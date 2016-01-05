@@ -628,6 +628,7 @@ wip_read_caption(GNode *node, gpointer caption)
     return FALSE;
 }
 
+// FIXME: Imported as greyscale
 static GwyDataField*
 wip_read_bmp(const guchar *bmpdata,
              gsize datasize,

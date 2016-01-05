@@ -20,7 +20,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
- 
+
  /*
   *  TODO: Read whitelight calibrations and metadata from EXIF tags
   */
@@ -1277,6 +1277,7 @@ wdf_load(const gchar *filename,
         rowstride = gdk_pixbuf_get_rowstride(pixbuf);
         bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
 
+		// FIXME: Whitelight imported as greyscale
         dfield = gwy_data_field_new(width, height, width, height, TRUE);
         data = gwy_data_field_get_data(dfield);
         for (i = 0; i < height; i++) {
