@@ -25,6 +25,8 @@ Libraries:
   gwy_triangulation_triangulate() was added.
 - libgwyprocess: Functions for filling area under mask with a value and
   simple data-average correction using unmasked data were added.
+- libgwydgets: GwyGraphModel and GwyGraphCurveModel clone() methods were
+  implemented.
 
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
@@ -69,6 +71,7 @@ Modules:
 - Graph function fit, FD curve fit, critical dimension: Function names are
   translated also in reports.
 - Ballistic deposition synthesis: Progressive preview works now.
+- Align graph: Crash with curves not sorted by abscissa was fixed.
 
 Other:
 - MS Windows packages include OpenEXR support now.
