@@ -149,6 +149,9 @@ static GwyContainer* lif_load        (const gchar *filename,
 LIFMemBlock *   lif_read_memblock    (const guchar *buffer,
                                       gsize *size,
                                       gint version);
+gboolean        lif_remove_memblock  (gpointer key,
+                                      gpointer value,
+                                      gpointer user_data);
 static void     header_start_element (GMarkupParseContext *context,
                                       const gchar *element_name,
                                       const gchar **attribute_names,
@@ -227,7 +230,7 @@ lif_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     gdouble *data = NULL;
     gint i, j, channels = 0;
-    gchar *strkey;
+    gchar *strkey, *lutname;
     GMarkupParser parser = {
         header_start_element,
         header_end_element,
@@ -236,7 +239,7 @@ lif_load(const gchar *filename,
     GMarkupParseContext *context;
     XMLParserData *xmldata;
     gint x, xres, y, yres, xstep, ystep, offset;
-    gdouble xreal, yreal, xoffset, yoffset, zscale, zoffset;
+    gdouble xreal, yreal, xoffset, yoffset, zscale;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
     gint power10xy = 1, power10z = 1;
 
@@ -391,7 +394,7 @@ lif_load(const gchar *filename,
             if (offset + (xres - 1) * xstep + (yres - 1)* ystep
                                                  > memblock->memsize) {
                 gwy_debug("Memblock too small");
-                gwy_debug("%d %d",
+                gwy_debug("%d %" G_GUINT64_FORMAT "",
                           offset + (xres-1)*xstep + (yres-1)*ystep,
                           memblock->memsize);
                 err_SIZE_MISMATCH(error,
@@ -427,13 +430,70 @@ lif_load(const gchar *filename,
                                                g_strdup(element->name));
                 g_free(strkey);
             }
+            if (channel->lut) {
+                lutname = NULL;
+                if (gwy_strequal(channel->lut, "Red"))
+                    lutname = g_strdup_printf("RGB-Red");
+                else if (gwy_strequal(channel->lut, "Green"))
+                    lutname = g_strdup_printf("RGB-Green");
+                else if (gwy_strequal(channel->lut, "Blue"))
+                    lutname = g_strdup_printf("RGB-Blue");
+                else if (gwy_strequal(channel->lut, "Gray"))
+                    lutname = g_strdup_printf("Gray");
+                if (lutname) {
+                    strkey = g_strdup_printf("/%u/base/palette",
+                                             channels);
+                    gwy_container_set_string_by_name(container, strkey,
+                                                     lutname);
+                    g_free(strkey);
+                }
+            }
             channels++;
         }
     }
 
 fail:
-    if (file)
+    /* freeing all stuff */
+    if (file) {
+        if (file->memblocks) {
+            g_hash_table_foreach_remove(file->memblocks,
+                                        lif_remove_memblock,
+                                        NULL);
+            g_hash_table_unref(file->memblocks);
+        }
+        if (file->elements) {
+            for (i = 0; i < file->elements->len; i++) {
+                element = &g_array_index(file->elements, LIFElement, i);
+                if (element->dimensions) {
+                    for (j = 0; j < element->dimensions->len; j++) {
+                        dimension = &g_array_index(element->dimensions,
+                                                   LIFDimension, j);
+                        if (dimension->unit)
+                            g_free(dimension->unit);
+                    }
+                    g_array_free(element->dimensions, TRUE);
+                }
+                if (element->channels) {
+                    for (j = 0; j < element->channels->len; j++) {
+                        channel = &g_array_index(element->channels,
+                                                 LIFChannel, j);
+                        if (channel->unit)
+                            g_free(channel->unit);
+                        if (channel->lut)
+                            g_free(channel->lut);
+                    }
+                    g_array_free(element->channels, TRUE);
+                }
+
+                if (element->name)
+                    g_free(element->name);
+                if (element->memid)
+                    g_free(element->memid);
+            }
+            g_array_free(file->elements, TRUE);
+        }
         g_free(file);
+    }
     if (header->xmlheader)
         g_free(header->xmlheader);
     if (header) {
@@ -494,6 +554,22 @@ lif_read_memblock(const guchar *buffer, gsize *size, gint version)
 
     *size = (gsize)(p - buffer) + memblock->memsize;
     return memblock;
+}
+
+gboolean
+lif_remove_memblock(G_GNUC_UNUSED gpointer key,
+                    gpointer value,
+                    G_GNUC_UNUSED gpointer user_data)
+{
+    LIFMemBlock *memblock;
+
+    memblock = (LIFMemBlock *)value;
+    if (memblock->memid)
+        g_free(memblock->memid);
+
+    g_free(memblock);
+
+    return TRUE;
 }
 
 static void
