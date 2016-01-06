@@ -27,6 +27,8 @@ Libraries:
   simple data-average correction using unmasked data were added.
 - libgwydgets: GwyGraphModel and GwyGraphCurveModel clone() methods were
   implemented.
+- libgwyprocess: Euclidean distance transform with from_border=FALSE actually
+  work for all cases, previously the border-influenced ares had to be limited.
 
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
