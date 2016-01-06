@@ -22,7 +22,6 @@
 #ifndef __GWY_PROCESS_TRIANGULATION_H__
 #define __GWY_PROCESS_TRIANGULATION_H__ 1
 
-#include <libprocess/datafield.h>
 #include <libprocess/gwyprocesstypes.h>
 
 G_BEGIN_DECLS
@@ -64,6 +63,8 @@ struct _GwyTriangulation {
 struct _GwyTriangulationClass {
     GObjectClass parent_class;
 };
+
+#include <libprocess/datafield.h>
 
 GType                 gwy_triangulation_get_type             (void)                                      G_GNUC_CONST;
 GwyTriangulation*     gwy_triangulation_new                  (void);

@@ -28,14 +28,23 @@
 #include <libprocess/datafield.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/stats.h>
+#include <libprocess/grains.h>
 #include "gwyprocessinternal.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
+
+#define PointXYZ GwyTriangulationPointXYZ
 
 enum {
     DATA_CHANGED,
     LAST_SIGNAL
 };
+
+typedef struct {
+    gdouble dist;
+    gint i;
+    gint j;
+} MaskedPoint;
 
 static void       gwy_data_field_finalize         (GObject *object);
 static void       gwy_data_field_serializable_init(GwySerializableIface *iface);
@@ -2325,6 +2334,279 @@ gwy_data_field_invalidate(GwyDataField *data_field)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     data_field->cached = 0;
+}
+
+static int
+compare_double(gconstpointer a, gconstpointer b)
+{
+    const double da = *(const double*)a;
+    const double db = *(const double*)b;
+
+    if (da < db)
+        return -1;
+    if (da > db)
+        return 1;
+    return 0;
+}
+
+static void
+fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
+{
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    MaskedPoint *mpts;
+    gdouble *d, *w;
+    gint nmissing, k, kk, i, j;
+
+    d = gwy_data_field_get_data(dfield);
+    w = gwy_data_field_get_data(mask);
+
+    nmissing = 0;
+    for (kk = 0; kk < xres*yres; kk++) {
+        if (w[kk])
+            nmissing++;
+    }
+    if (!nmissing)
+        return;
+
+    if (nmissing == xres*yres) {
+        gwy_data_field_clear(dfield);
+        return;
+    }
+
+    /* This physically touches the mask data but does not change their
+     * interpretation. */
+    gwy_data_field_grain_simple_dist_trans(mask,
+                                           GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
+                                           FALSE);
+
+    mpts = g_new(MaskedPoint, nmissing);
+    k = 0;
+    for (kk = 0; kk < xres*yres; kk++) {
+        if (w[kk]) {
+            mpts[k].dist = w[kk];
+            mpts[k].i = kk/xres;
+            mpts[k].j = kk % xres;
+            k++;
+        }
+    }
+    qsort(mpts, nmissing, sizeof(MaskedPoint), compare_double);
+
+    for (k = 0; k < nmissing; k++) {
+        gdouble z = 0.0, dist = mpts[k].dist;
+        gint n = 0;
+
+        i = mpts[k].i;
+        j = mpts[k].j;
+        kk = i*xres + j;
+
+        /* Cardinal. */
+        if (i > 0 && w[kk - xres] < dist) {
+            z += d[kk - xres];
+            n++;
+        }
+        if (j > 0 && w[kk-1] < dist) {
+            z += d[kk-1];
+            n++;
+        }
+        if (j < xres-1 && w[kk+1] < dist) {
+            z += d[kk+1];
+            n++;
+        }
+        if (i < yres-1 && w[kk + xres] < dist) {
+            z += d[kk + xres];
+            n++;
+        }
+        z *= 2.0;
+        n *= 2;
+
+        /* Diagonal, half weight. */
+        if (i > 0 && j > 0 && w[kk-1 - xres] < dist) {
+            z += d[kk-1 - xres];
+            n++;
+        }
+        if (i > 0 && j < xres-1 && w[kk+1 - xres] < dist) {
+            z += d[kk+1 - xres];
+            n++;
+        }
+        if (i < yres-1 && j > 0 && w[kk-1 + xres] < dist) {
+            z += d[kk-1 + xres];
+            n++;
+        }
+        if (i < yres-1 && j < xres-1 && w[kk+1 + xres] < dist) {
+            z += d[kk+1 + xres];
+            n++;
+        }
+
+        g_assert(n);
+        d[kk] = z/n;
+    }
+
+    g_free(mpts);
+}
+
+/**
+ * gwy_data_field_average_xyz:
+ * @data_field: A data field to fill with regularised XYZ data.
+ * @densitymap: Optional data field to fill with XYZ point density map.  It can
+ *              be %NULL.
+ * @points: Array of XYZ points.  Coordinates X and Y represent positions in
+ *          the plane; the Z-coordinate represents values.
+ * @npoints: Number of points.
+ *
+ * Fills a data field with regularised XYZ data using a simple method.
+ *
+ * The real dimensions and offsets of @field determine the rectangle in the XY
+ * plane that will be regularised.  The regularisation method is fast but
+ * simple and there are no absolute guarantees of quality, even though the
+ * result will be usually quite acceptable.  If there are no points in the
+ * rectangle defined by @field nor anywehre close then @field will be simply
+ * filled with zeroes.
+ *
+ * Since: 2.44
+ **/
+void
+gwy_data_field_average_xyz(GwyDataField *dfield,
+                           GwyDataField *densitymap,
+                           const GwyTriangulationPointXYZ *points,
+                           gint npoints)
+{
+    GwyDataField *extfield, *extweights;
+    gdouble xoff, yoff, qx, qy;
+    gint extxres, extyres, xres, yres, k, kk, i, j;
+    gint imin = G_MAXINT, imax = G_MININT, jmin = G_MAXINT, jmax = G_MININT;
+    gdouble *d, *w;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    if (densitymap) {
+        g_return_if_fail(GWY_IS_DATA_FIELD(densitymap));
+        g_return_if_fail(densitymap->xres == dfield->xres);
+        g_return_if_fail(densitymap->yres == dfield->yres);
+    }
+
+    if (!points || !npoints) {
+        gwy_data_field_clear(dfield);
+        if (densitymap)
+            gwy_data_field_clear(densitymap);
+        return;
+    }
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    xoff = dfield->xoff;
+    yoff = dfield->yoff;
+    qx = dfield->xreal/xres;
+    qy = dfield->yreal/yres;
+    g_return_if_fail(qx > 0.0);
+    g_return_if_fail(qy > 0.0);
+    gwy_debug("dfield %dx%d", xres, yres);
+
+    for (k = 0; k < npoints; k++) {
+        const PointXYZ *pt = points + k;
+        gdouble x = (pt->x - xoff)/qx;
+        gdouble y = (pt->y - yoff)/qy;
+
+        j = (gint)floor(x);
+        i = (gint)floor(y);
+
+        if (j < jmin)
+            jmin = j;
+        if (j > jmax)
+            jmax = j;
+
+        if (i < imin)
+            imin = i;
+        if (i > imax)
+            imax = i;
+    }
+
+    /* Honour exterior if it is not too far away.  We do not want to construct
+     * useless huge data fields for zoom-in scenarios. */
+    gwy_debug("true extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
+    imin = CLAMP(imin, -(yres/2 + 16), 0);
+    imax = CLAMP(imax, yres-1, yres + yres/2 + 15);
+    jmin = CLAMP(jmin, -(xres/2 + 16), 0);
+    jmax = CLAMP(jmax, xres-1, xres + xres/2 + 15);
+    gwy_debug("extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
+
+    extxres = jmax+1 - jmin;
+    extyres = imax+1 - imin;
+    gwy_debug("extfield %dx%d", extxres, extyres);
+    extfield = gwy_data_field_new(extxres, extyres, qx*extxres, qy*extyres,
+                                  TRUE);
+    extweights = gwy_data_field_new(extxres, extyres, qx*extxres, qy*extyres,
+                                    TRUE);
+    d = gwy_data_field_get_data(extfield);
+    w = gwy_data_field_get_data(extweights);
+
+    for (k = 0; k < npoints; k++) {
+        const PointXYZ *pt = points + k;
+        gdouble x = (pt->x - xoff)/qx - jmin;
+        gdouble y = (pt->y - yoff)/qy - imin;
+        gdouble z = pt->z;
+        gdouble xx, yy, ww;
+
+        j = (gint)floor(x);
+        i = (gint)floor(y);
+        xx = x - j;
+        yy = y - i;
+
+        /* Ensure we are always working in (j,j+1) x (i,i+1) rectangle. */
+        if (xx < 0.5) {
+            xx += 1.0;
+            j--;
+        }
+        xx -= 0.5;
+        if (yy < 0.5) {
+            yy += 1.0;
+            i--;
+        }
+        yy -= 0.5;
+
+        kk = i*extxres + j;
+        if (j >= 0 && j < extxres && i >= 0 && i < extyres) {
+            ww = (1.0 - xx)*(1.0 - yy);
+            d[kk] += ww*z;
+            w[kk] += ww;
+        }
+        if (j+1 >= 0 && j+1 < extxres && i >= 0 && i < extyres) {
+            ww = xx*(1.0 - yy);
+            d[kk+1] += ww*z;
+            w[kk+1] += ww;
+        }
+        if (j >= 0 && j < extxres && i+1 >= 0 && i+1 < extyres) {
+            ww = (1.0 - xx)*yy;
+            d[kk + extxres] += ww*z;
+            w[kk + extxres] += ww;
+        }
+        if (j+1 >= 0 && j+1 < extxres && i+1 >= 0 && i+1 < extyres) {
+            ww = xx*yy;
+            d[kk + extxres+1] += ww*z;
+            w[kk + extxres+1] += ww;
+        }
+    }
+
+    if (densitymap) {
+        gwy_data_field_area_copy(extweights, densitymap,
+                                 -jmin, -imin, xres, yres, 0, 0);
+    }
+
+    for (i = 0; i < extyres; i++) {
+        for (j = 0; j < extxres; j++) {
+            kk = i*extxres + j;
+            if (w[kk]) {
+                d[kk] = d[kk]/w[kk];
+                w[kk] = 0.0;
+            }
+            else
+                w[kk] = 1.0;
+        }
+    }
+    fill_missing_points(extfield, extweights);
+
+    gwy_data_field_area_copy(extfield, dfield, -jmin, -imin, xres, yres, 0, 0);
+    g_object_unref(extfield);
+    g_object_unref(extweights);
 }
 
 /************************** Documentation ****************************/

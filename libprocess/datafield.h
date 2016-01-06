@@ -67,6 +67,8 @@ struct _GwyDataFieldClass {
     void (*reserved1)(void);
 };
 
+#include <libprocess/triangulation.h>
+
 void gwy_data_field_invalidate(GwyDataField *data_field);
 
 #define gwy_data_field_invalidate(data_field) (data_field)->cached = 0
@@ -270,6 +272,10 @@ gdouble      gwy_data_field_get_angder     (GwyDataField *data_field,
                                             gint col,
                                             gint row,
                                             gdouble theta);
+void         gwy_data_field_average_xyz    (GwyDataField *data_field,
+                                            GwyDataField *density_map,
+                                            const GwyTriangulationPointXYZ *points,
+                                            gint npoints);
 
 G_END_DECLS
 
