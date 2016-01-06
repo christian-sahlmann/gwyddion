@@ -4471,131 +4471,46 @@ int_list_free(IntList *list)
 static void
 distance_transform_first_step(guint *distances,
                               guint xres, guint yres,
-                              IntList *queue)
+                              IntList *queue,
+                              gboolean from_border)
 {
     guint k = 0, j, i;
 
     queue->len = 0;
-    for (j = xres; j; j--, k++) {
-        if (distances[k]) {
-            distances[k] = 1;
-            int_list_add(queue, k);
-        }
-    }
+    for (i = 0; i < yres; i++) {
+        gboolean first_row = (i == 0);
+        gboolean last_row = (i == yres-1);
 
-    if (G_UNLIKELY(yres == 1))
-        return;
+        for (j = 0; j < xres; j++, k++) {
+            gboolean first_column = (j == 0);
+            gboolean last_column = (j == xres-1);
 
-    for (i = 1; i < yres-1; i++) {
-        if (distances[k]) {
-            distances[k] = 1;
-            int_list_add(queue, k);
-        }
-        k++;
-
-        if (G_UNLIKELY(xres == 1))
-            continue;
-
-        for (j = xres-2; j; j--, k++) {
             if (!distances[k])
                 continue;
 
-            if (!distances[k-xres] || !distances[k-1]
-                || !distances[k+1] || !distances[k+xres]) {
+            if ((from_border && (first_row || first_column
+                                 || last_row || last_column))
+                || (!first_row && !distances[k-xres])
+                || (!first_column && !distances[k-1])
+                || (!last_column && !distances[k+1])
+                || (!last_row && !distances[k+xres])) {
                 distances[k] = 1;
                 int_list_add(queue, k);
             }
-            else if (!distances[k-xres-1] || !distances[k-xres+1]
-                     || !distances[k+xres-1] || !distances[k+xres+1]) {
+            else if ((!first_row && !first_column && !distances[k-xres-1])
+                     || (!first_row && !last_column && !distances[k-xres+1])
+                     || (!last_row && !first_column && !distances[k+xres-1])
+                     || (!last_row && !last_column && !distances[k+xres+1])) {
                 distances[k] = 2;
                 int_list_add(queue, k);
             }
-        }
-
-        if (distances[k]) {
-            distances[k] = 1;
-            int_list_add(queue, k);
-        }
-        k++;
-    }
-
-    for (j = xres; j; j--, k++) {
-        if (distances[k]) {
-            distances[k] = 1;
-            int_list_add(queue, k);
-        }
-    }
-}
-
-static void
-distance_transform_erode_sed2(guint *distances, const guint *olddist,
-                              guint xres, guint yres,
-                              const IntList *inqueue,
-                              IntList *outqueue)
-{
-    enum { hvsed2 = 3, diag2 = 6 };
-    guint q;
-
-    outqueue->len = 0;
-
-    for (q = 0; q < inqueue->len; q++) {
-        guint k = inqueue->data[q], kk = k-xres-1;
-        guint i = k/xres, j = k % xres;
-        guint d2hv = olddist[k] + hvsed2, d2d = olddist[k] + diag2;
-
-        if (i && j && (distances[kk] & ~QUEUED) > d2d) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2d;
-        }
-        kk++;
-        if (i && (distances[kk] & ~QUEUED) > d2hv) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2hv;
-        }
-        kk++;
-        if (i && j < xres-1 && (distances[kk] & ~QUEUED) > d2d) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2d;
-        }
-        kk += xres-2;
-        if (j && (distances[kk] & ~QUEUED) > d2hv) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2hv;
-        }
-        kk += 2;
-        if (j < xres-1 && (distances[kk] & ~QUEUED) > d2hv) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2hv;
-        }
-        kk += xres-2;
-        if (i < yres-1 && j && (distances[kk] & ~QUEUED) > d2d) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2d;
-        }
-        kk++;
-        if (i < yres-1 && (distances[kk] & ~QUEUED) > d2hv) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2hv;
-        }
-        kk++;
-        if (i < yres-1 && j < xres-1 && (distances[kk] & ~QUEUED) > d2d) {
-            if (!(distances[kk] & QUEUED))
-                int_list_add(outqueue, kk);
-            distances[kk] = QUEUED | d2d;
         }
     }
 }
 
 static void
 distance_transform_erode_sed(guint *distances, const guint *olddist,
-                             guint xres,
+                             guint xres, guint yres,
                              guint l,
                              const IntList *inqueue,
                              IntList *outqueue)
@@ -4607,51 +4522,56 @@ distance_transform_erode_sed(guint *distances, const guint *olddist,
 
     for (q = 0; q < inqueue->len; q++) {
         guint k = inqueue->data[q], kk = k-xres-1;
+        guint i = k/xres, j = k % xres;
+        gboolean first_row = (i == 0);
+        gboolean last_row = (i == yres-1);
+        gboolean first_column = (j == 0);
+        gboolean last_column = (j == xres-1);
         guint d2hv = olddist[k] + hvsed2, d2d = olddist[k] + diag2;
 
-        if ((distances[kk] & ~QUEUED) > d2d) {
+        if (!first_row && !first_column && (distances[kk] & ~QUEUED) > d2d) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2d;
         }
         kk++;
-        if ((distances[kk] & ~QUEUED) > d2hv) {
+        if (!first_row && (distances[kk] & ~QUEUED) > d2hv) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2hv;
         }
         kk++;
-        if ((distances[kk] & ~QUEUED) > d2d) {
+        if (!first_row && !last_column && (distances[kk] & ~QUEUED) > d2d) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2d;
         }
         kk += xres-2;
-        if ((distances[kk] & ~QUEUED) > d2hv) {
+        if (!first_column && (distances[kk] & ~QUEUED) > d2hv) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2hv;
         }
         kk += 2;
-        if ((distances[kk] & ~QUEUED) > d2hv) {
+        if (!last_column && (distances[kk] & ~QUEUED) > d2hv) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2hv;
         }
         kk += xres-2;
-        if ((distances[kk] & ~QUEUED) > d2d) {
+        if (!last_row && !first_column && (distances[kk] & ~QUEUED) > d2d) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2d;
         }
         kk++;
-        if ((distances[kk] & ~QUEUED) > d2hv) {
+        if (!last_row && (distances[kk] & ~QUEUED) > d2hv) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2hv;
         }
         kk++;
-        if ((distances[kk] & ~QUEUED) > d2d) {
+        if (!last_row && !last_column && (distances[kk] & ~QUEUED) > d2d) {
             if (!(distances[kk] & QUEUED))
                 int_list_add(outqueue, kk);
             distances[kk] = QUEUED | d2d;
@@ -4668,6 +4588,7 @@ distance_transform_erode_sed(guint *distances, const guint *olddist,
  * @yres: Height.
  * @inqueue: Pre-allocated queue used by the algorithm.
  * @outqueue: Second pre-allocated queue used by the algorithm.
+ * @from_border: %TRUE to consider image edges to be grain boundaries.
  *
  * Performs distance transformation.
  *
@@ -4681,11 +4602,12 @@ distance_transform_erode_sed(guint *distances, const guint *olddist,
 static void
 distance_transform_raw(guint *distances, guint *workspace,
                        guint xres, guint yres,
-                       IntList *inqueue, IntList *outqueue)
+                       IntList *inqueue, IntList *outqueue,
+                       gboolean from_border)
 {
     guint l, q;
 
-    distance_transform_first_step(distances, xres, yres, inqueue);
+    distance_transform_first_step(distances, xres, yres, inqueue, from_border);
 
     for (l = 2; inqueue->len; l++) {
         gint *qdata;
@@ -4694,12 +4616,8 @@ distance_transform_raw(guint *distances, guint *workspace,
             guint k = inqueue->data[q];
             workspace[k] = distances[k];
         }
-        if (l == 2)
-            distance_transform_erode_sed2(distances, workspace, xres, yres,
-                                          inqueue, outqueue);
-        else
-            distance_transform_erode_sed(distances, workspace, xres, l,
-                                         inqueue, outqueue);
+        distance_transform_erode_sed(distances, workspace, xres, yres, l,
+                                     inqueue, outqueue);
 
         qdata = outqueue->data;
         for (q = outqueue->len; q; q--, qdata++)
@@ -4709,23 +4627,9 @@ distance_transform_raw(guint *distances, guint *workspace,
     }
 }
 
-/**
- * gwy_data_field_grain_distance_transform:
- * @data_field: A data field with zeroes in empty space and nonzeroes in
- *              grains.
- *
- * Performs Euclidean distance transform of a data field with grains.
- *
- * Each non-zero value will be replaced with Euclidean distance to the grain
- * boundary, measured in pixels.
- *
- * See also gwy_data_field_grain_simple_dist_trans() for simple distance
- * transforms such as city-block or chessboard.
- *
- * Since: 2.36
- **/
 void
-gwy_data_field_grain_distance_transform(GwyDataField *data_field)
+gwy_data_field_grain_distance_transform_internal(GwyDataField *data_field,
+                                                 gboolean from_border)
 {
     IntList *inqueue, *outqueue;
     guint xres, yres, k, inisize;
@@ -4747,17 +4651,40 @@ gwy_data_field_grain_distance_transform(GwyDataField *data_field)
     inqueue = int_list_new(inisize);
     outqueue = int_list_new(inisize);
 
-    distance_transform_raw(distances, workspace, xres, yres, inqueue, outqueue);
+    distance_transform_raw(distances, workspace, xres, yres, inqueue, outqueue,
+                           from_border);
 
     int_list_free(inqueue);
     int_list_free(outqueue);
 
+    // FIXME: restore without SEDINF
     for (k = 0; k < xres*yres; k++)
-        d[k] = sqrt(distances[k]);
+        d[k] = sqrt(distances[k] == SEDINF ? 0 : distances[k]);
     gwy_data_field_invalidate(data_field);
 
     g_free(workspace);
     g_free(distances);
+}
+
+/**
+ * gwy_data_field_grain_distance_transform:
+ * @data_field: A data field with zeroes in empty space and nonzeroes in
+ *              grains.
+ *
+ * Performs Euclidean distance transform of a data field with grains.
+ *
+ * Each non-zero value will be replaced with Euclidean distance to the grain
+ * boundary, measured in pixels.
+ *
+ * See also gwy_data_field_grain_simple_dist_trans() for simple distance
+ * transforms such as city-block or chessboard.
+ *
+ * Since: 2.36
+ **/
+void
+gwy_data_field_grain_distance_transform(GwyDataField *data_field)
+{
+    gwy_data_field_grain_distance_transform_internal(data_field, TRUE);
 }
 
 /* Perform a cityblock, chessboard or octagonal distance transform of given
@@ -4822,25 +4749,6 @@ simple_dist_trans(gint *grain, guint width, guint height,
 }
 
 static void
-borderless_edt(GwyDataField *dfield)
-{
-    guint xres = dfield->xres, yres = dfield->yres;
-    /* FIXME: This is extremely pessimistic.  The extension should be the
-     * minimum of this and the length of longest masked segment along the edge,
-     * or something like that. */
-    guint extdim = (guint)floor(sqrt(xres*xres + yres*yres));
-    GwyDataField *extended;
-
-    extended = gwy_data_field_extend(dfield,
-                                     extdim, extdim, extdim, extdim,
-                                     GWY_EXTERIOR_BORDER_EXTEND, 0.0, FALSE);
-    gwy_data_field_grain_distance_transform(extended);
-    gwy_data_field_area_copy(extended, dfield,
-                             extdim, extdim, xres, yres, 0, 0);
-    g_object_unref(extended);
-}
-
-static void
 average_octagonal_dt(GwyDataField *dfield, gboolean from_border)
 {
     GwyDataField *tmp;
@@ -4888,11 +4796,8 @@ gwy_data_field_grain_simple_dist_trans(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
     if (dtype == GWY_DISTANCE_TRANSFORM_EUCLIDEAN) {
-        if (from_border)
-            gwy_data_field_grain_distance_transform(data_field);
-        else
-            borderless_edt(data_field);
-
+        gwy_data_field_grain_distance_transform_internal(data_field,
+                                                         from_border);
         return;
     }
     if (dtype == GWY_DISTANCE_TRANSFORM_OCTAGONAL) {
