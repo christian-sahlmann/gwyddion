@@ -1496,31 +1496,31 @@ extend_borders(RawXYZFile *rfile,
      * create at most 3 full copies (4 halves and 4 quarters) of the base set.
      * Anyone asking for more is either clueless or malicious. */
     for (i = 0; i < nbase; i++) {
-        const PointXYZ *pt = &g_array_index(rfile->points, PointXYZ, i);
+        const PointXYZ pt = g_array_index(rfile->points, PointXYZ, i);
         PointXYZ pt2;
         gdouble txl, txr, tyt, tyb;
         gboolean txlok, txrok, tytok, tybok;
 
-        pt2.z = pt->z;
+        pt2.z = pt.z;
         if (args->exterior == GWY_EXTERIOR_MIRROR_EXTEND) {
-            txl = 2.0*rfile->xmin - pt->x;
-            tyt = 2.0*rfile->ymin - pt->y;
-            txr = 2.0*rfile->xmax - pt->x;
-            tyb = 2.0*rfile->ymax - pt->y;
-            txlok = pt->x - rfile->xmin < 0.5*xreal;
-            tytok = pt->y - rfile->ymin < 0.5*yreal;
-            txrok = rfile->xmax - pt->x < 0.5*xreal;
-            tybok = rfile->ymax - pt->y < 0.5*yreal;
+            txl = 2.0*rfile->xmin - pt.x;
+            tyt = 2.0*rfile->ymin - pt.y;
+            txr = 2.0*rfile->xmax - pt.x;
+            tyb = 2.0*rfile->ymax - pt.y;
+            txlok = pt.x - rfile->xmin < 0.5*xreal;
+            tytok = pt.y - rfile->ymin < 0.5*yreal;
+            txrok = rfile->xmax - pt.x < 0.5*xreal;
+            tybok = rfile->ymax - pt.y < 0.5*yreal;
         }
         else if (args->exterior == GWY_EXTERIOR_PERIODIC) {
-            txl = pt->x - xreal;
-            tyt = pt->y - yreal;
-            txr = pt->x + xreal;
-            tyb = pt->y + yreal;
-            txlok = rfile->xmax - pt->x < 0.5*xreal;
-            tytok = rfile->ymax - pt->y < 0.5*yreal;
-            txrok = pt->x - rfile->xmin < 0.5*xreal;
-            tybok = pt->y - rfile->ymin < 0.5*yreal;
+            txl = pt.x - xreal;
+            tyt = pt.y - yreal;
+            txr = pt.x + xreal;
+            tyb = pt.y + yreal;
+            txlok = rfile->xmax - pt.x < 0.5*xreal;
+            tytok = rfile->ymax - pt.y < 0.5*yreal;
+            txrok = pt.x - rfile->xmin < 0.5*xreal;
+            tybok = pt.y - rfile->ymin < 0.5*yreal;
         }
         else {
             g_assert_not_reached();
@@ -1537,7 +1537,7 @@ extend_borders(RawXYZFile *rfile,
 
         if (txlok) {
             pt2.x = txl;
-            pt2.y = pt->y - eps;
+            pt2.y = pt.y - eps;
             g_array_append_val(rfile->points, pt2);
         }
         if (txlok && tytok) {
@@ -1546,7 +1546,7 @@ extend_borders(RawXYZFile *rfile,
             g_array_append_val(rfile->points, pt2);
         }
         if (tytok) {
-            pt2.x = pt->x + eps;
+            pt2.x = pt.x + eps;
             pt2.y = tyt;
             g_array_append_val(rfile->points, pt2);
         }
@@ -1557,7 +1557,7 @@ extend_borders(RawXYZFile *rfile,
         }
         if (txrok) {
             pt2.x = txr;
-            pt2.y = pt->y + eps;
+            pt2.y = pt.y + eps;
             g_array_append_val(rfile->points, pt2);
         }
         if (txrok && tybok) {
@@ -1566,7 +1566,7 @@ extend_borders(RawXYZFile *rfile,
             g_array_append_val(rfile->points, pt2);
         }
         if (tybok) {
-            pt2.x = pt->x - eps;
+            pt2.x = pt.x - eps;
             pt2.y = tyb;
             g_array_append_val(rfile->points, pt2);
         }
