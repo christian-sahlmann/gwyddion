@@ -88,6 +88,7 @@ typedef struct {
     gint yres;
     gboolean xydimeq;
     gboolean xymeasureeq;
+    gboolean plot_density;
     /* Interface only */
     gdouble xmin;
     gdouble xmax;
@@ -133,6 +134,7 @@ typedef struct {
     GtkWidget *z_units_parsed;
     GtkWidget *interpolation;
     GtkWidget *exterior;
+    GtkWidget *plot_density;
     GtkWidget *preview;
     GtkWidget *do_preview;
     GtkWidget *error;
@@ -192,11 +194,14 @@ static void          interpolation_changed  (RawXYZControls *controls,
                                              GtkComboBox *combo);
 static void          exterior_changed       (RawXYZControls *controls,
                                              GtkComboBox *combo);
+static void          plot_density_changed   (RawXYZControls *controls,
+                                             GtkToggleButton *toggle);
 static void          reset_ranges           (RawXYZControls *controls);
 static void          preview                (RawXYZControls *controls);
 static void          triangulation_info     (RawXYZControls *controls);
 static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
+                                             GwyDataField **pdensitymap,
                                              GtkWindow *dialog,
                                              GError **error);
 static void          fill_field_x           (const PointXYZ *points,
@@ -208,7 +213,8 @@ static void          interpolate_field      (guint npoints,
                                              GwyDataField *dfield);
 static void          interpolate_average    (guint npoints,
                                              const PointXYZ *points,
-                                             GwyDataField *dfield);
+                                             GwyDataField *dfield,
+                                             GwyDataField *densitymap);
 static gboolean      extend_borders         (RawXYZFile *rfile,
                                              const RawXYZArgs *args,
                                              gboolean check_for_changes,
@@ -230,6 +236,7 @@ static const RawXYZArgs rawxyz_defaults = {
     NULL, NULL,
     500, 500,
     TRUE, TRUE,
+    FALSE,
     /* Interface only */
     0.0, 0.0, 0.0, 0.0
 };
@@ -317,7 +324,7 @@ rawxyz_load(const gchar *filename,
             GError **error)
 {
     GwyContainer *settings, *container = NULL;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *densitymap = NULL;
     RawXYZArgs args;
     RawXYZFile rfile;
     gchar *buffer = NULL;
@@ -358,14 +365,24 @@ rawxyz_load(const gchar *filename,
         goto fail;
     }
 
-    dfield = rawxyz_do(&rfile, &args, NULL, error);
+    dfield = rawxyz_do(&rfile, &args,
+                       (args.plot_density ? &densitymap : NULL),
+                       NULL, error);
     if (dfield) {
         container = gwy_container_new();
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup("Regularized XYZ"));
+                                         g_strdup(_("Regularized XYZ")));
         gwy_file_channel_import_log_add(container, 0, NULL, filename);
+
+        if (densitymap) {
+            gwy_container_set_object_by_name(container, "/1/data", densitymap);
+            gwy_container_set_string_by_name(container, "/1/data/title",
+                                             g_strdup(_("Point density map")));
+            gwy_file_channel_import_log_add(container, 1, NULL, filename);
+        }
     }
+    gwy_object_unref(densitymap);
 
 fail:
     rawxyz_free(&rfile);
@@ -421,7 +438,10 @@ rawxyz_dialog(RawXYZArgs *args,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(rfile->regular == RAW_XYZ_IRREGULAR
+                                    ? 14
+                                    : 6,
+                                    4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
@@ -443,8 +463,12 @@ rawxyz_dialog(RawXYZArgs *args,
     row = construct_units(&controls, table, row);
     update_unit_label(GTK_LABEL(controls.xy_units_parsed), args->xy_units);
     update_unit_label(GTK_LABEL(controls.z_units_parsed), args->z_units);
-    if (rfile->regular == RAW_XYZ_IRREGULAR)
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
         row = construct_options(&controls, table, row);
+        gtk_widget_set_sensitive(controls.plot_density,
+                                 (gint)args->interpolation
+                                 == GWY_INTERPOLATION_AVERAGE);
+    }
 
     /* Right column */
     vbox = gtk_vbox_new(FALSE, 2);
@@ -505,6 +529,8 @@ rawxyz_dialog(RawXYZArgs *args,
                                  G_CALLBACK(interpolation_changed), &controls);
         g_signal_connect_swapped(controls.exterior, "changed",
                                  G_CALLBACK(exterior_changed), &controls);
+        g_signal_connect_swapped(controls.plot_density, "toggled",
+                                 G_CALLBACK(plot_density_changed), &controls);
     }
     controls.in_update = FALSE;
 
@@ -747,6 +773,14 @@ construct_options(RawXYZControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    controls->plot_density
+        = gtk_check_button_new_with_mnemonic(_("Plot point density map"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->plot_density),
+                                 args->plot_density);
+    gtk_table_attach(table, controls->plot_density, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
     return row;
 }
 
@@ -965,6 +999,9 @@ interpolation_changed(RawXYZControls *controls,
     RawXYZArgs *args = controls->args;
 
     args->interpolation = gwy_enum_combo_box_get_active(combo);
+    gtk_widget_set_sensitive(controls->plot_density,
+                             (gint)args->interpolation
+                             == GWY_INTERPOLATION_AVERAGE);
 }
 
 static void
@@ -974,6 +1011,15 @@ exterior_changed(RawXYZControls *controls,
     RawXYZArgs *args = controls->args;
 
     args->exterior = gwy_enum_combo_box_get_active(combo);
+}
+
+static void
+plot_density_changed(RawXYZControls *controls,
+                     GtkToggleButton *toggle)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->plot_density = gtk_toggle_button_get_active(toggle);
 }
 
 static void
@@ -1010,8 +1056,8 @@ preview(RawXYZControls *controls)
     yres = args->yres;
     args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
-    dfield = rawxyz_do(controls->rfile, args, GTK_WINDOW(controls->dialog),
-                       &error);
+    dfield = rawxyz_do(controls->rfile, args, NULL,
+                       GTK_WINDOW(controls->dialog), &error);
     /* Regular grids are always created at full size. */
     if (dfield)
         gwy_data_field_resample(dfield, args->xres, args->yres,
@@ -1062,12 +1108,13 @@ triangulation_info(RawXYZControls *controls)
 static GwyDataField*
 rawxyz_do(RawXYZFile *rfile,
           const RawXYZArgs *args,
+          GwyDataField **pdensitymap,
           GtkWindow *dialog,
           GError **error)
 {
     GArray *points = rfile->points;
     GwySIUnit *unitxy, *unitz;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *densitymap = NULL;
     gint xypow10, zpow10, xres, yres;
     gdouble mag;
 
@@ -1106,8 +1153,15 @@ rawxyz_do(RawXYZFile *rfile,
         interpolate_field(points->len, (const PointXYZ*)points->data, dfield);
     }
     else if ((gint)args->interpolation == GWY_INTERPOLATION_AVERAGE) {
+        if (pdensitymap) {
+            densitymap = gwy_data_field_new_alike(dfield, FALSE);
+            gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(densitymap),
+                                        NULL);
+            *pdensitymap = densitymap;
+        }
         extend_borders(rfile, args, FALSE, EPSREL);
-        interpolate_average(points->len, (const PointXYZ*)points->data, dfield);
+        interpolate_average(points->len, (const PointXYZ*)points->data,
+                            dfield, densitymap);
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
@@ -1353,7 +1407,8 @@ fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
 static void
 interpolate_average(guint npoints,
                     const PointXYZ *points,
-                    GwyDataField *dfield)
+                    GwyDataField *dfield,
+                    GwyDataField *densitymap)
 {
     GwyDataField *extfield, *extweights;
     gdouble xoff, yoff, qx, qy;
@@ -1452,6 +1507,11 @@ interpolate_average(guint npoints,
             d[kk + extxres+1] += ww*z;
             w[kk + extxres+1] += ww;
         }
+    }
+
+    if (densitymap) {
+        gwy_data_field_area_copy(extweights, densitymap,
+                                 -jmin, -imin, xres, yres, 0, 0);
     }
 
     for (i = 0; i < extyres; i++) {
@@ -2076,11 +2136,12 @@ check_regular_grid(RawXYZFile *rfile)
     return TRUE;
 }
 
-static const gchar xres_key[]          = "/module/rawxyz/xres";
-static const gchar yres_key[]          = "/module/rawxyz/yres";
 static const gchar exterior_key[]      = "/module/rawxyz/exterior";
 static const gchar interpolation_key[] = "/module/rawxyz/interpolation";
+static const gchar plot_density_key[]  = "/module/rawxyz/plot-density";
+static const gchar xres_key[]          = "/module/rawxyz/xres";
 static const gchar xy_units_key[]      = "/module/rawxyz/xy-units";
+static const gchar yres_key[]          = "/module/rawxyz/yres";
 static const gchar z_units_key[]       = "/module/rawxyz/z-units";
 
 static void
@@ -2095,6 +2156,7 @@ rawxyz_sanitize_args(RawXYZArgs *args)
         args->exterior = GWY_EXTERIOR_BORDER_EXTEND;
     args->xres = CLAMP(args->xres, 2, 16384);
     args->yres = CLAMP(args->yres, 2, 16384);
+    args->plot_density = !!args->plot_density;
 }
 
 static void
@@ -2112,6 +2174,8 @@ rawxyz_load_args(GwyContainer *container,
                                      (const guchar**)&args->z_units);
     gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
     gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
+    gwy_container_gis_boolean_by_name(container, plot_density_key,
+                                      &args->plot_density);
 
     rawxyz_sanitize_args(args);
     args->xy_units = g_strdup(args->xy_units ? args->xy_units : "");
@@ -2131,6 +2195,8 @@ rawxyz_save_args(GwyContainer *container,
                                      g_strdup(args->z_units));
     gwy_container_set_int32_by_name(container, xres_key, args->xres);
     gwy_container_set_int32_by_name(container, yres_key, args->yres);
+    gwy_container_set_boolean_by_name(container, plot_density_key,
+                                      args->plot_density);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
