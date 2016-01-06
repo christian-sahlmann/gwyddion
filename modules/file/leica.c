@@ -43,7 +43,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Leica LIF Data File
  * .lif
- *
+ * Read
  **/
 
 #define DEBUG
@@ -218,6 +218,7 @@ lif_load(const gchar *filename,
     LIFFile *file = NULL;
     LIFElement *element = NULL;
     LIFDimension *dimension = NULL;
+    LIFChannel *channel = NULL;
     gsize size = 0, memblock_size = 0;
     gint64 remaining = 0;
     gchar *buffer;
@@ -234,6 +235,10 @@ lif_load(const gchar *filename,
     };
     GMarkupParseContext *context;
     XMLParserData *xmldata;
+    gint x, xres, y, yres, xstep, ystep, offset;
+    gdouble xreal, yreal, xoffset, yoffset, zscale, zoffset;
+    GwySIUnit *siunitxy = NULL, *siunitz = NULL;
+    gint power10xy = 1, power10z = 1;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -346,33 +351,83 @@ lif_load(const gchar *filename,
 
         p = memblock->data;
         for (j = 0; j < element->channels->len; j++) {
-            gint x, xres, y, yres;
-            gdouble xreal, yreal;
-
             dimension = &g_array_index(element->dimensions,
                                        LIFDimension, 0);
             xres = dimension->res;
             xreal = dimension->length;
+            xoffset = dimension->origin;
+            xstep = dimension->bytesinc;
+            siunitxy = gwy_si_unit_new_parse(dimension->unit,
+                                             &power10xy);
+
             dimension = &g_array_index(element->dimensions,
                                        LIFDimension, 1);
             yres = dimension->res;
             yreal = dimension->length;
-            dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
+            yoffset = dimension->origin;
+            ystep = dimension->bytesinc;
+
+            if (xreal <= 0.0)
+                xreal = 1.0;
+            if (yreal <= 0.0)
+                yreal = 1.0;
+
+            channel = &g_array_index(element->channels, LIFChannel, j);
+            offset = channel->bytesinc;
+            siunitz = gwy_si_unit_new_parse(channel->unit,
+                                            &power10z);
+
+            zscale = pow10(power10z);
+
+            dfield = gwy_data_field_new(xres, yres,
+                                        xreal*pow10(power10xy),
+                                        yreal*pow10(power10xy), TRUE);
+            gwy_data_field_set_xoffset(dfield,
+                                       xoffset*pow10(power10xy));
+            gwy_data_field_set_yoffset(dfield,
+                                       yoffset*pow10(power10xy));
+
             data = gwy_data_field_get_data(dfield);
+            if (offset + (xres - 1) * xstep + (yres - 1)* ystep
+                                                 > memblock->memsize) {
+                gwy_debug("Memblock too small");
+                gwy_debug("%d %d",
+                          offset + (xres-1)*xstep + (yres-1)*ystep,
+                          memblock->memsize);
+                err_SIZE_MISMATCH(error,
+                                  memblock->memsize,
+                                  offset + xres * xstep + yres * ystep,
+                                  FALSE);
+                goto fail;
+            }
             for (y = 0; y < yres; y++)
                 for (x = 0; x < xres; x++) {
-                    *(data++) = (gdouble)*(p++);
+                    *(data++) = zscale
+                       * (gdouble)*(p + offset + x * xstep + y * ystep);
             }
 
-            if (dfield) {
-                strkey = g_strdup_printf("/%d/data", channels);
-                gwy_container_set_object_by_name(container,
-                                                 strkey,
-                                                 dfield);
-                g_object_unref(dfield);
-                g_free(strkey);
-                channels++;
+            if (siunitxy) {
+                gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+                g_object_unref(siunitxy);
             }
+            if (siunitz) {
+                gwy_data_field_set_si_unit_z(dfield, siunitz);
+                g_object_unref(siunitz);
+            }
+
+            strkey = g_strdup_printf("/%d/data", channels);
+            gwy_container_set_object_by_name(container,
+                                             strkey,
+                                             dfield);
+            g_object_unref(dfield);
+            g_free(strkey);
+            if (element->name) {
+                strkey = g_strdup_printf("/%d/data/title", channels);
+                gwy_container_set_string_by_name(container, strkey,
+                                               g_strdup(element->name));
+                g_free(strkey);
+            }
+            channels++;
         }
     }
 
