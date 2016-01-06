@@ -63,7 +63,7 @@ enum {
 
 enum {
     GWY_INTERPOLATION_FIELD = -1,
-    GWY_INTERPOLATION_PREVIEW = -2,
+    GWY_INTERPOLATION_AVERAGE = -2,
 };
 
 typedef enum {
@@ -206,7 +206,7 @@ static void          fill_field_y           (const PointXYZ *points,
 static void          interpolate_field      (guint npoints,
                                              const PointXYZ *points,
                                              GwyDataField *dfield);
-static void          interpolate_preview    (guint npoints,
+static void          interpolate_average    (guint npoints,
                                              const PointXYZ *points,
                                              GwyDataField *dfield);
 static gboolean      extend_borders         (RawXYZFile *rfile,
@@ -720,7 +720,7 @@ construct_options(RawXYZControls *controls,
                                   _("Round"), GWY_INTERPOLATION_ROUND,
                                   _("Linear"), GWY_INTERPOLATION_LINEAR,
                                   _("Field"), GWY_INTERPOLATION_FIELD,
-                                  _("Preview"), GWY_INTERPOLATION_PREVIEW,
+                                  _("Average"), GWY_INTERPOLATION_AVERAGE,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->interpolation);
     gtk_table_attach(table, controls->interpolation, 1, 4, row, row+1,
@@ -1105,9 +1105,9 @@ rawxyz_do(RawXYZFile *rfile,
         extend_borders(rfile, args, FALSE, EPSREL);
         interpolate_field(points->len, (const PointXYZ*)points->data, dfield);
     }
-    else if ((gint)args->interpolation == GWY_INTERPOLATION_PREVIEW) {
+    else if ((gint)args->interpolation == GWY_INTERPOLATION_AVERAGE) {
         extend_borders(rfile, args, FALSE, EPSREL);
-        interpolate_preview(points->len, (const PointXYZ*)points->data, dfield);
+        interpolate_average(points->len, (const PointXYZ*)points->data, dfield);
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
@@ -1260,7 +1260,7 @@ compare_double(gconstpointer a, gconstpointer b)
 }
 
 static void
-interpolate_preview(guint npoints,
+interpolate_average(guint npoints,
                     const PointXYZ *points,
                     GwyDataField *dfield)
 {
@@ -2073,7 +2073,7 @@ rawxyz_sanitize_args(RawXYZArgs *args)
 {
     if (args->interpolation != GWY_INTERPOLATION_ROUND
         && (gint)args->interpolation != GWY_INTERPOLATION_FIELD
-        && (gint)args->interpolation != GWY_INTERPOLATION_PREVIEW)
+        && (gint)args->interpolation != GWY_INTERPOLATION_AVERAGE)
         args->interpolation = GWY_INTERPOLATION_LINEAR;
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
