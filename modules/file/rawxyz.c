@@ -1260,6 +1260,97 @@ compare_double(gconstpointer a, gconstpointer b)
 }
 
 static void
+fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
+{
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    MaskedPoint *mpts;
+    gdouble *d, *w;
+    gint nmissing, k, kk, i, j;
+
+    d = gwy_data_field_get_data(dfield);
+    w = gwy_data_field_get_data(mask);
+
+    nmissing = 0;
+    for (kk = 0; kk < xres*yres; kk++) {
+        if (w[kk])
+            nmissing++;
+    }
+    if (!nmissing)
+        return;
+
+    /* This physically touches the mask data but does not change their
+     * interpretation. */
+    gwy_data_field_grain_simple_dist_trans(mask,
+                                           GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
+                                           FALSE);
+
+    mpts = g_new(MaskedPoint, nmissing);
+    k = 0;
+    for (kk = 0; kk < xres*yres; kk++) {
+        if (w[kk]) {
+            mpts[k].dist = w[kk];
+            mpts[k].i = kk/xres;
+            mpts[k].j = kk % xres;
+            k++;
+        }
+    }
+    qsort(mpts, nmissing, sizeof(MaskedPoint), compare_double);
+
+    for (k = 0; k < nmissing; k++) {
+        gdouble z = 0.0, dist = mpts[k].dist;
+        gint n = 0;
+
+        i = mpts[k].i;
+        j = mpts[k].j;
+        kk = i*xres + j;
+
+        /* Cardinal. */
+        if (i > 0 && w[kk - xres] < dist) {
+            z += d[kk - xres];
+            n++;
+        }
+        if (j > 0 && w[kk-1] < dist) {
+            z += d[kk-1];
+            n++;
+        }
+        if (j < xres-1 && w[kk+1] < dist) {
+            z += d[kk+1];
+            n++;
+        }
+        if (i < yres-1 && w[kk + xres] < dist) {
+            z += d[kk + xres];
+            n++;
+        }
+        z *= 2.0;
+        n *= 2;
+
+        /* Diagonal, half weight. */
+        if (i > 0 && j > 0 && w[kk-1 - xres] < dist) {
+            z += d[kk-1 - xres];
+            n++;
+        }
+        if (i > 0 && j < xres-1 && w[kk+1 - xres] < dist) {
+            z += d[kk+1 - xres];
+            n++;
+        }
+        if (i < yres-1 && j > 0 && w[kk-1 + xres] < dist) {
+            z += d[kk-1 + xres];
+            n++;
+        }
+        if (i < yres-1 && j < xres-1 && w[kk+1 + xres] < dist) {
+            z += d[kk+1 + xres];
+            n++;
+        }
+
+        g_assert(n);
+        d[kk] = z/n;
+    }
+
+    g_free(mpts);
+}
+
+static void
 interpolate_average(guint npoints,
                     const PointXYZ *points,
                     GwyDataField *dfield)
@@ -1268,7 +1359,6 @@ interpolate_average(guint npoints,
     gdouble xoff, yoff, qx, qy;
     gint extxres, extyres, xres, yres, k, kk, i, j;
     gint imin = G_MAXINT, imax = G_MININT, jmin = G_MAXINT, jmax = G_MININT;
-    gint nmissing = 0;
     gdouble *d, *w;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -1371,86 +1461,11 @@ interpolate_average(guint npoints,
                 d[kk] = d[kk]/w[kk];
                 w[kk] = 0.0;
             }
-            else {
+            else
                 w[kk] = 1.0;
-                nmissing++;
-            }
         }
     }
-    gwy_debug("nmissing %d", nmissing);
-
-    if (nmissing) {
-        MaskedPoint *mpts = g_new(MaskedPoint, nmissing);
-
-        gwy_data_field_grain_simple_dist_trans(extweights,
-                                               GWY_DISTANCE_TRANSFORM_EUCLIDEAN,
-                                               FALSE);
-        k = 0;
-        for (kk = 0; kk < extxres*extyres; kk++) {
-            if (w[kk]) {
-                g_assert(k < nmissing);
-                mpts[k].dist = w[kk];
-                mpts[k].i = kk/extxres;
-                mpts[k].j = kk % extxres;
-                k++;
-            }
-        }
-        g_assert(k == nmissing);
-        qsort(mpts, nmissing, sizeof(MaskedPoint), compare_double);
-
-        for (k = 0; k < nmissing; k++) {
-            gdouble z = 0.0, dist = mpts[k].dist;
-            gint n = 0;
-
-            i = mpts[k].i;
-            j = mpts[k].j;
-            kk = i*extxres + j;
-
-            /* Cardinal. */
-            if (i > 0 && w[kk - extxres] < dist) {
-                z += d[kk - extxres];
-                n++;
-            }
-            if (j > 0 && w[kk-1] < dist) {
-                z += d[kk-1];
-                n++;
-            }
-            if (j < extxres-1 && w[kk+1] < dist) {
-                z += d[kk+1];
-                n++;
-            }
-            if (i < extyres-1 && w[kk + extxres] < dist) {
-                z += d[kk + extxres];
-                n++;
-            }
-            z *= 2.0;
-            n *= 2;
-
-            /* Diagonal, half weight. */
-            if (i > 0 && j > 0 && w[kk-1 - extxres] < dist) {
-                z += d[kk-1 - extxres];
-                n++;
-            }
-            if (i > 0 && j < extxres-1 && w[kk+1 - extxres] < dist) {
-                z += d[kk+1 - extxres];
-                n++;
-            }
-            if (i < extyres-1 && j > 0 && w[kk-1 + extxres] < dist) {
-                z += d[kk-1 + extxres];
-                n++;
-            }
-            if (i < extyres-1 && j < extxres-1 && w[kk+1 + extxres] < dist) {
-                z += d[kk+1 + extxres];
-                n++;
-            }
-
-            g_assert(n);
-            d[kk] = z/n;
-        }
-
-        g_free(mpts);
-    }
-
+    fill_missing_points(extfield, extweights);
 
     gwy_data_field_area_copy(extfield, dfield, -jmin, -imin, xres, yres, 0, 0);
     g_object_unref(extfield);
@@ -1648,7 +1663,7 @@ static void
 round_to_nice(gdouble *minval, gdouble *maxval)
 {
     gdouble range = *maxval - *minval;
-    gdouble base = pow10(floor(log10(range) - 1.0));
+    gdouble base = pow10(floor(log10(range) - 2.0));
 
     *minval = round_with_base(*minval, base);
     *maxval = round_with_base(*maxval, base);
