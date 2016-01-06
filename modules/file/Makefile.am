@@ -143,6 +143,7 @@ file_LTLIBRARIES = \
 	nanoscope.la \
 	nanotop.la \
 	netcdf.la \
+	nmmxyz.la \
 	nrrdfile.la \
 	nt-mdt.la \
 	nxiifile.la \
@@ -284,6 +285,7 @@ nanoscope_ii_la_SOURCES  = nanoscope-ii.c
 nanoscope_la_SOURCES     = nanoscope.c
 nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
+nmmxyz_la_SOURCES        = nmmxyz.c
 nrrdfile_la_SOURCES      = nrrdfile.c
 nt_mdt_la_SOURCES        = nt-mdt.c
 nxiifile_la_SOURCES      = nxiifile.c
