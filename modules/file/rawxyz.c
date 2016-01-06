@@ -206,7 +206,7 @@ static void          fill_field_y           (const PointXYZ *points,
 static void          interpolate_field      (guint npoints,
                                              const PointXYZ *points,
                                              GwyDataField *dfield);
-static void          interpolate_rough      (guint npoints,
+static void          interpolate_preview    (guint npoints,
                                              const PointXYZ *points,
                                              GwyDataField *dfield);
 static gboolean      extend_borders         (RawXYZFile *rfile,
@@ -1107,7 +1107,7 @@ rawxyz_do(RawXYZFile *rfile,
     }
     else if ((gint)args->interpolation == GWY_INTERPOLATION_PREVIEW) {
         extend_borders(rfile, args, FALSE, EPSREL);
-        interpolate_rough(points->len, (const PointXYZ*)points->data, dfield);
+        interpolate_preview(points->len, (const PointXYZ*)points->data, dfield);
     }
     else {
         GwyTriangulation *triangulation = rfile->triangulation;
@@ -1260,9 +1260,9 @@ compare_double(gconstpointer a, gconstpointer b)
 }
 
 static void
-interpolate_rough(guint npoints,
-                  const PointXYZ *points,
-                  GwyDataField *dfield)
+interpolate_preview(guint npoints,
+                    const PointXYZ *points,
+                    GwyDataField *dfield)
 {
     GwyDataField *extfield, *extweights;
     gdouble xoff, yoff, qx, qy;
