@@ -4657,9 +4657,8 @@ gwy_data_field_grain_distance_transform_internal(GwyDataField *data_field,
     int_list_free(inqueue);
     int_list_free(outqueue);
 
-    // FIXME: restore without SEDINF
     for (k = 0; k < xres*yres; k++)
-        d[k] = sqrt(distances[k] == SEDINF ? 0 : distances[k]);
+        d[k] = sqrt(distances[k]);
     gwy_data_field_invalidate(data_field);
 
     g_free(workspace);
