@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2015-12-28 02:14+0100\n"
-"PO-Revision-Date: 2015-12-28 22:15+0100\n"
+"POT-Creation-Date: 2016-01-06 02:14+0100\n"
+"PO-Revision-Date: 2016-01-06 21:01+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -567,12 +567,12 @@ msgstr "Échelle et espace adaptatifs"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3555
-#: modules/file/rawxyz.c:700
+#: modules/file/rawxyz.c:720
 msgid "Round"
 msgstr "Arrondi"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3556
-#: modules/file/rawxyz.c:701
+#: modules/file/rawxyz.c:721
 msgid "Linear"
 msgstr "Linéaire"
 
@@ -755,6 +755,11 @@ msgstr "Démarrage de l'estimation partielle"
 #: libprocess/tip.c:861
 msgid "Starting full estimation"
 msgstr "Démarrage de l'estimation complète"
+
+#: libprocess/triangulation.c:2087 modules/process/calcoefs_view.c:799
+#: modules/process/lat_synth.c:1146
+msgid "Triangulating..."
+msgstr "Triangulation..."
 
 #: libgwydgets/gwy3dwindow.c:504
 msgid "Rotate view (R)"
@@ -1302,7 +1307,7 @@ msgid "A_dd symbol"
 msgstr "Ajouter un symbole"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/file/rawxyz.c:429
+#: modules/file/rawxyz.c:453 modules/file/rawxyz.c:723
 msgid "Preview"
 msgstr "Aperçu"
 
@@ -1881,42 +1886,42 @@ msgstr ""
 "Pour éviter la perte des réglages sauvegardés aucune mise à jour ne sera "
 "faite avant que le fichier ne soit réparé ou supprimé."
 
-#: app/gwymoduleutils-file.c:506
+#: app/gwymoduleutils-file.c:498
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
 msgstr "La section %s termine à la ligne %u mais elle n'a pas de début."
 
-#: app/gwymoduleutils-file.c:514
+#: app/gwymoduleutils-file.c:506
 #, c-format
 msgid "Section %s ended at line %u instead of %s."
 msgstr "La section %s se termine à la ligne %u au lieu de %s."
 
-#: app/gwymoduleutils-file.c:551
+#: app/gwymoduleutils-file.c:543
 #, c-format
 msgid "Section %s started at line %u before %s ended."
 msgstr "La section %s commence à la ligne %u avant que %s ne soit terminée."
 
-#: app/gwymoduleutils-file.c:557
+#: app/gwymoduleutils-file.c:549
 #, c-format
 msgid "Empty section name at header line %u."
 msgstr "Nom de section vide à la ligne %u de l'en-tête."
 
-#: app/gwymoduleutils-file.c:592
+#: app/gwymoduleutils-file.c:584
 #, c-format
 msgid "Header line %u lacks prefix %s."
 msgstr "Il manque à la ligne %u de l'en-tête le préfixe %s."
 
-#: app/gwymoduleutils-file.c:617
+#: app/gwymoduleutils-file.c:609
 #, c-format
 msgid "Header line %u lacks key-value separator."
 msgstr "Il manque à la ligne %u de l'en-tête le séparateur de valeur clé."
 
-#: app/gwymoduleutils-file.c:625
+#: app/gwymoduleutils-file.c:617
 #, c-format
 msgid "Key at header line %u is empty."
 msgstr "La clé à la ligne %u de l'en-tête est vide."
 
-#: app/gwymoduleutils-file.c:652
+#: app/gwymoduleutils-file.c:644
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
@@ -3032,7 +3037,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3948
-#: modules/file/rawfile.c:758 modules/file/rawxyz.c:688
+#: modules/file/rawfile.c:758 modules/file/rawxyz.c:708
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
 #: modules/process/col_synth.c:506 modules/process/correct_affine.c:475
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
@@ -3149,19 +3154,19 @@ msgid "Neither `%s' nor `%s' header field found."
 msgstr "Les champs d'en-tête `%s' et `%s' n'ont pas été trouvés."
 
 #: modules/file/createc.c:771 modules/file/matfile.c:600
-#: modules/file/rhk-sm4.c:1457
+#: modules/file/rhk-sm4.c:1469
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
 "L'initialisation de zlib a échoué avec l'erreur %d, impossible de "
 "décompresser les données."
 
-#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1471
+#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1483
 #, c-format
 msgid "Decompression of compressed data failed with error %d."
 msgstr "La décompression des données a échoué avec l'erreur %d."
 
-#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1514
+#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1526
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr ""
 "Impossible de décompresser les données. Le support Zlib n'a pas été intégré."
@@ -3305,7 +3310,7 @@ msgstr ""
 "La taille des données calculée à partir de l'en-tête est de %u octets, mais "
 "la taille réelle est de %u octets."
 
-#: modules/file/err.h:109
+#: modules/file/err.h:109 modules/file/rhk-sm4.c:765
 #, c-format
 msgid "Invalid field dimension: %d."
 msgstr "Champ des dimensions invalide : %d."
@@ -3756,7 +3761,7 @@ msgstr "Pages : "
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2776
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/file/rawxyz.c:583 modules/process/dimensions.h:467
+#: modules/file/rawxyz.c:603 modules/process/dimensions.h:467
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
@@ -3787,7 +3792,7 @@ msgid "H_eight:"
 msgstr "Hauteur :"
 
 #: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:914
-#: modules/file/rawfile.c:701 modules/file/rawxyz.c:557
+#: modules/file/rawfile.c:701 modules/file/rawxyz.c:584
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
@@ -4113,7 +4118,7 @@ msgstr "Afficher _l'annotation"
 msgid "Image"
 msgstr "Image"
 
-#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:692
+#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:712
 #: modules/process/correct_affine.c:493 modules/process/drift.c:306
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:203
 #: modules/process/fft_filter_1d.c:305 modules/process/fft_profile.c:297
@@ -4556,15 +4561,15 @@ msgstr "La taille du bloc d'information de fichier est invalide."
 msgid "Unique id record is too short."
 msgstr "L'identifiant unique est trop court."
 
-#: modules/file/mifile.c:173
+#: modules/file/mifile.c:177
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Importe les fichiers Molecular Imaging MI."
 
-#: modules/file/mifile.c:186
+#: modules/file/mifile.c:190
 msgid "PicoView Data Files (.mi)"
 msgstr "PicoView (.mi)"
 
-#: modules/file/mifile.c:383
+#: modules/file/mifile.c:366 modules/file/mifile.c:453
 msgid "Spectroscopy Graph"
 msgstr "Courbe de spectrosopie"
 
@@ -4610,7 +4615,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:276
-#: modules/file/renishaw.c:1325 modules/file/sensofar.c:256
+#: modules/file/renishaw.c:1326 modules/file/sensofar.c:256
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
@@ -5417,7 +5422,7 @@ msgstr "Information"
 msgid "Data Format"
 msgstr "Format de données"
 
-#: modules/file/rawfile.c:567 modules/file/rawxyz.c:443
+#: modules/file/rawfile.c:567 modules/file/rawxyz.c:467
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
 #: modules/process/convolution_filter.c:241
 #: modules/process/deposit_synth.c:645 modules/process/drift.c:251
@@ -5438,22 +5443,22 @@ msgstr "Mise à jour"
 msgid "<b>File</b>"
 msgstr "<b>Fichier</b>"
 
-#: modules/file/rawfile.c:626 modules/file/rawxyz.c:523
+#: modules/file/rawfile.c:626 modules/file/rawxyz.c:550
 #: modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Résolution"
 
-#: modules/file/rawfile.c:631 modules/file/rawxyz.c:527
+#: modules/file/rawfile.c:631 modules/file/rawxyz.c:554
 #: modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
-#: modules/file/rawfile.c:638 modules/file/rawxyz.c:542
+#: modules/file/rawfile.c:638 modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
 
-#: modules/file/rawfile.c:643 modules/file/rawxyz.c:623
+#: modules/file/rawfile.c:643 modules/file/rawxyz.c:643
 msgid "S_quare sample"
 msgstr "Échantillon carré"
 
@@ -5689,63 +5694,67 @@ msgstr "Seuls les fichiers ayant deux colonnes peuvent être importées."
 msgid "Curve"
 msgstr "Courbe"
 
-#: modules/file/rawxyz.c:225
+#: modules/file/rawxyz.c:240
 msgid "Imports raw XYZ data files."
 msgstr "Importe les fichiers de points XYZ."
 
-#: modules/file/rawxyz.c:238
+#: modules/file/rawxyz.c:253
 msgid "XYZ data files"
 msgstr "Fichiers des points XYZ"
 
-#: modules/file/rawxyz.c:317
+#: modules/file/rawxyz.c:332
 msgid "Raw XYZ data import must be run as interactive."
 msgstr "L'import de données XYZ doit être fait de manière interactive."
 
-#: modules/file/rawxyz.c:393
+#: modules/file/rawxyz.c:408
 msgid "Import XYZ Data"
 msgstr "Importer des données XYZ"
 
-#: modules/file/rawxyz.c:587
+#: modules/file/rawxyz.c:434
+msgid "Reset Ran_ges"
+msgstr "Initialiser les pla_ges"
+
+#: modules/file/rawxyz.c:607
 msgid "_X-range:"
 msgstr "Plage _X :"
 
-#: modules/file/rawxyz.c:605
+#: modules/file/rawxyz.c:625
 msgid "_Y-range:"
 msgstr "Plage _Y :"
 
-#: modules/file/rawxyz.c:642
+#: modules/file/rawxyz.c:662
 msgid "_Lateral units:"
 msgstr "Unités _latérales :"
 
-#: modules/file/rawxyz.c:659 modules/process/dimensions.h:494
+#: modules/file/rawxyz.c:679 modules/process/dimensions.h:494
 msgid "_Value units:"
 msgstr "Unités de valeur :"
 
-#: modules/file/rawxyz.c:702
+#: modules/file/rawxyz.c:722
 msgid "Field"
 msgstr "Champ"
 
-#: modules/file/rawxyz.c:709 modules/process/extend.c:275
+#: modules/file/rawxyz.c:730 modules/process/extend.c:275
 #: modules/process/polydistort.c:268
 msgid "_Exterior type:"
 msgstr "Type d'_extérieur :"
 
-#: modules/file/rawxyz.c:717 modules/process/extend.c:268
+#: modules/file/rawxyz.c:738 modules/process/extend.c:268
 #: modules/process/polydistort.c:261
 msgid "exterior|Border"
 msgstr "Extérieur"
 
-#: modules/file/rawxyz.c:719 modules/process/extend.c:270
+#: modules/file/rawxyz.c:740 modules/process/extend.c:270
 #: modules/process/polydistort.c:263
 msgid "exterior|Mirror"
 msgstr "Miroir"
 
-#: modules/file/rawxyz.c:721 modules/process/extend.c:272
+#: modules/file/rawxyz.c:742 modules/process/extend.c:272
 #: modules/process/polydistort.c:265
 msgid "exterior|Periodic"
 msgstr "Périodique"
 
-#: modules/file/rawxyz.c:994
+#: modules/file/rawxyz.c:1045
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5756,7 +5765,7 @@ msgstr ""
 "Fusionés car trop proches : %u\n"
 "Ajoutés sur les bords : %u"
 
-#: modules/file/rawxyz.c:1002
+#: modules/file/rawxyz.c:1053
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5765,11 +5774,40 @@ msgstr ""
 "Points lus dans le fichier : %u\n"
 "Les points forment une grille régulière : %u×%u"
 
-#: modules/file/rawxyz.c:1067
-msgid "XYZ data regularization failed due to numerical instability."
+#: modules/file/rawxyz.c:1083
+msgid "Physical dimensions are invalid."
+msgstr "Les dimensions physiques sont invalides."
+
+#: modules/file/rawxyz.c:1123 modules/process/bdep_synth.c:247
+#: modules/process/bdep_synth.c:603 modules/process/calcoefs_simple.c:633
+#: modules/process/col_synth.c:280 modules/process/col_synth.c:712
+#: modules/process/crosscor.c:599 modules/process/crosscor.c:624
+#: modules/process/deposit_synth.c:276 modules/process/deposit_synth.c:867
+#: modules/process/diff_synth.c:312 modules/process/diff_synth.c:712
+#: modules/process/domain_synth.c:263 modules/process/domain_synth.c:752
+#: modules/process/grain_wshed.c:437 modules/process/lat_synth.c:465
+#: modules/process/mark_disconn.c:156 modules/process/mark_disconn.c:381
+#: modules/process/maskcor.c:331 modules/process/mcrop.c:321
+#: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
+#: modules/process/neural.c:1289 modules/process/pid.c:338
+#: modules/process/superresolution.c:416 modules/process/superresolution.c:505
+#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
+#: modules/process/xydenoise.c:217 modules/volume/volume_kmeans.c:364
+#: modules/volume/volume_kmedians.c:365
+msgid "Initializing..."
+msgstr "Initialisation..."
+
+#: modules/file/rawxyz.c:1144 modules/process/superresolution.c:554
+msgid "Interpolating..."
+msgstr "Interpolation..."
+
+#: modules/file/rawxyz.c:1156
+msgid ""
+"XYZ data regularization failed due to numerical instability or was "
+"interrupted."
 msgstr ""
 "La régularisation des données XYZ a échoué à cause d'une instabilité "
-"numérique."
+"numérique ou a été interrompue."
 
 #: modules/file/renishaw.c:368
 msgid "Imports Renishaw WiRE data files (WDF)."
@@ -5787,11 +5825,11 @@ msgstr "Le bloc MapArea est tronqué"
 msgid "Random points order unsupported"
 msgstr "Les points donnés dans un ordre aléatoire ne sont pas supportés."
 
-#: modules/file/renishaw.c:1396
+#: modules/file/renishaw.c:1397
 msgid "Block header is truncated"
 msgstr "Le bloc d'en-tête est tronqué."
 
-#: modules/file/renishaw.c:1411
+#: modules/file/renishaw.c:1412
 msgid "Data block is truncated"
 msgstr "Le bloc de données est tronqué."
 
@@ -5829,30 +5867,30 @@ msgstr "Fin du fichier atteinte dans les données de couleur."
 msgid "Unknown line %d"
 msgstr "Ligne inconnue %d"
 
-#: modules/file/rhk-sm4.c:396
+#: modules/file/rhk-sm4.c:397
 msgid "Imports RHK Technology SM4 data files."
 msgstr "Importe les fichiers RHK Technology SM4."
 
-#: modules/file/rhk-sm4.c:416
+#: modules/file/rhk-sm4.c:417
 msgid "RHK SM4 files (.sm4)"
 msgstr "RHK SM4 (.sm4)"
 
-#: modules/file/rhk-sm4.c:651
+#: modules/file/rhk-sm4.c:653
 #, c-format
 msgid "Object %s is truncated."
 msgstr "L'objet %s est tronqué."
 
-#: modules/file/rhk-sm4.c:934
+#: modules/file/rhk-sm4.c:946
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr "La liste d'objetsdans %s est tronquée."
 
-#: modules/file/rhk-sm4.c:951
+#: modules/file/rhk-sm4.c:963
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr "L'objet de type %s est tronqué."
 
-#: modules/file/rhk-sm4.c:976
+#: modules/file/rhk-sm4.c:988
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr "Impossible de trouver l'objet %s dans %s."
@@ -6387,15 +6425,15 @@ msgstr "Le code d'unité %d est invalide ou n'est pas supporté."
 msgid "The first line contains too many items."
 msgstr "La première ligne contient trop d'éléments."
 
-#: modules/graph/graph_align.c:51
+#: modules/graph/graph_align.c:56
 msgid "Aligns graph curves."
 msgstr "Aligne les courbes."
 
-#: modules/graph/graph_align.c:65
+#: modules/graph/graph_align.c:70
 msgid "/_Align"
 msgstr "/_Aligner"
 
-#: modules/graph/graph_align.c:68
+#: modules/graph/graph_align.c:73
 msgid "Align curves"
 msgstr "Aligner les courbes"
 
@@ -6465,7 +6503,7 @@ msgstr "_Dessiner un cercle entier"
 msgid "Save Fit Report"
 msgstr "Sauver le rapport d'ajustement"
 
-#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1134
+#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1137
 #: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
@@ -6488,37 +6526,37 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 msgid "N.A."
 msgstr "N. A."
 
-#: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1385
-#: modules/graph/graph_fit.c:1522 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:1023 modules/graph/graph_fdfit.c:1388
+#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Résultats de l'ajustement ====="
 
-#: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1389
-#: modules/graph/graph_fit.c:1526 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
+#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Données :             %s\n"
 
-#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
-#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1030 modules/graph/graph_fdfit.c:1395
+#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Nombre de points : %d sur %d\n"
 
-#: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1396
-#: modules/graph/graph_fit.c:1533 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1034 modules/graph/graph_fdfit.c:1399
+#: modules/graph/graph_fit.c:1536 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1402
-#: modules/graph/graph_fit.c:1539 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
+#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fonction ajustée :  %s\n"
 
-#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
-#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1043 modules/graph/graph_fdfit.c:1408
+#: modules/graph/graph_fit.c:1545 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Résultats\n"
 
@@ -6614,11 +6652,11 @@ msgstr "Exporter les _métadonnées"
 
 #: modules/graph/graph_export_bitmap.c:35
 msgid "Export graph into bitmap"
-msgstr "Exporter le graphe en image bitmap"
+msgstr "Exporter le graphe en image PNG"
 
 #: modules/graph/graph_export_bitmap.c:49
 msgid "/Export _Bitmap"
-msgstr "/Exporter en _bitmap"
+msgstr "/Exporter en image PNG"
 
 #: modules/graph/graph_export_bitmap.c:52
 msgid "Export graph to a raster image"
@@ -6650,7 +6688,7 @@ msgstr "Ajuster les données force-distance"
 
 #: modules/graph/graph_fdfit.c:186
 msgid "/_Fit FD Curve..."
-msgstr "/Ajuster la courbe _FD..."
+msgstr "/Ajuster la courbe _force-distance..."
 
 #: modules/graph/graph_fdfit.c:189
 msgid "Fit a force-distance curve"
@@ -6711,13 +6749,13 @@ msgstr "graphe"
 msgid "Estimate"
 msgstr "Estimation"
 
-#: modules/graph/graph_fdfit.c:1432 modules/graph/graph_fit.c:1569
+#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somme résiduelle :   %g\n"
 
-#: modules/graph/graph_fdfit.c:1435 modules/graph/graph_fit.c:1572
+#: modules/graph/graph_fdfit.c:1437 modules/graph/graph_fit.c:1574
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
@@ -7091,33 +7129,15 @@ msgstr ""
 
 #: modules/process/bdep_synth.c:158
 msgid "Generates surfaces by ballistic deposition."
-msgstr "Génère des surfaces par déposition balistique."
+msgstr "Génère des surfaces par dépôt balistique."
 
 #: modules/process/bdep_synth.c:172
 msgid "/S_ynthetic/_Ballistic..."
-msgstr "/S_ynthèse/_Balistique..."
+msgstr "/S_ynthèse/Dépôt _balistique..."
 
 #: modules/process/bdep_synth.c:176
 msgid "Generate surface by ballistic deposition"
-msgstr "Générer une surface par déposition balistique"
-
-#: modules/process/bdep_synth.c:247 modules/process/bdep_synth.c:603
-#: modules/process/calcoefs_simple.c:633 modules/process/col_synth.c:280
-#: modules/process/col_synth.c:712 modules/process/crosscor.c:599
-#: modules/process/crosscor.c:624 modules/process/deposit_synth.c:276
-#: modules/process/deposit_synth.c:867 modules/process/diff_synth.c:312
-#: modules/process/diff_synth.c:712 modules/process/domain_synth.c:263
-#: modules/process/domain_synth.c:752 modules/process/grain_wshed.c:437
-#: modules/process/lat_synth.c:465 modules/process/mark_disconn.c:156
-#: modules/process/mark_disconn.c:381 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:321 modules/process/merge.c:1078
-#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1289
-#: modules/process/pid.c:338 modules/process/superresolution.c:416
-#: modules/process/superresolution.c:505 modules/process/tip_blind.c:784
-#: modules/process/tipops.c:319 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
-msgid "Initializing..."
-msgstr "Initialisation..."
+msgstr "Générer une surface par dépôt balistique"
 
 #: modules/process/bdep_synth.c:283 modules/process/col_synth.c:318
 #: modules/process/deposit_synth.c:314 modules/process/deposit_synth.c:326
@@ -7138,7 +7158,7 @@ msgstr "Épaisseur moyenne déposée"
 
 #: modules/process/bdep_synth.c:347
 msgid "Ballistic Deposition"
-msgstr "Déposition balistique"
+msgstr "Dépôt balistique"
 
 #: modules/process/bdep_synth.c:391 modules/process/col_synth.c:425
 #: modules/process/diff_synth.c:461 modules/process/domain_synth.c:414
@@ -7529,10 +7549,6 @@ msgstr "Erreur : en dehors de la plage"
 #: modules/process/calcoefs_view.c:793
 msgid "Building mesh..."
 msgstr "Maillage en cours..."
-
-#: modules/process/calcoefs_view.c:799 modules/process/lat_synth.c:1146
-msgid "Triangulating..."
-msgstr "Triangulation..."
 
 #: modules/process/calcoefs_view.c:1126 modules/tools/profile.c:1822
 msgid "X correction"
@@ -9579,7 +9595,7 @@ msgid "Upper threshold:"
 msgstr "Seuil haut : "
 
 #. TRANSLATORS: %c is replaced with quantity label A, B or C.
-#: modules/process/grain_filter.c:649
+#: modules/process/grain_filter.c:650
 #, c-format
 msgid "Condition %c: %s"
 msgstr "Condition %c : %s"
@@ -12007,10 +12023,6 @@ msgstr "Corrélation en cours pourdéterminer le déplacement moyen..."
 #: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
 msgstr "Corrélation croisée..."
-
-#: modules/process/superresolution.c:554
-msgid "Interpolating..."
-msgstr "Interpolation..."
 
 #: modules/process/synth.h:343
 msgid "Roundness"
