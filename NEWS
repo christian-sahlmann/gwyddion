@@ -173,6 +173,8 @@ Modules:
   does not conform to Step profile according to the norm.
 - GWYXYZF: Incorrect memory freeing, possibly causing leaks or crashes, was
   fixed.
+- 2D FFT: Crash for raw inverse transform without any imaginary part selected
+  was fixed.
 
 Other:
 - Gwyddion can use either minizip or libzip for opening of ZIP-compressed
