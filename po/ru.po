@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-04 08:43+0300\n"
-"PO-Revision-Date: 2016-01-04 08:44+0300\n"
+"POT-Creation-Date: 2016-01-07 09:11+0300\n"
+"PO-Revision-Date: 2016-01-07 09:14+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -570,12 +570,12 @@ msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3555
-#: modules/file/rawxyz.c:726
+#: modules/file/rawxyz.c:742
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3556
-#: modules/file/rawxyz.c:727
+#: modules/file/rawxyz.c:743
 msgid "Linear"
 msgstr "Линейная"
 
@@ -1311,7 +1311,7 @@ msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/file/rawxyz.c:454 modules/file/rawxyz.c:729
+#: modules/file/rawxyz.c:473
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -3044,7 +3044,7 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3948
-#: modules/file/rawfile.c:758 modules/file/rawxyz.c:714
+#: modules/file/rawfile.c:758 modules/file/rawxyz.c:730
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
 #: modules/process/col_synth.c:506 modules/process/correct_affine.c:475
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
@@ -3762,7 +3762,7 @@ msgstr "Страницы:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2776
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/file/rawxyz.c:609 modules/process/dimensions.h:467
+#: modules/file/rawxyz.c:625 modules/process/dimensions.h:467
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
@@ -3793,7 +3793,7 @@ msgid "H_eight:"
 msgstr "_Высота:"
 
 #: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:914
-#: modules/file/rawfile.c:701 modules/file/rawxyz.c:583
+#: modules/file/rawfile.c:701 modules/file/rawxyz.c:606
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -4114,7 +4114,7 @@ msgstr "Рисовать подпис_ь"
 msgid "Image"
 msgstr "Изображение"
 
-#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:718
+#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:734
 #: modules/process/correct_affine.c:493 modules/process/drift.c:306
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:203
 #: modules/process/fft_filter_1d.c:305 modules/process/fft_profile.c:297
@@ -4380,6 +4380,14 @@ msgstr "Файлы данных Keyence VK4 (.vk4)"
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Не получается сконвертировать строку из UTF-16: %s"
 
+#: modules/file/leica.c:174
+msgid "Imports Leica CLSM image files (LIF)."
+msgstr "Импортирует файлы изображений Leica LIF."
+
+#: modules/file/leica.c:187
+msgid "Leica LIF image files (.lif)"
+msgstr "Файлы изображений Leica LIF (.lif)"
+
 #: modules/file/lextfile.c:80
 msgid "Imports LEXT data files."
 msgstr "Импортирует файлы данных LEXT."
@@ -4600,7 +4608,7 @@ msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
 #: modules/file/nanoeducator.c:648 modules/file/opdfile.c:276
-#: modules/file/renishaw.c:1325 modules/file/sensofar.c:256
+#: modules/file/renishaw.c:1326 modules/file/sensofar.c:256
 #: modules/file/witec-asc.c:161
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
@@ -4835,6 +4843,14 @@ msgstr ""
 #: modules/file/netcdf.c:1325
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
+
+#: modules/file/nmmxyz.c:77
+msgid "Imports Nano Measuring Machine profile files."
+msgstr "Импортирует файлы профилей Nano Measuring Machine."
+
+#: modules/file/nmmxyz.c:90
+msgid "Nano Measuring Machine files (*.dsc)"
+msgstr "Файлы Nano Measuring Machine (*.dsc)"
 
 #: modules/file/nrrdfile.c:179
 msgid "Imports and exports nearly raw raster data (NRRD) files."
@@ -5386,7 +5402,7 @@ msgstr "Информация"
 msgid "Data Format"
 msgstr "Формат данных"
 
-#: modules/file/rawfile.c:567 modules/file/rawxyz.c:468
+#: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
 #: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
 #: modules/process/drift.c:251 modules/process/edge.c:644
@@ -5407,22 +5423,22 @@ msgstr "О_бновить"
 msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
-#: modules/file/rawfile.c:626 modules/file/rawxyz.c:549
+#: modules/file/rawfile.c:626 modules/file/rawxyz.c:572
 #: modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/rawfile.c:631 modules/file/rawxyz.c:553
+#: modules/file/rawfile.c:631 modules/file/rawxyz.c:576
 #: modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/rawfile.c:638 modules/file/rawxyz.c:568
+#: modules/file/rawfile.c:638 modules/file/rawxyz.c:591
 #: modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/rawfile.c:643 modules/file/rawxyz.c:649
+#: modules/file/rawfile.c:643 modules/file/rawxyz.c:665
 msgid "S_quare sample"
 msgstr "_Квадратный сэмпл"
 
@@ -5657,69 +5673,85 @@ msgstr "Могут быть импортированы только файлы �
 msgid "Curve"
 msgstr "Кривая"
 
-#: modules/file/rawxyz.c:241
+#: modules/file/rawxyz.c:243
 msgid "Imports raw XYZ data files."
 msgstr "Импортирует неформатированные файлы XYZ."
 
-#: modules/file/rawxyz.c:254
+#: modules/file/rawxyz.c:256
 msgid "XYZ data files"
 msgstr "Импорт файлов данных XYZ"
 
-#: modules/file/rawxyz.c:333
+#: modules/file/rawxyz.c:335
 msgid "Raw XYZ data import must be run as interactive."
 msgstr ""
 "импорт неформатированных данных XYZ должен быть запущен в интерактивном "
 "режиме."
 
-#: modules/file/rawxyz.c:409
+#: modules/file/rawxyz.c:371
+msgid "Regularized XYZ"
+msgstr "Упорядоченные XYZ"
+
+#: modules/file/rawxyz.c:377
+msgid "Point density map"
+msgstr "Карта плотности точек"
+
+#: modules/file/rawxyz.c:421
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:435
+#: modules/file/rawxyz.c:450
 msgid "Reset Ran_ges"
-msgstr "Сбросить _Диапазоны"
+msgstr "Сбросить _диапазоны"
 
-#: modules/file/rawxyz.c:613
+#: modules/file/rawxyz.c:629
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:631
+#: modules/file/rawxyz.c:647
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:668
+#: modules/file/rawxyz.c:684
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:685 modules/process/dimensions.h:494
+#: modules/file/rawxyz.c:701 modules/process/dimensions.h:494
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:728
+#: modules/file/rawxyz.c:744
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:736 modules/process/extend.c:275
+#: modules/file/rawxyz.c:745 modules/process/merge.c:197
+msgid "Average"
+msgstr "Среднее"
+
+#: modules/file/rawxyz.c:752 modules/process/extend.c:275
 #: modules/process/polydistort.c:268
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:744 modules/process/extend.c:268
+#: modules/file/rawxyz.c:760 modules/process/extend.c:268
 #: modules/process/polydistort.c:261
 msgid "exterior|Border"
 msgstr "Граница"
 
-#: modules/file/rawxyz.c:746 modules/process/extend.c:270
+#: modules/file/rawxyz.c:762 modules/process/extend.c:270
 #: modules/process/polydistort.c:263
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
-#: modules/file/rawxyz.c:748 modules/process/extend.c:272
+#: modules/file/rawxyz.c:764 modules/process/extend.c:272
 #: modules/process/polydistort.c:265
 msgid "exterior|Periodic"
 msgstr "Периодический"
 
-#: modules/file/rawxyz.c:1041
+#: modules/file/rawxyz.c:773
+msgid "Plot point density map"
+msgstr "Строить карту плотности точек"
+
+#: modules/file/rawxyz.c:1087
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5728,9 +5760,9 @@ msgid ""
 msgstr ""
 "Точек считано из файла: %u\n"
 "Объединено как слишком близких: %u\n"
-"Добавлено на границе: %u"
+"Добавлено на границах: %u"
 
-#: modules/file/rawxyz.c:1049
+#: modules/file/rawxyz.c:1095
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5739,7 +5771,11 @@ msgstr ""
 "Точек считано из файла: %u\n"
 "Точки формируют правильную сетку: %u×%u"
 
-#: modules/file/rawxyz.c:1113 modules/process/bdep_synth.c:247
+#: modules/file/rawxyz.c:1126
+msgid "Physical dimensions are invalid."
+msgstr "Физические размеры неверны."
+
+#: modules/file/rawxyz.c:1173 modules/process/bdep_synth.c:247
 #: modules/process/bdep_synth.c:603 modules/process/calcoefs_simple.c:633
 #: modules/process/col_synth.c:280 modules/process/col_synth.c:712
 #: modules/process/crosscor.c:599 modules/process/crosscor.c:624
@@ -5758,14 +5794,17 @@ msgstr ""
 msgid "Initializing..."
 msgstr "Инициализация..."
 
-#: modules/file/rawxyz.c:1134 modules/process/superresolution.c:554
+#: modules/file/rawxyz.c:1194 modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Интерполяция..."
 
-#: modules/file/rawxyz.c:1146
-msgid "XYZ data regularization failed due to numerical instability."
+#: modules/file/rawxyz.c:1206
+msgid ""
+"XYZ data regularization failed due to numerical instability or was "
+"interrupted."
 msgstr ""
-"Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
+"Регуляризация данных XYZ завершилась неудачно вследствие численной "
+"нестабильности или была прервана."
 
 #: modules/file/renishaw.c:368
 msgid "Imports Renishaw WiRE data files (WDF)."
@@ -5783,11 +5822,11 @@ msgstr "Блок MapArea неполон."
 msgid "Random points order unsupported"
 msgstr "Случайный порядок точек не поддерживается"
 
-#: modules/file/renishaw.c:1396
+#: modules/file/renishaw.c:1397
 msgid "Block header is truncated"
 msgstr "Заголовок блока усечён"
 
-#: modules/file/renishaw.c:1411
+#: modules/file/renishaw.c:1412
 msgid "Data block is truncated"
 msgstr "Блок данных неполон."
 
@@ -6383,15 +6422,15 @@ msgstr "Код единиц измерения %d неправилен или н
 msgid "The first line contains too many items."
 msgstr "Первая строка содержит слишком много элементов."
 
-#: modules/graph/graph_align.c:51
+#: modules/graph/graph_align.c:56
 msgid "Aligns graph curves."
 msgstr "Выравнивает кривые графиков"
 
-#: modules/graph/graph_align.c:65
+#: modules/graph/graph_align.c:70
 msgid "/_Align"
 msgstr "/_Подровнять"
 
-#: modules/graph/graph_align.c:68
+#: modules/graph/graph_align.c:73
 msgid "Align curves"
 msgstr "Выровнять кривые"
 
@@ -6461,7 +6500,7 @@ msgstr "_Рисовать полный круг"
 msgid "Save Fit Report"
 msgstr "Сохранить отчёт аппроксимации"
 
-#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1134
+#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1137
 #: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
@@ -6486,37 +6525,37 @@ msgstr ""
 msgid "N.A."
 msgstr "недоступно"
 
-#: modules/graph/graph_cd.c:1020 modules/graph/graph_fdfit.c:1385
-#: modules/graph/graph_fit.c:1522 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:1023 modules/graph/graph_fdfit.c:1388
+#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
-#: modules/graph/graph_cd.c:1024 modules/graph/graph_fdfit.c:1389
-#: modules/graph/graph_fit.c:1526 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
+#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
 
-#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
-#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1030 modules/graph/graph_fdfit.c:1395
+#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Число точек: %d из %d\n"
 
-#: modules/graph/graph_cd.c:1031 modules/graph/graph_fdfit.c:1396
-#: modules/graph/graph_fit.c:1533 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1034 modules/graph/graph_fdfit.c:1399
+#: modules/graph/graph_fit.c:1536 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1037 modules/graph/graph_fdfit.c:1402
-#: modules/graph/graph_fit.c:1539 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
+#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
 
-#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
-#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1043 modules/graph/graph_fdfit.c:1408
+#: modules/graph/graph_fit.c:1545 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Результаты\n"
 
@@ -6709,13 +6748,13 @@ msgstr "ст_роить"
 msgid "Estimate"
 msgstr "Оценка"
 
-#: modules/graph/graph_fdfit.c:1432 modules/graph/graph_fit.c:1569
+#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Остаточная сумма:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1435 modules/graph/graph_fit.c:1572
+#: modules/graph/graph_fdfit.c:1437 modules/graph/graph_fit.c:1574
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Матрица корреляции\n"
@@ -10995,10 +11034,6 @@ msgstr "Первый операнд"
 msgid "Second operand"
 msgstr "Второй операнд."
 
-#: modules/process/merge.c:197
-msgid "Average"
-msgstr "Среднее"
-
 #: modules/process/merge.c:198
 msgid "Interpolation"
 msgstr "Интерполяция"
@@ -14051,6 +14086,11 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "XYZ data regularization failed due to numerical instability."
+#~ msgstr ""
+#~ "Упорядочение XYZ-данных закончилось неудачно из-за численной "
+#~ "нестабильности."
 
 #~ msgid "Calculates entropy of two-dimensional distribution of slopes."
 #~ msgstr "Рассчитывает энтропию двумерного распределения уклонов."
