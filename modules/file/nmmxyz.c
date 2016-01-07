@@ -56,6 +56,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/help.h>
+#include <app/wait.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -207,6 +208,7 @@ nmmxyz_load(const gchar *filename,
     GArray *data = NULL;
     GArray *dscs = NULL;
     PointXYZ *points = NULL;
+    gboolean waiting = FALSE;
     guint i, ntodo;
 
     /* In principle we can load data non-interactively, but it is going to
@@ -258,25 +260,55 @@ nmmxyz_load(const gchar *filename,
 
     /* TODO: save args. */
 
+    waiting = TRUE;
+    gwy_app_wait_start(NULL, _("Reading files..."));
+
     free_profile_descriptions(dscs, FALSE);
     data = g_array_new(FALSE, FALSE, sizeof(gdouble));
     if (!gather_data_files(filename, &info, &args, dscs, data, error))
         goto fail;
 
+    if (!gwy_app_wait_set_message(_("Rendering surface..."))) {
+        err_CANCELLED(error);
+        goto fail;
+    }
+    gwy_app_wait_set_fraction(0.0);
+
     points = create_points_with_xy(data, args.nincluded);
+    if (!gwy_app_wait_set_fraction(1.0/args.nincluded)) {
+        err_CANCELLED(error);
+        goto fail;
+    }
+
     find_data_range(points, &info);
+    if (!gwy_app_wait_set_fraction(2.0/args.nincluded)) {
+        err_CANCELLED(error);
+        goto fail;
+    }
 
     container = gwy_container_new();
     ntodo = args.nincluded-2;
     for (i = 2; i < info.blocksize; i++) {
         if (args.include_channel[i]) {
+            gdouble f;
+
             create_data_field(container, &info, &args, dscs, data, points, i,
                               ntodo == 1);
+            ntodo--;
+            f = 1.0 - (gdouble)ntodo/args.nincluded;
+            f = CLAMP(f, 0.0, 1.0);
+            if (!gwy_app_wait_set_fraction(f)) {
+                gwy_object_unref(container);
+                err_CANCELLED(error);
+                goto fail;
+            }
         }
-        ntodo--;
     }
 
 fail:
+    if (waiting)
+        gwy_app_wait_finish();
+
     g_free(args.include_channel);
     g_free(points);
     free_profile_descriptions(dscs, TRUE);
@@ -599,8 +631,6 @@ create_data_field(GwyContainer *container,
  * the number of files and data is taken from headers.
  *
  * If non-NULL @data array is passed the raw data are immediately loaded.
- *
- * TODO: We need a progress bar.
  */
 static gboolean
 gather_data_files(const gchar *filename,
@@ -615,9 +645,11 @@ gather_data_files(const gchar *filename,
     gchar *dirname = NULL, *basename = NULL, *s;
     GString *str;
     gboolean ok = FALSE;
-    guint nincluded = 0, oldblocksize;
+    guint nincluded = 0, oldblocksize, oldnfiles;
 
     oldblocksize = info->blocksize;
+    oldnfiles = info->nfiles;
+
     info->nfiles = 0;
     info->ndata = 0;
     info->blocksize = 0;
@@ -681,6 +713,8 @@ gather_data_files(const gchar *filename,
 
         /* Read the data if requested. */
         if (data) {
+            gdouble f;
+
             s = g_build_filename(dirname, fname, NULL);
             g_string_assign(str, s);
             g_free(s);
@@ -692,6 +726,13 @@ gather_data_files(const gchar *filename,
             read_data_file(data, str->str, info->blocksize,
                            args->include_channel, args->nincluded);
             info->ndata = data->len/nincluded;
+
+            f = (gdouble)info->nfiles/oldnfiles;
+            f = CLAMP(f, 0.0, 1.0);
+            if (!gwy_app_wait_set_fraction(f)) {
+                err_CANCELLED(error);
+                goto fail;
+            }
         }
         else {
             dsc = &g_array_index(this_dscs, NMMXYZProfileDescription, 0);
