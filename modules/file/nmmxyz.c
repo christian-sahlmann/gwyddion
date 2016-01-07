@@ -19,10 +19,32 @@
  */
 #define DEBUG 1
 /**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-nano-measuring-machine-spm">
+ *   <comment>Nano Measuring Machine data header</comment>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="------------------------------------------"/>
+ *     <match type="string" offset="44" value="Scan procedure description file"/>
+ *   </magic>
+ *   <glob pattern="*.dsc"/>
+ *   <glob pattern="*.DSC"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # Nano Measuring Machine profiles header
+ * # Usually accompanied with unidentifiable data files.
+ * 0 string ------------------------------------------
+ * >44 string Scan\ procedure\ description\ file Nano Measuring Machine data header
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Nano Measuring Machine profile data
  * *.dsc + *.dat
- * Read
+ * Read[1]
+ * [1] XYZ data are interpolated to a regular grid upon import.
  **/
 
 #include <stdlib.h>
@@ -271,6 +293,7 @@ create_data_field(GwyContainer *container,
     gulong k, ndata;
     guint blocksize;
     const gdouble *d;
+    const gchar *zunit = NULL;
     GQuark quark;
 
     gwy_debug("regularising field #%u %s (%s)",
@@ -280,9 +303,13 @@ create_data_field(GwyContainer *container,
                                 info->ymax - info->ymin,
                                 FALSE);
 
+    if (gwy_stramong(dsc->short_name, "Lz", "Az", "-Lz+Az", "XY vector", NULL))
+        zunit = "m";
+
     gwy_data_field_set_xoffset(dfield, info->xmin);
     gwy_data_field_set_yoffset(dfield, info->ymin);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), zunit);
 
     d = (const gdouble*)data->data + (i + 2);
     blocksize = info->blocksize;
