@@ -4627,7 +4627,7 @@ distance_transform_raw(guint *distances, guint *workspace,
     }
 }
 
-void
+static void
 gwy_data_field_grain_distance_transform_internal(GwyDataField *data_field,
                                                  gboolean from_border)
 {
