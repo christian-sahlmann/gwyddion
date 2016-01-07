@@ -49,10 +49,13 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <app/help.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -65,6 +68,7 @@
 #define DASHED_LINE "------------------------------------------"
 
 typedef struct {
+    const gchar *filename;
     guint nfiles;
     guint blocksize;
     gulong ndata;
@@ -75,17 +79,22 @@ typedef struct {
 } NMMXYZInfo;
 
 typedef struct {
-    guint nchannels;
     gboolean *include_channel;
+    guint nincluded;  // Derived quantity
     gint xres;
     gint yres;
+    gboolean xymeasureeq;
+    gboolean plot_density;
 } NMMXYZArgs;
 
 typedef struct {
     NMMXYZArgs *args;
+    NMMXYZInfo *info;
     GtkWidget *dialog;
-    GtkWidget *info;
-    GtkWidget **include_channel;
+    GtkWidget *info_label;
+    GtkObject *xres;
+    GtkObject *yres;
+    GtkWidget *xymeasureeq;
 } NMMXYZControls;
 
 typedef struct {
@@ -102,24 +111,42 @@ static gint          nmmxyz_detect             (const GwyFileDetectInfo *fileinf
 static GwyContainer* nmmxyz_load               (const gchar *filename,
                                                 GwyRunType mode,
                                                 GError **error);
-static void          gather_data_files         (const gchar *filename,
-                                                NMMXYZInfo *info,
-                                                GArray *dscs,
-                                                GArray *data);
-static PointXYZ*     create_points_with_xy     (GArray *data,
+static void          update_nincluded          (NMMXYZArgs *args,
                                                 guint blocksize);
+static gboolean      nmmxyz_dialogue           (NMMXYZArgs *args,
+                                                NMMXYZInfo *info,
+                                                GArray *dscs);
+static void          update_ok_sensitivity     (NMMXYZControls *controls);
+static void          include_channel_changed   (GtkToggleButton *toggle,
+                                                NMMXYZControls *controls);
+static void          plot_density_changed      (NMMXYZControls *controls,
+                                                GtkToggleButton *toggle);
+static gint          construct_resolutions     (NMMXYZControls *controls,
+                                                GtkTable *table,
+                                                gint row);
+static gboolean      gather_data_files         (const gchar *filename,
+                                                NMMXYZInfo *info,
+                                                const NMMXYZArgs *args,
+                                                GArray *dscs,
+                                                GArray *data,
+                                                GError **error);
+static PointXYZ*     create_points_with_xy     (GArray *data,
+                                                guint nincluded);
 static void          create_data_field         (GwyContainer *container,
                                                 const NMMXYZInfo *info,
                                                 const NMMXYZArgs *args,
                                                 GArray *dscs,
                                                 GArray *data,
                                                 PointXYZ *points,
-                                                guint i);
+                                                guint i,
+                                                gboolean plot_density);
 static void          find_data_range           (const PointXYZ *points,
                                                 NMMXYZInfo *info);
 static void          read_data_file            (GArray *data,
                                                 const gchar *filename,
-                                                guint nrec);
+                                                guint nrec,
+                                                const gboolean *include_channel,
+                                                guint nincluded);
 static gboolean      profile_descriptions_match(GArray *descs1,
                                                 GArray *descs2);
 static void          read_profile_description  (const gchar *filename,
@@ -173,14 +200,14 @@ nmmxyz_load(const gchar *filename,
             G_GNUC_UNUSED GwyRunType mode,
             GError **error)
 {
+    const NMMXYZProfileDescription *dsc;
     NMMXYZInfo info;
     NMMXYZArgs args;
     GwyContainer *container = NULL;
     GArray *data = NULL;
     GArray *dscs = NULL;
     PointXYZ *points = NULL;
-    guint i;
-    gdouble q;
+    guint i, ntodo;
 
     /* In principle we can load data non-interactively, but it is going to
      * take several minutes which is not good for previews... */
@@ -192,34 +219,65 @@ nmmxyz_load(const gchar *filename,
         return NULL;
     }
 
+    info.filename = filename;
+    args.include_channel = NULL;
+    args.nincluded = 0;
     dscs = g_array_new(FALSE, FALSE, sizeof(NMMXYZProfileDescription));
-    gather_data_files(filename, &info, dscs, NULL);
+    if (!gather_data_files(filename, &info, &args, dscs, NULL, error))
+        goto fail;
+
+    gwy_debug("ndata from DSC files %lu", info.ndata);
     if (!info.ndata) {
         err_NO_DATA(error);
         goto fail;
     }
 
-    /* TODO: here goes the dialogue. */
+    if (info.blocksize < 3) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    dsc = &g_array_index(dscs, NMMXYZProfileDescription, 0);
+    if (!gwy_strequal(dsc->short_name, "Lx"))
+        g_warning("First channel is not Lx.");
+
+    dsc = &g_array_index(dscs, NMMXYZProfileDescription, 1);
+    if (!gwy_strequal(dsc->short_name, "Ly"))
+        g_warning("Second channel is not Ly.");
+
+    args.include_channel = g_new0(gboolean, info.blocksize);
+    args.include_channel[0] = args.include_channel[1] = TRUE;
+
+    /* TODO: here we load args and restore set of channels to import. */
+    args.xres = args.yres = 200;
+
+    if (!nmmxyz_dialogue(&args, &info, dscs)) {
+        err_CANCELLED(error);
+        goto fail;
+    }
+
+    /* TODO: save args. */
 
     free_profile_descriptions(dscs, FALSE);
     data = g_array_new(FALSE, FALSE, sizeof(gdouble));
-    gather_data_files(filename, &info, dscs, data);
+    if (!gather_data_files(filename, &info, &args, dscs, data, error))
+        goto fail;
 
-    points = create_points_with_xy(data, info.blocksize);
+    points = create_points_with_xy(data, args.nincluded);
     find_data_range(points, &info);
 
-    /* XXX: Needs some safeguards.  But anyway, this will be selectable in the
-     * GUI when we have it. */
-    q = sqrt((info.xmax - info.xmin)/(info.ymax - info.ymin));
-    args.xres = (gint)ceil(2048.0*q);
-    args.yres = (gint)ceil(2048.0/q);
-
     container = gwy_container_new();
-    for (i = 0; i < info.blocksize-2; i++) {
-        create_data_field(container, &info, &args, dscs, data, points, i);
+    ntodo = args.nincluded-2;
+    for (i = 2; i < info.blocksize; i++) {
+        if (args.include_channel[i]) {
+            create_data_field(container, &info, &args, dscs, data, points, i,
+                              ntodo == 1);
+        }
+        ntodo--;
     }
 
 fail:
+    g_free(args.include_channel);
     g_free(points);
     free_profile_descriptions(dscs, TRUE);
     if (data)
@@ -228,22 +286,210 @@ fail:
     return container;
 }
 
+static void
+update_nincluded(NMMXYZArgs *args, guint blocksize)
+{
+    guint i;
+
+    args->nincluded = 0;
+    for (i = 0; i < blocksize; i++) {
+        if (args->include_channel[i])
+            args->nincluded++;
+    }
+}
+
+static gboolean
+nmmxyz_dialogue(NMMXYZArgs *args, NMMXYZInfo *info, GArray *dscs)
+{
+    GtkWidget *dialog, *label, *check;
+    GtkTable *table;
+    NMMXYZControls controls;
+    guint i, nchannels;
+    gint row, response;
+
+    gwy_clear(&controls, 1);
+    controls.args = args;
+    controls.info = info;
+
+    nchannels = info->blocksize - 2;
+
+    dialog = gtk_dialog_new_with_buttons(_("Import NMM Profile Set"), NULL, 0,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    controls.dialog = dialog;
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_file_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+
+    table = GTK_TABLE(gtk_table_new(6 + nchannels, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
+                       TRUE, TRUE, 0);
+    row = 0;
+
+    row = construct_resolutions(&controls, table, row);
+
+    label = gwy_label_new_header(_("Imported Channels"));
+    gtk_table_attach(table, label, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    for (i = 0; i < nchannels; i++) {
+        const NMMXYZProfileDescription *dsc
+            = &g_array_index(dscs, NMMXYZProfileDescription, i + 2);
+
+        check = gtk_check_button_new_with_label(dsc->long_name);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                     args->include_channel[i + 2]);
+        g_object_set_data(G_OBJECT(check), "id", GUINT_TO_POINTER(i + 2));
+        gtk_table_attach(table, check, 0, 4, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        g_signal_connect(check, "toggled",
+                         G_CALLBACK(include_channel_changed), &controls);
+    }
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+    check = gtk_check_button_new_with_mnemonic(_("Plot point density map"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->plot_density);
+    gtk_table_attach(table, check, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(plot_density_changed), &controls);
+    row++;
+
+    update_nincluded(controls.args, info->blocksize);
+    update_ok_sensitivity(&controls);
+    gtk_widget_show_all(dialog);
+
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
+static void
+update_ok_sensitivity(NMMXYZControls *controls)
+{
+    /* XXX: We might want to just plot the density but this is not implemented
+     * by the regularisation function.  So require an actual channel to be
+     * selected. */
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK,
+                                      controls->args->nincluded > 2);
+}
+
+static void
+include_channel_changed(GtkToggleButton *toggle,
+                        NMMXYZControls *controls)
+{
+    NMMXYZArgs *args = controls->args;
+    guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(toggle), "id"));
+
+    args->include_channel[i] = gtk_toggle_button_get_active(toggle);
+    update_nincluded(args, controls->info->blocksize);
+    update_ok_sensitivity(controls);
+}
+
+static void
+plot_density_changed(NMMXYZControls *controls,
+                     GtkToggleButton *toggle)
+{
+    NMMXYZArgs *args = controls->args;
+
+    args->plot_density = gtk_toggle_button_get_active(toggle);
+}
+
+static gint
+construct_resolutions(NMMXYZControls *controls,
+                      GtkTable *table,
+                      gint row)
+{
+    NMMXYZArgs *args = controls->args;
+    GtkWidget *spin, *label, *button;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Resolution")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Horizontal size:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->xres = gtk_adjustment_new(args->xres, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Vertical size:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->yres = gtk_adjustment_new(args->yres, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->yres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
+    controls->xymeasureeq = button;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->xymeasureeq);
+    gtk_table_attach(table, button, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    return row;
+}
+
 static PointXYZ*
-create_points_with_xy(GArray *data, guint blocksize)
+create_points_with_xy(GArray *data, guint nincluded)
 {
     PointXYZ *points;
     const gdouble *d;
     gulong i, npts;
 
-    gwy_debug("data->len %u, block size %u", data->len, blocksize);
+    gwy_debug("data->len %u, included block size %u", data->len, nincluded);
     d = (const gdouble*)data->data;
-    npts = data->len/blocksize;
+    npts = data->len/nincluded;
     points = g_new(PointXYZ, npts);
     gwy_debug("creating %lu XYZ points", npts);
     for (i = 0; i < npts; i++) {
         points[i].x = d[0];
         points[i].y = d[1];
-        d += blocksize;
+        d += nincluded;
     }
 
     return points;
@@ -285,13 +531,15 @@ create_data_field(GwyContainer *container,
                   GArray *dscs,
                   GArray *data,
                   PointXYZ *points,
-                  guint i)
+                  guint i,
+                  gboolean plot_density)
 {
     const NMMXYZProfileDescription *dsc
-        = &g_array_index(dscs, NMMXYZProfileDescription, i + 2);
-    GwyDataField *dfield;
+        = &g_array_index(dscs, NMMXYZProfileDescription, i);
+    GwyDataField *dfield, *density_map = NULL;
     gulong k, ndata;
-    guint blocksize;
+    guint nincluded;
+    gint id;
     const gdouble *d;
     const gchar *zunit = NULL;
     GQuark quark;
@@ -303,30 +551,48 @@ create_data_field(GwyContainer *container,
                                 info->ymax - info->ymin,
                                 FALSE);
 
-    if (gwy_stramong(dsc->short_name, "Lz", "Az", "-Lz+Az", "XY vector", NULL))
-        zunit = "m";
-
     gwy_data_field_set_xoffset(dfield, info->xmin);
     gwy_data_field_set_yoffset(dfield, info->ymin);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+
+    if (plot_density)
+        density_map = gwy_data_field_new_alike(dfield, FALSE);
+
+    if (gwy_stramong(dsc->short_name, "Lz", "Az", "-Lz+Az", "XY vector", NULL))
+        zunit = "m";
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), zunit);
 
-    d = (const gdouble*)data->data + (i + 2);
-    blocksize = info->blocksize;
+    d = (const gdouble*)data->data + i;
+    nincluded = args->nincluded;
     ndata = info->ndata;
     for (k = 0; k < ndata; k++) {
         points[k].z = *d;
-        d += blocksize;
+        d += nincluded;
     }
 
-    gwy_data_field_average_xyz(dfield, NULL, points, ndata);
+    gwy_data_field_average_xyz(dfield, density_map, points, ndata);
 
-    quark = gwy_app_get_data_key_for_id(i);
+    id = i-2;
+    quark = gwy_app_get_data_key_for_id(id);
     gwy_container_set_object(container, quark, dfield);
     g_object_unref(dfield);
 
-    quark = gwy_app_get_data_title_key_for_id(i);
+    quark = gwy_app_get_data_title_key_for_id(id);
     gwy_container_set_const_string(container, quark, dsc->long_name);
+    gwy_file_channel_import_log_add(container, id, NULL, info->filename);
+
+    if (density_map) {
+        id++;
+
+        quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(container, quark, density_map);
+        g_object_unref(density_map);
+
+        quark = gwy_app_get_data_title_key_for_id(id);
+        gwy_container_set_const_string(container, quark,
+                                       _("Point density map"));
+        gwy_file_channel_import_log_add(container, id, NULL, info->filename);
+    }
 }
 
 /* Fills nfiles, blocksize and ndata fields of @info.  When @data is %NULL
@@ -335,13 +601,12 @@ create_data_field(GwyContainer *container,
  * If non-NULL @data array is passed the raw data are immediately loaded.
  *
  * TODO: We need a progress bar.
- * TODO: If include_channel is passed we can both save memory (by skipping
- *       unwanted raw data) and time (by moving forward to the start of next
- *       whitespace instead of parsing the coordinates).
  */
-static void
-gather_data_files(const gchar *filename, NMMXYZInfo *info,
-                  GArray *dscs, GArray *data)
+static gboolean
+gather_data_files(const gchar *filename,
+                  NMMXYZInfo *info, const NMMXYZArgs *args,
+                  GArray *dscs, GArray *data,
+                  GError **error)
 {
     const NMMXYZProfileDescription *dsc;
     GArray *this_dscs = NULL;
@@ -349,7 +614,10 @@ gather_data_files(const gchar *filename, NMMXYZInfo *info,
     const gchar *fname;
     gchar *dirname = NULL, *basename = NULL, *s;
     GString *str;
+    gboolean ok = FALSE;
+    guint nincluded = 0, oldblocksize;
 
+    oldblocksize = info->blocksize;
     info->nfiles = 0;
     info->ndata = 0;
     info->blocksize = 0;
@@ -386,9 +654,21 @@ gather_data_files(const gchar *filename, NMMXYZInfo *info,
         if (!this_dscs->len)
             continue;
 
+        /* Use the first reasonable .dsc file we find as the template and
+         * require all other to be compatible. */
         if (!info->nfiles) {
+            if (args->include_channel && this_dscs->len != oldblocksize) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_SPECIFIC,
+                            _("Something is changing the data files on disk."));
+                goto fail;
+            }
             copy_profile_descriptions(this_dscs, dscs);
             info->blocksize = this_dscs->len;
+            nincluded = (args->include_channel
+                         ? args->nincluded
+                         : info->blocksize);
+            gwy_debug("setting nincluded to %u", nincluded);
         }
         else {
             if (!profile_descriptions_match(dscs, this_dscs)) {
@@ -399,6 +679,7 @@ gather_data_files(const gchar *filename, NMMXYZInfo *info,
 
         info->nfiles++;
 
+        /* Read the data if requested. */
         if (data) {
             s = g_build_filename(dirname, fname, NULL);
             g_string_assign(str, s);
@@ -408,14 +689,18 @@ gather_data_files(const gchar *filename, NMMXYZInfo *info,
                 g_string_truncate(str, s - str->str);
                 g_string_append(str, ".dat");
             }
-            read_data_file(data, str->str, info->blocksize);
-            info->ndata = data->len/info->blocksize;
+            read_data_file(data, str->str, info->blocksize,
+                           args->include_channel, args->nincluded);
+            info->ndata = data->len/nincluded;
         }
         else {
             dsc = &g_array_index(this_dscs, NMMXYZProfileDescription, 0);
             info->ndata += dsc->npts;
         }
     }
+
+    /* This may not be correct.  There other checks to do... */
+    ok = TRUE;
 
 fail:
     free_profile_descriptions(this_dscs, TRUE);
@@ -424,16 +709,30 @@ fail:
     g_string_free(str, TRUE);
     g_free(basename);
     g_free(dirname);
+
+    return ok;
 }
 
 static void
-read_data_file(GArray *data, const gchar *filename, guint nrec)
+read_data_file(GArray *data, const gchar *filename,
+               guint nrec, const gboolean *include_channel, guint nincluded)
 {
+    static const gboolean floating_point_chars[] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1,
+    };
+
     gchar *buffer = NULL, *line, *p, *end;
     gdouble *rec = NULL;
     gsize size;
-    guint i, linecount = 0;
+    guint i, j, linecount = 0;
 
+    g_assert(include_channel);
     gwy_debug("reading data file %s", filename);
     if (!g_file_get_contents(filename, &buffer, &size, NULL)) {
         gwy_debug("cannot read file %s", filename);
@@ -441,19 +740,40 @@ read_data_file(GArray *data, const gchar *filename, guint nrec)
     }
 
     p = buffer;
-    rec = g_new(gdouble, nrec);
+    rec = g_new(gdouble, nincluded);
 
     while ((line = gwy_str_next_line(&p))) {
-        for (i = 0; i < nrec; i++) {
-            rec[i] = g_ascii_strtod(line, &end);
-            if (end == line) {
-                gwy_debug("line %u terminated prematurely", linecount);
-                goto fail;
+        /* Data channels. */
+        for (i = j = 0; i < nrec; i++) {
+            /* Only read channels that were selected.  This saves both memory
+             * and time. */
+            if (include_channel[i]) {
+                rec[j] = g_ascii_strtod(line, &end);
+                if (end == line) {
+                    gwy_debug("line %u terminated prematurely", linecount);
+                    goto fail;
+                }
+                line = end;
+                j++;
             }
-            line = end;
+            else {
+                /* Skip whitespace and the next number so we end up at the
+                 * beggining of next whitespace or line end.  Or garbage. */
+                end = line;
+                while (g_ascii_isspace(*line))
+                    line++;
+                while ((guchar)(*line) < G_N_ELEMENTS(floating_point_chars)
+                       && floating_point_chars[(guchar)(*line)])
+                    line++;
+
+                if (end == line) {
+                    gwy_debug("line %u terminated prematurely", linecount);
+                    goto fail;
+                }
+            }
         }
         /* Now we have read a complete record so append it to the array. */
-        g_array_append_vals(data, rec, nrec);
+        g_array_append_vals(data, rec, nincluded);
         linecount++;
     }
 
