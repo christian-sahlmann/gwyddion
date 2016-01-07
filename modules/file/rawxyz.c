@@ -316,7 +316,7 @@ next_line:
 
 static GwyContainer*
 rawxyz_load(const gchar *filename,
-            G_GNUC_UNUSED GwyRunType mode,
+            GwyRunType mode,
             GError **error)
 {
     GwyContainer *settings, *container = NULL;
