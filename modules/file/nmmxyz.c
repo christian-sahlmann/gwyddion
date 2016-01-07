@@ -91,7 +91,6 @@ typedef struct {
     NMMXYZArgs *args;
     NMMXYZInfo *info;
     GtkWidget *dialog;
-    GtkWidget *info_label;
     GtkObject *xres;
     GtkObject *yres;
     GtkWidget *xres_spin;
@@ -118,6 +117,10 @@ static void          update_nincluded          (NMMXYZArgs *args,
 static gboolean      nmmxyz_dialogue           (NMMXYZArgs *args,
                                                 NMMXYZInfo *info,
                                                 GArray *dscs);
+static gint          add_info_count            (GtkTable *table,
+                                                gint row,
+                                                const gchar *description,
+                                                gulong n);
 static void          update_ok_sensitivity     (NMMXYZControls *controls);
 static void          include_channel_changed   (GtkToggleButton *toggle,
                                                 NMMXYZControls *controls);
@@ -368,7 +371,7 @@ nmmxyz_dialogue(NMMXYZArgs *args, NMMXYZInfo *info, GArray *dscs)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_file_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = GTK_TABLE(gtk_table_new(6 + nchannels, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(10 + nchannels, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -376,6 +379,19 @@ nmmxyz_dialogue(NMMXYZArgs *args, NMMXYZInfo *info, GArray *dscs)
                        TRUE, TRUE, 0);
     row = 0;
 
+    label = gwy_label_new_header(_("Information"));
+    gtk_table_attach(table, label, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = add_info_count(table, row,
+                         _("Number of data files:"), info->nfiles);
+    row = add_info_count(table, row,
+                         _("Total number of points:"), info->ndata);
+    row = add_info_count(table, row,
+                         _("Points per profile:"), info->ndata/info->nfiles);
+
+    gtk_table_set_row_spacing(table, row-1, 8);
     row = construct_resolutions(&controls, table, row);
 
     label = gwy_label_new_header(_("Imported Channels"));
@@ -434,6 +450,26 @@ nmmxyz_dialogue(NMMXYZArgs *args, NMMXYZInfo *info, GArray *dscs)
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static gint
+add_info_count(GtkTable *table, gint row, const gchar *description, gulong n)
+{
+    GtkWidget *label;
+    gchar buf[16];
+
+    label = gtk_label_new(description);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    g_snprintf(buf, sizeof(buf), "%lu", n);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    return row+1;
 }
 
 static void
