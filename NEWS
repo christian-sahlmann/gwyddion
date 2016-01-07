@@ -33,6 +33,7 @@ Libraries:
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
   and slopes.
+- Leica (new): Imports Leica LIF CLSM images.
 - DM3: Support for Digital Micrograph DM4 files was added.
 - Image export: The number of digits in false colour axis ticks can be
   controlled explicitly.  Very small negative values are displayed as ‘0.0’,
@@ -65,8 +66,8 @@ Modules:
 - Statistical quantities: Deficit of entropy to Gaussian distribution with the
   same dispersion was added as a new quantity.  Unavailable quantities are no
   longer printed to reports.
-- MI file: Loading of ASCII graphs was fixed.
-- RHK SM4: Loading of graph data with Y size of 1 works now.
+- MI file: Loading of graphs in ASCII format was implemented.
+- RHK SM4: Loading of graph data with small Y size works now.
 - Raw graph: Curve data are sorted upon import.
 - Grain filter: Options for unused quantities (B or C) are now hidden instead
   of insensitivised to reduce visual clutter.
@@ -74,6 +75,7 @@ Modules:
   translated also in reports.
 - Ballistic deposition synthesis: Progressive preview works now.
 - Align graph: Crash with curves not sorted by abscissa was fixed.
+- Renishaw: Timestamps in metadata were corrected.
 
 Other:
 - MS Windows packages include OpenEXR support now.
