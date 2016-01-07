@@ -55,9 +55,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <app/help.h>
-#include <app/wait.h>
-#include <app/data-browser.h>
+#include <app/gwyapp.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "get.h"
@@ -85,6 +83,7 @@ typedef struct {
     gint xres;
     gint yres;
     gboolean xymeasureeq;
+    gboolean use_xres;
     gboolean plot_density;
 } NMMXYZArgs;
 
@@ -95,6 +94,8 @@ typedef struct {
     GtkWidget *info_label;
     GtkObject *xres;
     GtkObject *yres;
+    GtkWidget *xres_spin;
+    GtkWidget *yres_spin;
     GtkWidget *xymeasureeq;
 } NMMXYZControls;
 
@@ -125,6 +126,12 @@ static void          plot_density_changed      (NMMXYZControls *controls,
 static gint          construct_resolutions     (NMMXYZControls *controls,
                                                 GtkTable *table,
                                                 gint row);
+static void          xres_changed              (NMMXYZControls *controls,
+                                                GtkAdjustment *adj);
+static void          yres_changed              (NMMXYZControls *controls,
+                                                GtkAdjustment *adj);
+static void          xymeasureeq_changed       (NMMXYZControls *controls,
+                                                GtkToggleButton *toggle);
 static gboolean      gather_data_files         (const gchar *filename,
                                                 NMMXYZInfo *info,
                                                 const NMMXYZArgs *args,
@@ -156,6 +163,19 @@ static void          free_profile_descriptions (GArray *dscs,
                                                 gboolean free_array);
 static void          copy_profile_descriptions (GArray *source,
                                                 GArray *dest);
+static void          nmmxyz_load_args          (GwyContainer *container,
+                                                NMMXYZArgs *args,
+                                                GArray *dscs);
+static void          nmmxyz_save_args          (GwyContainer *container,
+                                                NMMXYZArgs *args,
+                                                GArray *dscs);
+
+static const NMMXYZArgs nmmxyz_defaults = {
+    NULL, 0,
+    1200, 1200,
+    FALSE, TRUE,
+    FALSE,
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -204,6 +224,7 @@ nmmxyz_load(const gchar *filename,
     const NMMXYZProfileDescription *dsc;
     NMMXYZInfo info;
     NMMXYZArgs args;
+    GwyContainer *settings;
     GwyContainer *container = NULL;
     GArray *data = NULL;
     GArray *dscs = NULL;
@@ -222,8 +243,7 @@ nmmxyz_load(const gchar *filename,
     }
 
     info.filename = filename;
-    args.include_channel = NULL;
-    args.nincluded = 0;
+    args = nmmxyz_defaults;
     dscs = g_array_new(FALSE, FALSE, sizeof(NMMXYZProfileDescription));
     if (!gather_data_files(filename, &info, &args, dscs, NULL, error))
         goto fail;
@@ -247,18 +267,13 @@ nmmxyz_load(const gchar *filename,
     if (!gwy_strequal(dsc->short_name, "Ly"))
         g_warning("Second channel is not Ly.");
 
-    args.include_channel = g_new0(gboolean, info.blocksize);
-    args.include_channel[0] = args.include_channel[1] = TRUE;
-
-    /* TODO: here we load args and restore set of channels to import. */
-    args.xres = args.yres = 200;
-
+    settings = gwy_app_settings_get();
+    nmmxyz_load_args(settings, &args, dscs);
     if (!nmmxyz_dialogue(&args, &info, dscs)) {
         err_CANCELLED(error);
         goto fail;
     }
-
-    /* TODO: save args. */
+    nmmxyz_save_args(settings, &args, dscs);
 
     waiting = TRUE;
     gwy_app_wait_start(NULL, _("Reading files..."));
@@ -293,7 +308,7 @@ nmmxyz_load(const gchar *filename,
             gdouble f;
 
             create_data_field(container, &info, &args, dscs, data, points, i,
-                              ntodo == 1);
+                              args.plot_density && ntodo == 1);
             ntodo--;
             f = 1.0 - (gdouble)ntodo/args.nincluded;
             f = CLAMP(f, 0.0, 1.0);
@@ -471,6 +486,7 @@ construct_resolutions(NMMXYZControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->xres = gtk_adjustment_new(args->xres, 2, 16384, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xres), 0, 0);
+    controls->xres_spin = spin;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -486,6 +502,7 @@ construct_resolutions(NMMXYZControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->yres = gtk_adjustment_new(args->yres, 2, 16384, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->yres), 0, 0);
+    controls->yres_spin = spin;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -503,7 +520,67 @@ construct_resolutions(NMMXYZControls *controls,
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
+    if (args->xymeasureeq) {
+        if (args->use_xres)
+            gtk_entry_set_text(GTK_ENTRY(controls->yres_spin), "");
+        else
+            gtk_entry_set_text(GTK_ENTRY(controls->xres_spin), "");
+    }
+
+    g_signal_connect_swapped(controls->xres, "value-changed",
+                             G_CALLBACK(xres_changed), controls);
+    g_signal_connect_swapped(controls->yres, "value-changed",
+                             G_CALLBACK(yres_changed), controls);
+    g_signal_connect_swapped(controls->xymeasureeq, "toggled",
+                             G_CALLBACK(xymeasureeq_changed), controls);
+
     return row;
+}
+
+static void
+xres_changed(NMMXYZControls *controls, GtkAdjustment *adj)
+{
+    NMMXYZArgs *args = controls->args;
+
+    args->xres = gwy_adjustment_get_int(adj);
+    args->use_xres = TRUE;
+    if (args->xymeasureeq)
+        gtk_entry_set_text(GTK_ENTRY(controls->yres_spin), "");
+}
+
+static void
+yres_changed(NMMXYZControls *controls, GtkAdjustment *adj)
+{
+    NMMXYZArgs *args = controls->args;
+
+    args->yres = gwy_adjustment_get_int(adj);
+    args->use_xres = FALSE;
+    if (args->xymeasureeq)
+        gtk_entry_set_text(GTK_ENTRY(controls->xres_spin), "");
+}
+
+static void
+xymeasureeq_changed(NMMXYZControls *controls, GtkToggleButton *toggle)
+{
+    NMMXYZArgs *args = controls->args;
+
+    args->xymeasureeq = gtk_toggle_button_get_active(toggle);
+    if (args->xymeasureeq) {
+        if (args->use_xres)
+            gtk_entry_set_text(GTK_ENTRY(controls->yres_spin), "");
+        else
+            gtk_entry_set_text(GTK_ENTRY(controls->xres_spin), "");
+    }
+    else {
+        if (args->use_xres) {
+            g_signal_emit_by_name(controls->yres, "value-changed", NULL);
+            args->use_xres = TRUE;
+        }
+        else {
+            g_signal_emit_by_name(controls->xres, "value-changed", NULL);
+            args->use_xres = FALSE;
+        }
+    }
 }
 
 static PointXYZ*
@@ -570,7 +647,7 @@ create_data_field(GwyContainer *container,
         = &g_array_index(dscs, NMMXYZProfileDescription, i);
     GwyDataField *dfield, *density_map = NULL;
     gulong k, ndata;
-    guint nincluded;
+    guint nincluded, xres, yres;
     gint id;
     const gdouble *d;
     const gchar *zunit = NULL;
@@ -578,7 +655,25 @@ create_data_field(GwyContainer *container,
 
     gwy_debug("regularising field #%u %s (%s)",
               i, dsc->short_name, dsc->long_name);
-    dfield = gwy_data_field_new(args->xres, args->yres,
+    xres = args->xres;
+    yres = args->yres;
+    if (args->xymeasureeq) {
+        gdouble h;
+
+        if (args->use_xres) {
+            h = (info->xmax - info->xmin)/xres;
+            yres = (guint)ceil((info->ymax - info->ymin)/h);
+            yres = CLAMP(yres, 2, 32768);
+        }
+        else {
+            h = (info->ymax - info->ymin)/yres;
+            xres = (guint)ceil((info->xmax - info->xmin)/h);
+            xres = CLAMP(xres, 2, 32768);
+        }
+    }
+    gwy_debug("xres %u, yres %u", xres, yres);
+
+    dfield = gwy_data_field_new(xres, yres,
                                 info->xmax - info->xmin,
                                 info->ymax - info->ymin,
                                 FALSE);
@@ -948,6 +1043,104 @@ copy_profile_descriptions(GArray *source, GArray *dest)
         dsc.short_name = g_strdup(dsc.short_name);
         dsc.long_name = g_strdup(dsc.long_name);
         g_array_append_val(dest, dsc);
+    }
+}
+
+static const gchar include_channel_prefix[] = "/module/nmmxyz/include_channel/";
+
+static const gchar plot_density_key[] = "/module/nmmxyz/plot-density";
+static const gchar use_xres_key[]     = "/module/nmmxyz/use_xres";
+static const gchar xres_key[]         = "/module/nmmxyz/xres";
+static const gchar xymeasureeq_key[]  = "/module/nmmxyz/xymeasureeq";
+static const gchar yres_key[]         = "/module/nmmxyz/yres";
+
+static void
+sanitize_channel_id(gchar *s)
+{
+    gchar *t = s;
+
+    while (*s) {
+        if (g_ascii_isalnum(*s) || *s == '-' || *s == '+' || *s == '_') {
+            *t = *s;
+            t++;
+        }
+        s++;
+    }
+    *t = '\0';
+}
+
+static void
+nmmxyz_sanitize_args(NMMXYZArgs *args)
+{
+    args->xres = CLAMP(args->xres, 2, 16384);
+    args->yres = CLAMP(args->yres, 2, 16384);
+    args->plot_density = !!args->plot_density;
+    args->xymeasureeq = !!args->xymeasureeq;
+    args->use_xres = !!args->use_xres;
+}
+
+static void
+nmmxyz_load_args(GwyContainer *container,
+                 NMMXYZArgs *args,
+                 GArray *dscs)
+{
+    guint i, blocksize;
+
+    gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
+    gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
+    gwy_container_gis_boolean_by_name(container, plot_density_key,
+                                      &args->plot_density);
+    gwy_container_gis_boolean_by_name(container, xymeasureeq_key,
+                                      &args->xymeasureeq);
+    gwy_container_gis_boolean_by_name(container, use_xres_key, &args->use_xres);
+    nmmxyz_sanitize_args(args);
+
+    blocksize = dscs->len;
+    args->include_channel = g_new0(gboolean, blocksize);
+    args->include_channel[0] = args->include_channel[1] = TRUE;
+    for (i = 2; i < blocksize; i++) {
+        const NMMXYZProfileDescription *dsc
+            = &g_array_index(dscs, NMMXYZProfileDescription, i);
+        gchar *id = g_strdup(dsc->short_name);
+        gchar *key;
+
+        sanitize_channel_id(id);
+        key = g_strconcat(include_channel_prefix, id, NULL);
+        g_free(id);
+        gwy_container_gis_boolean_by_name(container, key,
+                                          args->include_channel + i);
+        g_free(key);
+    }
+}
+
+static void
+nmmxyz_save_args(GwyContainer *container,
+                 NMMXYZArgs *args,
+                 GArray *dscs)
+{
+    guint i, blocksize;
+
+    gwy_container_set_int32_by_name(container, xres_key, args->xres);
+    gwy_container_set_int32_by_name(container, yres_key, args->yres);
+    gwy_container_set_boolean_by_name(container, plot_density_key,
+                                      args->plot_density);
+    gwy_container_set_boolean_by_name(container, xymeasureeq_key,
+                                      args->xymeasureeq);
+    gwy_container_set_boolean_by_name(container, use_xres_key, args->use_xres);
+
+    blocksize = dscs->len;
+    for (i = 2; i < blocksize; i++) {
+        const NMMXYZProfileDescription *dsc
+            = &g_array_index(dscs, NMMXYZProfileDescription, i);
+        gchar *id = g_strdup(dsc->short_name);
+        gchar *key;
+
+        sanitize_channel_id(id);
+        key = g_strconcat(include_channel_prefix, id, NULL);
+        g_free(id);
+        gwy_container_set_boolean_by_name(container, key,
+                                          args->include_channel[i]);
+        g_free(key);
     }
 }
 
