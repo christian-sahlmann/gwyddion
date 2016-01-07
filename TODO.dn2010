@@ -1,7 +1,5 @@
 The features I want to be implemented, WIP is for the parts that are
 developed just now:
-- implement metadata loading for Renishaw WDF and load some additional
-  info from it (WIP).
 - more simple interface for volume data extraction. Implement missing
   parts of volume infrastructure.
 - Tool to recalculate calibrations for volume data.
@@ -13,9 +11,10 @@ developed just now:
   and text formats with current presets.
 - graph metadata.
 - RGB images as another basic datatype, support for it in 3D overlays
-  and presentations (somewhere in the far future of gwyddion4 era, we
-  need the plain list of all data without categories and single data
-  processing menu to add another datatypes).
+  and presentations (gwyddion4: somewhere in the far future of gwyddion4
+  era, we need the plain list of all data without categories and one
+  data processing menu to add another datatypes).
+- Something like GwyBrick, but wit one extra dimension (gwyddion4)
 - graph filter module with all basic graph processing.
 - multiple graph arithmetic.
 - more deconvolution algorithms.
