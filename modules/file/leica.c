@@ -228,8 +228,9 @@ lif_load(const gchar *filename,
     const guchar *p;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    GwyBrick *brick = NULL;
     gdouble *data = NULL;
-    gint i, j, channels = 0;
+    gint i, j, channelno = 0, volumeno = 0;
     gchar *strkey, *lutname;
     GMarkupParser parser = {
         header_start_element,
@@ -238,10 +239,13 @@ lif_load(const gchar *filename,
     };
     GMarkupParseContext *context;
     XMLParserData *xmldata;
-    gint x, xres, y, yres, xstep, ystep, offset;
-    gdouble xreal, yreal, xoffset, yoffset, zscale;
+    gint x, xres, xstep, y, yres, ystep, z, zres, zstep, offset;
+    gdouble xreal, yreal, zreal, xoffset, yoffset, zoffset;
+    gdouble zscale = 1.0, wscale = 1.0;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
-    gint power10xy = 1, power10z = 1;
+    GwySIUnit *siunitx = NULL, *siunity = NULL, *siunitw = NULL;
+    gint power10xy = 1;
+    gint power10x = 1, power10y = 1, power10z = 1, power10w = 1;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -281,7 +285,7 @@ lif_load(const gchar *filename,
 
     remaining -= header->xmllen * 2;
 
-    // gwy_debug("%s", header->xmlheader);
+    gwy_debug("%s", header->xmlheader);
     /* Parse XML header */
     xmldata = g_new0(XMLParserData, 1);
     xmldata->file = g_new0(LIFFile, 1);
@@ -326,13 +330,15 @@ lif_load(const gchar *filename,
     for (i = 0; i < file->elements->len; i++) {
         element = &g_array_index(file->elements, LIFElement, i);
 
-        if ((element->dimensions == NULL) || (element->channels == NULL)) {
+        if ((element->dimensions == NULL)
+                                       || (element->channels == NULL)) {
             gwy_debug("Empty element");
             continue;
         }
 
-        if (element->dimensions->len != 2) {
-            gwy_debug("Dimensions = %d channels=%d",
+        if ((element->dimensions->len != 2)
+                                    && (element->dimensions->len != 3)){
+            gwy_debug("Dimensions = %d channels=%d (not loading)",
                       element->dimensions->len,
                       element->channels->len);
 
@@ -353,103 +359,251 @@ lif_load(const gchar *filename,
         }
 
         p = memblock->data;
-        for (j = 0; j < element->channels->len; j++) {
-            dimension = &g_array_index(element->dimensions,
-                                       LIFDimension, 0);
-            xres = dimension->res;
-            xreal = dimension->length;
-            xoffset = dimension->origin;
-            xstep = dimension->bytesinc;
-            siunitxy = gwy_si_unit_new_parse(dimension->unit,
-                                             &power10xy);
+        if (element->dimensions->len == 2) { /* Image */
+            for (j = 0; j < element->channels->len; j++) {
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, 0);
+                xres = dimension->res;
+                xreal = dimension->length;
+                xoffset = dimension->origin;
+                xstep = dimension->bytesinc;
+                siunitxy = gwy_si_unit_new_parse(dimension->unit,
+                                                 &power10xy);
 
-            dimension = &g_array_index(element->dimensions,
-                                       LIFDimension, 1);
-            yres = dimension->res;
-            yreal = dimension->length;
-            yoffset = dimension->origin;
-            ystep = dimension->bytesinc;
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, 1);
+                yres = dimension->res;
+                yreal = dimension->length;
+                yoffset = dimension->origin;
+                ystep = dimension->bytesinc;
 
-            if (xreal <= 0.0)
-                xreal = 1.0;
-            if (yreal <= 0.0)
-                yreal = 1.0;
+                if (xreal <= 0.0)
+                    xreal = 1.0;
+                if (yreal <= 0.0)
+                    yreal = 1.0;
 
-            channel = &g_array_index(element->channels, LIFChannel, j);
-            offset = channel->bytesinc;
-            siunitz = gwy_si_unit_new_parse(channel->unit,
-                                            &power10z);
+                channel = &g_array_index(element->channels,
+                                         LIFChannel, j);
+                offset = channel->bytesinc;
+                siunitz = gwy_si_unit_new_parse(channel->unit,
+                                                &power10z);
 
-            zscale = pow10(power10z);
+                zscale = pow10(power10z);
+                if (offset + (xres - 1) * xstep + (yres - 1)* ystep
+                                                  > memblock->memsize) {
+                    gwy_debug("Memblock too small");
+                    gwy_debug("%d %" G_GUINT64_FORMAT "",
+                              offset + (xres-1)*xstep + (yres-1)*ystep,
+                              memblock->memsize);
+                    err_SIZE_MISMATCH(error,
+                                      memblock->memsize,
+                                      offset+(xres-1)*xstep
+                                                        +(yres-1)*ystep,
+                                      FALSE);
+                    goto fail;
+                }
 
-            dfield = gwy_data_field_new(xres, yres,
-                                        xreal*pow10(power10xy),
-                                        yreal*pow10(power10xy), TRUE);
-            gwy_data_field_set_xoffset(dfield,
-                                       xoffset*pow10(power10xy));
-            gwy_data_field_set_yoffset(dfield,
-                                       yoffset*pow10(power10xy));
+                dfield = gwy_data_field_new(xres, yres,
+                                            xreal*pow10(power10xy),
+                                            yreal*pow10(power10xy),
+                                            TRUE);
+                gwy_data_field_set_xoffset(dfield,
+                                           xoffset*pow10(power10xy));
+                gwy_data_field_set_yoffset(dfield,
+                                           yoffset*pow10(power10xy));
 
-            data = gwy_data_field_get_data(dfield);
-            if (offset + (xres - 1) * xstep + (yres - 1)* ystep
-                                                 > memblock->memsize) {
-                gwy_debug("Memblock too small");
-                gwy_debug("%d %" G_GUINT64_FORMAT "",
-                          offset + (xres-1)*xstep + (yres-1)*ystep,
-                          memblock->memsize);
-                err_SIZE_MISMATCH(error,
-                                  memblock->memsize,
-                                  offset + xres * xstep + yres * ystep,
-                                  FALSE);
-                goto fail;
-            }
-            for (y = 0; y < yres; y++)
-                for (x = 0; x < xres; x++) {
-                    *(data++) = zscale
-                       * (gdouble)*(p + offset + x * xstep + y * ystep);
-            }
+                data = gwy_data_field_get_data(dfield);
+                for (y = 0; y < yres; y++)
+                    for (x = 0; x < xres; x++) {
+                        *(data++) = zscale
+                           * (gdouble)*(p + offset + x*xstep + y*ystep);
+                }
 
-            if (siunitxy) {
-                gwy_data_field_set_si_unit_xy(dfield, siunitxy);
-                g_object_unref(siunitxy);
-            }
-            if (siunitz) {
-                gwy_data_field_set_si_unit_z(dfield, siunitz);
-                g_object_unref(siunitz);
-            }
+                if (siunitxy) {
+                    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+                    g_object_unref(siunitxy);
+                }
+                if (siunitz) {
+                    gwy_data_field_set_si_unit_z(dfield, siunitz);
+                    g_object_unref(siunitz);
+                }
 
-            strkey = g_strdup_printf("/%d/data", channels);
-            gwy_container_set_object_by_name(container,
-                                             strkey,
-                                             dfield);
-            g_object_unref(dfield);
-            g_free(strkey);
-            if (element->name) {
-                strkey = g_strdup_printf("/%d/data/title", channels);
-                gwy_container_set_string_by_name(container, strkey,
-                                               g_strdup(element->name));
+                strkey = g_strdup_printf("/%d/data", channelno);
+                gwy_container_set_object_by_name(container,
+                                                 strkey,
+                                                 dfield);
+                g_object_unref(dfield);
                 g_free(strkey);
-            }
-            if (channel->lut) {
-                lutname = NULL;
-                if (gwy_strequal(channel->lut, "Red"))
-                    lutname = g_strdup_printf("RGB-Red");
-                else if (gwy_strequal(channel->lut, "Green"))
-                    lutname = g_strdup_printf("RGB-Green");
-                else if (gwy_strequal(channel->lut, "Blue"))
-                    lutname = g_strdup_printf("RGB-Blue");
-                else if (gwy_strequal(channel->lut, "Gray"))
-                    lutname = g_strdup_printf("Gray");
-                if (lutname) {
-                    strkey = g_strdup_printf("/%u/base/palette",
-                                             channels);
+                if (element->name) {
+                    strkey = g_strdup_printf("/%d/data/title",
+                                             channelno);
                     gwy_container_set_string_by_name(container, strkey,
-                                                     lutname);
+                                               g_strdup(element->name));
                     g_free(strkey);
                 }
+                if (channel->lut) {
+                    lutname = NULL;
+                    if (gwy_strequal(channel->lut, "Red"))
+                        lutname = g_strdup_printf("RGB-Red");
+                    else if (gwy_strequal(channel->lut, "Green"))
+                        lutname = g_strdup_printf("RGB-Green");
+                    else if (gwy_strequal(channel->lut, "Blue"))
+                        lutname = g_strdup_printf("RGB-Blue");
+                    else if (gwy_strequal(channel->lut, "Gray"))
+                        lutname = g_strdup_printf("Gray");
+                    if (lutname) {
+                        strkey = g_strdup_printf("/%u/base/palette",
+                                                 channelno);
+                        gwy_container_set_string_by_name(container,
+                                                         strkey,
+                                                         lutname);
+                        g_free(strkey);
+                    }
+                }
+
+                gwy_file_channel_import_log_add(container, channelno,
+                                                NULL, filename);
+
+                channelno++;
             }
-            channels++;
         }
+        else if (element->dimensions->len == 3) { /* Volume */
+            for (j = 0; j < element->channels->len; j++) {
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, 0);
+                xres = dimension->res;
+                xreal = dimension->length;
+                xoffset = dimension->origin;
+                xstep = dimension->bytesinc;
+                siunitx = gwy_si_unit_new_parse(dimension->unit,
+                                                &power10x);
+
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, 1);
+                yres = dimension->res;
+                yreal = dimension->length;
+                yoffset = dimension->origin;
+                ystep = dimension->bytesinc;
+                siunity = gwy_si_unit_new_parse(dimension->unit,
+                                                &power10y);
+
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, 2);
+                zres = dimension->res;
+                zreal = dimension->length;
+                zoffset = dimension->origin;
+                zstep = dimension->bytesinc;
+                siunitz = gwy_si_unit_new_parse(dimension->unit,
+                                                &power10z);
+
+                channel = &g_array_index(element->channels,
+                                         LIFChannel, j);
+                offset = channel->bytesinc;
+                siunitw = gwy_si_unit_new_parse(channel->unit,
+                                                &power10w);
+                wscale = pow10(power10w);
+
+                if (offset
+                      + (xres-1)*xstep + (yres-1)*ystep + (zres-1)*zstep
+                                                  > memblock->memsize) {
+                    gwy_debug("Memblock too small");
+                    gwy_debug("%d %" G_GUINT64_FORMAT "",
+                              offset + (xres-1)*xstep
+                                      + (yres-1)*ystep + (zres-1)*zstep,
+                              memblock->memsize);
+                    err_SIZE_MISMATCH(error,
+                                      memblock->memsize,
+                                      offset + (xres-1)*xstep
+                                      + (yres-1)*ystep + (zres-1)*zstep,
+                                      FALSE);
+                    goto fail;
+                }
+                brick = gwy_brick_new(xres, yres, zres,
+                                      xreal*pow10(power10x),
+                                      yreal*pow10(power10y),
+                                      zreal*pow10(power10z),
+                                      TRUE);
+                gwy_brick_set_xoffset(brick, xoffset*pow10(power10x));
+                gwy_brick_set_yoffset(brick, yoffset*pow10(power10y));
+                gwy_brick_set_zoffset(brick, zoffset*pow10(power10z));
+
+                data = gwy_brick_get_data(brick);
+
+                for (z = 0; z < zres; z++)
+                    for (y = 0; y < yres; y++)
+                        for (x = 0; x < xres; x++) {
+                            *(data++) = wscale * (gdouble)*(p + offset
+                                         + x*xstep + y*ystep + z*zstep);
+                    }
+
+                if (siunitx) {
+                    gwy_brick_set_si_unit_x(brick, siunitx);
+                    g_object_unref(siunitx);
+                }
+                if (siunity) {
+                    gwy_brick_set_si_unit_y(brick, siunity);
+                    g_object_unref(siunity);
+                }
+                if (siunitz) {
+                    gwy_brick_set_si_unit_z(brick, siunitz);
+                    g_object_unref(siunitz);
+                }
+                if (siunitw) {
+                    gwy_brick_set_si_unit_w(brick, siunitw);
+                    g_object_unref(siunitw);
+                }
+
+                strkey = g_strdup_printf("/brick/%d", volumeno);
+                gwy_container_set_object_by_name(container,
+                                                 strkey,
+                                                 brick);
+                g_free(strkey);
+                if (element->name) {
+                    strkey = g_strdup_printf("/brick/%d/title",
+                                             volumeno);
+                    gwy_container_set_string_by_name(container, strkey,
+                                               g_strdup(element->name));
+                    g_free(strkey);
+                }
+                /*
+                if (channel->lut) {
+                    lutname = NULL;
+                    if (gwy_strequal(channel->lut, "Red"))
+                        lutname = g_strdup_printf("RGB-Red");
+                    else if (gwy_strequal(channel->lut, "Green"))
+                        lutname = g_strdup_printf("RGB-Green");
+                    else if (gwy_strequal(channel->lut, "Blue"))
+                        lutname = g_strdup_printf("RGB-Blue");
+                    else if (gwy_strequal(channel->lut, "Gray"))
+                        lutname = g_strdup_printf("Gray");
+                    if (lutname) {
+                        strkey = g_strdup_printf("/%u/base/palette",
+                                                 channelno);
+                        gwy_container_set_string_by_name(container, strkey,
+                                                         lutname);
+                        g_free(strkey);
+                    }
+                }
+                */
+                dfield = gwy_data_field_new(xres, yres,
+                                            xreal, yreal, FALSE);
+                gwy_brick_mean_plane(brick, dfield,
+                                     0, 0, 0,
+                                     xres, yres, -1, FALSE);
+                strkey = g_strdup_printf("/brick/%d/preview",
+                                         volumeno);
+                gwy_container_set_object_by_name(container,
+                                                 strkey,
+                                                 dfield);
+                g_free(strkey);
+                g_object_unref(brick);
+                g_object_unref(dfield);
+                gwy_file_volume_import_log_add(container, volumeno,
+                                               NULL, filename);
+
+                volumeno++;
+            } /* for (channels) */
+        } /* if (volume) */
     }
 
 fail:
