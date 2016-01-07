@@ -142,33 +142,33 @@ typedef struct {
     GPtrArray *elements;
 } XMLParserData;
 
-static gboolean      module_register (void);
-static gint          lif_detect      (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* lif_load        (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-LIFMemBlock *   lif_read_memblock    (const guchar *buffer,
-                                      gsize *size,
-                                      gint version);
-gboolean        lif_remove_memblock  (gpointer key,
-                                      gpointer value,
-                                      gpointer user_data);
-static void     header_start_element (GMarkupParseContext *context,
-                                      const gchar *element_name,
-                                      const gchar **attribute_names,
-                                      const gchar **attribute_values,
-                                      gpointer user_data,
-                                      GError **error);
-static void     header_end_element   (GMarkupParseContext *context,
-                                      const gchar *element_name,
-                                      gpointer user_data,
-                                      GError **error);
-static void     header_parse_text    (GMarkupParseContext *context,
-                                      const gchar *text,
-                                      gsize text_len,
-                                      gpointer user_data,
-                                      GError **error);
+static gboolean      module_register     (void);
+static gint          lif_detect          (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* lif_load            (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static LIFMemBlock*  lif_read_memblock   (const guchar *buffer,
+                                          gsize *size,
+                                          gint version);
+static gboolean      lif_remove_memblock (gpointer key,
+                                          gpointer value,
+                                          gpointer user_data);
+static void          header_start_element(GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          const gchar **attribute_names,
+                                          const gchar **attribute_values,
+                                          gpointer user_data,
+                                          GError **error);
+static void          header_end_element  (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          gpointer user_data,
+                                          GError **error);
+static void          header_parse_text   (GMarkupParseContext *context,
+                                          const gchar *text,
+                                          gsize text_len,
+                                          gpointer user_data,
+                                          GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -682,7 +682,7 @@ fail:
     return container;
 }
 
-LIFMemBlock *
+static LIFMemBlock*
 lif_read_memblock(const guchar *buffer, gsize *size, gint version)
 {
     LIFMemBlock *memblock;
@@ -735,7 +735,7 @@ lif_read_memblock(const guchar *buffer, gsize *size, gint version)
     return memblock;
 }
 
-gboolean
+static gboolean
 lif_remove_memblock(G_GNUC_UNUSED gpointer key,
                     gpointer value,
                     G_GNUC_UNUSED gpointer user_data)
