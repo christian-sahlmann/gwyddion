@@ -110,6 +110,7 @@ gwy_app_wait_create_dialog(GtkWindow *window,
                        FALSE, FALSE, 4);
 
     progress = gtk_progress_bar_new();
+    gtk_widget_set_size_request(progress, 280, -1);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress), 0.0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), progress,
                        FALSE, FALSE, 4);
