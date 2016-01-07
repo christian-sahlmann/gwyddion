@@ -25,8 +25,7 @@
  * <mime-type type="application/x-leica-spm">
  *   <comment>Leica LIF File</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="\x70"/>
- *     <match type="string" offset="8" value="\x2a"/>
+ *     <match type="string" offset="0" value="\x70\x00\x00\x00"/>
  *   </magic>
  *   <glob pattern="*.lif"/>
  *   <glob pattern="*.LIF"/>
@@ -36,17 +35,19 @@
 /**
  * [FILE-MAGIC-FILEMAGIC]
  * # Leica LIF
- * 0 string \x70 Leica LIF File
+ * 0 string \x70\x00\x00\x00 Leica LIF File
  **/
 
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Leica LIF Data File
  * .lif
- * Read
+ * Read Volume
  **/
 
-#define DEBUG
+/*
+ * TODO: laser and filter settings in metadata
+ */
 
 #include "config.h"
 #include <string.h>
@@ -126,6 +127,7 @@ typedef struct {
     gchar  *memid;
     GArray *channels;
     GArray *dimensions;
+    GwyContainer *metadata;
 } LIFElement;
 
 typedef struct {
@@ -285,7 +287,7 @@ lif_load(const gchar *filename,
 
     remaining -= header->xmllen * 2;
 
-    gwy_debug("%s", header->xmlheader);
+    // gwy_debug("%s", header->xmlheader);
     /* Parse XML header */
     xmldata = g_new0(XMLParserData, 1);
     xmldata->file = g_new0(LIFFile, 1);
@@ -434,6 +436,7 @@ lif_load(const gchar *filename,
                                                  dfield);
                 g_object_unref(dfield);
                 g_free(strkey);
+
                 if (element->name) {
                     strkey = g_strdup_printf("/%d/data/title",
                                              channelno);
@@ -441,6 +444,16 @@ lif_load(const gchar *filename,
                                                g_strdup(element->name));
                     g_free(strkey);
                 }
+
+                if (element->metadata) {
+                    strkey = g_strdup_printf("/%d/meta",
+                                             channelno);
+                    gwy_container_set_object_by_name(container,
+                                                     strkey,
+                                                     element->metadata);
+                    g_free(strkey);
+                }
+
                 if (channel->lut) {
                     lutname = NULL;
                     if (gwy_strequal(channel->lut, "Red"))
@@ -558,6 +571,7 @@ lif_load(const gchar *filename,
                                                  strkey,
                                                  brick);
                 g_free(strkey);
+
                 if (element->name) {
                     strkey = g_strdup_printf("/brick/%d/title",
                                              volumeno);
@@ -565,7 +579,16 @@ lif_load(const gchar *filename,
                                                g_strdup(element->name));
                     g_free(strkey);
                 }
-                /*
+
+                if (element->metadata) {
+                    strkey = g_strdup_printf("/brick/%d/meta",
+                                             volumeno);
+                    gwy_container_set_object_by_name(container,
+                                                     strkey,
+                                                     element->metadata);
+                    g_free(strkey);
+                }
+
                 if (channel->lut) {
                     lutname = NULL;
                     if (gwy_strequal(channel->lut, "Red"))
@@ -577,14 +600,14 @@ lif_load(const gchar *filename,
                     else if (gwy_strequal(channel->lut, "Gray"))
                         lutname = g_strdup_printf("Gray");
                     if (lutname) {
-                        strkey = g_strdup_printf("/%u/base/palette",
-                                                 channelno);
+                        strkey = g_strdup_printf("/brick/%d/preview/palette",
+                                                 volumeno);
                         gwy_container_set_string_by_name(container, strkey,
                                                          lutname);
                         g_free(strkey);
                     }
                 }
-                */
+
                 dfield = gwy_data_field_new(xres, yres,
                                             xreal, yreal, FALSE);
                 gwy_brick_mean_plane(brick, dfield,
@@ -643,6 +666,8 @@ fail:
                     g_free(element->name);
                 if (element->memid)
                     g_free(element->memid);
+                if (element->metadata)
+                    g_object_unref(element->metadata);
             }
             g_array_free(file->elements, TRUE);
         }
@@ -736,6 +761,7 @@ header_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 {
     const gchar **name_cursor = attribute_names;
     const gchar **value_cursor = attribute_values;
+    gchar *name, *value;
     XMLParserData *data;
     LIFElement *element;
 
@@ -836,7 +862,6 @@ header_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
         }
 
         g_array_append_val(element->channels, *channel);
-        fprintf(stderr,"5");
     }
     else if (gwy_strequal(element_name, "DimensionDescription")) {
         LIFDimension *dimension = NULL;
@@ -880,6 +905,33 @@ header_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
         }
 
         g_array_append_val(element->dimensions, *dimension);
+    }
+    else if (gwy_strequal(element_name,
+                          "ATLConfocalSettingDefinition")) {
+        if (!(data->elements->len)) {
+            gwy_debug("Wrong XML ATLConfocalSettingDefinition block");
+            err_FILE_TYPE(error, "Leica LIF");
+            goto fail_xml;
+        }
+
+        element = (LIFElement *)g_ptr_array_index(data->elements,
+                                               data->elements->len - 1);
+
+        if (!(element->metadata)) {
+            element->metadata = gwy_container_new();
+        }
+
+        while (*name_cursor) {
+            name = g_strdup(*name_cursor);
+            value = g_strdup(*value_cursor);
+            gwy_container_set_string_by_name(element->metadata,
+                                             name, value);
+            g_free(name);
+
+            name_cursor++;
+            value_cursor++;
+        }
+
     }
 
 fail_xml:
