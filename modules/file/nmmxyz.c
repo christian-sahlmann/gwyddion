@@ -688,6 +688,7 @@ create_data_field(GwyContainer *container,
     const gdouble *d;
     const gchar *zunit = NULL;
     GQuark quark;
+    gdouble q = 1.0;
 
     gwy_debug("regularising field #%u %s (%s)",
               i, dsc->short_name, dsc->long_name);
@@ -721,8 +722,13 @@ create_data_field(GwyContainer *container,
     if (plot_density)
         density_map = gwy_data_field_new_alike(dfield, FALSE);
 
-    if (gwy_stramong(dsc->short_name, "Lz", "Az", "-Lz+Az", "XY vector", NULL))
+    if (gwy_stramong(dsc->short_name,
+                     "Lz", "Az", "Az0", "Az1", "-Lz+Az", "XY vector", NULL))
         zunit = "m";
+    else if (gwy_stramong(dsc->short_name, "Ax", NULL)) {
+        zunit = "V";
+        q = 10.0/65536.0;
+    }
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), zunit);
 
     d = (const gdouble*)data->data + i;
@@ -734,6 +740,8 @@ create_data_field(GwyContainer *container,
     }
 
     gwy_data_field_average_xyz(dfield, density_map, points, ndata);
+    if (q != 1.0)
+        gwy_data_field_multiply(dfield, q);
 
     id = i-2;
     quark = gwy_app_get_data_key_for_id(id);
