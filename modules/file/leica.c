@@ -339,7 +339,7 @@ lif_load(const gchar *filename,
         }
 
         if ((element->dimensions->len != 2)
-                                    && (element->dimensions->len != 3)){
+                                   && (element->dimensions->len != 3)) {
             gwy_debug("Dimensions = %d channels=%d (not loading)",
                       element->dimensions->len,
                       element->channels->len);
