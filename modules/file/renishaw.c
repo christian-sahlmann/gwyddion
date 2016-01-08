@@ -25,7 +25,7 @@
   *  TODO: Read whitelight calibrations and metadata from EXIF tags
   */
 
- /**
+/**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-renishaw-spm">
  *   <comment>Renishaw WiRE Data File</comment>
@@ -1277,7 +1277,7 @@ wdf_load(const gchar *filename,
         rowstride = gdk_pixbuf_get_rowstride(pixbuf);
         bpp = gdk_pixbuf_get_has_alpha(pixbuf) ? 4 : 3;
 
-		// FIXME: Whitelight imported as greyscale
+        // FIXME: Whitelight imported as greyscale
         dfield = gwy_data_field_new(width, height, width, height, TRUE);
         data = gwy_data_field_get_data(dfield);
         for (i = 0; i < height; i++) {
@@ -1696,9 +1696,8 @@ wdf_read_pset(const guchar *buffer,
                     str = g_strdup_printf("%" G_GINT64_FORMAT "", i64);
                     for (i = 1; i < pset->size; i++) {
                         i64 = gwy_get_gint64_le(&buffer);
-                        newstr = g_strdup_printf(
-                                             "%s; %" G_GINT64_FORMAT "",
-                                             str, i64);
+                        newstr = g_strdup_printf("%s; %" G_GINT64_FORMAT "",
+                                                 str, i64);
                         g_free(str);
                         str = newstr;
                     }

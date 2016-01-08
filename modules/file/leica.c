@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301, USA.
  */
 
- /**
+/**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-leica-spm">
  *   <comment>Leica LIF File</comment>
@@ -283,7 +283,7 @@ lif_load(const gchar *filename,
 
     header->xmlheader = g_convert((const gchar*)p, 2 * header->xmllen,
                                   "UTF-8", "UTF-16", NULL, NULL, NULL);
-    p+= header->xmllen * 2;
+    p += header->xmllen * 2;
 
     remaining -= header->xmllen * 2;
 
@@ -320,7 +320,7 @@ lif_load(const gchar *filename,
         }
         remaining -= memblock_size;
         if (remaining >= 0) {
-            gwy_debug("remaining = %" G_GUINT64_FORMAT "",remaining);
+            gwy_debug("remaining = %" G_GUINT64_FORMAT "", remaining);
             p += memblock_size;
             g_hash_table_insert(file->memblocks, memblock->memid,
                                 memblock);
@@ -814,7 +814,7 @@ header_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
             value_cursor++;
         }
 
-        if(!(element->memid)) {
+        if (!(element->memid)) {
             gwy_debug("Wrong XML: Element has no MemID");
             err_FILE_TYPE(error, "Leica LIF");
         }
@@ -954,7 +954,7 @@ header_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     if (gwy_strequal(element_name, "Element")) {
         element = (LIFElement *)g_ptr_array_index(data->elements,
                                                data->elements->len - 1);
-        if(!(element->memid)) {
+        if (!(element->memid)) {
             gwy_debug("Wrong XML: Element has no MemID");
             err_FILE_TYPE(error, "Leica LIF");
         }
