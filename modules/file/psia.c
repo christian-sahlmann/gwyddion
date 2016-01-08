@@ -22,7 +22,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Park Systems
- * .tiff, .tif
+ * .tiff .tif
  * Read
  **/
 

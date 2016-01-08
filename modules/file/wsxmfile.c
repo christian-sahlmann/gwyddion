@@ -40,7 +40,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Nanotec WSxM
- * .tom, .stp
+ * .tom .stp
  * Read Export
  **/
 

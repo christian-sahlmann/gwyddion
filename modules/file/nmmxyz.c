@@ -42,7 +42,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Nano Measuring Machine profile data
- * *.dsc + *.dat
+ * .dsc .dat
  * Read[1]
  * [1] XYZ data are interpolated to a regular grid upon import.
  **/

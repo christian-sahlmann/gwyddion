@@ -40,7 +40,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * JPK Instruments
- * .jpk, .jpk-qi-image
+ * .jpk .jpk-qi-image
  * Read
  **/
 

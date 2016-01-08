@@ -21,7 +21,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Flexible Image Transport System (FITS)
- * .fits, .fit
+ * .fits .fit
  * Read
  **/
 

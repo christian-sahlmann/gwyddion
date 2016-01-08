@@ -42,7 +42,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Open Microscopy OME TIFF
- * .ome.tiff, .ome.tif
+ * .ome.tiff .ome.tif
  * Read
  **/
 

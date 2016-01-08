@@ -37,7 +37,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Keyence profilometry VK4
- * *.vk4
+ * .vk4
  * Read
  **/
 
