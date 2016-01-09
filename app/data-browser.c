@@ -4959,6 +4959,18 @@ gwy_app_data_browser_deleted(GwyAppDataBrowser *browser)
     return TRUE;
 }
 
+static gboolean
+gwy_app_data_browser_configured(GwyAppDataBrowser *browser)
+{
+    if (!browser || !browser->window || !GTK_WIDGET_VISIBLE(browser->window))
+        return FALSE;
+
+    gwy_app_save_window_position(GTK_WINDOW(browser->window),
+                                 "/app/data-browser", TRUE, TRUE);
+
+    return FALSE;
+}
+
 static void
 gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
 {
@@ -5168,6 +5180,8 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                              browser);
     g_signal_connect_swapped(browser->window, "delete-event",
                              G_CALLBACK(gwy_app_data_browser_deleted), browser);
+    g_signal_connect_swapped(browser->window, "configure-event",
+                             G_CALLBACK(gwy_app_data_browser_configured), browser);
     g_object_unref(browser->sensgroup);
 
     gtk_widget_show_all(vbox);
