@@ -2445,6 +2445,32 @@ fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
     g_free(mpts);
 }
 
+static void
+fill_missing_points_all(GwyDataField *dfield,
+                        const GwyTriangulationPointXYZ *points,
+                        guint npoints)
+{
+    gdouble xc = dfield->xoff + 0.5*dfield->xreal;
+    gdouble yc = dfield->yoff + 0.5*dfield->yreal;
+    gdouble d2min = G_MAXDOUBLE;
+    guint k, kmin = 0;
+
+    g_return_if_fail(npoints);
+
+    for (k = 0; k < npoints; k++) {
+        const PointXYZ *pt = points + k;
+        gdouble x = pt->x - xc;
+        gdouble y = pt->y - yc;
+        gdouble d2 = x*x + y*y;
+        if (d2 < d2min) {
+            d2min = d2;
+            kmin = k;
+        }
+    }
+
+    gwy_data_field_fill(dfield, points[kmin].z);
+}
+
 /**
  * gwy_data_field_average_xyz:
  * @data_field: A data field to fill with regularised XYZ data.
@@ -2459,9 +2485,13 @@ fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
  * The real dimensions and offsets of @field determine the rectangle in the XY
  * plane that will be regularised.  The regularisation method is fast but
  * simple and there are no absolute guarantees of quality, even though the
- * result will be usually quite acceptable.  If there are no points in the
- * rectangle defined by @field nor anywehre close then @field will be simply
- * filled with zeroes.
+ * result will be usually quite acceptable.
+ *
+ * This especially applies to reasonable views of the XYZ data.  Unreasonable
+ * views can be rendered unreasonably.  In particular if the rectangle does not
+ * contain any point from @points (either due to high zoom to an empty region
+ * or by just being completely off) @data_field will be filled entirely with
+ * the value of the closest point or something similar.
  *
  * Since: 2.44
  **/
@@ -2476,6 +2506,7 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
     gint extxres, extyres, xres, yres, k, kk, i, j;
     gint imin = G_MAXINT, imax = G_MININT, jmin = G_MAXINT, jmax = G_MININT;
     gdouble *d, *w;
+    guint ninside;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     if (densitymap) {
@@ -2591,20 +2622,29 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
                                  -jmin, -imin, xres, yres, 0, 0);
     }
 
+    ninside = 0;
     for (i = 0; i < extyres; i++) {
         for (j = 0; j < extxres; j++) {
             kk = i*extxres + j;
             if (w[kk]) {
                 d[kk] = d[kk]/w[kk];
                 w[kk] = 0.0;
+                ninside++;
             }
             else
                 w[kk] = 1.0;
         }
     }
-    fill_missing_points(extfield, extweights);
 
-    gwy_data_field_area_copy(extfield, dfield, -jmin, -imin, xres, yres, 0, 0);
+    if (ninside) {
+        fill_missing_points(extfield, extweights);
+        gwy_data_field_area_copy(extfield, dfield,
+                                 -jmin, -imin, xres, yres, 0, 0);
+    }
+    else {
+        fill_missing_points_all(dfield, points, npoints);
+    }
+
     g_object_unref(extfield);
     g_object_unref(extweights);
 }
