@@ -65,6 +65,7 @@ Modules:
   interpolation.  Button ‘Reset Ranges’ permits resetting the data ranges to
   the initial values obtained from the file data ranges.  Point density can be
   plotted as another field.
+- GWYXYZF: The regularisation method was improved to ‘Average’ from Raw XYZ.
 - Nanoscope: Support for 32bit raw data format used since 9.2 was added.
 - JEOL: Support for Phase channels was added.
 - Statistical quantities: Deficit of entropy to Gaussian distribution with the
