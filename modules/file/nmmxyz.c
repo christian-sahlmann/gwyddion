@@ -282,7 +282,8 @@ nmmxyz_load(const gchar *filename,
     gwy_app_wait_start(NULL, _("Reading files..."));
 
     free_profile_descriptions(dscs, FALSE);
-    data = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    data = g_array_sized_new(FALSE, FALSE, sizeof(gdouble),
+                             info.ndata*args.nincluded);
     if (!gather_data_files(filename, &info, &args, dscs, data, error))
         goto fail;
 
