@@ -31,6 +31,8 @@ Libraries:
   work for all cases, previously the border-influenced ares had to be limited.
 - libgwyprocess: New function for simple regularisation of XYZ data to a data
   field was added.
+- libgwyapp: Data windows hidden and re-shown from the data browser no longer
+  lose the window icon showing a data thumbnail.
 
 Modules:
 - Entropy (new): Visualises entropy calculation for distributions of values
