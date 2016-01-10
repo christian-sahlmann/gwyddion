@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-07 20:45+0100\n"
-"PO-Revision-Date: 2016-01-07 20:50+0100\n"
+"POT-Creation-Date: 2016-01-10 02:14+0100\n"
+"PO-Revision-Date: 2016-01-10 22:41+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -121,7 +121,7 @@ msgstr "kontaktní: Hertz (paraboloid)"
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
 #: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
 #: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
-#: app/data-browser.c:6897 app/data-browser.c:6979 app/resource-editor.c:366
+#: app/data-browser.c:6911 app/data-browser.c:6993 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:696
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -450,7 +450,7 @@ msgstr "Hodnota"
 msgid "Area"
 msgstr "Plocha"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5149 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5161 app/toolbox.c:114
 msgid "Volume"
 msgstr "Objem"
 
@@ -940,15 +940,15 @@ msgstr "pixelů"
 #: modules/process/correct_affine.c:306 modules/process/curvature.c:620
 #: modules/process/cwt.c:135 modules/process/deposit_synth.c:357
 #: modules/process/diff_synth.c:419 modules/process/domain_synth.c:362
-#: modules/process/drift.c:254 modules/process/dwtanisotropy.c:185
-#: modules/process/dwt.c:166 modules/process/edge.c:647
-#: modules/process/extend.c:192 modules/process/facet_analysis.c:276
-#: modules/process/facet-level.c:193 modules/process/fbm_synth.c:311
+#: modules/process/drift.c:254 modules/process/dwt.c:166
+#: modules/process/dwtanisotropy.c:185 modules/process/edge.c:647
+#: modules/process/extend.c:192 modules/process/facet-level.c:193
+#: modules/process/facet_analysis.c:276 modules/process/fbm_synth.c:311
 #: modules/process/fft.c:336 modules/process/fft_filter_2d.c:425
 #: modules/process/fft_synth.c:348 modules/process/fractal.c:235
 #: modules/process/grain_edge.c:222 modules/process/grain_mark.c:256
 #: modules/process/grain_wshed.c:175 modules/process/hough.c:179
-#: modules/process/latsim.c:158 modules/process/lat_synth.c:535
+#: modules/process/lat_synth.c:535 modules/process/latsim.c:158
 #: modules/process/level.c:264 modules/process/linematch.c:791
 #: modules/process/lno_synth.c:441 modules/process/local_contrast.c:130
 #: modules/process/mark_disconn.c:216 modules/process/mask_distribute.c:152
@@ -1307,6 +1307,20 @@ msgstr "_Přidat symbol"
 msgid "Preview"
 msgstr "Náhled"
 
+#: libgwymodule/gwymodule-file.c:549 modules/file/err.h:41
+#: modules/file/pixmap.c:497
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Soubor nelze otevřít pro čtení: %s."
+
+#: libgwymodule/gwymodule-file.c:558
+msgid "No module can load this file type."
+msgstr "Žádný modul nedokáže načíst tento typ souboru."
+
+#: libgwymodule/gwymodule-file.c:665
+msgid "No module can save to this file type."
+msgstr "Žádný modul nedokáže zapsat tento typ souboru."
+
 #: libgwymodule/gwymodulebrowser.c:67
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
@@ -1359,20 +1373,6 @@ msgstr "Jméno:"
 #: libgwymodule/gwymodulebrowser.c:271
 msgid "Failure:"
 msgstr "Selhání:"
-
-#: libgwymodule/gwymodule-file.c:549 modules/file/err.h:41
-#: modules/file/pixmap.c:497
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Soubor nelze otevřít pro čtení: %s."
-
-#: libgwymodule/gwymodule-file.c:558
-msgid "No module can load this file type."
-msgstr "Žádný modul nedokáže načíst tento typ souboru."
-
-#: libgwymodule/gwymodule-file.c:665
-msgid "No module can save to this file type."
-msgstr "Žádný modul nedokáže zapsat tento typ souboru."
 
 #: app/about.c:57
 #, c-format
@@ -1583,44 +1583,44 @@ msgstr "Kanál:"
 msgid "Section:"
 msgstr "Řez:"
 
-#: app/data-browser.c:5022
+#: app/data-browser.c:5034
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:5023
+#: app/data-browser.c:5035
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5036
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:5069
+#: app/data-browser.c:5081
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:5094
+#: app/data-browser.c:5106
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:5107
+#: app/data-browser.c:5119
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:5121 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5133 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:5135
+#: app/data-browser.c:5147
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:6935
+#: app/data-browser.c:6949
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
 
-#: app/data-browser.c:7021
+#: app/data-browser.c:7035
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Neznámá objemová data %d"
@@ -1880,12 +1880,6 @@ msgstr ""
 "Aby se neztratilo uložené nastavení, nebude se do něj zapisovat, dokud "
 "nebude opraven či odstraněn."
 
-#: app/gwymoduleutils.c:198 app/settings.c:131 app/settings.c:142
-#: modules/file/err.h:62
-#, c-format
-msgid "Cannot write to file: %s."
-msgstr "Do souboru nelze zapisovat: %s."
-
 #: app/gwymoduleutils-file.c:498
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
@@ -1926,6 +1920,12 @@ msgstr "Klíč na řádku %u je prázdný."
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
 "Hlavička neočekávaně skončila na řádku %u; chybí značka konce hlavičky."
+
+#: app/gwymoduleutils.c:198 app/settings.c:131 app/settings.c:142
+#: modules/file/err.h:62
+#, c-format
+msgid "Cannot write to file: %s."
+msgstr "Do souboru nelze zapisovat: %s."
 
 #: app/gwyplaintool.c:574
 msgid "<big><b>Missing layer module.</b></big>"
@@ -2913,7 +2913,7 @@ msgstr "Hodnota tagu ‚%s‘ v hlavičce není doplněna nulami."
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:180 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:168 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "Hlavička souboru je uříznutá."
@@ -3063,14 +3063,6 @@ msgstr "Hlavičku souboru nelze převést z UTF-16: %s"
 msgid "Unknown file type header: `%s'."
 msgstr "Neznámá hlavička souboru: ‚%s‘."
 
-#: modules/file/burleigh_bii.c:75
-msgid "Imports Burleigh BII binary data files."
-msgstr "Načítá datové soubory Burleigh BII."
-
-#: modules/file/burleigh_bii.c:88
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh Image Studio soubory (.bii)"
-
 #: modules/file/burleigh.c:127
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Načítá datové soubory Burleigh IMG verze 2.1."
@@ -3083,6 +3075,14 @@ msgstr "Burleigh 2.1 soubory (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Formát souboru verze %.1f není podporován."
+
+#: modules/file/burleigh_bii.c:75
+msgid "Imports Burleigh BII binary data files."
+msgstr "Načítá datové soubory Burleigh BII."
+
+#: modules/file/burleigh_bii.c:88
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh Image Studio soubory (.bii)"
 
 #: modules/file/burleigh_exp.c:88
 msgid "Imports Burleigh text/bin exported images."
@@ -3347,19 +3347,6 @@ msgstr "První sekce není DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount v [DataSet]"
 
-#: modules/file/femtoscan.c:81
-msgid "Imports FemtoScan SPM data files."
-msgstr "Načítá SPM datové soubory FemtoScan."
-
-#: modules/file/femtoscan.c:94
-msgid "FemtoScan SPM files"
-msgstr "FemtoScan SPM soubory"
-
-#: modules/file/femtoscan.c:285 modules/file/miffile.c:690
-#: modules/file/mulfile.c:304
-msgid "Image data are outside the file."
-msgstr "Data obrázku jsou mimo soubor."
-
 #: modules/file/femtoscan-txt.c:77
 msgid "Imports FemtoScan TXT files."
 msgstr "Načítá TXT datové soubory NanoScan."
@@ -3377,6 +3364,19 @@ msgstr "Datový řádek nezačíná hodnotou Y souřadnice."
 msgid ""
 "Data line length %u does not correspond to the number of X abscissas %u."
 msgstr "Délka %u datového řádku neodpovídá počtu %u souřadnic X."
+
+#: modules/file/femtoscan.c:81
+msgid "Imports FemtoScan SPM data files."
+msgstr "Načítá SPM datové soubory FemtoScan."
+
+#: modules/file/femtoscan.c:94
+msgid "FemtoScan SPM files"
+msgstr "FemtoScan SPM soubory"
+
+#: modules/file/femtoscan.c:285 modules/file/miffile.c:690
+#: modules/file/mulfile.c:304
+msgid "Image data are outside the file."
+msgstr "Data obrázku jsou mimo soubor."
 
 #: modules/file/fitsfile.c:76
 msgid "Reads Flexible Image Transport System (FITS) files."
@@ -3559,15 +3559,15 @@ msgstr "Nelze zjistit velikost nekomprimovaného souboru."
 msgid "Cannot read file contents."
 msgstr "Obsah souboru nelze přečíst."
 
-#: modules/file/gxyzffile.c:111
+#: modules/file/gxyzffile.c:100
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Načítá surové datové soubory typu Gwyddion XYZ Field."
 
-#: modules/file/gxyzffile.c:124
+#: modules/file/gxyzffile.c:113
 msgid "GwyXYZ data files"
 msgstr "GwyXYZ datové soubory"
 
-#: modules/file/gxyzffile.c:207
+#: modules/file/gxyzffile.c:195
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Velikost dat %lu není násobek velikosti bodu %u."
@@ -3748,7 +3748,7 @@ msgstr "Změnit"
 msgid "H_eight:"
 msgstr "_Výška:"
 
-#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:515
+#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:552
 #: modules/file/pixmap.c:914 modules/file/rawfile.c:701
 #: modules/file/rawxyz.c:606
 msgid "Identical _measures"
@@ -4072,7 +4072,7 @@ msgstr "Obraz"
 
 #: modules/file/imgexport.c:3541 modules/file/rawxyz.c:734
 #: modules/process/correct_affine.c:493 modules/process/drift.c:306
-#: modules/process/dwtanisotropy.c:203 modules/process/dwt.c:206
+#: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:203
 #: modules/process/fft_filter_1d.c:305 modules/process/fft_profile.c:297
 #: modules/process/fractal.c:257 modules/process/nanoindent_adjust.c:229
 #: modules/process/polydistort.c:252 modules/process/rotate.c:292
@@ -4679,6 +4679,14 @@ msgstr "Načítá datové soubory NanoScanTech .nstdat."
 msgid "NanoScanTech data (.nstdat)"
 msgstr "NanoScanTech data (.nstdat)"
 
+#: modules/file/nanoscope-ii.c:86
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
+
+#: modules/file/nanoscope-ii.c:99
+msgid "Nanoscope II files"
+msgstr "Nanoscope II soubory."
+
 #: modules/file/nanoscope.c:207
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -4724,14 +4732,6 @@ msgstr "Po datovém vzorku č. %u následují nesmysly."
 #: modules/file/nanoscope.c:1595
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
-
-#: modules/file/nanoscope-ii.c:86
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:99
-msgid "Nanoscope II files"
-msgstr "Nanoscope II soubory."
 
 #: modules/file/nanotop.c:107
 msgid "Imports NANOTOP AFM files"
@@ -4794,58 +4794,74 @@ msgstr "Pole ‚%s‘ má nenulový počet prvků, ačkoli není přítomno."
 msgid "More than one record dimension found."
 msgstr "Více než jedna dimenze je ‚record‘."
 
-#: modules/file/nmmxyz.c:183
+#: modules/file/nmmxyz.c:186
 msgid "Imports Nano Measuring Machine profile files."
 msgstr "Načítá profily Nano Measuring Machine."
 
-#: modules/file/nmmxyz.c:196
+#: modules/file/nmmxyz.c:199
 msgid "Nano Measuring Machine files (*.dsc)"
 msgstr "Nano Measuring Machine soubory (*.dsc)"
 
-#: modules/file/nmmxyz.c:240
+#: modules/file/nmmxyz.c:243
 msgid "Nano Measuring Machine data import must be run as interactive."
 msgstr "Načítání dat Nano Measuring Machine musí být spuštěno interaktivně."
 
-#: modules/file/nmmxyz.c:279
+#: modules/file/nmmxyz.c:282
 msgid "Reading files..."
 msgstr "Načítám soubory..."
 
-#: modules/file/nmmxyz.c:286 modules/process/lat_synth.c:1192
+#: modules/file/nmmxyz.c:290 modules/process/lat_synth.c:1192
 msgid "Rendering surface..."
 msgstr "Vykresluji povrch..."
 
-#: modules/file/nmmxyz.c:363
+#: modules/file/nmmxyz.c:367
 msgid "Import NMM Profile Set"
 msgstr "Načtení sady NMM profilů"
 
-#: modules/file/nmmxyz.c:381
+#: modules/file/nmmxyz.c:383 modules/file/rawfile.c:450
+msgid "Information"
+msgstr "Informace"
+
+#: modules/file/nmmxyz.c:389
+msgid "Number of data files:"
+msgstr "Počet datových souborů:"
+
+#: modules/file/nmmxyz.c:391
+msgid "Total number of points:"
+msgstr "Počet datových bodů:"
+
+#: modules/file/nmmxyz.c:393
+msgid "Points per profile:"
+msgstr "Bodů v jednom profilu:"
+
+#: modules/file/nmmxyz.c:398
 msgid "Imported Channels"
 msgstr "Načítané kanály"
 
-#: modules/file/nmmxyz.c:403 modules/file/rawxyz.c:773
+#: modules/file/nmmxyz.c:420 modules/file/rawxyz.c:773
 msgid "Plot point density map"
 msgstr "Vykreslit mapu hustoty bodů"
 
-#: modules/file/nmmxyz.c:479 modules/file/rawfile.c:626
+#: modules/file/nmmxyz.c:516 modules/file/rawfile.c:626
 #: modules/file/rawxyz.c:572 modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Rozlišení"
 
-#: modules/file/nmmxyz.c:483 modules/file/rawfile.c:631
+#: modules/file/nmmxyz.c:520 modules/file/rawfile.c:631
 #: modules/file/rawxyz.c:576 modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "_Vodorovný rozměr:"
 
-#: modules/file/nmmxyz.c:499 modules/file/rawfile.c:638
+#: modules/file/nmmxyz.c:536 modules/file/rawfile.c:638
 #: modules/file/rawxyz.c:591 modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "_Svislý rozměr:"
 
-#: modules/file/nmmxyz.c:720 modules/file/rawxyz.c:377
+#: modules/file/nmmxyz.c:765 modules/file/rawxyz.c:377
 msgid "Point density map"
 msgstr "Mapa hustoty bodů"
 
-#: modules/file/nmmxyz.c:790
+#: modules/file/nmmxyz.c:835
 msgid "Something is changing the data files on disk."
 msgstr "Něco průběžně mění datové soubory na disku."
 
@@ -5380,10 +5396,6 @@ msgstr "Načítání surových dat musí být spuštěno interaktivně."
 #: modules/file/rawfile.c:423
 msgid "Read Raw File"
 msgstr "Načtení surových dat"
-
-#: modules/file/rawfile.c:450
-msgid "Information"
-msgstr "Informace"
 
 #: modules/file/rawfile.c:455
 msgid "Data Format"
@@ -6050,6 +6062,14 @@ msgstr "Načítá ASCII datové soubory SPIP."
 msgid "SPIP ASCII files (.asc)"
 msgstr "SPIP ASCII soubory (.asc)"
 
+#: modules/file/spml.c:108
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
+
+#: modules/file/spml.c:122
+msgid "SPML files (.xml)"
+msgstr "SPML soubory (.xml)"
+
 #: modules/file/spmlab.c:131
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Načítá datové soubory Thermicroscopes SpmLab R3 až R7."
@@ -6074,14 +6094,6 @@ msgstr "SPMLab soubory s plovoucí čárkou (.flt)"
 #: modules/file/spmlabf.c:153
 msgid "Missing data start marker [Data]."
 msgstr "Chybí značka začátku dat [Data]."
-
-#: modules/file/spml.c:108
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
-
-#: modules/file/spml.c:122
-msgid "SPML files (.xml)"
-msgstr "SPML soubory (.xml)"
 
 #: modules/file/spmxfile.c:91
 msgid "Reads ATC SPMxFormat files."
@@ -8041,8 +8053,8 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:158 modules/process/dwtanisotropy.c:210
-#: modules/process/dwt.c:185
+#: modules/process/cwt.c:158 modules/process/dwt.c:185
+#: modules/process/dwtanisotropy.c:210
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
 
@@ -8345,39 +8357,6 @@ msgstr "drift"
 msgid "x-axis drift"
 msgstr "drift podél x"
 
-#: modules/process/dwtanisotropy.c:80
-msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
-
-#: modules/process/dwtanisotropy.c:94
-msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/_Integrální transformace/DWT _anisotropie"
-
-#: modules/process/dwtanisotropy.c:98
-msgid "DWT anisotropy detection"
-msgstr "Detekce anisotropie pomocí DWT"
-
-#: modules/process/dwtanisotropy.c:132 modules/process/dwt.c:119
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: Data musejí být čtvercová."
-
-#: modules/process/dwtanisotropy.c:132
-msgid "DWT Anisotropy"
-msgstr "DWT anisotropie"
-
-#: modules/process/dwtanisotropy.c:184
-msgid "2D DWT Anisotropy"
-msgstr "2D DWT detekce anisotropie"
-
-#: modules/process/dwtanisotropy.c:215
-msgid "X/Y ratio threshold:"
-msgstr "práh poměru X/Y:"
-
-#: modules/process/dwtanisotropy.c:223
-msgid "Low level exclude limit:"
-msgstr "Spodní limit rozkladu:"
-
 #: modules/process/dwt.c:72
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "Dvourozměrná DWT (diskrétní waveletová transformace)."
@@ -8389,6 +8368,11 @@ msgstr "/_Integrální transformace/2D _DWT..."
 #: modules/process/dwt.c:90
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Vypočíst diskrétní waveletovou transformaci"
+
+#: modules/process/dwt.c:119 modules/process/dwtanisotropy.c:132
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: Data musejí být čtvercová."
 
 #: modules/process/dwt.c:146
 msgid "DWT"
@@ -8406,6 +8390,34 @@ msgid ""
 msgstr ""
 "Velikost %d není mocnina dvou,\n"
 "pro DWT budou data přeškálována na %d×%d."
+
+#: modules/process/dwtanisotropy.c:80
+msgid "2D DWT anisotropy detection based on X/Y components ratio."
+msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
+
+#: modules/process/dwtanisotropy.c:94
+msgid "/_Integral Transforms/DWT _Anisotropy..."
+msgstr "/_Integrální transformace/DWT _anisotropie"
+
+#: modules/process/dwtanisotropy.c:98
+msgid "DWT anisotropy detection"
+msgstr "Detekce anisotropie pomocí DWT"
+
+#: modules/process/dwtanisotropy.c:132
+msgid "DWT Anisotropy"
+msgstr "DWT anisotropie"
+
+#: modules/process/dwtanisotropy.c:184
+msgid "2D DWT Anisotropy"
+msgstr "2D DWT detekce anisotropie"
+
+#: modules/process/dwtanisotropy.c:215
+msgid "X/Y ratio threshold:"
+msgstr "práh poměru X/Y:"
+
+#: modules/process/dwtanisotropy.c:223
+msgid "Low level exclude limit:"
+msgstr "Spodní limit rozkladu:"
 
 #: modules/process/edge.c:152
 msgid ""
@@ -8652,6 +8664,30 @@ msgstr "Rozšířit _symetricky"
 msgid "Keep lateral offsets"
 msgstr "_Zachovat podélné posunutí"
 
+#: modules/process/facet-level.c:64
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
+"orientovány vzhůru."
+
+#: modules/process/facet-level.c:79
+msgid "/_Level/_Facet Level"
+msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
+
+#: modules/process/facet-level.c:83
+msgid "Level data to make facets point upward"
+msgstr "Vyrovnat data, aby byly plošky orientovány vzhůru"
+
+#: modules/process/facet-level.c:119 modules/process/facet-level.c:130
+msgid "Facet Level"
+msgstr "Vyrovnání podle plošek"
+
+#: modules/process/facet-level.c:143 modules/process/flatten_base.c:250
+msgid "Facet-leveling..."
+msgstr "Vyrovnávání podle plošek..."
+
 #: modules/process/facet_analysis.c:165
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Zobrazuje, označuje a měří orientaci plošek."
@@ -8711,30 +8747,6 @@ msgid ""
 msgstr ""
 "Pozor: Jednotky podélných rozměrů a hodnot se liší. Úhly nedávají fyzikálně "
 "smysl."
-
-#: modules/process/facet-level.c:64
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-"Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
-"orientovány vzhůru."
-
-#: modules/process/facet-level.c:79
-msgid "/_Level/_Facet Level"
-msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
-
-#: modules/process/facet-level.c:83
-msgid "Level data to make facets point upward"
-msgstr "Vyrovnat data, aby byly plošky orientovány vzhůru"
-
-#: modules/process/facet-level.c:119 modules/process/facet-level.c:130
-msgid "Facet Level"
-msgstr "Vyrovnání podle plošek"
-
-#: modules/process/facet-level.c:143 modules/process/flatten_base.c:250
-msgid "Facet-leveling..."
-msgstr "Vyrovnávání podle plošek..."
 
 #: modules/process/fbm_synth.c:170
 msgid "Generates random surfaces similar to fractional Brownian motion."
@@ -10102,42 +10114,6 @@ msgstr "Interpolace dat pod maskou řešením Laplaceovy rovnice"
 msgid "Laplace interpolation..."
 msgstr "Laplaceovská interpolace..."
 
-#: modules/process/latsim.c:75
-msgid "Lateral force simulator"
-msgstr "Simulace laterálních sil"
-
-#: modules/process/latsim.c:89
-msgid "/_Tip/_Lateral force..."
-msgstr "/_Hrot SPM/_Laterální síly..."
-
-#: modules/process/latsim.c:93
-msgid "Simulate topograpy artefacts in lateral force channels"
-msgstr "Simulace topografických artefaktů v kanálu laterální síly"
-
-#: modules/process/latsim.c:134
-msgid "Fw lateral force "
-msgstr "Laterální síla (FW)"
-
-#: modules/process/latsim.c:143
-msgid "Rev lateral force"
-msgstr "Laterální síla (REV)"
-
-#: modules/process/latsim.c:157
-msgid "Lateral force simulation"
-msgstr "Simulace laterálních sil"
-
-#: modules/process/latsim.c:174
-msgid "_Friction coef.:"
-msgstr "Koe_ficient tření:"
-
-#: modules/process/latsim.c:180
-msgid "_Normal force:"
-msgstr "_Normálová síla:"
-
-#: modules/process/latsim.c:186
-msgid "_Adhesion force:"
-msgstr "_Adheze:"
-
 #: modules/process/lat_synth.c:347
 msgid "Random constant"
 msgstr "Náhodná konstanta"
@@ -10238,6 +10214,42 @@ msgstr "Relaxuji mřížku..."
 #: modules/process/lat_synth.c:1177
 msgid "Relaxing heights..."
 msgstr "Relaxuji mřížku..."
+
+#: modules/process/latsim.c:75
+msgid "Lateral force simulator"
+msgstr "Simulace laterálních sil"
+
+#: modules/process/latsim.c:89
+msgid "/_Tip/_Lateral force..."
+msgstr "/_Hrot SPM/_Laterální síly..."
+
+#: modules/process/latsim.c:93
+msgid "Simulate topograpy artefacts in lateral force channels"
+msgstr "Simulace topografických artefaktů v kanálu laterální síly"
+
+#: modules/process/latsim.c:134
+msgid "Fw lateral force "
+msgstr "Laterální síla (FW)"
+
+#: modules/process/latsim.c:143
+msgid "Rev lateral force"
+msgstr "Laterální síla (REV)"
+
+#: modules/process/latsim.c:157
+msgid "Lateral force simulation"
+msgstr "Simulace laterálních sil"
+
+#: modules/process/latsim.c:174
+msgid "_Friction coef.:"
+msgstr "Koe_ficient tření:"
+
+#: modules/process/latsim.c:180
+msgid "_Normal force:"
+msgstr "_Normálová síla:"
+
+#: modules/process/latsim.c:186
+msgid "_Adhesion force:"
+msgstr "_Adheze:"
 
 #: modules/process/level.c:81
 msgid ""
@@ -10603,42 +10615,6 @@ msgstr "M_aximum:"
 msgid "Operand"
 msgstr "Operand"
 
-#: modules/process/maskcor.c:86
-msgid "Creates mask by correlation with another data."
-msgstr "Vytváří masku z korelace s jinými daty."
-
-#: modules/process/maskcor.c:100
-msgid "/M_ultidata/_Mask by Correlation..."
-msgstr "/M_ultidata/_Maska pomocí korelace..."
-
-#: modules/process/maskcor.c:104
-msgid "Create mask by correlation with another data"
-msgstr "Vytvořit masku korelací s jinými daty"
-
-#: modules/process/maskcor.c:141
-msgid "Mask by Correlation"
-msgstr "Maska pomocí korelace"
-
-#: modules/process/maskcor.c:165
-msgid "Correlation _kernel:"
-msgstr "Jádro _korelace:"
-
-#: modules/process/maskcor.c:172
-msgid "Objects marked"
-msgstr "Vyznačené objekty"
-
-#: modules/process/maskcor.c:173
-msgid "Correlation maxima"
-msgstr "Maxima korelace"
-
-#: modules/process/maskcor.c:174 modules/process/maskcor.c:364
-msgid "Correlation score"
-msgstr "Výsledek korelace"
-
-#: modules/process/maskcor.c:183
-msgid "Correlation _method:"
-msgstr "Korelační _metoda:"
-
 #: modules/process/mask_distribute.c:85
 msgid "Distributes masks to other channels."
 msgstr "Kopíruje masku do ostatních kanálů."
@@ -10780,6 +10756,42 @@ msgstr "_Maska:"
 #: modules/process/mask_morph.c:257
 msgid "_Trim empty borders"
 msgstr "Oříznout prázné o_kraje"
+
+#: modules/process/maskcor.c:86
+msgid "Creates mask by correlation with another data."
+msgstr "Vytváří masku z korelace s jinými daty."
+
+#: modules/process/maskcor.c:100
+msgid "/M_ultidata/_Mask by Correlation..."
+msgstr "/M_ultidata/_Maska pomocí korelace..."
+
+#: modules/process/maskcor.c:104
+msgid "Create mask by correlation with another data"
+msgstr "Vytvořit masku korelací s jinými daty"
+
+#: modules/process/maskcor.c:141
+msgid "Mask by Correlation"
+msgstr "Maska pomocí korelace"
+
+#: modules/process/maskcor.c:165
+msgid "Correlation _kernel:"
+msgstr "Jádro _korelace:"
+
+#: modules/process/maskcor.c:172
+msgid "Objects marked"
+msgstr "Vyznačené objekty"
+
+#: modules/process/maskcor.c:173
+msgid "Correlation maxima"
+msgstr "Maxima korelace"
+
+#: modules/process/maskcor.c:174 modules/process/maskcor.c:364
+msgid "Correlation score"
+msgstr "Výsledek korelace"
+
+#: modules/process/maskcor.c:183
+msgid "Correlation _method:"
+msgstr "Korelační _metoda:"
 
 #: modules/process/maskops.c:46
 msgid "Basic operations with mask: inversion, removal, extraction."
@@ -12511,27 +12523,6 @@ msgstr "Počítám zpětné FFT..."
 msgid "Denoised"
 msgstr "Odšuměná data"
 
-#: pygwy.c:97
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
-
-#: pygwy.c:585 pygwy.c:676
-msgid "Function written in Python"
-msgstr "Funkce napsaná v Pythonu"
-
-#: pygwy.c:630
-msgid "Graph function written in Python"
-msgstr "Grafová funkce napsaná v Pythonu"
-
-#: pygwy.c:1099
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-"Pygwy plugin: %s (%s)\n"
-"Export se nezdařil."
-
 #: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy Console"
 msgstr "/Konsola pygwy"
@@ -12575,6 +12566,27 @@ msgstr "Spustit skript (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:429
 msgid "Command"
 msgstr "Příkaz"
+
+#: pygwy.c:97
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
+
+#: pygwy.c:585 pygwy.c:676
+msgid "Function written in Python"
+msgstr "Funkce napsaná v Pythonu"
+
+#: pygwy.c:630
+msgid "Graph function written in Python"
+msgstr "Grafová funkce napsaná v Pythonu"
+
+#: pygwy.c:1099
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
+"Pygwy plugin: %s (%s)\n"
+"Export se nezdařil."
 
 #: modules/tools/crop.c:84
 msgid "Crop tool, crops data to smaller size."
