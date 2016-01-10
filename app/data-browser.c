@@ -2318,6 +2318,29 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
+static void
+update_window_icon(GtkTreeModel *model, GtkTreeIter *iter)
+{
+    GtkWidget *widget, *window;
+    GdkPixbuf *pixbuf;
+
+    g_return_if_fail(GTK_IS_LIST_STORE(model));
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_THUMBNAIL, &pixbuf,
+                       MODEL_WIDGET, &widget,
+                       -1);
+
+    if (pixbuf && widget) {
+        window = gtk_widget_get_toplevel(GTK_WIDGET(widget));
+        if (window && GTK_IS_WINDOW(window))
+            gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
+    }
+
+    gwy_object_unref(pixbuf);
+    gwy_object_unref(widget);
+}
+
 /**************************************************************************
  *
  * Channels treeview
@@ -2387,7 +2410,6 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GObject *object;
     GdkPixbuf *pixbuf;
     gdouble timestamp, *pbuf_timestamp = NULL;
-    GtkWidget *data_view;
     gint id;
 
     gtk_tree_model_get(model, iter,
@@ -2395,7 +2417,6 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        MODEL_OBJECT, &object,
                        MODEL_TIMESTAMP, &timestamp,
                        MODEL_THUMBNAIL, &pixbuf,
-                       MODEL_WIDGET, &data_view,
                        -1);
 
     container = g_object_get_qdata(object, container_quark);
@@ -2407,7 +2428,6 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
         if (*pbuf_timestamp >= timestamp) {
             g_object_set(renderer, "pixbuf", pixbuf, NULL);
             g_object_unref(pixbuf);
-            gwy_object_unref(data_view);
             return;
         }
     }
@@ -2422,16 +2442,9 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        MODEL_THUMBNAIL, pixbuf,
                        -1);
     g_object_set(renderer, "pixbuf", pixbuf, NULL);
-
-    if (data_view) {
-        GtkWidget *window = gtk_widget_get_toplevel(data_view);
-
-        if (window && GTK_IS_WINDOW(window))
-            gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
-        g_object_unref(data_view);
-    }
-
     g_object_unref(pixbuf);
+
+    update_window_icon(model, iter);
 }
 
 /**
@@ -2966,6 +2979,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     if (visible) {
         widget = gwy_app_data_browser_create_channel(proxy->parent, proxy, id);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
+        update_window_icon(model, iter);
         list->visible_count++;
     }
     else {
@@ -4233,7 +4247,6 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GObject *object;
     GdkPixbuf *pixbuf;
     gdouble timestamp, *pbuf_timestamp = NULL;
-    GtkWidget *data_view;
     gint id;
 
     gtk_tree_model_get(model, iter,
@@ -4241,7 +4254,6 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        MODEL_OBJECT, &object,
                        MODEL_TIMESTAMP, &timestamp,
                        MODEL_THUMBNAIL, &pixbuf,
-                       MODEL_WIDGET, &data_view,
                        -1);
 
     container = g_object_get_qdata(object, container_quark);
@@ -4253,7 +4265,6 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
         if (*pbuf_timestamp >= timestamp) {
             g_object_set(renderer, "pixbuf", pixbuf, NULL);
             g_object_unref(pixbuf);
-            gwy_object_unref(data_view);
             return;
         }
     }
@@ -4268,16 +4279,9 @@ gwy_app_data_browser_render_brick(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        MODEL_THUMBNAIL, pixbuf,
                        -1);
     g_object_set(renderer, "pixbuf", pixbuf, NULL);
-
-    if (data_view) {
-        GtkWidget *window = gtk_widget_get_toplevel(data_view);
-
-        if (window && GTK_IS_WINDOW(window))
-            gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
-        g_object_unref(data_view);
-    }
-
     g_object_unref(pixbuf);
+
+    update_window_icon(model, iter);
 }
 
 /**
@@ -4473,6 +4477,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     if (visible) {
         widget = gwy_app_data_browser_create_volume(proxy->parent, proxy, id);
         gtk_list_store_set(list->store, iter, MODEL_WIDGET, widget, -1);
+        update_window_icon(model, iter);
         list->visible_count++;
     }
     else {
