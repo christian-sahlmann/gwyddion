@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-06 02:14+0100\n"
-"PO-Revision-Date: 2016-01-06 21:01+0100\n"
+"POT-Creation-Date: 2016-01-09 02:14+0100\n"
+"PO-Revision-Date: 2016-01-10 19:39+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -567,12 +567,12 @@ msgstr "Échelle et espace adaptatifs"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3555
-#: modules/file/rawxyz.c:720
+#: modules/file/rawxyz.c:742
 msgid "Round"
 msgstr "Arrondi"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3556
-#: modules/file/rawxyz.c:721
+#: modules/file/rawxyz.c:743
 msgid "Linear"
 msgstr "Linéaire"
 
@@ -1307,7 +1307,7 @@ msgid "A_dd symbol"
 msgstr "Ajouter un symbole"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/file/rawxyz.c:453 modules/file/rawxyz.c:723
+#: modules/file/rawxyz.c:473
 msgid "Preview"
 msgstr "Aperçu"
 
@@ -3037,7 +3037,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3948
-#: modules/file/rawfile.c:758 modules/file/rawxyz.c:708
+#: modules/file/rawfile.c:758 modules/file/rawxyz.c:730
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
 #: modules/process/col_synth.c:506 modules/process/correct_affine.c:475
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:272
@@ -3761,7 +3761,7 @@ msgstr "Pages : "
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2776
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/file/rawxyz.c:603 modules/process/dimensions.h:467
+#: modules/file/rawxyz.c:625 modules/process/dimensions.h:467
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
@@ -3791,8 +3791,9 @@ msgstr "Changer"
 msgid "H_eight:"
 msgstr "Hauteur :"
 
-#: modules/file/hdrimage.cc:2354 modules/file/pixmap.c:914
-#: modules/file/rawfile.c:701 modules/file/rawxyz.c:584
+#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:551
+#: modules/file/pixmap.c:914 modules/file/rawfile.c:701
+#: modules/file/rawxyz.c:606
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
@@ -4118,7 +4119,7 @@ msgstr "Afficher _l'annotation"
 msgid "Image"
 msgstr "Image"
 
-#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:712
+#: modules/file/imgexport.c:3541 modules/file/rawxyz.c:734
 #: modules/process/correct_affine.c:493 modules/process/drift.c:306
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:203
 #: modules/process/fft_filter_1d.c:305 modules/process/fft_profile.c:297
@@ -4389,6 +4390,14 @@ msgstr "Fichiers Keyence VK4 (.vk4)"
 #, c-format
 msgid "Cannot convert string from UTF-16: %s"
 msgstr "Impossible de convertir la chaîne de caractères depuis UTF-16 : %s"
+
+#: modules/file/leica.c:176
+msgid "Imports Leica CLSM image files (LIF)."
+msgstr "Importe les images Leica CLSM (.lif)."
+
+#: modules/file/leica.c:189
+msgid "Leica LIF image files (.lif)"
+msgstr "Leica LIF  (.lif)"
 
 #: modules/file/lextfile.c:80
 msgid "Imports LEXT data files."
@@ -4857,6 +4866,79 @@ msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul.
 #: modules/file/netcdf.c:1325
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
+
+#: modules/file/nmmxyz.c:186
+msgid "Imports Nano Measuring Machine profile files."
+msgstr "Importe les fichiers Nano Measuring Machine."
+
+#: modules/file/nmmxyz.c:199
+msgid "Nano Measuring Machine files (*.dsc)"
+msgstr "Nano Measuring Machine (*.dsc)"
+
+#: modules/file/nmmxyz.c:243
+msgid "Nano Measuring Machine data import must be run as interactive."
+msgstr ""
+"L'import des données Nano Measuring Machine doit être fait de manière "
+"interactive."
+
+#: modules/file/nmmxyz.c:282
+msgid "Reading files..."
+msgstr "Lecture des fichiers..."
+
+#: modules/file/nmmxyz.c:289 modules/process/lat_synth.c:1192
+msgid "Rendering surface..."
+msgstr "Calcul de la surface..."
+
+#: modules/file/nmmxyz.c:366
+msgid "Import NMM Profile Set"
+msgstr "Importer un ensemble de profils NMM"
+
+#: modules/file/nmmxyz.c:382 modules/file/rawfile.c:450
+msgid "Information"
+msgstr "Information"
+
+#: modules/file/nmmxyz.c:388
+msgid "Number of data files:"
+msgstr "Nombre de fichiers de données :"
+
+#: modules/file/nmmxyz.c:390
+msgid "Total number of points:"
+msgstr "Nombre total de points :"
+
+#: modules/file/nmmxyz.c:392
+msgid "Points per profile:"
+msgstr "Points par profil :"
+
+#: modules/file/nmmxyz.c:397
+msgid "Imported Channels"
+msgstr "Canaux importés"
+
+#: modules/file/nmmxyz.c:419 modules/file/rawxyz.c:773
+msgid "Plot point density map"
+msgstr "Afficher la carte de densité des points"
+
+#: modules/file/nmmxyz.c:515 modules/file/rawfile.c:626
+#: modules/file/rawxyz.c:572 modules/process/dimensions.h:445
+msgid "Resolution"
+msgstr "Résolution"
+
+#: modules/file/nmmxyz.c:519 modules/file/rawfile.c:631
+#: modules/file/rawxyz.c:576 modules/process/dimensions.h:451
+msgid "_Horizontal size:"
+msgstr "Taille _horizontale :"
+
+#: modules/file/nmmxyz.c:535 modules/file/rawfile.c:638
+#: modules/file/rawxyz.c:591 modules/process/dimensions.h:454
+msgid "_Vertical size:"
+msgstr "Taille _verticale :"
+
+#: modules/file/nmmxyz.c:764 modules/file/rawxyz.c:377
+msgid "Point density map"
+msgstr "Carte de densité des points"
+
+#: modules/file/nmmxyz.c:834
+msgid "Something is changing the data files on disk."
+msgstr "Quelque chose modifie les fichiers de données sur le disque."
 
 #: modules/file/nrrdfile.c:179
 msgid "Imports and exports nearly raw raster data (NRRD) files."
@@ -5414,15 +5496,11 @@ msgstr ""
 msgid "Read Raw File"
 msgstr "Lire le fichier ASCII ou binaire"
 
-#: modules/file/rawfile.c:450
-msgid "Information"
-msgstr "Information"
-
 #: modules/file/rawfile.c:455
 msgid "Data Format"
 msgstr "Format de données"
 
-#: modules/file/rawfile.c:567 modules/file/rawxyz.c:467
+#: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
 #: modules/process/convolution_filter.c:241
 #: modules/process/deposit_synth.c:645 modules/process/drift.c:251
@@ -5443,22 +5521,7 @@ msgstr "Mise à jour"
 msgid "<b>File</b>"
 msgstr "<b>Fichier</b>"
 
-#: modules/file/rawfile.c:626 modules/file/rawxyz.c:550
-#: modules/process/dimensions.h:445
-msgid "Resolution"
-msgstr "Résolution"
-
-#: modules/file/rawfile.c:631 modules/file/rawxyz.c:554
-#: modules/process/dimensions.h:451
-msgid "_Horizontal size:"
-msgstr "Taille _horizontale :"
-
-#: modules/file/rawfile.c:638 modules/file/rawxyz.c:569
-#: modules/process/dimensions.h:454
-msgid "_Vertical size:"
-msgstr "Taille _verticale :"
-
-#: modules/file/rawfile.c:643 modules/file/rawxyz.c:643
+#: modules/file/rawfile.c:643 modules/file/rawxyz.c:665
 msgid "S_quare sample"
 msgstr "Échantillon carré"
 
@@ -5694,67 +5757,75 @@ msgstr "Seuls les fichiers ayant deux colonnes peuvent être importées."
 msgid "Curve"
 msgstr "Courbe"
 
-#: modules/file/rawxyz.c:240
+#: modules/file/rawxyz.c:243
 msgid "Imports raw XYZ data files."
 msgstr "Importe les fichiers de points XYZ."
 
-#: modules/file/rawxyz.c:253
+#: modules/file/rawxyz.c:256
 msgid "XYZ data files"
 msgstr "Fichiers des points XYZ"
 
-#: modules/file/rawxyz.c:332
+#: modules/file/rawxyz.c:335
 msgid "Raw XYZ data import must be run as interactive."
 msgstr "L'import de données XYZ doit être fait de manière interactive."
 
-#: modules/file/rawxyz.c:408
+#: modules/file/rawxyz.c:371
+msgid "Regularized XYZ"
+msgstr "Données XYZ régularisées"
+
+#: modules/file/rawxyz.c:421
 msgid "Import XYZ Data"
 msgstr "Importer des données XYZ"
 
-#: modules/file/rawxyz.c:434
+#: modules/file/rawxyz.c:450
 msgid "Reset Ran_ges"
 msgstr "Initialiser les pla_ges"
 
-#: modules/file/rawxyz.c:607
+#: modules/file/rawxyz.c:629
 msgid "_X-range:"
 msgstr "Plage _X :"
 
-#: modules/file/rawxyz.c:625
+#: modules/file/rawxyz.c:647
 msgid "_Y-range:"
 msgstr "Plage _Y :"
 
-#: modules/file/rawxyz.c:662
+#: modules/file/rawxyz.c:684
 msgid "_Lateral units:"
 msgstr "Unités _latérales :"
 
-#: modules/file/rawxyz.c:679 modules/process/dimensions.h:494
+#: modules/file/rawxyz.c:701 modules/process/dimensions.h:494
 msgid "_Value units:"
 msgstr "Unités de valeur :"
 
-#: modules/file/rawxyz.c:722
+#: modules/file/rawxyz.c:744
 msgid "Field"
 msgstr "Champ"
 
-#: modules/file/rawxyz.c:730 modules/process/extend.c:275
+#: modules/file/rawxyz.c:745 modules/process/merge.c:197
+msgid "Average"
+msgstr "Moyenne"
+
+#: modules/file/rawxyz.c:752 modules/process/extend.c:275
 #: modules/process/polydistort.c:268
 msgid "_Exterior type:"
 msgstr "Type d'_extérieur :"
 
-#: modules/file/rawxyz.c:738 modules/process/extend.c:268
+#: modules/file/rawxyz.c:760 modules/process/extend.c:268
 #: modules/process/polydistort.c:261
 msgid "exterior|Border"
 msgstr "Extérieur"
 
-#: modules/file/rawxyz.c:740 modules/process/extend.c:270
+#: modules/file/rawxyz.c:762 modules/process/extend.c:270
 #: modules/process/polydistort.c:263
 msgid "exterior|Mirror"
 msgstr "Miroir"
 
-#: modules/file/rawxyz.c:742 modules/process/extend.c:272
+#: modules/file/rawxyz.c:764 modules/process/extend.c:272
 #: modules/process/polydistort.c:265
 msgid "exterior|Periodic"
 msgstr "Périodique"
 
-#: modules/file/rawxyz.c:1045
+#: modules/file/rawxyz.c:1087
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5765,7 +5836,7 @@ msgstr ""
 "Fusionés car trop proches : %u\n"
 "Ajoutés sur les bords : %u"
 
-#: modules/file/rawxyz.c:1053
+#: modules/file/rawxyz.c:1095
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5774,11 +5845,11 @@ msgstr ""
 "Points lus dans le fichier : %u\n"
 "Les points forment une grille régulière : %u×%u"
 
-#: modules/file/rawxyz.c:1083
+#: modules/file/rawxyz.c:1126
 msgid "Physical dimensions are invalid."
 msgstr "Les dimensions physiques sont invalides."
 
-#: modules/file/rawxyz.c:1123 modules/process/bdep_synth.c:247
+#: modules/file/rawxyz.c:1173 modules/process/bdep_synth.c:247
 #: modules/process/bdep_synth.c:603 modules/process/calcoefs_simple.c:633
 #: modules/process/col_synth.c:280 modules/process/col_synth.c:712
 #: modules/process/crosscor.c:599 modules/process/crosscor.c:624
@@ -5797,11 +5868,11 @@ msgstr "Les dimensions physiques sont invalides."
 msgid "Initializing..."
 msgstr "Initialisation..."
 
-#: modules/file/rawxyz.c:1144 modules/process/superresolution.c:554
+#: modules/file/rawxyz.c:1194 modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Interpolation..."
 
-#: modules/file/rawxyz.c:1156
+#: modules/file/rawxyz.c:1206
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
@@ -10269,10 +10340,6 @@ msgstr "Relaxation du maillage..."
 msgid "Relaxing heights..."
 msgstr "Relaxation des hauteurs..."
 
-#: modules/process/lat_synth.c:1192
-msgid "Rendering surface..."
-msgstr "Calcul de la surface..."
-
 #: modules/process/latsim.c:75
 msgid "Lateral force simulator"
 msgstr "SiImulateur de force latérale"
@@ -11040,10 +11107,6 @@ msgstr "Premier opérande"
 #: modules/process/merge.c:196
 msgid "Second operand"
 msgstr "Second opérande"
-
-#: modules/process/merge.c:197
-msgid "Average"
-msgstr "Moyenne"
 
 #: modules/process/merge.c:198
 msgid "Interpolation"
@@ -14407,9 +14470,6 @@ msgstr ""
 
 #~ msgid "E_xpression:"
 #~ msgstr "E_xpression :"
-
-#~ msgid "_Number of quantities:"
-#~ msgstr "_Nombre de quantités :"
 
 #~ msgid "Scaling"
 #~ msgstr "Échelle"
