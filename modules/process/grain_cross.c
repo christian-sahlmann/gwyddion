@@ -35,9 +35,9 @@
 
 typedef struct {
     const gchar *abscissa;
-    gint abscissa_expanded;
+    guint abscissa_expanded;
     const gchar *ordinate;
-    gint ordinate_expanded;
+    guint ordinate_expanded;
 
     gboolean units_equal;
     guint ngrains;
@@ -73,7 +73,7 @@ static GtkTreeView*   attach_axis_list         (GtkTable *table,
                                                 const gchar *name,
                                                 gint column,
                                                 const gchar *selected,
-                                                gint expanded,
+                                                guint expanded,
                                                 GrainCrossControls *controls);
 static void           grain_cross_run          (GrainCrossArgs *args,
                                                 GwyContainer *data,
@@ -86,8 +86,8 @@ static void           grain_cross_save_args    (GwyContainer *container,
                                                 GrainCrossArgs *args);
 
 static const GrainCrossArgs grain_cross_defaults = {
-    "Equivalent disc radius", 0,
-    "Projected boundary length", 0,
+    "Equivalent disc radius", (1 << GWY_GRAIN_VALUE_GROUP_AREA),
+    "Projected boundary length", (1 << GWY_GRAIN_VALUE_GROUP_BOUNDARY),
     FALSE,
     0, NULL,
     GWY_APP_DATA_ID_NONE,
@@ -100,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Plots one grain quantity as a function of another."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas",
     "2007",
 };
@@ -296,6 +296,7 @@ grain_cross_dialog(GrainCrossArgs *args,
 static void
 axis_quantity_changed(GrainCrossControls *controls)
 {
+    GrainCrossArgs *args = controls->args;
     GtkTreeSelection *selection;
     GwyGraphModel *gmodel;
     GwyGrainValue *gvalue;
@@ -306,26 +307,30 @@ axis_quantity_changed(GrainCrossControls *controls)
     ok = TRUE;
 
     selection = gtk_tree_view_get_selection(controls->abscissa);
+    args->abscissa_expanded
+        = gwy_grain_value_tree_view_get_expanded_groups(controls->abscissa);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter,
                            GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
                            -1);
-        controls->args->abscissa = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+        args->abscissa = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     }
     else
         ok = FALSE;
 
     selection = gtk_tree_view_get_selection(controls->ordinate);
+    args->ordinate_expanded
+        = gwy_grain_value_tree_view_get_expanded_groups(controls->ordinate);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter,
                            GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
                            -1);
-        controls->args->ordinate = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+        args->ordinate = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     }
     else
         ok = FALSE;
 
-    gmodel = create_corr_graph(controls->args, controls->dfield);
+    gmodel = create_corr_graph(args, controls->dfield);
     gwy_graph_set_model(GWY_GRAPH(controls->graph), gmodel);
     g_object_unref(gmodel);
 
@@ -366,7 +371,7 @@ attach_axis_list(GtkTable *table,
                  const gchar *name,
                  gint column,
                  const gchar *selected,
-                 gint expanded,
+                 guint expanded,
                  GrainCrossControls *controls)
 {
     GwyGrainValue *gvalue;
@@ -525,10 +530,10 @@ grain_cross_load_args(GwyContainer *container,
         gwy_container_gis_string_by_name(container, ordinate_key,
                                          (const guchar**)&args->ordinate);
 
-    gwy_container_gis_boolean_by_name(container, abscissa_expanded_key,
-                                      &args->abscissa_expanded);
-    gwy_container_gis_boolean_by_name(container, ordinate_expanded_key,
-                                      &args->ordinate_expanded);
+    gwy_container_gis_int32_by_name(container, abscissa_expanded_key,
+                                    (gint*)&args->abscissa_expanded);
+    gwy_container_gis_int32_by_name(container, ordinate_expanded_key,
+                                    (gint*)&args->ordinate_expanded);
     args->target_graph = target_id;
     grain_cross_sanitize_args(args);
 }
@@ -540,12 +545,12 @@ grain_cross_save_args(GwyContainer *container,
     target_id = args->target_graph;
     gwy_container_set_string_by_name(container, abscissa_key,
                                      g_strdup(args->abscissa));
-    gwy_container_set_boolean_by_name(container, abscissa_expanded_key,
-                                      args->abscissa_expanded);
+    gwy_container_set_int32_by_name(container, abscissa_expanded_key,
+                                    args->abscissa_expanded);
     gwy_container_set_string_by_name(container, ordinate_key,
                                      g_strdup(args->ordinate));
-    gwy_container_set_boolean_by_name(container, ordinate_expanded_key,
-                                      args->ordinate_expanded);
+    gwy_container_set_int32_by_name(container, ordinate_expanded_key,
+                                    args->ordinate_expanded);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
