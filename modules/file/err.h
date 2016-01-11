@@ -170,7 +170,7 @@ static inline void
 err_CANCELLED(GError **error)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_CANCELLED,
-                _("File import was cancelled by user."));
+                _("File import was canceled by user."));
 }
 
 G_GNUC_UNUSED
