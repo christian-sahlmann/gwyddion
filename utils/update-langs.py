@@ -27,6 +27,7 @@ languages = (
     Language('en', 'en_US.UTF-8', 'English'),
     Language('cs', 'cs_CZ.UTF-8', 'Czech'),
     Language('de', 'de_DE.UTF-8', 'German'),
+    Language('en_GB', 'en_GB.UTF-8', 'English (UK)'),
     Language('fr', 'fr_FR.UTF-8', 'French'),
     Language('it', 'it_IT.UTF-8', 'Italian'),
     Language('ko', 'ko_KR.UTF-8', 'Korean'),

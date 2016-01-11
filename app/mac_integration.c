@@ -229,6 +229,7 @@ gwy_osx_set_locale()
         { "en_US.UTF-8", "en" },
         { "cs_CZ.UTF-8", "cs" },
         { "de_DE.UTF-8", "de" },
+        { "en_GB.UTF-8", "en_GB" },
         { "fr_FR.UTF-8", "fr" },
         { "it_IT.UTF-8", "it" },
         { "ko_KR.UTF-8", "ko" },
