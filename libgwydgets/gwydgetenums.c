@@ -184,8 +184,10 @@ gwy_graph_curve_type_get_enum(void)
  * @GWY_TICKS_STYLE_CENTER: One tick is drawn at center.
  * @GWY_TICKS_STYLE_AUTO: A number of automatically chosen ticks are drawn at
  *                        `round' values.
- * @GWY_TICKS_STYLE_UNLABELLED: Only edge ticks are labelled, interior ticks
- *                              are drawn but not labelled.  (Since 2.39)
+ * @GWY_TICKS_STYLE_UNLABELED: Only edge ticks are labelled, interior ticks
+ *                             are drawn but not labelled.  (Since 2.44)
+ * @GWY_TICKS_STYLE_UNLABELLED: Alias for %GWY_TICKS_STYLE_UNLABELED.
+ *                              (Since 2.39)
  *
  * Axis ticks style (used in #GwyColorAxis).
  **/
