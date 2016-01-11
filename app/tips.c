@@ -123,7 +123,7 @@ static const StartupTip tips[] = {
     {
         GTK_STOCK_OPEN,
         N_("Previews in the file open dialog can be shown with plane "
-           "and/or line levelling applied.  Use the switches at the bottom "
+           "and/or line leveling applied.  Use the switches at the bottom "
            "of the preview list."),
     },
     /* Resources */
@@ -211,6 +211,11 @@ static const StartupTip tips[] = {
         N_("Clicking on a false color scale with the right mouse button "
            "brings a false color gradient selector."),
     },
+    {
+        GWY_STOCK_MASK,
+        N_("Mask color can be changed by right-clicking on a data view "
+           "and selecting Mask Color from the menu."),
+    },
     /* 3D Views */
     {
         GWY_STOCK_3D_BASE,
@@ -221,6 +226,11 @@ static const StartupTip tips[] = {
         GWY_STOCK_3D_BASE,
         N_("3D view transformation modes can be selected with keys: "
            "R (rotate), S (scale), V (value scale) and L (light source)."),
+    },
+    {
+        GWY_STOCK_3D_BASE,
+        N_("You can make a specific 3D view setup the default using the "
+           "Set as Default button."),
     },
     /* Data Browser */
     {
@@ -255,8 +265,8 @@ static const StartupTip tips[] = {
     },
     {
         GWY_STOCK_LINE_LEVEL,
-        N_("Median Line Correction offers to use/exclude the masked area "
-           "if a mask is present on the data."),
+        N_("Align Rows offers to use/exclude the masked area if a mask is "
+           "present on the data."),
     },
     {
         GWY_STOCK_ARITHMETIC,
@@ -271,13 +281,18 @@ static const StartupTip tips[] = {
     {
         GWY_STOCK_FACET_LEVEL,
         N_("Facet Level can often level data with large features that make "
-           "impossible to use standard plane levelling.  It levels the surface "
+           "impossible to use standard plane leveling.  It levels the surface "
            "by making normals of flat areas point upwards."),
     },
     {
+        GWY_STOCK_LEVEL,
+        N_("Flatten Base performs automated leveling of base flat surface "
+           "with positive features."),
+    },
+    {
         GWY_STOCK_GRAINS_REMOVE,
-        N_("Too small grains can be filtered out with Remove by Threshold "
-           "grain function."),
+        N_("Too small grains can be filtered out with Data Process → Grains "
+           "→ Filter."),
     },
     {
         GWY_STOCK_EDGE,
@@ -286,8 +301,8 @@ static const StartupTip tips[] = {
     },
     {
         GWY_STOCK_DATA_MEASURE,
-        N_("Data Process → Basic Operations → Recalibrate changes scales, "
-           "offsets and even lateral and value units."),
+        N_("Data Process → Basic Operations → Dimensions and Units "
+           "changes scales, offsets and even lateral and value units."),
     },
     {
         GWY_STOCK_MASK,
@@ -366,7 +381,7 @@ static const StartupTip tips[] = {
         GWY_STOCK_PATH_LEVEL,
         N_("Path Level tool levels misaligned rows by lining them up along "
            "manually selected lines.  If there are no large features "
-           "automatic Median Line Correction usually works well."),
+           "automatic Align Rows usually works well."),
     },
     {
         GWY_STOCK_GRAINS_MEASURE,
