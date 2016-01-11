@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-10 02:14+0100\n"
+"POT-Creation-Date: 2016-01-11 13:44+0100\n"
 "PO-Revision-Date: 2016-01-10 22:41+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -119,9 +119,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "kontaktní: Hertz (paraboloid)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
-#: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
-#: app/data-browser.c:6911 app/data-browser.c:6993 app/resource-editor.c:366
+#: app/data-browser.c:2120 app/data-browser.c:2902 app/data-browser.c:3763
+#: app/data-browser.c:3922 app/data-browser.c:4208 app/data-browser.c:4615
+#: app/data-browser.c:6916 app/data-browser.c:6998 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:696
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -440,9 +440,9 @@ msgstr "Id"
 msgid "Position"
 msgstr "Poloha"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:384
-#: modules/file/imgexport.c:4349 modules/process/curvature.c:767
-#: modules/tools/level3.c:468 modules/tools/readvalue.c:297
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:384 modules/file/imgexport.c:4349
+#: modules/process/curvature.c:767 modules/tools/level3.c:468
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Hodnota"
 
@@ -450,7 +450,7 @@ msgstr "Hodnota"
 msgid "Area"
 msgstr "Plocha"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5161 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5166 app/toolbox.c:114
 msgid "Volume"
 msgstr "Objem"
 
@@ -1253,8 +1253,7 @@ msgstr "Křivka:"
 msgid "Method:"
 msgstr "Metoda:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
 msgid "Angle"
 msgstr "Úhel"
 
@@ -1583,44 +1582,44 @@ msgstr "Kanál:"
 msgid "Section:"
 msgstr "Řez:"
 
-#: app/data-browser.c:5034
+#: app/data-browser.c:5039
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:5035
+#: app/data-browser.c:5040
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:5036
+#: app/data-browser.c:5041
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:5081
+#: app/data-browser.c:5086
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:5106
+#: app/data-browser.c:5111
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:5119
+#: app/data-browser.c:5124
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:5133 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5138 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:5147
+#: app/data-browser.c:5152
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:6949
+#: app/data-browser.c:6954
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
 
-#: app/data-browser.c:7035
+#: app/data-browser.c:7040
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Neznámá objemová data %d"
@@ -5403,18 +5402,18 @@ msgstr "Formát dat"
 
 #: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
-#: modules/process/convolution_filter.c:241
-#: modules/process/deposit_synth.c:645 modules/process/drift.c:251
-#: modules/process/edge.c:644 modules/process/entropy.c:180
-#: modules/process/fft_filter_1d.c:193 modules/process/grain_edge.c:219
-#: modules/process/grain_filter.c:318 modules/process/grain_mark.c:253
-#: modules/process/grain_wshed.c:172 modules/process/mark_disconn.c:213
-#: modules/process/mark_with.c:205 modules/process/polydistort.c:210
-#: modules/process/scars.c:451 modules/process/slope_dist.c:275
-#: modules/process/synth.h:509 modules/process/tip_model.c:165
-#: modules/process/wpour_mark.c:282 modules/tools/linestats.c:454
-#: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
-#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
+#: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
+#: modules/process/drift.c:251 modules/process/edge.c:644
+#: modules/process/entropy.c:180 modules/process/fft_filter_1d.c:193
+#: modules/process/grain_edge.c:219 modules/process/grain_filter.c:318
+#: modules/process/grain_mark.c:253 modules/process/grain_wshed.c:172
+#: modules/process/mark_disconn.c:213 modules/process/mark_with.c:205
+#: modules/process/polydistort.c:210 modules/process/scars.c:451
+#: modules/process/slope_dist.c:275 modules/process/synth.h:509
+#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:282
+#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
+#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
+#: modules/volume/volume_linestat.c:287
 msgid "_Update"
 msgstr "_Aktualizovat"
 

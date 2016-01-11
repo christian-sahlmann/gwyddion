@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-08 09:08+0300\n"
+"POT-Creation-Date: 2016-01-11 13:44+0100\n"
 "PO-Revision-Date: 2016-01-08 09:11+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
-#: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
-#: app/data-browser.c:6897 app/data-browser.c:6979 app/resource-editor.c:366
+#: app/data-browser.c:2120 app/data-browser.c:2902 app/data-browser.c:3763
+#: app/data-browser.c:3922 app/data-browser.c:4208 app/data-browser.c:4615
+#: app/data-browser.c:6916 app/data-browser.c:6998 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:696
 msgid "Untitled"
 msgstr "Безымянный"
@@ -459,7 +459,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5149 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5166 app/toolbox.c:114
 msgid "Volume"
 msgstr "Объём"
 
@@ -1592,44 +1592,44 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:5022
+#: app/data-browser.c:5039
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:5023
+#: app/data-browser.c:5040
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5041
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5069
+#: app/data-browser.c:5086
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5094
+#: app/data-browser.c:5111
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5107
+#: app/data-browser.c:5124
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5121 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5138 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5135
+#: app/data-browser.c:5152
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6935
+#: app/data-browser.c:6954
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:7021
+#: app/data-browser.c:7040
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2954,7 +2954,7 @@ msgstr "Значение тега заголовка ‘%s’ не выровн�
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:180 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:168 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
@@ -3603,15 +3603,15 @@ msgstr "Не удаётся получить размер несжатого ф�
 msgid "Cannot read file contents."
 msgstr "Не удаётся прочитать содержимое файла."
 
-#: modules/file/gxyzffile.c:111
+#: modules/file/gxyzffile.c:100
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Импортирует файлы Gwyddion XYZ-полей."
 
-#: modules/file/gxyzffile.c:124
+#: modules/file/gxyzffile.c:113
 msgid "GwyXYZ data files"
 msgstr "Файлы данных GwyXYZ"
 
-#: modules/file/gxyzffile.c:207
+#: modules/file/gxyzffile.c:195
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Размер данных %lu не является кратным размеру точки  %u."
@@ -3792,7 +3792,7 @@ msgstr "Изменить"
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:551
+#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:552
 #: modules/file/pixmap.c:914 modules/file/rawfile.c:701
 #: modules/file/rawxyz.c:606
 msgid "Identical _measures"
@@ -4863,58 +4863,58 @@ msgstr ""
 msgid "Reading files..."
 msgstr "Считываются файлы..."
 
-#: modules/file/nmmxyz.c:289 modules/process/lat_synth.c:1192
+#: modules/file/nmmxyz.c:290 modules/process/lat_synth.c:1192
 msgid "Rendering surface..."
 msgstr "Строится поверхность..."
 
-#: modules/file/nmmxyz.c:366
+#: modules/file/nmmxyz.c:367
 msgid "Import NMM Profile Set"
 msgstr "Импортировать набор профилей NMM"
 
-#: modules/file/nmmxyz.c:382 modules/file/rawfile.c:450
+#: modules/file/nmmxyz.c:383 modules/file/rawfile.c:450
 msgid "Information"
 msgstr "Информация"
 
-#: modules/file/nmmxyz.c:388
+#: modules/file/nmmxyz.c:389
 msgid "Number of data files:"
 msgstr "Число файлов данных:"
 
-#: modules/file/nmmxyz.c:390
+#: modules/file/nmmxyz.c:391
 msgid "Total number of points:"
 msgstr "Общее количество точек:"
 
-#: modules/file/nmmxyz.c:392
+#: modules/file/nmmxyz.c:393
 msgid "Points per profile:"
 msgstr "Точек в профиле:"
 
-#: modules/file/nmmxyz.c:397
+#: modules/file/nmmxyz.c:398
 msgid "Imported Channels"
 msgstr "Импортированные каналы"
 
-#: modules/file/nmmxyz.c:419 modules/file/rawxyz.c:773
+#: modules/file/nmmxyz.c:420 modules/file/rawxyz.c:773
 msgid "Plot point density map"
 msgstr "Строить карту плотности точек"
 
-#: modules/file/nmmxyz.c:515 modules/file/rawfile.c:626
+#: modules/file/nmmxyz.c:516 modules/file/rawfile.c:626
 #: modules/file/rawxyz.c:572 modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/nmmxyz.c:519 modules/file/rawfile.c:631
+#: modules/file/nmmxyz.c:520 modules/file/rawfile.c:631
 #: modules/file/rawxyz.c:576 modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/nmmxyz.c:535 modules/file/rawfile.c:638
+#: modules/file/nmmxyz.c:536 modules/file/rawfile.c:638
 #: modules/file/rawxyz.c:591 modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/nmmxyz.c:756 modules/file/rawxyz.c:377
+#: modules/file/nmmxyz.c:765 modules/file/rawxyz.c:377
 msgid "Point density map"
 msgstr "Карта плотности точек"
 
-#: modules/file/nmmxyz.c:826
+#: modules/file/nmmxyz.c:835
 msgid "Something is changing the data files on disk."
 msgstr "Что-то меняет данные на диске."
 

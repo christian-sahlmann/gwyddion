@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-09 02:14+0100\n"
+"POT-Creation-Date: 2016-01-11 13:44+0100\n"
 "PO-Revision-Date: 2016-01-10 19:39+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -125,9 +125,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2120 app/data-browser.c:2889 app/data-browser.c:3749
-#: app/data-browser.c:3908 app/data-browser.c:4194 app/data-browser.c:4610
-#: app/data-browser.c:6897 app/data-browser.c:6979 app/resource-editor.c:366
+#: app/data-browser.c:2120 app/data-browser.c:2902 app/data-browser.c:3763
+#: app/data-browser.c:3922 app/data-browser.c:4208 app/data-browser.c:4615
+#: app/data-browser.c:6916 app/data-browser.c:6998 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:696
 msgid "Untitled"
 msgstr "Sans titre"
@@ -446,9 +446,9 @@ msgstr "Identifiant"
 msgid "Position"
 msgstr "Position"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:384
-#: modules/file/imgexport.c:4349 modules/process/curvature.c:767
-#: modules/tools/level3.c:468 modules/tools/readvalue.c:297
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:384 modules/file/imgexport.c:4349
+#: modules/process/curvature.c:767 modules/tools/level3.c:468
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valeur"
 
@@ -456,7 +456,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5149 app/toolbox.c:114
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5166 app/toolbox.c:114
 msgid "Volume"
 msgstr "Volume"
 
@@ -1257,8 +1257,7 @@ msgstr "Courbe :"
 msgid "Method:"
 msgstr "Méthode :"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
 msgid "Angle"
 msgstr "Angle"
 
@@ -1587,44 +1586,44 @@ msgstr "Canal :"
 msgid "Section:"
 msgstr "Section :"
 
-#: app/data-browser.c:5022
+#: app/data-browser.c:5039
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:5023
+#: app/data-browser.c:5040
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:5024
+#: app/data-browser.c:5041
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:5069
+#: app/data-browser.c:5086
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5094
+#: app/data-browser.c:5111
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5107
+#: app/data-browser.c:5124
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5121 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5138 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5135
+#: app/data-browser.c:5152
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6935
+#: app/data-browser.c:6954
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:7021
+#: app/data-browser.c:7040
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -2947,7 +2946,7 @@ msgstr ""
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:180 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:168 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "L'en-tête de fichier est tronqué."
@@ -3601,15 +3600,15 @@ msgstr "Impossible d'obtenir la taille du fichier décompressé."
 msgid "Cannot read file contents."
 msgstr "Impossible de lire le contenu du fichier."
 
-#: modules/file/gxyzffile.c:111
+#: modules/file/gxyzffile.c:100
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Importe les fichiers Gwyddion XYZ."
 
-#: modules/file/gxyzffile.c:124
+#: modules/file/gxyzffile.c:113
 msgid "GwyXYZ data files"
 msgstr "Données GwyXYZ"
 
-#: modules/file/gxyzffile.c:207
+#: modules/file/gxyzffile.c:195
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr ""
@@ -3791,7 +3790,7 @@ msgstr "Changer"
 msgid "H_eight:"
 msgstr "Hauteur :"
 
-#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:551
+#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:552
 #: modules/file/pixmap.c:914 modules/file/rawfile.c:701
 #: modules/file/rawxyz.c:606
 msgid "Identical _measures"
@@ -4885,58 +4884,58 @@ msgstr ""
 msgid "Reading files..."
 msgstr "Lecture des fichiers..."
 
-#: modules/file/nmmxyz.c:289 modules/process/lat_synth.c:1192
+#: modules/file/nmmxyz.c:290 modules/process/lat_synth.c:1192
 msgid "Rendering surface..."
 msgstr "Calcul de la surface..."
 
-#: modules/file/nmmxyz.c:366
+#: modules/file/nmmxyz.c:367
 msgid "Import NMM Profile Set"
 msgstr "Importer un ensemble de profils NMM"
 
-#: modules/file/nmmxyz.c:382 modules/file/rawfile.c:450
+#: modules/file/nmmxyz.c:383 modules/file/rawfile.c:450
 msgid "Information"
 msgstr "Information"
 
-#: modules/file/nmmxyz.c:388
+#: modules/file/nmmxyz.c:389
 msgid "Number of data files:"
 msgstr "Nombre de fichiers de données :"
 
-#: modules/file/nmmxyz.c:390
+#: modules/file/nmmxyz.c:391
 msgid "Total number of points:"
 msgstr "Nombre total de points :"
 
-#: modules/file/nmmxyz.c:392
+#: modules/file/nmmxyz.c:393
 msgid "Points per profile:"
 msgstr "Points par profil :"
 
-#: modules/file/nmmxyz.c:397
+#: modules/file/nmmxyz.c:398
 msgid "Imported Channels"
 msgstr "Canaux importés"
 
-#: modules/file/nmmxyz.c:419 modules/file/rawxyz.c:773
+#: modules/file/nmmxyz.c:420 modules/file/rawxyz.c:773
 msgid "Plot point density map"
 msgstr "Afficher la carte de densité des points"
 
-#: modules/file/nmmxyz.c:515 modules/file/rawfile.c:626
+#: modules/file/nmmxyz.c:516 modules/file/rawfile.c:626
 #: modules/file/rawxyz.c:572 modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Résolution"
 
-#: modules/file/nmmxyz.c:519 modules/file/rawfile.c:631
+#: modules/file/nmmxyz.c:520 modules/file/rawfile.c:631
 #: modules/file/rawxyz.c:576 modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
-#: modules/file/nmmxyz.c:535 modules/file/rawfile.c:638
+#: modules/file/nmmxyz.c:536 modules/file/rawfile.c:638
 #: modules/file/rawxyz.c:591 modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
 
-#: modules/file/nmmxyz.c:764 modules/file/rawxyz.c:377
+#: modules/file/nmmxyz.c:765 modules/file/rawxyz.c:377
 msgid "Point density map"
 msgstr "Carte de densité des points"
 
-#: modules/file/nmmxyz.c:834
+#: modules/file/nmmxyz.c:835
 msgid "Something is changing the data files on disk."
 msgstr "Quelque chose modifie les fichiers de données sur le disque."
 
@@ -5502,18 +5501,18 @@ msgstr "Format de données"
 
 #: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
-#: modules/process/convolution_filter.c:241
-#: modules/process/deposit_synth.c:645 modules/process/drift.c:251
-#: modules/process/edge.c:644 modules/process/entropy.c:180
-#: modules/process/fft_filter_1d.c:193 modules/process/grain_edge.c:219
-#: modules/process/grain_filter.c:318 modules/process/grain_mark.c:253
-#: modules/process/grain_wshed.c:172 modules/process/mark_disconn.c:213
-#: modules/process/mark_with.c:205 modules/process/polydistort.c:210
-#: modules/process/scars.c:451 modules/process/slope_dist.c:275
-#: modules/process/synth.h:509 modules/process/tip_model.c:165
-#: modules/process/wpour_mark.c:282 modules/tools/linestats.c:454
-#: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
-#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
+#: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
+#: modules/process/drift.c:251 modules/process/edge.c:644
+#: modules/process/entropy.c:180 modules/process/fft_filter_1d.c:193
+#: modules/process/grain_edge.c:219 modules/process/grain_filter.c:318
+#: modules/process/grain_mark.c:253 modules/process/grain_wshed.c:172
+#: modules/process/mark_disconn.c:213 modules/process/mark_with.c:205
+#: modules/process/polydistort.c:210 modules/process/scars.c:451
+#: modules/process/slope_dist.c:275 modules/process/synth.h:509
+#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:282
+#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
+#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
+#: modules/volume/volume_linestat.c:287
 msgid "_Update"
 msgstr "Mise à jour"
 
