@@ -147,9 +147,6 @@ if GCONF_SCHEMAS_INSTALL
 	    $(GCONFTOOL) --makefile-install-rule $(schema_DATA); \
 	fi
 endif
-if OS_MSWIN
-	$(install_sh_DATA) $(srcdir)/survey-icons.bmp $(pkgdatadir)
-endif
 
 uninstall-hook:
 if DESKTOP_FILE_UPDATE
@@ -163,7 +160,4 @@ if GCONF_SCHEMAS_INSTALL
 	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE_REAL) \
 	    $(GCONFTOOL) --makefile-uninstall-rule $(schema_DATA); \
 	fi
-endif
-if OS_MSWIN
-	rm -f $(pkgdatadir)/survey-icons.bmp
 endif
