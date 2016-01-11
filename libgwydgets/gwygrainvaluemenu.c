@@ -233,6 +233,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection,
                                            selection_allowed, treeview, NULL);
+    gtk_tree_view_collapse_all(treeview);
 
     return widget;
 }
