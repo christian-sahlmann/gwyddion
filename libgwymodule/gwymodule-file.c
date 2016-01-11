@@ -1151,7 +1151,7 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
 /**
  * GwyModuleFileError:
  * @GWY_MODULE_FILE_ERROR_CANCELED: Interactive operation was cancelled by
- *                                  user.  (Since: 2.45)
+ *                                  user.  (Since 2.45)
  * @GWY_MODULE_FILE_ERROR_CANCELLED: Alias for %GWY_MODULE_FILE_ERROR_CANCELED.
  * @GWY_MODULE_FILE_ERROR_UNIMPLEMENTED: No module implements requested
  *                                       operation.

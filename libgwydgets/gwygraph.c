@@ -68,12 +68,19 @@ gwy_graph_class_init(GwyGraphClass *klass)
     gobject_class->set_property = gwy_graph_set_property;
     gobject_class->get_property = gwy_graph_get_property;
 
+    /**
+     * GwyGraph:model:
+     *
+     * The graph model of the graph.
+     *
+     * Since: 2.7
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_MODEL,
          g_param_spec_object("model",
                              "Model",
-                             "The graph model of the graph. (Since: 2.7)",
+                             "The graph model of the graph.",
                              GWY_TYPE_GRAPH_MODEL,
                              G_PARAM_READWRITE));
 

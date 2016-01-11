@@ -202,16 +202,21 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
                               FALSE,
                               G_PARAM_READWRITE));
 
+    /**
+     * Gwy3DSetup:line-width:
+     *
+     * Width of axis lines and ticks, in pixels.
+     *
+     * Since: 2.42
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_LINE_WIDTH,
          g_param_spec_double("line-width",
                              "Line width",
-                             "Width of axis lines and ticks, in pixels. "
-                             "(Since: 2.42)",
+                             "Width of axis lines and ticks, in pixels.",
                              1.0, 10.0, 1.0,
                              G_PARAM_READWRITE));
-
 }
 
 static void

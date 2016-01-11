@@ -225,9 +225,9 @@ gwy_interpolation_type_get_enum(void)
  * @GWY_WINDOWING_LANCZOS: Lanczos window.
  * @GWY_WINDOWING_WELCH: Welch window.
  * @GWY_WINDOWING_RECT: Rectangular window.
- * @GWY_WINDOWING_NUTTALL: Nuttall window (Since: 2.7).
- * @GWY_WINDOWING_FLAT_TOP: Flat-top window (Since: 2.7).
- * @GWY_WINDOWING_KAISER25: Kaiser window with &beta;=2.5 (Since: 2.7).
+ * @GWY_WINDOWING_NUTTALL: Nuttall window (Since 2.7).
+ * @GWY_WINDOWING_FLAT_TOP: Flat-top window (Since 2.7).
+ * @GWY_WINDOWING_KAISER25: Kaiser window with &beta;=2.5 (Since 2.7).
  *
  * Frequency windowing type.
  **/
@@ -362,11 +362,11 @@ gwy_masking_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MEDIAN: Median value.
  * @GWY_GRAIN_VALUE_PIXEL_AREA: Flat grain area measured in pixels.  This value
  *                              is redundant but it is useful for filtering
- *                              (Since: 2.37).
+ *                              (Since 2.37).
  * @GWY_GRAIN_VALUE_HALF_HEIGHT_AREA: Projected area of the part of grain
  *                                    that is above the half-height, i.e.
  *                                    the height between the minimum and
- *                                    maximum (Since: 2.8).
+ *                                    maximum (Since 2.8).
  * @GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH: Length of projected grain boundary.
  *                                        Note for grains not topologically
  *                                        equivalent to disc, only the length
@@ -387,16 +387,16 @@ gwy_masking_type_get_enum(void)
  *                                       maximum is not unique).
  * @GWY_GRAIN_VALUE_CENTER_X: Grain centre horizontal position,
  *                            i.e. the mean value of its physical x-coordinates.
- *                            (Since: 2.7)
+ *                            (Since 2.7)
  * @GWY_GRAIN_VALUE_CENTER_Y: Grain centre vertical position,
  *                            i.e. the mean value of its physical y-coordinates.
- *                            (Since: 2.7)
+ *                            (Since 2.7)
  * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
  *                            z=0 (therefore it is just an integral it can be
- *                            negative).  (Since: 2.3)
+ *                            negative).  (Since 2.3)
  * @GWY_GRAIN_VALUE_VOLUME_MIN: Grain volume calculated with grain basis at
  *                              grain minimum value.  This value is a lower
- *                              bound.  (Since: 2.3)
+ *                              bound.  (Since 2.3)
  *                              Future changes:
  *                              This quantity can be trivially calculated from
  *                              @GWY_GRAIN_VALUE_VOLUME_0,
@@ -405,60 +405,60 @@ gwy_masking_type_get_enum(void)
  *                              and will be likely removed in 3.0.
  * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
  *                                  calculated by laplacian interpolation of
- *                                  surrounding values.  (Since: 2.3)
+ *                                  surrounding values.  (Since 2.3)
  * @GWY_GRAIN_VALUE_SLOPE_THETA: Spherical angle theta of grain normal (0 is
- *                               upwards). (Since: 2.7)
+ *                               upwards). (Since 2.7)
  * @GWY_GRAIN_VALUE_SLOPE_PHI: Spherical angle phi of grain normal (0 is
- *                             in positive x direction). (Since: 2.7)
+ *                             in positive x direction). (Since 2.7)
  * @GWY_GRAIN_VALUE_BOUNDARY_MINIMUM: Minimum value on the grain inner
- *                                    boundary.  (Since: 2.12)
+ *                                    boundary.  (Since 2.12)
  * @GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM: Maximum value in the grain inner
- *                                    boundary.  (Since: 2.12)
+ *                                    boundary.  (Since 2.12)
  * @GWY_GRAIN_VALUE_CURVATURE_CENTER_X: Grain curvature centre horizontal
  *                                      position.  For too small or flat grains
  *                                      it reduces to the horizontal position
  *                                      of geometrical centre.
- *                                      (Since: 2.22)
+ *                                      (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE_CENTER_Y: Grain curvature centre vertical
  *                                      position.  For too small or flat grains
  *                                      it reduces to the vertical position
  *                                      of geometrical centre.
- *                                      (Since: 2.22)
+ *                                      (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE_CENTER_Z: The value at curvature centre.  Note
  *                                      this is the value in the origin of the
  *                                      fitted quadratic surface, not at the
  *                                      real surface.
- *                                      (Since: 2.22)
+ *                                      (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE1: Smaller grain curvature.
- *                              (Since: 2.22)
+ *                              (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE2: Larger grain curvature.
- *                              (Since: 2.22)
+ *                              (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE_ANGLE1: Direction of the smaller grain curvature
  *                                    radius.  If the grain is flat or too
  *                                    small the angle is reported as 0.
- *                                    (Since: 2.22)
+ *                                    (Since 2.22)
  * @GWY_GRAIN_VALUE_CURVATURE_ANGLE2: Direction of the larger grain curvature
  *                                    radius.  If the grain is flat or too
  *                                    small the angle is reported as π/2.
- *                                    (Since: 2.22)
+ *                                    (Since 2.22)
  * @GWY_GRAIN_VALUE_INSCRIBED_DISC_R: Radius of maximum disc
- *                                    that fits inside the grain (Since: 2.30)
+ *                                    that fits inside the grain (Since 2.30)
  * @GWY_GRAIN_VALUE_INSCRIBED_DISC_X: Real X-coordinate of the centre of the
- *                                    maximum inscribed disc. (Since: 2.30)
+ *                                    maximum inscribed disc. (Since 2.30)
  * @GWY_GRAIN_VALUE_INSCRIBED_DISC_Y: Real Y-coordinate of the centre of the
- *                                    maximum inscribed disc. (Since: 2.30)
+ *                                    maximum inscribed disc. (Since 2.30)
  * @GWY_GRAIN_VALUE_CONVEX_HULL_AREA: Projected (flat) area of grain convex
- *                                    hull. (Since: 2.30)
+ *                                    hull. (Since 2.30)
  * @GWY_GRAIN_VALUE_CIRCUMCIRCLE_R: Radius of minimum circle containing the
- *                                  grain.  (Since: 2.30)
+ *                                  grain.  (Since 2.30)
  * @GWY_GRAIN_VALUE_CIRCUMCIRCLE_X: Real X-coordinate of the centre of the
- *                                  minimum circumcircle. (Since: 2.30)
+ *                                  minimum circumcircle. (Since 2.30)
  * @GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y: Real Y-coordinate of the centre of the
- *                                  minimum circumcircle. (Since: 2.30)
+ *                                  minimum circumcircle. (Since 2.30)
  * @GWY_GRAIN_VALUE_MEAN_RADIUS: Mean distance from boundary to the grain
  *                               centre as defined by
  *                               @GWY_GRAIN_VALUE_CENTER_X and
- *                               @GWY_GRAIN_VALUE_CENTER_Y. (Since: 2.30)
+ *                               @GWY_GRAIN_VALUE_CENTER_Y. (Since 2.30)
  * @GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MAJOR: Length of major semiaxis of equivalent
  *                                       ellipse. (Since 2.36)
  * @GWY_GRAIN_VALUE_EQUIV_ELLIPSE_MINOR: Length of minor semiaxis of equivalent
