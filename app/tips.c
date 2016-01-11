@@ -203,7 +203,7 @@ static const StartupTip tips[] = {
         GWY_STOCK_DATA_MEASURE,
         N_("Data with different <i>x</i> and <i>y</i> measures can be "
            "displayed either with pixel-wise or realistic aspect ratio.  "
-           "The menu in data window top left corner enables to switch "
+           "The menu in data window top left corner enables switching "
            "between these two modes."),
     },
     {
