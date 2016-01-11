@@ -51,10 +51,6 @@ EXTRA_DIST = \
 	thumbnailer-schemas.xsl \
 	$(gwyddionmime_DATA)
 
-# XXX Temporary user influence study reminder
-# XXX To be removed after 2.44 release
-EXTRA_DIST += survey-icons.bmp
-
 # gwyddion.vim generation
 gwyddion_vim_sources = \
 	$(docsrc)/libgwyapp/libgwyapp-decl.txt \
