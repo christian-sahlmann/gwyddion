@@ -49,17 +49,17 @@ static const StartupTip tips[] = {
     /* Interface */
     {
         GWY_STOCK_SELECTIONS,
-        N_("Holding Shift restritcs directions of selected lines "
+        N_("Holding Shift restricts directions of selected lines "
            "to multiples of 15°."),
     },
     {
         GWY_STOCK_SELECTIONS,
-        N_("Holding Shift restritcs shapes of selected rectangles "
+        N_("Holding Shift restricts shapes of selected rectangles "
            "to perfect squares."),
     },
     {
         GWY_STOCK_SELECTIONS,
-        N_("Holding Shift restritcs shapes of selected ellipses "
+        N_("Holding Shift restricts shapes of selected ellipses "
            "to perfect circles."),
     },
     {
