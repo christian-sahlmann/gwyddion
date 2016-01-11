@@ -143,10 +143,11 @@ typedef enum {
 } GwyWindowingType;
 
 typedef enum {
-    GWY_TIP_PYRAMIDE       = 0,
-    GWY_TIP_CONTACT        = 1,
-    GWY_TIP_NONCONTACT     = 2,
-    GWY_TIP_DELTA          = 3
+    GWY_TIP_PYRAMID    = 0,
+    GWY_TIP_PYRAMIDE   = GWY_TIP_PYRAMID,
+    GWY_TIP_CONTACT    = 1,
+    GWY_TIP_NONCONTACT = 2,
+    GWY_TIP_DELTA      = 3
 } GwyTipType;
 
 typedef enum {

@@ -30,12 +30,12 @@
 /* INTERPOLATION: New (not applicable). */
 
 static void
-pyramide_guess(GwyDataField *data,
-               gdouble height,
-               gdouble radius,
-               gdouble *params,
-               gint *xres,
-               gint *yres)
+pyramid_guess(GwyDataField *data,
+              gdouble height,
+              gdouble radius,
+              gdouble *params,
+              gint *xres,
+              gint *yres)
 {
     gdouble angle = params[1];
     gdouble xreal = 2*(height+radius)/tan(angle);
@@ -96,7 +96,7 @@ delta_guess(G_GNUC_UNUSED GwyDataField *data,
 }
 
 static void
-create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
+create_pyramid(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
 {
     gint col, row;
     gdouble rcol, rrow;
@@ -142,7 +142,7 @@ create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
 }
 
 static void
-round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
+round_pyramid(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
 {
     gdouble center_x, center_y, center_z;
     gdouble height = gwy_data_field_get_max(tip);
@@ -179,15 +179,15 @@ round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
 }
 
 static void
-pyramide(GwyDataField *tip,
-         G_GNUC_UNUSED gdouble height,
-         gdouble radius,
-         gdouble rotation,
-         gdouble *params)
+pyramid(GwyDataField *tip,
+        G_GNUC_UNUSED gdouble height,
+        gdouble radius,
+        gdouble rotation,
+        gdouble *params)
 {
     /*params[0]..number of sides, params[1]..angle*/
-    create_pyramide(tip, params[1], params[0], rotation);
-    round_pyramide(tip, params[1], params[0], radius);
+    create_pyramid(tip, params[1], params[0], rotation);
+    round_pyramid(tip, params[1], params[0], radius);
 }
 
 static void
@@ -198,8 +198,8 @@ contact(GwyDataField *tip,
         G_GNUC_UNUSED gdouble *params)
 {
     gdouble angle = G_PI/2 - atan(sqrt(2));
-    create_pyramide(tip, angle, 4, rotation);
-    round_pyramide(tip, angle, 4, radius);
+    create_pyramid(tip, angle, 4, rotation);
+    round_pyramid(tip, angle, 4, radius);
 }
 
 static void
@@ -210,8 +210,8 @@ noncontact(GwyDataField *tip,
            G_GNUC_UNUSED gdouble *params)
 {
     gdouble angle = G_PI/2 - atan(sqrt(2));
-    create_pyramide(tip, angle, 3, rotation);
-    round_pyramide(tip, angle, 3, radius);
+    create_pyramid(tip, angle, 3, rotation);
+    round_pyramid(tip, angle, 3, radius);
 }
 
 static void
@@ -226,10 +226,10 @@ delta(GwyDataField *tip, gdouble height,
 
 static const GwyTipModelPreset tip_presets[] = {
     {
-        N_("Pyramide"),
+        N_("Pyramid"),
         N_("Pyramidal"),
-        &pyramide,
-        &pyramide_guess,
+        &pyramid,
+        &pyramid_guess,
         0
     },
     {

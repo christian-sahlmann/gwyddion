@@ -394,7 +394,7 @@ tip_model_dialog_update_controls(TipModelControls *controls,
                         GTK_COMBO_BOX(controls->radius_unit),
                         args->radius);
     switch (args->type) {
-        case GWY_TIP_PYRAMIDE:
+        case GWY_TIP_PYRAMID:
         all_sensitive = TRUE;
         case GWY_TIP_CONTACT:
         case GWY_TIP_NONCONTACT:
