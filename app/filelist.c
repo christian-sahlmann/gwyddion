@@ -261,7 +261,7 @@ gwy_app_recent_file_list_new(void)
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
     gtk_box_pack_start(GTK_BOX(vbox), buttonbox, FALSE, FALSE, 0);
 
-    gcontrols.prune = gwy_stock_like_button_new(_("_Prune"),
+    gcontrols.prune = gwy_stock_like_button_new(_("Clean U_p"),
                                                 GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
     gtk_tooltips_set_tip(gwy_app_get_tooltips(), gcontrols.prune,
