@@ -209,7 +209,7 @@ dme_load(const gchar *filename,
 
     if (dmefile.data_size != 2*(dmefile.xres + 1)*dmefile.yres) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Data size %u do not match data dimensions (%u×%u)."),
+                    _("Data size %u does not match data dimensions (%u×%u)."),
                     dmefile.data_size, dmefile.xres, dmefile.yres);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
