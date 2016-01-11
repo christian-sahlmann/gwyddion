@@ -61,7 +61,7 @@ static const LevelArgs level_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Automatic facet-orientation based levelling. "
+    N_("Automatic facet-orientation based leveling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
     "2.5",
