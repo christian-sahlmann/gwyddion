@@ -844,7 +844,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                      G_CALLBACK(gwy_3d_window_show_fmscale_changed), window);
     row++;
 
-    check = gtk_check_button_new_with_mnemonic(_("_Ortographic projection"));
+    check = gtk_check_button_new_with_mnemonic(_("_Orthographic projection"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  !setup->projection);
     gtk_table_attach(GTK_TABLE(table), check,
