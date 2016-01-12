@@ -2111,9 +2111,14 @@ gwy_app_init_i18n(void)
  *       values "" and "all" for untyped modules (like plug-in proxy) and
  *       all modules, respectively.
  *
- * Performs common initialization.
+ * Performs common application initialization.
  *
- * FIXME: Much more to say.
+ * This function can be useful in Gwyddion-based programs and includes:
+ * widget class initialisation,
+ * internationalisation initialisation,
+ * stock item and resource class loading,
+ * settings loading, and
+ * module registration.
  *
  * Returns: Settings loading status.
  **/
