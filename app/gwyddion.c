@@ -66,11 +66,6 @@ static void process_preinit_options         (int *argc,
                                              GwyAppOptions *options);
 static void debug_time                      (GTimer *timer,
                                              const gchar *task);
-static void setup_logging                   (void);
-static void logger                          (const gchar *log_domain,
-                                             GLogLevelFlags log_level,
-                                             const gchar *message,
-                                             gpointer user_data);
 static void setup_locale_from_win32_registry(void);
 static void warn_broken_settings_file       (GtkWidget *parent,
                                              const gchar *settings_file,
@@ -108,8 +103,9 @@ main(int argc, char *argv[])
     gwy_osx_set_locale();
 
     process_preinit_options(&argc, &argv, &app_options);
-    if (app_options.log_to_file)
-        setup_logging();
+    gwy_app_setup_logging(app_options.log_to_file
+                          ? GWY_APP_LOGGING_TO_FILE
+                          : 0);
     gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
@@ -422,67 +418,6 @@ warn_broken_settings_file(GtkWidget *parent,
     gtk_window_present(GTK_WINDOW(dialog));
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
-}
-
-/* Redirect messages from all libraries we use to a file.  This (a) creates
- * a possibly useful log if we don't crash totally (b) prevents the mesages
- * to go to a DOS console thus creating it. */
-static void
-setup_logging(void)
-{
-    const gchar *domains[] = {
-        "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
-        "GdkPixbuf", "Gdk", "Gtk",
-        "GdkGLExt", "GtkGLExt",
-        "Pango", "Unique",
-        "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
-        "Module", NULL
-    };
-    gchar *log_filename;
-    gsize i;
-    FILE *logfile;
-
-    log_filename = gwy_app_settings_get_log_filename();
-    logfile = gwy_fopen(log_filename, "w");
-    for (i = 0; i < G_N_ELEMENTS(domains); i++)
-        g_log_set_handler(domains[i],
-                          G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
-                          | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
-                          | G_LOG_LEVEL_CRITICAL,
-                          logger, logfile);
-}
-
-static void
-logger(const gchar *log_domain,
-       G_GNUC_UNUSED GLogLevelFlags log_level,
-       const gchar *message,
-       gpointer user_data)
-{
-    static GString *last = NULL;
-    static guint count = 0;
-    FILE *logfile = (FILE*)user_data;
-
-    if (!logfile)
-        return;
-
-    if (!last)
-        last = g_string_new("");
-
-    if (gwy_strequal(message, last->str)) {
-        count++;
-        return;
-    }
-
-    if (count)
-        gwy_fprintf(logfile, "Last message repeated %u times\n", count);
-    g_string_assign(last, message);
-    count = 0;
-
-    gwy_fprintf(logfile, "%s%s%s\n",
-            log_domain ? log_domain : "",
-            log_domain ? ": " : "",
-            message);
-    fflush(logfile);
 }
 
 static void

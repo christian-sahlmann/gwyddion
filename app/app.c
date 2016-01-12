@@ -104,6 +104,11 @@ static void       gwy_app_volume_window_reset_zoom    (void);
 static void       metadata_browser                    (gpointer pwhat);
 static void       log_browser                         (gpointer pwhat);
 static void       gwy_app_change_mask_color           (void);
+static void       setup_logging_to_file               (void);
+static void       logger                              (const gchar *log_domain,
+                                                       GLogLevelFlags log_level,
+                                                       const gchar *message,
+                                                       gpointer user_data);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -2198,6 +2203,87 @@ gwy_app_init_common(GError **error,
     }
 
     return ok;
+}
+
+/**
+ * gwy_app_setup_logging:
+ * @flags: Flags controlling how messages are handled.
+ *
+ * Sets up Gwyddion GLib log handler.
+ *
+ * The log handler sends the messages to a log file or console, as Gwyddion
+ * usually does.  This function may not be useful in Gwyddion-based programs
+ * unless they try to emulate Gwyddion behaviour closely.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_app_setup_logging(GwyAppLoggingFlags flags)
+{
+    if (flags & GWY_APP_LOGGING_TO_FILE)
+        setup_logging_to_file();
+}
+
+/* Redirect messages from all libraries we use to a file.  This (a) creates
+ * a possibly useful log if we don't crash totally (b) prevents the mesages
+ * to go to a DOS console thus instantiating it. */
+static void
+setup_logging_to_file(void)
+{
+    const gchar *domains[] = {
+        "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
+        "GdkPixbuf", "Gdk", "Gtk",
+        "GdkGLExt", "GtkGLExt",
+        "Pango", "Unique",
+        "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
+        "Module", NULL
+    };
+    gchar *log_filename;
+    gsize i;
+    FILE *logfile;
+
+    log_filename = gwy_app_settings_get_log_filename();
+    logfile = gwy_fopen(log_filename, "w");
+    for (i = 0; i < G_N_ELEMENTS(domains); i++) {
+        g_log_set_handler(domains[i],
+                          G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
+                          | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
+                          | G_LOG_LEVEL_CRITICAL,
+                          logger, logfile);
+    }
+}
+
+static void
+logger(const gchar *log_domain,
+       G_GNUC_UNUSED GLogLevelFlags log_level,
+       const gchar *message,
+       gpointer user_data)
+{
+    static GString *last = NULL;
+    static guint count = 0;
+    FILE *logfile = (FILE*)user_data;
+
+    if (!logfile)
+        return;
+
+    if (!last)
+        last = g_string_new("");
+
+    if (gwy_strequal(message, last->str)) {
+        count++;
+        return;
+    }
+
+    if (count)
+        gwy_fprintf(logfile, "Last message repeated %u times\n", count);
+    g_string_assign(last, message);
+    count = 0;
+
+    gwy_fprintf(logfile, "%s%s%s\n",
+                log_domain ? log_domain : "",
+                log_domain ? ": " : "",
+                message);
+    fflush(logfile);
 }
 
 /************************** Documentation ****************************/

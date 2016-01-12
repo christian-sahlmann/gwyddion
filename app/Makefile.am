@@ -76,6 +76,7 @@ MAINTAINERCLEANFILES = authors.h
 MKENUM_NAME = gwyapptypes
 MKENUM_ID = GWY_APP_TYPES
 MKENUM_HFILES = \
+	$(srcdir)/app.h \
 	$(srcdir)/data-browser.h \
 	$(srcdir)/help.h \
 	$(srcdir)/menu.h \
