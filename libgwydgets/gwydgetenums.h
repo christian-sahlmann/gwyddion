@@ -33,7 +33,7 @@ typedef enum {
     GWY_AXIS_SCALE_FORMAT_INT
 } GwyAxisScaleFormat;
 
-typedef enum { /*< lowercase_name=gwy_3d_movement >*/
+typedef enum { /*< underscore_name=gwy_3d_movement >*/
     GWY_3D_MOVEMENT_NONE = 0,
     GWY_3D_MOVEMENT_ROTATION,
     GWY_3D_MOVEMENT_SCALE,
@@ -41,19 +41,19 @@ typedef enum { /*< lowercase_name=gwy_3d_movement >*/
     GWY_3D_MOVEMENT_LIGHT
 } Gwy3DMovement;
 
-typedef enum { /*< lowercase_name=gwy_3d_projection >*/
+typedef enum { /*< underscore_name=gwy_3d_projection >*/
     GWY_3D_PROJECTION_ORTHOGRAPHIC = 0,
     GWY_3D_PROJECTION_PERSPECTIVE
 } Gwy3DProjection;
 
-typedef enum { /*< lowercase_name=gwy_3d_visualization >*/
+typedef enum { /*< underscore_name=gwy_3d_visualization >*/
     GWY_3D_VISUALIZATION_GRADIENT = 0,
     GWY_3D_VISUALIZATION_LIGHTING,
     GWY_3D_VISUALIZATION_OVERLAY,
     GWY_3D_VISUALIZATION_OVERLAY_NO_LIGHT
 } Gwy3DVisualization;
 
-typedef enum { /*< lowercase_name=gwy_3d_view_label >*/
+typedef enum { /*< underscore_name=gwy_3d_view_label >*/
     GWY_3D_VIEW_LABEL_X = 0,
     GWY_3D_VIEW_LABEL_Y,
     GWY_3D_VIEW_LABEL_MIN,
