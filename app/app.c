@@ -2327,6 +2327,8 @@ logger(const gchar *log_domain,
     if (G_UNLIKELY(!last))
         last = g_string_new(NULL);
 
+    g_printerr("levels %u vs %u\n", log_level, last_level);
+    g_printerr("msgs <%s> vs <%s>\n", message, last->str);
     if (log_level == last_level && gwy_strequal(message, last->str)) {
         count++;
         return;
@@ -2336,7 +2338,7 @@ logger(const gchar *log_domain,
         console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
 
     if (count) {
-        g_string_printf(last, "Last message repeated %u times\n", count);
+        g_string_printf(last, "Last message repeated %u times", count);
         format_log_message(str, log_domain, log_level, last->str);
         if (to_file) {
             fputs(str->str, log_file);
@@ -2369,12 +2371,11 @@ format_log_message(GString *str,
                    GLogLevelFlags log_level,
                    const gchar *message)
 {
-    GLogLevelFlags just_log_level;
+    GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
 
-    just_log_level = (log_level & G_LOG_LEVEL_MASK);
-
+    g_string_truncate(str, 0);
     if (log_level & ALERT_LEVELS)
-        g_string_append(str, "\n");
+        g_string_append_c(str, '\n');
     if (!log_domain)
         g_string_append(str, "** ");
 
@@ -2404,7 +2405,7 @@ format_log_message(GString *str,
         /* XXX: GLib does (a) escaping (b) conversion from UTF-8 here. */
         g_string_append(str, message);
     }
-    g_string_append(str, "\n");
+    g_string_append_c(str, '\n');
 }
 
 /************************** Documentation ****************************/
