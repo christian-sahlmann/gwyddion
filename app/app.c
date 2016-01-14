@@ -2327,8 +2327,6 @@ logger(const gchar *log_domain,
     if (G_UNLIKELY(!last))
         last = g_string_new(NULL);
 
-    g_printerr("levels %u vs %u\n", log_level, last_level);
-    g_printerr("msgs <%s> vs <%s>\n", message, last->str);
     if (log_level == last_level && gwy_strequal(message, last->str)) {
         count++;
         return;
