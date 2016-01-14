@@ -108,6 +108,11 @@ G_GNUC_INTERNAL
 gint       _gwy_app_analyse_data_key           (const gchar *strkey,
                                                 GwyAppKeyType *type,
                                                 guint *len);
+G_GNUC_INTERNAL
+void       _gwy_app_log_start_message_capture  (void);
+G_GNUC_INTERNAL
+gchar**    _gwy_app_log_get_captured_messages  (void);
+
 /* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);
 

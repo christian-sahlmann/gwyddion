@@ -28,6 +28,7 @@
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwystringlist.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/gwygrainvalue.h>
@@ -68,6 +69,11 @@ static GQuark corner_item_quark = 0;
 
 static GwyAppLoggingFlags logging_flags = 0;
 static FILE *log_file = NULL;
+static GString *log_last = NULL;
+static guint log_count = 0;
+static GLogLevelFlags log_last_level = 0;
+static gboolean log_capturing_now = FALSE;
+static GPtrArray *log_captured_messages = NULL;
 
 static gboolean   gwy_app_main_window_save_position   (void);
 static void       gwy_app_main_window_restore_position(void);
@@ -2321,16 +2327,40 @@ emit_log_message(GString *str,
     }
 }
 
+void
+_gwy_app_log_start_message_capture(void)
+{
+    g_return_if_fail(!log_capturing_now);
+    log_capturing_now = TRUE;
+    if (G_UNLIKELY(!log_captured_messages))
+        log_captured_messages = g_ptr_array_new();
+}
+
+gchar**
+_gwy_app_log_get_captured_messages(void)
+{
+    gchar **messages;
+
+    g_return_val_if_fail(log_capturing_now, NULL);
+    log_capturing_now = FALSE;
+
+    if (!log_captured_messages->len)
+        return NULL;
+
+    g_ptr_array_add(log_captured_messages, NULL);
+    messages = g_memdup(log_captured_messages->pdata,
+                        log_captured_messages->len*sizeof(gchar*));
+    g_ptr_array_set_size(log_captured_messages, 0);
+    return messages;
+}
+
 static void
 logger(const gchar *log_domain,
        GLogLevelFlags log_level,
        const gchar *message,
        G_GNUC_UNUSED gpointer user_data)
 {
-    static GString *last = NULL;
     static GString *str = NULL;
-    static guint count = 0;
-    static GLogLevelFlags last_level = 0;
 
     gboolean to_file = log_file && (logging_flags & GWY_APP_LOGGING_TO_FILE);
     gboolean to_console = (logging_flags & GWY_APP_LOGGING_TO_CONSOLE);
@@ -2341,24 +2371,28 @@ logger(const gchar *log_domain,
 
     if (G_UNLIKELY(!str))
         str = g_string_new(NULL);
-    if (G_UNLIKELY(!last))
-        last = g_string_new(NULL);
+    if (G_UNLIKELY(!log_last))
+        log_last = g_string_new(NULL);
 
-    if (log_level == last_level && gwy_strequal(message, last->str)) {
-        count++;
+    if (log_level == log_last_level && gwy_strequal(message, log_last->str)) {
+        log_count++;
         return;
     }
 
-    if (count) {
-        g_string_printf(last, "Last message repeated %u times", count);
-        format_log_message(str, log_domain, just_log_level, last->str);
+    if (log_count) {
+        g_string_printf(log_last, "Last message repeated %u times", log_count);
+        if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
+            g_ptr_array_add(log_captured_messages, g_strdup(log_last->str));
+        format_log_message(str, log_domain, just_log_level, log_last->str);
         emit_log_message(str, just_log_level, to_file, to_console);
     }
 
-    g_string_assign(last, message);
-    last_level = log_level;
-    count = 0;
+    g_string_assign(log_last, message);
+    log_last_level = log_level;
+    log_count = 0;
 
+    if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
+        g_ptr_array_add(log_captured_messages, g_strdup(message));
     format_log_message(str, log_domain, just_log_level, message);
     emit_log_message(str, just_log_level, to_file, to_console);
 }
