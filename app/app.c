@@ -2305,6 +2305,23 @@ get_console_stream(GLogLevelFlags log_level)
 }
 
 static void
+emit_log_message(GString *str,
+                 GLogLevelFlags log_level,
+                 gboolean to_file, gboolean to_console)
+{
+    if (to_file) {
+        fputs(str->str, log_file);
+        fflush(log_file);
+    }
+
+    if (to_console) {
+        FILE *console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
+        fputs(str->str, console_stream);
+        fflush(console_stream);
+    }
+}
+
+static void
 logger(const gchar *log_domain,
        GLogLevelFlags log_level,
        const gchar *message,
@@ -2317,7 +2334,7 @@ logger(const gchar *log_domain,
 
     gboolean to_file = log_file && (logging_flags & GWY_APP_LOGGING_TO_FILE);
     gboolean to_console = (logging_flags & GWY_APP_LOGGING_TO_CONSOLE);
-    FILE *console_stream = NULL;
+    GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
 
     if (!to_file && !to_console)
         return;
@@ -2332,35 +2349,18 @@ logger(const gchar *log_domain,
         return;
     }
 
-    if (to_console)
-        console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
-
     if (count) {
         g_string_printf(last, "Last message repeated %u times", count);
-        format_log_message(str, log_domain, log_level, last->str);
-        if (to_file) {
-            fputs(str->str, log_file);
-            fflush(log_file);
-        }
-        if (to_console) {
-            fputs(str->str, console_stream);
-            fflush(console_stream);
-        }
+        format_log_message(str, log_domain, just_log_level, last->str);
+        emit_log_message(str, just_log_level, to_file, to_console);
     }
 
     g_string_assign(last, message);
     last_level = log_level;
     count = 0;
 
-    format_log_message(str, log_domain, log_level, message);
-    if (to_file) {
-        fputs(str->str, log_file);
-        fflush(log_file);
-    }
-    if (to_console) {
-        fputs(str->str, console_stream);
-        fflush(console_stream);
-    }
+    format_log_message(str, log_domain, just_log_level, message);
+    emit_log_message(str, just_log_level, to_file, to_console);
 }
 
 static void
@@ -2369,8 +2369,6 @@ format_log_message(GString *str,
                    GLogLevelFlags log_level,
                    const gchar *message)
 {
-    GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
-
     g_string_truncate(str, 0);
     if (log_level & ALERT_LEVELS)
         g_string_append_c(str, '\n');
@@ -2392,7 +2390,7 @@ format_log_message(GString *str,
         g_string_append_c(str, '-');
     }
 
-    append_level_prefix(str, just_log_level);
+    append_level_prefix(str, log_level);
     if (log_level & ALERT_LEVELS)
         g_string_append(str, " **");
 
