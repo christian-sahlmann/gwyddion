@@ -22,6 +22,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <math.h>
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
@@ -36,6 +37,13 @@
 #include <libgwydgets/gwygraphwindow.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
+
+/* Our handler should not get G_LOG_LEVEL_ERROR errors but it does not hurt. */
+enum {
+    ALERT_LEVELS = (G_LOG_LEVEL_ERROR
+                    | G_LOG_LEVEL_CRITICAL
+                    | G_LOG_LEVEL_WARNING)
+};
 
 enum {
     ITEM_PIXELSQUARE,
@@ -57,6 +65,9 @@ static GtkWidget *gwy_app_main_window = NULL;
 
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
+
+static GwyAppLoggingFlags logging_flags = 0;
+static FILE *log_file = NULL;
 
 static gboolean   gwy_app_main_window_save_position   (void);
 static void       gwy_app_main_window_restore_position(void);
@@ -104,11 +115,14 @@ static void       gwy_app_volume_window_reset_zoom    (void);
 static void       metadata_browser                    (gpointer pwhat);
 static void       log_browser                         (gpointer pwhat);
 static void       gwy_app_change_mask_color           (void);
-static void       setup_logging_to_file               (void);
 static void       logger                              (const gchar *log_domain,
                                                        GLogLevelFlags log_level,
                                                        const gchar *message,
                                                        gpointer user_data);
+static void       format_log_message                  (GString *str,
+                                                       const gchar *log_domain,
+                                                       GLogLevelFlags log_level,
+                                                       const gchar *message);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -2220,16 +2234,6 @@ gwy_app_init_common(GError **error,
 void
 gwy_app_setup_logging(GwyAppLoggingFlags flags)
 {
-    if (flags & GWY_APP_LOGGING_TO_FILE)
-        setup_logging_to_file();
-}
-
-/* Redirect messages from all libraries we use to a file.  This (a) creates
- * a possibly useful log if we don't crash totally (b) prevents the mesages
- * to go to a DOS console thus instantiating it. */
-static void
-setup_logging_to_file(void)
-{
     const gchar *domains[] = {
         "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
         "GdkPixbuf", "Gdk", "Gtk",
@@ -2238,52 +2242,169 @@ setup_logging_to_file(void)
         "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
         "Module", NULL
     };
-    gchar *log_filename;
-    gsize i;
-    FILE *logfile;
 
-    log_filename = gwy_app_settings_get_log_filename();
-    logfile = gwy_fopen(log_filename, "w");
+    static gboolean logging_set_up = FALSE;
+    guint i;
+
+    if (logging_set_up) {
+        g_warning("Logging has already been set up.");
+        return;
+    }
+
+    logging_set_up = TRUE;
+    logging_flags = flags;
+
+    if (flags & GWY_APP_LOGGING_TO_FILE) {
+        const gchar *log_filename = gwy_app_settings_get_log_filename();
+        log_file = gwy_fopen(log_filename, "w");
+    }
+
     for (i = 0; i < G_N_ELEMENTS(domains); i++) {
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
                           | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
                           | G_LOG_LEVEL_CRITICAL,
-                          logger, logfile);
+                          logger, NULL);
     }
+}
+
+/* Similar to GLib's function but we do not handle recursive and fatal errors
+ * so we do not have to handle the difficult cases and can use GLib functions.
+ */
+static void
+append_level_prefix(GString *str,
+                    GLogLevelFlags log_level)
+{
+    if (log_level == G_LOG_LEVEL_ERROR)
+        g_string_append(str, "ERROR");
+    else if (log_level == G_LOG_LEVEL_CRITICAL)
+        g_string_append(str, "CRITICAL");
+    else if (log_level == G_LOG_LEVEL_WARNING)
+        g_string_append(str, "WARNING");
+    else if (log_level == G_LOG_LEVEL_MESSAGE)
+        g_string_append(str, "Message");
+    else if (log_level == G_LOG_LEVEL_INFO)
+        g_string_append(str, "INFO");
+    else if (log_level == G_LOG_LEVEL_DEBUG)
+        g_string_append(str, "DEBUG");
+    else if (log_level)
+        g_string_append_printf(str, "LOG-%u", log_level);
+    else
+        g_string_append(str, "LOG");
+}
+
+static FILE*
+get_console_stream(GLogLevelFlags log_level)
+{
+    if (log_level == G_LOG_LEVEL_ERROR
+        || log_level == G_LOG_LEVEL_CRITICAL
+        || log_level == G_LOG_LEVEL_WARNING
+        || log_level == G_LOG_LEVEL_MESSAGE)
+        return stderr;
+    return stdout;
 }
 
 static void
 logger(const gchar *log_domain,
-       G_GNUC_UNUSED GLogLevelFlags log_level,
+       GLogLevelFlags log_level,
        const gchar *message,
-       gpointer user_data)
+       G_GNUC_UNUSED gpointer user_data)
 {
     static GString *last = NULL;
+    static GString *str = NULL;
     static guint count = 0;
-    FILE *logfile = (FILE*)user_data;
+    static GLogLevelFlags last_level = 0;
 
-    if (!logfile)
+    gboolean to_file = log_file && (logging_flags & GWY_APP_LOGGING_TO_FILE);
+    gboolean to_console = (logging_flags & GWY_APP_LOGGING_TO_CONSOLE);
+    FILE *console_stream = NULL;
+
+    if (!to_file && !to_console)
         return;
 
-    if (!last)
-        last = g_string_new("");
+    if (G_UNLIKELY(!str))
+        str = g_string_new(NULL);
+    if (G_UNLIKELY(!last))
+        last = g_string_new(NULL);
 
-    if (gwy_strequal(message, last->str)) {
+    if (log_level == last_level && gwy_strequal(message, last->str)) {
         count++;
         return;
     }
 
-    if (count)
-        gwy_fprintf(logfile, "Last message repeated %u times\n", count);
+    if (to_console)
+        console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
+
+    if (count) {
+        g_string_printf(last, "Last message repeated %u times\n", count);
+        format_log_message(str, log_domain, log_level, last->str);
+        if (to_file) {
+            fputs(str->str, log_file);
+            fflush(log_file);
+        }
+        if (to_console) {
+            fputs(str->str, console_stream);
+            fflush(console_stream);
+        }
+    }
+
     g_string_assign(last, message);
+    last_level = log_level;
     count = 0;
 
-    gwy_fprintf(logfile, "%s%s%s\n",
-                log_domain ? log_domain : "",
-                log_domain ? ": " : "",
-                message);
-    fflush(logfile);
+    format_log_message(str, log_domain, log_level, message);
+    if (to_file) {
+        fputs(str->str, log_file);
+        fflush(log_file);
+    }
+    if (to_console) {
+        fputs(str->str, console_stream);
+        fflush(console_stream);
+    }
+}
+
+static void
+format_log_message(GString *str,
+                   const gchar *log_domain,
+                   GLogLevelFlags log_level,
+                   const gchar *message)
+{
+    GLogLevelFlags just_log_level;
+
+    just_log_level = (log_level & G_LOG_LEVEL_MASK);
+
+    if (log_level & ALERT_LEVELS)
+        g_string_append(str, "\n");
+    if (!log_domain)
+        g_string_append(str, "** ");
+
+    /* GLib uses g_log_msg_prefix but we do not have access to it. */
+    if (TRUE) {
+        const gchar *prg_name = g_get_prgname();
+        gulong pid = getpid();
+
+        if (!prg_name)
+            g_string_append_printf(str, "(process:%lu): ", pid);
+        else
+            g_string_append_printf(str, "(%s:%lu): ", prg_name, pid);
+    }
+    if (log_domain) {
+        g_string_append(str, log_domain);
+        g_string_append_c(str, '-');
+    }
+
+    append_level_prefix(str, just_log_level);
+    if (log_level & ALERT_LEVELS)
+        g_string_append(str, " **");
+
+    g_string_append(str, ": ");
+    if (!message)
+        g_string_append(str, "(NULL) message");
+    else {
+        /* XXX: GLib does (a) escaping (b) conversion from UTF-8 here. */
+        g_string_append(str, message);
+    }
+    g_string_append(str, "\n");
 }
 
 /************************** Documentation ****************************/

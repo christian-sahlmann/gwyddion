@@ -28,7 +28,8 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    GWY_APP_LOGGING_TO_FILE = (1 << 0),
+    GWY_APP_LOGGING_TO_FILE    = (1 << 0),
+    GWY_APP_LOGGING_TO_CONSOLE = (1 << 1),
 } GwyAppLoggingFlags;
 
 void         gwy_app_switch_tool                (const gchar *toolname);
