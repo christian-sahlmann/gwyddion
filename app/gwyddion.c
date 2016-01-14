@@ -39,11 +39,13 @@
 
 #ifdef G_OS_WIN32
 #define LOG_TO_FILE_DEFAULT TRUE
+#define LOG_TO_CONSOLE_DEFAULT FALSE
 #include <windows.h>
 #include <winreg.h>
 #define gwyddion_key "Software\\Gwyddion\\2.0"
 #else
-#define LOG_TO_FILE_DEFAULT FALSE
+#define LOG_TO_FILE_DEFAULT TRUE
+#define LOG_TO_CONSOLE_DEFAULT TRUE
 #endif
 
 typedef struct {
@@ -51,8 +53,9 @@ typedef struct {
     gboolean debug_objects;
     gboolean startup_time;
     gboolean check;
-    gboolean log_to_file;
     gboolean disable_gl;
+    gboolean log_to_file;
+    gboolean log_to_console;
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
@@ -77,7 +80,8 @@ static void gwy_app_check_version           (void);
 static void sneaking_thread_init            (void);
 
 static GwyAppOptions app_options = {
-    FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, FALSE,
+    FALSE, FALSE, FALSE, FALSE, FALSE,
+    LOG_TO_FILE_DEFAULT, LOG_TO_CONSOLE_DEFAULT,
     GWY_APP_REMOTE_NONE,
 };
 
@@ -103,9 +107,10 @@ main(int argc, char *argv[])
     gwy_osx_set_locale();
 
     process_preinit_options(&argc, &argv, &app_options);
-    gwy_app_setup_logging(app_options.log_to_file
-                          ? GWY_APP_LOGGING_TO_FILE
-                          : 0);
+    gwy_app_setup_logging((app_options.log_to_file
+                           ? GWY_APP_LOGGING_TO_FILE : 0)
+                          | (app_options.log_to_console
+                             ? GWY_APP_LOGGING_TO_CONSOLE : 0));
     gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
@@ -320,6 +325,14 @@ process_preinit_options(int *argc,
                 options->log_to_file = FALSE;
                 continue;
             }
+            if (gwy_strequal((*argv)[i], "--log-to-console")) {
+                options->log_to_console = TRUE;
+                continue;
+            }
+            if (gwy_strequal((*argv)[i], "--no-log-to-console")) {
+                options->log_to_console = FALSE;
+                continue;
+            }
             if (gwy_strequal((*argv)[i], "--disable-gl")) {
                 options->disable_gl = TRUE;
                 continue;
@@ -353,8 +366,10 @@ print_help(void)
 "     --remote-existing      Load FILES to a running instance or fail.\n"
 "     --check                Check FILES, print problems and terminate.\n"
 "     --disable-gl           Disable OpenGL, including any availability checks.\n"
-"     --log-to-file          Redirect messages file set in GWYDDION_LOGFILE.\n"
-"     --no-log-to-file       Print messages to console.\n"
+"     --log-to-file          Write messages to file set in GWYDDION_LOGFILE.\n"
+"     --no-log-to-file       Do not write messages to any file.\n"
+"     --log-to-console       Print messages to console\n"
+"     --no-log-to-console    Do not print messages to console.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
 "     --startup-time         Measure time of startup tasks.\n"
         );
