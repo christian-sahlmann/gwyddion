@@ -98,16 +98,17 @@ main(int argc, char *argv[])
     sneaking_thread_init();
     g_unsetenv("UBUNTU_MENUPROXY");
     timer = g_timer_new();
-    gwy_app_check_version();
-
-    gwy_osx_init_handler(&argc);
-    gwy_osx_set_locale();
 
     process_preinit_options(&argc, &argv, &app_options);
     gwy_app_setup_logging((app_options.log_to_file
                            ? GWY_APP_LOGGING_TO_FILE : 0)
                           | (app_options.log_to_console
                              ? GWY_APP_LOGGING_TO_CONSOLE : 0));
+    gwy_app_check_version();
+
+    gwy_osx_init_handler(&argc);
+    gwy_osx_set_locale();
+
     gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
@@ -657,7 +658,7 @@ sneaking_thread_init(void)
 
     main_module = g_module_open(NULL, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
     if (!main_module) {
-        gwy_debug("Canno dlopen() self.");
+        gwy_debug("Cannot dlopen() self.");
         return;
     }
 
