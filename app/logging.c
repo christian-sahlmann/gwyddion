@@ -153,6 +153,19 @@ _gwy_app_log_get_captured_messages(void)
     return messages;
 }
 
+void
+_gwy_app_log_discard_captured_messages(void)
+{
+    guint i;
+
+    g_return_val_if_fail(log_capturing_now, NULL);
+    log_capturing_now = FALSE;
+
+    for (i = 0; i < log_captured_messages->len; i++)
+        g_free(g_ptr_array_index(log_captured_messages, i));
+    g_ptr_array_set_size(log_captured_messages, 0);
+}
+
 static void
 flush_last_message(LoggingSetup *setup_init)
 {

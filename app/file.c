@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <app/gwyapp.h>
 #include "gwyappfilechooser.h"
+#include "gwyappinternal.h"
 
 typedef struct {
     const gchar *funcname;
@@ -253,6 +254,7 @@ gwy_app_file_load_real(const gchar *filename_utf8,
         free_utf8 = TRUE;
     }
 
+    _gwy_app_log_start_message_capture();
     if (name)
         data = gwy_file_func_run_load(name, filename_sys,
                                       GWY_RUN_INTERACTIVE, &err);
@@ -268,6 +270,7 @@ gwy_app_file_load_real(const gchar *filename_utf8,
             gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
     }
     else {
+        _gwy_app_log_discard_captured_messages();
         if (err && !g_error_matches(err,
                                     GWY_MODULE_FILE_ERROR,
                                     GWY_MODULE_FILE_ERROR_CANCELLED)) {
@@ -331,9 +334,12 @@ gwy_app_file_add_loaded(GwyContainer *data,
     gwy_app_data_browser_add(data);
     gwy_app_data_browser_reset_visibility(data,
                                           GWY_VISIBILITY_RESET_DEFAULT);
+    _gwy_app_data_browser_add_messages(data);
+
     if (filename_utf8)
         gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
     gwy_app_set_current_directory(filename_sys);
+
 }
 
 /**
@@ -392,10 +398,19 @@ gwy_app_file_open_or_merge(gboolean merge)
 
             data = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
             if (data) {
+                GwyContainer *current_data;
+
                 gwy_app_data_browser_merge(data);
                 warn_broken_load_func(name, data);
                 g_object_unref(data);
+
+                gwy_app_data_browser_get_current(GWY_APP_CONTAINER,
+                                                 &current_data,
+                                                 NULL);
+                _gwy_app_data_browser_add_messages(current_data);
             }
+            else
+                _gwy_app_log_discard_captured_messages();
         }
         else
             gwy_app_file_load(NULL, fname_sys, name);

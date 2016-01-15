@@ -6264,6 +6264,38 @@ gwy_app_data_browser_get_number(GwyContainer *data)
     return proxy ? proxy->data_no : 0;
 }
 
+void
+_gwy_app_data_browser_add_messages(GwyContainer *data)
+{
+    GwyAppDataBrowser *browser;
+    GwyAppDataProxy *proxy;
+    gchar **messages;
+
+    if (!data) {
+        _gwy_app_log_discard_captured_messages();
+        g_warning("Cannot add messages for NULL data.");
+        return;
+    }
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
+    browser = gwy_app_get_data_browser();
+    proxy = gwy_app_data_browser_get_proxy(browser, data);
+    if (!proxy) {
+        _gwy_app_log_discard_captured_messages();
+        g_critical("Data container is unknown to data browser.");
+        return;
+    }
+
+    messages = _gwy_app_log_get_captured_messages();
+    if (!messages)
+        return;
+
+    g_printerr("TODO: And here we would display %u messages for Container %p "
+               "in the data browser.\n",
+               g_strv_length(messages), data);
+    g_strfreev(messages);
+}
+
 /**
  * gwy_app_data_browser_set_keep_invisible:
  * @data: A data container.
