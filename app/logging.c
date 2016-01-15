@@ -37,6 +37,7 @@ typedef struct {
     FILE *file;
     GString *str;
     GString *last;
+    GString *last_domain;
     guint last_count;
     GLogLevelFlags last_level;
     GwyAppLoggingFlags flags;
@@ -48,6 +49,7 @@ static void  logger             (const gchar *log_domain,
                                  GLogLevelFlags log_level,
                                  const gchar *message,
                                  gpointer user_data);
+static void  flush_last_message (LoggingSetup *setup_init);
 static void  format_log_message (GString *str,
                                  const gchar *log_domain,
                                  GLogLevelFlags log_level,
@@ -108,6 +110,8 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
 
     setup->str = g_string_new(NULL);
     setup->last = g_string_new(NULL);
+    setup->last_domain = g_string_new(NULL);
+    setup->last_count = G_MAXUINT;
 
     for (i = 0; i < G_N_ELEMENTS(domains); i++) {
         g_log_set_handler(domains[i],
@@ -116,12 +120,15 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
                           | G_LOG_LEVEL_CRITICAL,
                           logger, setup);
     }
+
+    flush_last_message(setup);
 }
 
 void
 _gwy_app_log_start_message_capture(void)
 {
     g_return_if_fail(!log_capturing_now);
+    flush_last_message(NULL);
     log_capturing_now = TRUE;
     if (G_UNLIKELY(!log_captured_messages))
         log_captured_messages = g_ptr_array_new();
@@ -138,11 +145,38 @@ _gwy_app_log_get_captured_messages(void)
     if (!log_captured_messages->len)
         return NULL;
 
+    flush_last_message(NULL);
     g_ptr_array_add(log_captured_messages, NULL);
     messages = g_memdup(log_captured_messages->pdata,
                         log_captured_messages->len*sizeof(gchar*));
     g_ptr_array_set_size(log_captured_messages, 0);
     return messages;
+}
+
+static void
+flush_last_message(LoggingSetup *setup_init)
+{
+    GLogLevelFlags just_log_level;
+    static LoggingSetup *setup = NULL;
+
+    if (G_UNLIKELY(setup_init)) {
+        setup = setup_init;
+        return;
+    }
+
+    if (!setup->last_count || setup->last_count == G_MAXUINT)
+        return;
+
+    just_log_level = (setup->last_level & G_LOG_LEVEL_MASK);
+    g_string_printf(setup->last, "Last message repeated %u times",
+                    setup->last_count);
+    if (log_capturing_now && (just_log_level & ~G_LOG_LEVEL_DEBUG))
+        g_ptr_array_add(log_captured_messages, g_strdup(setup->last->str));
+    format_log_message(setup->str, setup->last_domain->str, just_log_level,
+                       setup->last->str);
+    emit_log_message(setup, just_log_level);
+
+    setup->last_count = G_MAXUINT;
 }
 
 static void
@@ -152,36 +186,28 @@ logger(const gchar *log_domain,
        gpointer user_data)
 {
     LoggingSetup *setup = (LoggingSetup*)user_data;
-    gboolean to_file = setup->to_file;
-    gboolean to_console = setup->to_console;
     GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
-    GString *str = setup->str;
-    GString *last = setup->last;
+    const gchar *safe_log_domain = log_domain ? log_domain : "";
 
-    if (!to_file && !to_console)
+    if (!setup->to_file && !setup->to_console)
         return;
 
-    if (log_level == setup->last_level && gwy_strequal(message, last->str)) {
+    if (setup->last_count != G_MAXUINT
+        && log_level == setup->last_level
+        && gwy_strequal(safe_log_domain, setup->last_domain->str)
+        && gwy_strequal(message, setup->last->str)) {
         setup->last_count++;
         return;
     }
 
-    if (setup->last_count) {
-        g_string_printf(last, "Last message repeated %u times",
-                        setup->last_count);
-        if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
-            g_ptr_array_add(log_captured_messages, g_strdup(last->str));
-        format_log_message(str, log_domain, just_log_level, last->str);
-        emit_log_message(setup, just_log_level);
-    }
-
-    g_string_assign(last, message);
+    flush_last_message(NULL);
+    g_string_assign(setup->last, message);
+    g_string_assign(setup->last_domain, safe_log_domain);
     setup->last_level = log_level;
-    setup->last_count = 0;
 
-    if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
+    if (log_capturing_now && (just_log_level & ~G_LOG_LEVEL_DEBUG))
         g_ptr_array_add(log_captured_messages, g_strdup(message));
-    format_log_message(str, log_domain, just_log_level, message);
+    format_log_message(setup->str, log_domain, just_log_level, message);
     emit_log_message(setup, just_log_level);
 }
 
@@ -194,7 +220,7 @@ emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
     }
 
     if (setup->to_console) {
-        FILE *console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
+        FILE *console_stream = get_console_stream(log_level);
         fputs(setup->str->str, console_stream);
         fflush(console_stream);
     }
