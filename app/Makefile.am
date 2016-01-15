@@ -130,6 +130,7 @@ libgwyapp2_la_SOURCES = \
 	gwytool.c \
 	help.c \
 	log.c \
+	logging.c \
 	menu.c \
 	meta.c \
 	settings.c \
