@@ -33,13 +33,16 @@ enum {
                     | G_LOG_LEVEL_WARNING)
 };
 
-static GwyAppLoggingFlags logging_flags = 0;
-static FILE *log_file = NULL;
-static GString *log_last = NULL;
-static guint log_count = 0;
-static GLogLevelFlags log_last_level = 0;
-static gboolean log_capturing_now = FALSE;
-static GPtrArray *log_captured_messages = NULL;
+typedef struct {
+    FILE *file;
+    GString *str;
+    GString *last;
+    guint last_count;
+    GLogLevelFlags last_level;
+    GwyAppLoggingFlags flags;
+    gboolean to_file;
+    gboolean to_console;
+} LoggingSetup;
 
 static void  logger             (const gchar *log_domain,
                                  GLogLevelFlags log_level,
@@ -49,13 +52,14 @@ static void  format_log_message (GString *str,
                                  const gchar *log_domain,
                                  GLogLevelFlags log_level,
                                  const gchar *message);
-static void  emit_log_message   (GString *str,
-                                 GLogLevelFlags log_level,
-                                 gboolean to_file,
-                                 gboolean to_console);
+static void  emit_log_message   (LoggingSetup *setup,
+                                 GLogLevelFlags log_level);
 static void  append_level_prefix(GString *str,
                                  GLogLevelFlags log_level);
 static FILE* get_console_stream (GLogLevelFlags log_level);
+
+static gboolean log_capturing_now = FALSE;
+static GPtrArray *log_captured_messages = NULL;
 
 /**
  * gwy_app_setup_logging:
@@ -72,7 +76,7 @@ static FILE* get_console_stream (GLogLevelFlags log_level);
 void
 gwy_app_setup_logging(GwyAppLoggingFlags flags)
 {
-    const gchar *domains[] = {
+    static const gchar *domains[] = {
         "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
         "GdkPixbuf", "Gdk", "Gtk",
         "GdkGLExt", "GtkGLExt",
@@ -82,6 +86,8 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
     };
 
     static gboolean logging_set_up = FALSE;
+
+    LoggingSetup *setup;
     guint i;
 
     if (logging_set_up) {
@@ -90,19 +96,25 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
     }
 
     logging_set_up = TRUE;
-    logging_flags = flags;
+    setup = g_new0(LoggingSetup, 1);
+    setup->flags = flags;
 
+    setup->to_console = (flags & GWY_APP_LOGGING_TO_CONSOLE);
     if (flags & GWY_APP_LOGGING_TO_FILE) {
         const gchar *log_filename = gwy_app_settings_get_log_filename();
-        log_file = gwy_fopen(log_filename, "w");
+        setup->file = gwy_fopen(log_filename, "w");
+        setup->to_file = !!setup->file;
     }
+
+    setup->str = g_string_new(NULL);
+    setup->last = g_string_new(NULL);
 
     for (i = 0; i < G_N_ELEMENTS(domains); i++) {
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
                           | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
                           | G_LOG_LEVEL_CRITICAL,
-                          logger, NULL);
+                          logger, setup);
     }
 }
 
@@ -137,58 +149,53 @@ static void
 logger(const gchar *log_domain,
        GLogLevelFlags log_level,
        const gchar *message,
-       G_GNUC_UNUSED gpointer user_data)
+       gpointer user_data)
 {
-    static GString *str = NULL;
-
-    gboolean to_file = log_file && (logging_flags & GWY_APP_LOGGING_TO_FILE);
-    gboolean to_console = (logging_flags & GWY_APP_LOGGING_TO_CONSOLE);
+    LoggingSetup *setup = (LoggingSetup*)user_data;
+    gboolean to_file = setup->to_file;
+    gboolean to_console = setup->to_console;
     GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
+    GString *str = setup->str;
+    GString *last = setup->last;
 
     if (!to_file && !to_console)
         return;
 
-    if (G_UNLIKELY(!str))
-        str = g_string_new(NULL);
-    if (G_UNLIKELY(!log_last))
-        log_last = g_string_new(NULL);
-
-    if (log_level == log_last_level && gwy_strequal(message, log_last->str)) {
-        log_count++;
+    if (log_level == setup->last_level && gwy_strequal(message, last->str)) {
+        setup->last_count++;
         return;
     }
 
-    if (log_count) {
-        g_string_printf(log_last, "Last message repeated %u times", log_count);
+    if (setup->last_count) {
+        g_string_printf(last, "Last message repeated %u times",
+                        setup->last_count);
         if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
-            g_ptr_array_add(log_captured_messages, g_strdup(log_last->str));
-        format_log_message(str, log_domain, just_log_level, log_last->str);
-        emit_log_message(str, just_log_level, to_file, to_console);
+            g_ptr_array_add(log_captured_messages, g_strdup(last->str));
+        format_log_message(str, log_domain, just_log_level, last->str);
+        emit_log_message(setup, just_log_level);
     }
 
-    g_string_assign(log_last, message);
-    log_last_level = log_level;
-    log_count = 0;
+    g_string_assign(last, message);
+    setup->last_level = log_level;
+    setup->last_count = 0;
 
     if (log_capturing_now && (log_level & ~G_LOG_LEVEL_DEBUG))
         g_ptr_array_add(log_captured_messages, g_strdup(message));
     format_log_message(str, log_domain, just_log_level, message);
-    emit_log_message(str, just_log_level, to_file, to_console);
+    emit_log_message(setup, just_log_level);
 }
 
 static void
-emit_log_message(GString *str,
-                 GLogLevelFlags log_level,
-                 gboolean to_file, gboolean to_console)
+emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
 {
-    if (to_file) {
-        fputs(str->str, log_file);
-        fflush(log_file);
+    if (setup->to_file) {
+        fputs(setup->str->str, setup->file);
+        fflush(setup->file);
     }
 
-    if (to_console) {
+    if (setup->to_console) {
         FILE *console_stream = get_console_stream(log_level & G_LOG_LEVEL_MASK);
-        fputs(str->str, console_stream);
+        fputs(setup->str->str, console_stream);
         fflush(console_stream);
     }
 }
