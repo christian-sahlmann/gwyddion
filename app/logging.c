@@ -158,7 +158,7 @@ _gwy_app_log_discard_captured_messages(void)
 {
     guint i;
 
-    g_return_val_if_fail(log_capturing_now, NULL);
+    g_return_if_fail(log_capturing_now);
     log_capturing_now = FALSE;
 
     for (i = 0; i < log_captured_messages->len; i++)
