@@ -76,6 +76,7 @@ struct _GwySpline {
     gboolean fixed_sampling_valid;
     guint nfixed;
     GArray *fixed_samples;
+    GArray *fixed_tangents;
 };
 
 static void gwy_spline_invalidate (GwySpline *spline);
@@ -107,6 +108,7 @@ gwy_spline_new(void)
     spline->control_points = g_array_new(FALSE, FALSE, sizeof(ControlPoint));
     spline->natural_points = g_array_new(FALSE, FALSE, sizeof(PointXY));
     spline->fixed_samples = g_array_new(FALSE, FALSE, sizeof(PointXY));
+    spline->fixed_tangents = g_array_new(FALSE, FALSE, sizeof(PointXY));
 
     return spline;
 }
@@ -123,6 +125,7 @@ void
 gwy_spline_free(GwySpline *spline)
 {
     g_return_if_fail(spline);
+    g_array_free(spline->fixed_tangents, TRUE);
     g_array_free(spline->fixed_samples, TRUE);
     g_array_free(spline->natural_points, TRUE);
     g_array_free(spline->control_points, TRUE);
@@ -133,7 +136,7 @@ gwy_spline_free(GwySpline *spline)
 /**
  * gwy_spline_from_points:
  * @xy: Array of points in plane the curve will pass through.
- * @n: Number of points in @xy[].
+ * @n: Number of points in @xy.
  *
  * Creates a new spline curve passing through given points.
  *
@@ -224,11 +227,11 @@ gwy_spline_get_closed(GwySpline *spline)
 /**
  * gwy_spline_set_points:
  * @xy: Array of points in plane the curve will pass through.
- * @n: Number of points in @xy[].
+ * @n: Number of points in @xy.
  *
  * Sets the coordinates of XY points a spline curve should pass through.
  *
- * It is possible to pass @n=0 to make the spline empty (@xy can be NULL then)
+ * It is possible to pass @n=0 to make the spline empty (@xy can be %NULL then)
  * but such spline may not be sampled.
  *
  * Since: 2.45
@@ -342,6 +345,9 @@ gwy_spline_length(GwySpline *spline)
  * gwy_spline_sample:
  * @spline: A spline curve.
  * @xy: Array where the sampled point coordinates should be stored in.
+ *      May be %NULL if you are only interested in the tangents.
+ * @t: Array where tangent vectors at the @xy coordinates should be stored in.
+ *     May be %NULL if you are only interested in the coordinates.
  * @n: The number of samples to take.
  *
  * Samples uniformly a spline curve.
@@ -363,6 +369,11 @@ gwy_spline_length(GwySpline *spline)
  * meaningful sampling requires @n at least 2, nevertheless, the function
  * permits also @n of one or zero.
  *
+ * The tangents vectors stored in @t are normalised and oriented from the
+ * beginning of the curve towards the end.  If two or more consecutive given XY
+ * points coincide or the curve has only a single point the vectors may be
+ * (0,0).
+ *
  * Returns: The curve length in whatever units the XY coordinates are expressed
  *          in.
  *
@@ -371,10 +382,17 @@ gwy_spline_length(GwySpline *spline)
 gdouble
 gwy_spline_sample(GwySpline *spline,
                   GwyTriangulationPointXY *xy,
+                  GwyTriangulationPointXY *t,
                   guint n)
 {
+    if (!xy && !t)
+        return gwy_spline_length(spline);
+
     if (spline->fixed_sampling_valid && spline->nfixed == n) {
-        memcpy(xy, spline->fixed_samples->data, n*sizeof(PointXY));
+        if (xy)
+            memcpy(xy, spline->fixed_samples->data, n*sizeof(PointXY));
+        if (t)
+            memcpy(t, spline->fixed_tangents->data, n*sizeof(PointXY));
         return spline->length;
     }
 
@@ -729,9 +747,8 @@ sample_curve(const GwySpline *spline,
     return xpt;
 }
 
-/* FIXME: We can also sample velocities (derivatives).  The public API should
- * probably always offer them because they permit constructing normals to the
- * curve easily. */
+/* NB: The velocities have magnitude; the caller is responsible for
+ * normalisation if required. */
 static void
 sample_curve_uniformly(GwySpline *spline,
                        guint nsamples,

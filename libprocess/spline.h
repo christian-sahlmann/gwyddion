@@ -47,6 +47,7 @@ void                           gwy_spline_set_closed   (GwySpline *spline,
 gdouble                        gwy_spline_length       (GwySpline *spline);
 gdouble                        gwy_spline_sample       (GwySpline *spline,
                                                         GwyTriangulationPointXY *xy,
+                                                        GwyTriangulationPointXY *t,
                                                         guint n);
 
 G_END_DECLS
