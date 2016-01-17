@@ -44,6 +44,7 @@
 #include <libprocess/spectra.h>
 #include <libprocess/linestats.h>
 #include <libprocess/inttrans.h>
+#include <libprocess/spline.h>
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
 #include <libprocess/tip.h>
