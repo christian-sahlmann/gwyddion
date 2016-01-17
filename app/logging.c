@@ -45,20 +45,22 @@ typedef struct {
     gboolean to_console;
 } LoggingSetup;
 
-static void  logger             (const gchar *log_domain,
-                                 GLogLevelFlags log_level,
-                                 const gchar *message,
-                                 gpointer user_data);
-static void  flush_last_message (LoggingSetup *setup_init);
-static void  format_log_message (GString *str,
-                                 const gchar *log_domain,
-                                 GLogLevelFlags log_level,
-                                 const gchar *message);
-static void  emit_log_message   (LoggingSetup *setup,
-                                 GLogLevelFlags log_level);
-static void  append_level_prefix(GString *str,
-                                 GLogLevelFlags log_level);
-static FILE* get_console_stream (GLogLevelFlags log_level);
+static void  logger                (const gchar *log_domain,
+                                    GLogLevelFlags log_level,
+                                    const gchar *message,
+                                    gpointer user_data);
+static void  flush_last_message    (LoggingSetup *setup_init);
+static void  format_log_message    (GString *str,
+                                    const gchar *log_domain,
+                                    GLogLevelFlags log_level,
+                                    const gchar *message);
+static void  append_escaped_message(GString *str,
+                                    const gchar *message);
+static void  emit_log_message      (LoggingSetup *setup,
+                                    GLogLevelFlags log_level);
+static void  append_level_prefix   (GString *str,
+                                    GLogLevelFlags log_level);
+static FILE* get_console_stream    (GLogLevelFlags log_level);
 
 static gboolean log_capturing_now = FALSE;
 static GPtrArray *log_captured_messages = NULL;
@@ -273,11 +275,45 @@ format_log_message(GString *str,
     g_string_append(str, ": ");
     if (!message)
         g_string_append(str, "(NULL) message");
-    else {
-        /* XXX: GLib does (a) escaping (b) conversion from UTF-8 here. */
-        g_string_append(str, message);
-    }
+    else
+        append_escaped_message(str, message);
     g_string_append_c(str, '\n');
+}
+
+static void
+append_escaped_message(GString *str, const gchar *message)
+{
+    guint pos, good_from, utf8_valid_only_to;
+    gboolean escape_this;
+    const gchar *p;
+    guchar c;
+
+    g_utf8_validate(message, -1, &p);
+    utf8_valid_only_to = p - message;
+    for (pos = good_from = 0; (c = (guchar)message[pos]); pos++) {
+        /* First find out if this character breaks the sequence of characters
+         * we just copy as-is. */
+        escape_this = FALSE;
+        if (pos == utf8_valid_only_to) {
+            escape_this = TRUE;
+            g_utf8_validate(message + pos + 1, -1, &p);
+            utf8_valid_only_to = p - message;
+        }
+        else if (g_ascii_iscntrl(c) && !g_ascii_isspace(c))
+            escape_this = TRUE;
+
+        /* If it does not just increment the counter.  If we have to escape
+         * this one then first copy as-is the entire good segment, and only
+         * after that add the bad character. */
+        if (escape_this) {
+            if (pos > good_from)
+                g_string_append_len(str, message + good_from, pos - good_from);
+            g_string_append_printf(str, "\\x%02x", c);
+            good_from = pos+1;
+        }
+    }
+    if (pos > good_from)
+        g_string_append_len(str, message + good_from, pos - good_from);
 }
 
 /* Similar to GLib's function but we do not handle recursive and fatal errors
