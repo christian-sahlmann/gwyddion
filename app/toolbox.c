@@ -78,6 +78,8 @@ static void       gwy_app_toolbox_create_group (GtkBox *box,
                                                 GtkWidget *toolbox);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *expander);
 static void       show_user_guide              (void);
+static void       show_message_log             (void);
+static GtkWindow* create_message_log_window    (void);
 static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 GdkDragContext *context,
                                                 gint x,
@@ -692,6 +694,14 @@ gwy_app_menu_create_info_menu(GtkAccelGroup *accel_group)
             NULL
         },
         {
+            N_("/Program _Messages"),
+            NULL,
+            show_message_log,
+            0,
+            "<Item>",
+            NULL
+        },
+        {
             "/---",
             NULL,
             NULL,
@@ -996,6 +1006,63 @@ static void
 show_user_guide(void)
 {
     gwy_help_show("index", NULL);
+}
+
+static void
+show_message_log(void)
+{
+    static GtkWindow *window = NULL;
+
+    if (!window)
+        window = create_message_log_window();
+
+    gtk_window_present(window);
+}
+
+static void
+message_log_updated(GtkTextBuffer *textbuf, GtkTextView *textview)
+{
+    GtkTextIter iter;
+
+    gtk_text_buffer_get_end_iter(textbuf, &iter);
+    gtk_text_view_scroll_to_iter(textview, &iter, 0.0, FALSE, 0.0, 1.0);
+}
+
+static gboolean
+message_log_deleted(GtkWidget *window)
+{
+    gtk_widget_hide(window);
+    return TRUE;
+}
+
+static GtkWindow*
+create_message_log_window(void)
+{
+    GtkWindow *window;
+    GtkTextBuffer *textbuf;
+    GtkWidget *logview, *scwin;
+
+    window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(window, _("Program Messages"));
+    gtk_window_set_default_size(window, 320, 240);
+
+    textbuf = gwy_app_get_log_text_buffer();
+    logview = gtk_text_view_new_with_buffer(textbuf);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+    gtk_container_add(GTK_CONTAINER(scwin), logview);
+    gtk_widget_show_all(scwin);
+
+    gtk_container_add(GTK_CONTAINER(window), scwin);
+
+    g_signal_connect(textbuf, "changed",
+                     G_CALLBACK(message_log_updated), logview);
+    g_signal_connect(window, "delete-event",
+                     G_CALLBACK(message_log_deleted), NULL);
+
+    return window;
 }
 
 static gboolean
