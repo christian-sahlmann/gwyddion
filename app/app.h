@@ -27,11 +27,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-    GWY_APP_LOGGING_TO_FILE    = (1 << 0),
-    GWY_APP_LOGGING_TO_CONSOLE = (1 << 1),
-} GwyAppLoggingFlags;
-
 void         gwy_app_switch_tool                (const gchar *toolname);
 const gchar* gwy_app_current_tool_name          (void);
 void         gwy_app_add_main_accel_group       (GtkWindow *window);
@@ -49,11 +44,9 @@ void         gwy_app_init_widget_styles         (void);
 void         gwy_app_init_i18n                  (void);
 gboolean     gwy_app_init_common                (GError **error,
                                                  ...);
-void         gwy_app_setup_logging              (GwyAppLoggingFlags flags);
 
 G_END_DECLS
 
 #endif /* __GWY_APP_APP_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

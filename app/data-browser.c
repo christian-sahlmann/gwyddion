@@ -162,7 +162,7 @@ struct _GwyAppDataProxy {
     GList *associated_3d;       /* of a channel */
     GList *associated_mask;     /* of a channel */
     GList *associated_preview;  /* of a volume */
-    GPtrArray *messages;
+    GArray *messages;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -1957,6 +1957,7 @@ gwy_app_data_proxy_finalize(gpointer user_data)
 {
     GwyAppDataProxy *proxy = (GwyAppDataProxy*)user_data;
     GwyAppDataBrowser *browser;
+    GArray *messages = proxy->messages;
 
     proxy->finalize_id = 0;
 
@@ -1995,12 +1996,13 @@ gwy_app_data_proxy_finalize(gpointer user_data)
         (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
 
-    if (proxy->messages) {
+    if (messages) {
         guint i;
 
-        for (i = 0; i < proxy->messages->len; i++)
-            g_free(g_ptr_array_index(proxy->messages, i));
-        g_ptr_array_free(proxy->messages, TRUE);
+        for (i = 0; i < messages->len; i++)
+            g_free(g_array_index(messages, GwyAppLogMessage, i).message);
+        g_array_free(messages, TRUE);
+        proxy->messages = NULL;
     }
 
     g_object_unref(proxy->container);
@@ -6278,8 +6280,8 @@ _gwy_app_data_browser_add_messages(GwyContainer *data)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
-    gchar **messages;
-    guint i;
+    GwyAppLogMessage *messages;
+    guint nmesg;
 
     if (!data) {
         _gwy_app_log_discard_captured_messages();
@@ -6296,17 +6298,16 @@ _gwy_app_data_browser_add_messages(GwyContainer *data)
         return;
     }
 
-    messages = _gwy_app_log_get_captured_messages();
+    messages = _gwy_app_log_get_captured_messages(&nmesg);
     if (!messages)
         return;
 
     if (!proxy->messages)
-        proxy->messages = g_ptr_array_new();
+        proxy->messages = g_array_new(FALSE, FALSE, sizeof(GwyAppLogMessage));
 
-    for (i = 0; messages[i]; i++)
-        g_ptr_array_add(proxy->messages, messages[i]);
+    g_array_append_vals(proxy->messages, messages, nmesg);
     g_free(messages);
-    /* TODO: Make the messages visible in the browser. */
+    /* TODO: Filter the messages and make them visible in the browser. */
 }
 
 /**

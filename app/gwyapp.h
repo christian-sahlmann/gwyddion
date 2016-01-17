@@ -36,6 +36,7 @@
 #include <app/gwyplaintool.h>
 #include <app/help.h>
 #include <app/log.h>
+#include <app/logging.h>
 #include <app/menu.h>
 #include <app/meta.h>
 #include <app/resource-editor.h>

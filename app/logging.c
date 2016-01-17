@@ -22,6 +22,7 @@
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
@@ -41,29 +42,35 @@ typedef struct {
     guint last_count;
     GLogLevelFlags last_level;
     GwyAppLoggingFlags flags;
+    GArray *message_history;
+    GtkTextBuffer *textbuf;
     gboolean to_file;
     gboolean to_console;
+    guint capturing_from;
 } LoggingSetup;
 
-static void  logger                (const gchar *log_domain,
-                                    GLogLevelFlags log_level,
-                                    const gchar *message,
-                                    gpointer user_data);
-static void  flush_last_message    (LoggingSetup *setup_init);
-static void  format_log_message    (GString *str,
-                                    const gchar *log_domain,
-                                    GLogLevelFlags log_level,
-                                    const gchar *message);
-static void  append_escaped_message(GString *str,
-                                    const gchar *message);
-static void  emit_log_message      (LoggingSetup *setup,
-                                    GLogLevelFlags log_level);
-static void  append_level_prefix   (GString *str,
-                                    GLogLevelFlags log_level);
-static FILE* get_console_stream    (GLogLevelFlags log_level);
+static void           logger                    (const gchar *log_domain,
+                                                 GLogLevelFlags log_level,
+                                                 const gchar *message,
+                                                 gpointer user_data);
+static void           flush_last_message        (LoggingSetup *setup);
+static void           format_log_message        (GString *str,
+                                                 const gchar *log_domain,
+                                                 GLogLevelFlags log_level,
+                                                 const gchar *message);
+static void           append_escaped_message    (GString *str,
+                                                 const gchar *message);
+static void           emit_log_message          (LoggingSetup *setup,
+                                                 GLogLevelFlags log_level);
+static void           append_level_prefix       (GString *str,
+                                                 GLogLevelFlags log_level);
+static FILE*          get_console_stream        (GLogLevelFlags log_level);
+static GtkTextBuffer* create_text_buffer_for_log(void);
+static void           add_message_to_text_buffer(GtkTextBuffer *textbuf,
+                                                 const gchar *message,
+                                                 GLogLevelFlags log_level);
 
-static gboolean log_capturing_now = FALSE;
-static GPtrArray *log_captured_messages = NULL;
+static LoggingSetup log_setup;
 
 /**
  * gwy_app_setup_logging:
@@ -89,95 +96,87 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
         "Module", NULL
     };
 
-    static gboolean logging_set_up = FALSE;
-
-    LoggingSetup *setup;
     guint i;
 
-    if (logging_set_up) {
-        g_warning("Logging has already been set up.");
+    if (log_setup.message_history) {
+        g_warning("Logging has been already set up.");
         return;
     }
 
-    logging_set_up = TRUE;
-    setup = g_new0(LoggingSetup, 1);
-    setup->flags = flags;
+    log_setup.flags = flags;
 
-    setup->to_console = (flags & GWY_APP_LOGGING_TO_CONSOLE);
+    log_setup.to_console = (flags & GWY_APP_LOGGING_TO_CONSOLE);
     if (flags & GWY_APP_LOGGING_TO_FILE) {
         const gchar *log_filename = gwy_app_settings_get_log_filename();
-        setup->file = gwy_fopen(log_filename, "w");
-        setup->to_file = !!setup->file;
+        log_setup.file = gwy_fopen(log_filename, "w");
+        log_setup.to_file = !!log_setup.file;
     }
 
-    setup->str = g_string_new(NULL);
-    setup->last = g_string_new(NULL);
-    setup->last_domain = g_string_new(NULL);
-    setup->last_count = G_MAXUINT;
+    log_setup.str = g_string_new(NULL);
+    log_setup.last = g_string_new(NULL);
+    log_setup.last_domain = g_string_new(NULL);
+    log_setup.last_count = G_MAXUINT;
+    log_setup.message_history = g_array_new(FALSE, FALSE,
+                                            sizeof(GwyAppLogMessage));
+    log_setup.capturing_from = G_MAXUINT;
+    /* NB: We must not initialise the text buffer here because Gtk+ may not be
+     * initialised yet.  Only do that on demand. */
 
     for (i = 0; i < G_N_ELEMENTS(domains); i++) {
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
                           | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING
                           | G_LOG_LEVEL_CRITICAL,
-                          logger, setup);
+                          logger, &log_setup);
     }
-
-    flush_last_message(setup);
 }
 
 void
 _gwy_app_log_start_message_capture(void)
 {
-    g_return_if_fail(!log_capturing_now);
-    flush_last_message(NULL);
-    log_capturing_now = TRUE;
-    if (G_UNLIKELY(!log_captured_messages))
-        log_captured_messages = g_ptr_array_new();
+    g_return_if_fail(log_setup.capturing_from == G_MAXUINT);
+    flush_last_message(&log_setup);
+    log_setup.capturing_from = log_setup.message_history->len;
 }
 
-gchar**
-_gwy_app_log_get_captured_messages(void)
+GwyAppLogMessage*
+_gwy_app_log_get_captured_messages(guint *nmesg)
 {
-    gchar **messages;
+    GwyAppLogMessage *messages;
+    guint capturing_from = log_setup.capturing_from, i, n;
+    GArray *message_history = log_setup.message_history;
 
-    g_return_val_if_fail(log_capturing_now, NULL);
-    log_capturing_now = FALSE;
+    g_return_if_fail(log_setup.capturing_from != G_MAXUINT);
+    log_setup.capturing_from = G_MAXUINT;
 
-    if (!log_captured_messages->len)
+    if (message_history->len == capturing_from) {
+        *nmesg = 0;
         return NULL;
+    }
 
-    flush_last_message(NULL);
-    g_ptr_array_add(log_captured_messages, NULL);
-    messages = g_memdup(log_captured_messages->pdata,
-                        log_captured_messages->len*sizeof(gchar*));
-    g_ptr_array_set_size(log_captured_messages, 0);
+    flush_last_message(&log_setup);
+    n = message_history->len - capturing_from;
+    messages = g_new(GwyAppLogMessage, n);
+    for (i = 0; i < n; i++) {
+        messages[i] = g_array_index(message_history, GwyAppLogMessage,
+                                    capturing_from + i);
+        messages[i].message = g_strdup(messages[i].message);
+    }
+    *nmesg = n;
     return messages;
 }
 
 void
 _gwy_app_log_discard_captured_messages(void)
 {
-    guint i;
-
-    g_return_if_fail(log_capturing_now);
-    log_capturing_now = FALSE;
-
-    for (i = 0; i < log_captured_messages->len; i++)
-        g_free(g_ptr_array_index(log_captured_messages, i));
-    g_ptr_array_set_size(log_captured_messages, 0);
+    g_return_if_fail(log_setup.capturing_from != G_MAXUINT);
+    log_setup.capturing_from = G_MAXUINT;
 }
 
 static void
-flush_last_message(LoggingSetup *setup_init)
+flush_last_message(LoggingSetup *setup)
 {
     GLogLevelFlags just_log_level;
-    static LoggingSetup *setup = NULL;
-
-    if (G_UNLIKELY(setup_init)) {
-        setup = setup_init;
-        return;
-    }
 
     if (!setup->last_count || setup->last_count == G_MAXUINT)
         return;
@@ -185,12 +184,9 @@ flush_last_message(LoggingSetup *setup_init)
     just_log_level = (setup->last_level & G_LOG_LEVEL_MASK);
     g_string_printf(setup->last, "Last message repeated %u times",
                     setup->last_count);
-    if (log_capturing_now && (just_log_level & ~G_LOG_LEVEL_DEBUG))
-        g_ptr_array_add(log_captured_messages, g_strdup(setup->last->str));
     format_log_message(setup->str, setup->last_domain->str, just_log_level,
                        setup->last->str);
     emit_log_message(setup, just_log_level);
-
     setup->last_count = G_MAXUINT;
 }
 
@@ -203,9 +199,6 @@ logger(const gchar *log_domain,
     LoggingSetup *setup = (LoggingSetup*)user_data;
     GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
     const gchar *safe_log_domain = log_domain ? log_domain : "";
-
-    if (!setup->to_file && !setup->to_console)
-        return;
 
     if (setup->last_count != G_MAXUINT
         && log_level == setup->last_level
@@ -220,8 +213,6 @@ logger(const gchar *log_domain,
     g_string_assign(setup->last_domain, safe_log_domain);
     setup->last_level = log_level;
 
-    if (log_capturing_now && (just_log_level & ~G_LOG_LEVEL_DEBUG))
-        g_ptr_array_add(log_captured_messages, g_strdup(message));
     format_log_message(setup->str, log_domain, just_log_level, message);
     emit_log_message(setup, just_log_level);
 }
@@ -229,6 +220,8 @@ logger(const gchar *log_domain,
 static void
 emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
 {
+    GwyAppLogMessage logmessage;
+
     if (setup->to_file) {
         fputs(setup->str->str, setup->file);
         fflush(setup->file);
@@ -239,6 +232,13 @@ emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
         fputs(setup->str->str, console_stream);
         fflush(console_stream);
     }
+
+    logmessage.message = g_strdup(setup->str->str);
+    logmessage.log_level = log_level;
+    g_array_append_val(setup->message_history, logmessage);
+
+    if (setup->textbuf)
+        add_message_to_text_buffer(setup->textbuf, setup->str->str, log_level);
 }
 
 static void
@@ -350,6 +350,112 @@ get_console_stream(GLogLevelFlags log_level)
         || log_level == G_LOG_LEVEL_MESSAGE)
         return stderr;
     return stdout;
+}
+
+/**
+ * gwy_app_get_log_text_buffer:
+ *
+ * Obtains a text buffer with program log messages.
+ *
+ * This functions may only be called after gwy_app_setup_logging() and,
+ * obviously, after GTK+ was intialised.
+ *
+ * The text buffer is owned by the library and must not be modified nor
+ * destroyed.  It will be already filled with messages occurring between
+ * gwy_app_setup_logging() and this function call.  New messages will be
+ * appended to the buffer as they arrive.
+ *
+ * Returns: Text buffer with the program log messages.
+ *
+ * Since: 2.45
+ **/
+GtkTextBuffer*
+gwy_app_get_log_text_buffer(void)
+{
+    if (!log_setup.message_history) {
+        g_warning("Obtaining program log text buffer requires "
+                  "gwy_app_setup_logging() being called first.");
+        return create_text_buffer_for_log();
+    }
+
+    if (!log_setup.textbuf) {
+        GArray *message_history = log_setup.message_history;
+        guint i;
+
+        log_setup.textbuf = create_text_buffer_for_log();
+        for (i = 0; i < message_history->len; i++) {
+            GwyAppLogMessage *message = &g_array_index(message_history,
+                                                       GwyAppLogMessage, i);
+            add_message_to_text_buffer(log_setup.textbuf,
+                                       message->message, message->log_level);
+        }
+    }
+
+    return log_setup.textbuf;
+}
+
+static GtkTextBuffer*
+create_text_buffer_for_log(void)
+{
+    GtkTextBuffer *textbuf = gtk_text_buffer_new(NULL);
+
+    gtk_text_buffer_create_tag(textbuf, "ERROR",
+                               "foreground", "#ffffff",
+                               "foreground-set", TRUE,
+                               "background", "#e00000",
+                               "background-set", TRUE,
+                               NULL);
+    gtk_text_buffer_create_tag(textbuf, "CRITICAL",
+                               "foreground", "#e00000",
+                               "foreground-set", TRUE,
+                               NULL);
+    gtk_text_buffer_create_tag(textbuf, "WARNING",
+                               "foreground", "#b0b000",
+                               "foreground-set", TRUE,
+                               NULL);
+    gtk_text_buffer_create_tag(textbuf, "Message",
+                               "foreground", "#3030f0",
+                               "foreground-set", TRUE,
+                               NULL);
+    gtk_text_buffer_create_tag(textbuf, "INFO",
+                               "foreground", "#000000",
+                               "foreground-set", TRUE,
+                               NULL);
+    gtk_text_buffer_create_tag(textbuf, "DEBUG",
+                               "foreground", "#a0a0a0",
+                               "foreground-set", TRUE,
+                               NULL);
+
+    return textbuf;
+}
+
+static void
+add_message_to_text_buffer(GtkTextBuffer *textbuf,
+                           const gchar *message, GLogLevelFlags log_level)
+{
+    const gchar *tagname = NULL;
+    GtkTextIter iter;
+
+    if (log_level & G_LOG_LEVEL_ERROR)
+        tagname = "ERROR";
+    else if (log_level & G_LOG_LEVEL_CRITICAL)
+        tagname = "CRITICAL";
+    else if (log_level & G_LOG_LEVEL_WARNING)
+        tagname = "WARNING";
+    else if (log_level & G_LOG_LEVEL_MESSAGE)
+        tagname = "Message";
+    else if (log_level & G_LOG_LEVEL_INFO)
+        tagname = "INFO";
+    else if (log_level & G_LOG_LEVEL_DEBUG)
+        tagname = "DEBUG";
+
+    gtk_text_buffer_get_end_iter(textbuf, &iter);
+    if (tagname) {
+        gtk_text_buffer_insert_with_tags_by_name(textbuf, &iter, message, -1,
+                                                 tagname, NULL);
+    }
+    else
+        gtk_text_buffer_insert(textbuf, &iter, message, -1);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

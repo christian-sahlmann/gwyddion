@@ -73,6 +73,11 @@ typedef enum {
     KEY_IS_BRICK_LOG,
 } GwyAppKeyType;
 
+typedef struct {
+    GLogLevelFlags log_level;
+    gchar *message;
+} GwyAppLogMessage;
+
 G_GNUC_INTERNAL
 gint     _gwy_app_get_n_recent_files          (void);
 
@@ -108,14 +113,15 @@ G_GNUC_INTERNAL
 gint       _gwy_app_analyse_data_key           (const gchar *strkey,
                                                 GwyAppKeyType *type,
                                                 guint *len);
+
 G_GNUC_INTERNAL
-void       _gwy_app_log_start_message_capture    (void);
+void              _gwy_app_log_start_message_capture    (void);
 G_GNUC_INTERNAL
-gchar**    _gwy_app_log_get_captured_messages    (void);
+void              _gwy_app_log_discard_captured_messages(void);
 G_GNUC_INTERNAL
-void       _gwy_app_log_discard_captured_messages(void);
+GwyAppLogMessage* _gwy_app_log_get_captured_messages    (guint *nmesg);
 G_GNUC_INTERNAL
-void       _gwy_app_data_browser_add_messages    (GwyContainer *data);
+void              _gwy_app_data_browser_add_messages    (GwyContainer *data);
 
 /* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);

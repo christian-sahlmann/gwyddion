@@ -36,6 +36,7 @@ libgwyapp2include_HEADERS = \
 	gwytool.h \
 	help.h \
 	log.h \
+	logging.h \
 	menu.h \
 	meta.h \
 	resource-editor.h \
@@ -76,9 +77,9 @@ MAINTAINERCLEANFILES = authors.h
 MKENUM_NAME = gwyapptypes
 MKENUM_ID = GWY_APP_TYPES
 MKENUM_HFILES = \
-	$(srcdir)/app.h \
 	$(srcdir)/data-browser.h \
 	$(srcdir)/help.h \
+	$(srcdir)/logging.h \
 	$(srcdir)/menu.h \
 	$(srcdir)/gwymoduleutils-file.h \
 	$(srcdir)/gwyplaintool.h \
