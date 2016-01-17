@@ -422,7 +422,7 @@ create_text_buffer_for_log(void)
                                "foreground-set", TRUE,
                                NULL);
     gtk_text_buffer_create_tag(textbuf, "WARNING",
-                               "foreground", "#b08000",
+                               "foreground", "#b05000",
                                "foreground-set", TRUE,
                                NULL);
     gtk_text_buffer_create_tag(textbuf, "Message",
