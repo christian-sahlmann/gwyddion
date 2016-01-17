@@ -27,6 +27,18 @@
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <process.h>
+#endif
+
+#ifdef _MSC_VER
+#define getpid _getpid
+#endif
+
 /* Our handler should not get G_LOG_LEVEL_ERROR errors but it does not hurt. */
 enum {
     ALERT_LEVELS = (G_LOG_LEVEL_ERROR
