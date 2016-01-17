@@ -162,6 +162,7 @@ struct _GwyAppDataProxy {
     GList *associated_3d;       /* of a channel */
     GList *associated_mask;     /* of a channel */
     GList *associated_preview;  /* of a volume */
+    GPtrArray *messages;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -1993,6 +1994,14 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
+
+    if (proxy->messages) {
+        guint i;
+
+        for (i = 0; i < proxy->messages->len; i++)
+            g_free(g_ptr_array_index(proxy->messages, i));
+        g_ptr_array_free(proxy->messages, TRUE);
+    }
 
     g_object_unref(proxy->container);
     g_free(proxy);
@@ -6270,6 +6279,7 @@ _gwy_app_data_browser_add_messages(GwyContainer *data)
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     gchar **messages;
+    guint i;
 
     if (!data) {
         _gwy_app_log_discard_captured_messages();
@@ -6290,10 +6300,13 @@ _gwy_app_data_browser_add_messages(GwyContainer *data)
     if (!messages)
         return;
 
-    g_printerr("TODO: And here we would display %u messages for Container %p "
-               "in the data browser.\n",
-               g_strv_length(messages), data);
-    g_strfreev(messages);
+    if (!proxy->messages)
+        proxy->messages = g_ptr_array_new();
+
+    for (i = 0; messages[i]; i++)
+        g_ptr_array_add(proxy->messages, messages[i]);
+    g_free(messages);
+    /* TODO: Make the messages visible in the browser. */
 }
 
 /**
