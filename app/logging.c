@@ -220,7 +220,7 @@ logger(const gchar *log_domain,
         return;
     }
 
-    flush_last_message(NULL);
+    flush_last_message(setup);
     g_string_assign(setup->last, message);
     g_string_assign(setup->last_domain, safe_log_domain);
     setup->last_level = log_level;
@@ -422,7 +422,7 @@ create_text_buffer_for_log(void)
                                "foreground-set", TRUE,
                                NULL);
     gtk_text_buffer_create_tag(textbuf, "WARNING",
-                               "foreground", "#b0b000",
+                               "foreground", "#b08000",
                                "foreground-set", TRUE,
                                NULL);
     gtk_text_buffer_create_tag(textbuf, "Message",
