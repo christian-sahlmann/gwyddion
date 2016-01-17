@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -1035,6 +1036,17 @@ message_log_deleted(GtkWidget *window)
     return TRUE;
 }
 
+static gboolean
+message_log_key_pressed(GtkWidget *window, GdkEventKey *event)
+{
+    if (event->keyval != GDK_Escape
+        || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
+        return FALSE;
+
+    gtk_widget_hide(window);
+    return TRUE;
+}
+
 static GtkWindow*
 create_message_log_window(void)
 {
@@ -1048,6 +1060,7 @@ create_message_log_window(void)
 
     textbuf = gwy_app_get_log_text_buffer();
     logview = gtk_text_view_new_with_buffer(textbuf);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(logview), FALSE);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -1061,6 +1074,9 @@ create_message_log_window(void)
                      G_CALLBACK(message_log_updated), logview);
     g_signal_connect(window, "delete-event",
                      G_CALLBACK(message_log_deleted), NULL);
+    g_signal_connect(window, "key-press-event",
+                     G_CALLBACK(message_log_key_pressed), NULL);
+    /* TODO: We should also enable the standard accelerators (quit, ...) */
 
     return window;
 }
