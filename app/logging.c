@@ -158,7 +158,7 @@ _gwy_app_log_get_captured_messages(guint *nmesg)
     guint capturing_from = log_setup.capturing_from, i, n;
     GArray *message_history = log_setup.message_history;
 
-    g_return_if_fail(log_setup.capturing_from != G_MAXUINT);
+    g_return_val_if_fail(log_setup.capturing_from != G_MAXUINT, NULL);
     log_setup.capturing_from = G_MAXUINT;
 
     if (message_history->len == capturing_from) {
