@@ -6471,7 +6471,6 @@ gwy_app_data_proxy_destroy_messages(GwyAppDataProxy *proxy)
     GArray *messages = proxy->messages;
     guint i;
 
-    g_printerr("destroy proxy %p\n", proxy);
     if (proxy->message_window)
         gtk_widget_destroy(proxy->message_window);
 
