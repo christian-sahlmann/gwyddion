@@ -1056,7 +1056,7 @@ create_message_log_window(void)
 
     window = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(window, _("Program Messages"));
-    gtk_window_set_default_size(window, 320, 240);
+    gtk_window_set_default_size(window, 480, 320);
 
     textbuf = gwy_app_get_log_text_buffer();
     logview = gtk_text_view_new_with_buffer(textbuf);
@@ -1070,13 +1070,13 @@ create_message_log_window(void)
 
     gtk_container_add(GTK_CONTAINER(window), scwin);
 
+    gwy_app_add_main_accel_group(window);
     g_signal_connect(textbuf, "changed",
                      G_CALLBACK(message_log_updated), logview);
     g_signal_connect(window, "delete-event",
                      G_CALLBACK(message_log_deleted), NULL);
     g_signal_connect(window, "key-press-event",
                      G_CALLBACK(message_log_key_pressed), NULL);
-    /* TODO: We should also enable the standard accelerators (quit, ...) */
 
     return window;
 }
