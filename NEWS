@@ -1,3 +1,22 @@
+2.45 (0000-00-00)
+Application:
+- New translation: British English (accompanied with unification of the default
+  language to US English).
+- Program messages are written to the log file by default on all platforms,
+  on Unix in addition to the console.  New options --log-to-console and
+  --no-log-to-console permit controlling independently where the messages go
+  (and where they do not).
+- Program messages can be displayed in the GUI using Info → Program Messages.
+
+Libraries:
+- libgwyprocess: GwySpline is a new helper data structure for sampling along
+  curves.
+- libgwyapp: All program messages are gathered by the default logger and
+  displayed in a text view.
+- libgwyapp: Data browser can show warnings ocurring during the opening or
+  merging of specific files.
+
+
 2.44 (2016-01-11)
 Application:
 - Translations updated: Czech, French, Russian.
