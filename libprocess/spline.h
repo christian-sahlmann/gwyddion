@@ -29,26 +29,28 @@ G_BEGIN_DECLS
 
 typedef struct _GwySpline GwySpline;
 
-GwySpline*                     gwy_spline_new          (void);
-void                           gwy_spline_free         (GwySpline *spline);
-GwySpline*                     gwy_spline_from_points  (const GwyTriangulationPointXY *xy,
-                                                        guint n);
-guint                          gwy_spline_get_npoints  (GwySpline *spline);
-const GwyTriangulationPointXY* gwy_spline_get_points   (GwySpline *spline);
-gdouble                        gwy_spline_get_slackness(GwySpline *spline);
-gboolean                       gwy_spline_get_closed   (GwySpline *spline);
-void                           gwy_spline_set_points   (GwySpline *spline,
-                                                        const GwyTriangulationPointXY *xy,
-                                                        guint n);
-void                           gwy_spline_set_slackness(GwySpline *spline,
-                                                        gdouble slackness);
-void                           gwy_spline_set_closed   (GwySpline *spline,
-                                                        gboolean closed);
-gdouble                        gwy_spline_length       (GwySpline *spline);
-gdouble                        gwy_spline_sample       (GwySpline *spline,
-                                                        GwyTriangulationPointXY *xy,
-                                                        GwyTriangulationPointXY *t,
-                                                        guint n);
+GwySpline*                     gwy_spline_new             (void);
+void                           gwy_spline_free            (GwySpline *spline);
+GwySpline*                     gwy_spline_from_points     (const GwyTriangulationPointXY *xy,
+                                                           guint n);
+guint                          gwy_spline_get_npoints     (GwySpline *spline);
+const GwyTriangulationPointXY* gwy_spline_get_points      (GwySpline *spline);
+gdouble                        gwy_spline_get_slackness   (GwySpline *spline);
+gboolean                       gwy_spline_get_closed      (GwySpline *spline);
+void                           gwy_spline_set_points      (GwySpline *spline,
+                                                           const GwyTriangulationPointXY *xy,
+                                                           guint n);
+void                           gwy_spline_set_slackness   (GwySpline *spline,
+                                                           gdouble slackness);
+void                           gwy_spline_set_closed      (GwySpline *spline,
+                                                           gboolean closed);
+gdouble                        gwy_spline_length          (GwySpline *spline);
+const GwyTriangulationPointXY* gwy_spline_sample_naturally(GwySpline *spline,
+                                                           guint *n);
+gdouble                        gwy_spline_sample_uniformly(GwySpline *spline,
+                                                           GwyTriangulationPointXY *xy,
+                                                           GwyTriangulationPointXY *t,
+                                                           guint n);
 
 G_END_DECLS
 
