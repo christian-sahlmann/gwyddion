@@ -335,7 +335,7 @@ sxm_read_tag(SXMFile *sxmfile,
             if (g_strv_length(columns) < 6) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
-                            _("DATA_INFO line contains less than %d fields."),
+                            _("DATA_INFO line contains fewer than %d fields."),
                             6);
                 g_free(columns);
                 g_array_free(data_info, TRUE);

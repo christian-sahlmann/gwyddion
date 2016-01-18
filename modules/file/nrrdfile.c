@@ -325,7 +325,7 @@ nrrdfile_load(const gchar *filename,
     datafile = g_hash_table_lookup(fields, "datafile");
     if (detached_header && !datafile) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Deatched header does not refer to any data file."));
+                    _("Detached header does not refer to any data file."));
         goto fail;
     }
 
@@ -960,7 +960,7 @@ decode_hex(const guchar *encoded,
 
 fail:
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Hex data contains less values (%u) "
+                _("Hex data contain fewer values (%u) "
                   "than corresponds to the sizes (%u)."),
                 (guint)(nitems-i), (guint)nitems);
 
@@ -1073,7 +1073,7 @@ decode_text(const gchar *encoded,
 fail:
     if (!*p)
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Text data contains less values (%u) "
+                    _("Text data contain fewer values (%u) "
                       "than corresponds to the sizes (%u)."),
                     (guint)(nitems-i), (guint)nitems);
     else
