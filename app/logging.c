@@ -77,10 +77,6 @@ static void           emit_log_message          (LoggingSetup *setup,
 static void           append_level_prefix       (GString *str,
                                                  GLogLevelFlags log_level);
 static FILE*          get_console_stream        (GLogLevelFlags log_level);
-static GtkTextBuffer* create_text_buffer_for_log(void);
-static void           add_message_to_text_buffer(GtkTextBuffer *textbuf,
-                                                 const gchar *message,
-                                                 GLogLevelFlags log_level);
 
 static LoggingSetup log_setup;
 
@@ -249,8 +245,10 @@ emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
     logmessage.log_level = log_level;
     g_array_append_val(setup->message_history, logmessage);
 
-    if (setup->textbuf)
-        add_message_to_text_buffer(setup->textbuf, setup->str->str, log_level);
+    if (setup->textbuf) {
+        _gwy_app_log_add_message_to_textbuf(setup->textbuf,
+                                            setup->str->str, log_level);
+    }
 }
 
 static void
@@ -387,27 +385,28 @@ gwy_app_get_log_text_buffer(void)
     if (!log_setup.message_history) {
         g_warning("Obtaining program log text buffer requires "
                   "gwy_app_setup_logging() being called first.");
-        return create_text_buffer_for_log();
+        return _gwy_app_log_create_textbuf();
     }
 
     if (!log_setup.textbuf) {
         GArray *message_history = log_setup.message_history;
         guint i;
 
-        log_setup.textbuf = create_text_buffer_for_log();
+        log_setup.textbuf = _gwy_app_log_create_textbuf();
         for (i = 0; i < message_history->len; i++) {
             GwyAppLogMessage *message = &g_array_index(message_history,
                                                        GwyAppLogMessage, i);
-            add_message_to_text_buffer(log_setup.textbuf,
-                                       message->message, message->log_level);
+            _gwy_app_log_add_message_to_textbuf(log_setup.textbuf,
+                                                message->message,
+                                                message->log_level);
         }
     }
 
     return log_setup.textbuf;
 }
 
-static GtkTextBuffer*
-create_text_buffer_for_log(void)
+GtkTextBuffer*
+_gwy_app_log_create_textbuf(void)
 {
     GtkTextBuffer *textbuf = gtk_text_buffer_new(NULL);
 
@@ -441,9 +440,10 @@ create_text_buffer_for_log(void)
     return textbuf;
 }
 
-static void
-add_message_to_text_buffer(GtkTextBuffer *textbuf,
-                           const gchar *message, GLogLevelFlags log_level)
+void
+_gwy_app_log_add_message_to_textbuf(GtkTextBuffer *textbuf,
+                                    const gchar *message,
+                                    GLogLevelFlags log_level)
 {
     const gchar *tagname = NULL;
     GtkTextIter iter;

@@ -25,6 +25,7 @@
 #define __GWY_APP_INTERNAL_H__
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gtk/gtk.h>
 #include <libprocess/spectra.h>
 #include <libprocess/brick.h>
 #include <libgwydgets/gwydatawindow.h>
@@ -122,6 +123,12 @@ G_GNUC_INTERNAL
 GwyAppLogMessage* _gwy_app_log_get_captured_messages    (guint *nmesg);
 G_GNUC_INTERNAL
 void              _gwy_app_data_browser_add_messages    (GwyContainer *data);
+G_GNUC_INTERNAL
+GtkTextBuffer*    _gwy_app_log_create_textbuf           (void);
+G_GNUC_INTERNAL
+void              _gwy_app_log_add_message_to_textbuf   (GtkTextBuffer *textbuf,
+                                                         const gchar *message,
+                                                         GLogLevelFlags log_level);
 
 /* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);

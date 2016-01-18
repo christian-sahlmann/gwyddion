@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2015 David Necas (Yeti), Petr Klapetek, Chris Anderson
+ *  Copyright (C) 2006-2016 David Necas (Yeti), Petr Klapetek, Chris Anderson
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, sidewinderasu@gmail.com.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -82,7 +83,7 @@ enum {
 enum {
     SENS_OBJECT = 1 << 0,
     SENS_FILE   = 1 << 1,
-    SENS_MASK   = 0x03
+    SENS_MASK   = 0x07
 };
 
 /* Channel and graph tree store columns */
@@ -143,8 +144,9 @@ struct _GwyAppDataBrowser {
     gint untitled_counter;
     gdouble edit_timestamp;
     GwySensitivityGroup *sensgroup;
-    GtkWidget *filename;
     GtkWidget *window;
+    GtkWidget *filename;
+    GtkWidget *messages_button;
     GtkWidget *notebook;
     GtkWidget *lists[NPAGES];
 };
@@ -163,6 +165,8 @@ struct _GwyAppDataProxy {
     GList *associated_mask;     /* of a channel */
     GList *associated_preview;  /* of a volume */
     GArray *messages;
+    GtkTextBuffer *message_textbuf;
+    GtkWidget *message_window;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -213,6 +217,10 @@ static GList* gwy_app_data_proxy_find_3d(GwyAppDataProxy *proxy,
 static GList* gwy_app_data_proxy_get_3d (GwyAppDataProxy *proxy,
                                          gint id);
 static void   update_all_sens           (void);
+static void   update_message_button     (void);
+static void   gwy_app_data_proxy_destroy_messages(GwyAppDataProxy *proxy);
+static void   gwy_app_data_browser_show_hide_messages(GtkToggleButton *toggle,
+                                                      GwyAppDataBrowser *browser);
 static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                                  guint pageno,
                                                  GtkTreeModel *model,
@@ -1957,7 +1965,6 @@ gwy_app_data_proxy_finalize(gpointer user_data)
 {
     GwyAppDataProxy *proxy = (GwyAppDataProxy*)user_data;
     GwyAppDataBrowser *browser;
-    GArray *messages = proxy->messages;
 
     proxy->finalize_id = 0;
 
@@ -1996,15 +2003,6 @@ gwy_app_data_proxy_finalize(gpointer user_data)
         (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
 
-    if (messages) {
-        guint i;
-
-        for (i = 0; i < messages->len; i++)
-            g_free(g_array_index(messages, GwyAppLogMessage, i).message);
-        g_array_free(messages, TRUE);
-        proxy->messages = NULL;
-    }
-
     g_object_unref(proxy->container);
     g_free(proxy);
 
@@ -2040,6 +2038,7 @@ gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
     if (!proxy->keep_invisible
         && gwy_app_data_proxy_visible_count(proxy) == 0) {
         gwy_app_data_proxy_destroy_all_3d(proxy);
+        gwy_app_data_proxy_destroy_messages(proxy);
         gwy_app_data_proxy_queue_finalize(proxy);
         gwy_app_data_assoc_finalize_list(proxy->associated_mask,
                                          proxy,
@@ -5093,7 +5092,7 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                              G_CALLBACK(gwy_app_data_browser_window_destroyed),
                              browser);
 
-    gtk_window_set_default_size(GTK_WINDOW(browser->window), 300, 300);
+    gtk_window_set_default_size(GTK_WINDOW(browser->window), 320, 400);
     gtk_window_set_title(GTK_WINDOW(browser->window), _("Data Browser"));
     gtk_window_set_role(GTK_WINDOW(browser->window), GWY_DATABROWSER_WM_ROLE);
     gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
@@ -5113,6 +5112,18 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     gtk_misc_set_alignment(GTK_MISC(browser->filename), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(browser->filename), 4, 2);
     gtk_box_pack_start(GTK_BOX(hbox), browser->filename, TRUE, TRUE, 0);
+
+    /* Messages button */
+    browser->messages_button = button = gtk_toggle_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    image = gtk_image_new_from_stock(GTK_STOCK_INFO, GTK_ICON_SIZE_BUTTON);
+    gtk_container_add(GTK_CONTAINER(button), image);
+    gtk_tooltips_set_tip(tips, button, _("Show file messages"), NULL);
+    gtk_widget_set_no_show_all(browser->messages_button, TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "toggled",
+                     G_CALLBACK(gwy_app_data_browser_show_hide_messages),
+                     browser);
 
     /* Close button */
     button = gtk_button_new();
@@ -5312,6 +5323,7 @@ update_all_sens(void)
     update_graph_sens();
     update_channel_sens();
     update_brick_sens();
+    update_message_button();
 }
 
 static void
@@ -5804,6 +5816,7 @@ gwy_app_data_browser_remove(GwyContainer *data)
     g_return_if_fail(proxy);
 
     gwy_app_data_proxy_destroy_all_3d(proxy);
+    gwy_app_data_proxy_destroy_messages(proxy);
     gwy_app_data_browser_reset_visibility(proxy->container,
                                           GWY_VISIBILITY_RESET_HIDE_ALL);
     g_return_if_fail(gwy_app_data_proxy_visible_count(proxy) == 0);
@@ -6275,6 +6288,25 @@ gwy_app_data_browser_get_number(GwyContainer *data)
     return proxy ? proxy->data_no : 0;
 }
 
+static void
+update_messages_textbuf_since(GwyAppDataProxy *proxy, guint from)
+{
+    GArray *messages = proxy->messages;
+    GtkTextBuffer *textbuf = proxy->message_textbuf;
+    guint i;
+
+    if (!messages || !textbuf)
+        return;
+
+    for (i = from; i < messages->len; i++) {
+        const GwyAppLogMessage *message = &g_array_index(messages,
+                                                         GwyAppLogMessage, i);
+        _gwy_app_log_add_message_to_textbuf(textbuf,
+                                            message->message,
+                                            message->log_level);
+    }
+}
+
 void
 _gwy_app_data_browser_add_messages(GwyContainer *data)
 {
@@ -6307,7 +6339,149 @@ _gwy_app_data_browser_add_messages(GwyContainer *data)
 
     g_array_append_vals(proxy->messages, messages, nmesg);
     g_free(messages);
-    /* TODO: Filter the messages and make them visible in the browser. */
+
+    update_messages_textbuf_since(proxy, proxy->messages->len - nmesg);
+    update_message_button();
+}
+
+static void
+update_message_button(void)
+{
+    GwyAppDataBrowser *browser = gwy_app_get_data_browser();
+    GwyAppDataProxy *proxy = browser->current;
+
+    if (!browser->window)
+        return;
+
+    if (!proxy || !proxy->messages || !proxy->messages->len) {
+        gtk_widget_set_no_show_all(browser->messages_button, TRUE);
+        gtk_widget_hide(browser->messages_button);
+    }
+    else {
+        gtk_widget_set_no_show_all(browser->messages_button, FALSE);
+        gtk_widget_show_all(browser->messages_button);
+        /* The "toggled" handler can deal with setting state to the existing
+         * state. */
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(browser->messages_button),
+                                     !!proxy->message_window);
+    }
+}
+
+static void
+message_log_window_destroyed(gpointer data,
+                             G_GNUC_UNUSED GObject *where_the_object_was)
+{
+    GwyAppDataProxy *proxy = (GwyAppDataProxy*)data;
+    GwyAppDataBrowser *browser = proxy->parent;
+
+    proxy->message_window = NULL;
+    gwy_object_unref(proxy->message_textbuf);
+    if (proxy == browser->current) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(browser->messages_button),
+                                     FALSE);
+    }
+}
+
+static void
+message_log_updated(GtkTextBuffer *textbuf, GtkTextView *textview)
+{
+    GtkTextIter iter;
+
+    gtk_text_buffer_get_end_iter(textbuf, &iter);
+    gtk_text_view_scroll_to_iter(textview, &iter, 0.0, FALSE, 0.0, 1.0);
+}
+
+static gboolean
+message_log_key_pressed(GtkWidget *window, GdkEventKey *event)
+{
+    if (event->keyval != GDK_Escape
+        || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
+        return FALSE;
+
+    gtk_widget_hide(window);
+    return TRUE;
+}
+
+static void
+create_message_log_window(GwyAppDataProxy *proxy)
+{
+    GtkWindow *window;
+    GtkTextBuffer *textbuf;
+    GtkWidget *logview, *scwin;
+    const guchar *filename;
+    gchar *title, *bname;
+
+    if (gwy_container_gis_string(proxy->container, filename_quark, &filename)) {
+        bname = g_path_get_basename(filename);
+        title = g_strdup_printf(_("Messages for %s"), bname);
+        g_free(bname);
+    }
+    else
+        title = g_strdup(_("Messages for Untitled"));
+
+    proxy->message_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    window = GTK_WINDOW(proxy->message_window);
+    gtk_window_set_title(window, title);
+    g_free(title);
+    gtk_window_set_default_size(window, 480, 320);
+
+    textbuf = proxy->message_textbuf = _gwy_app_log_create_textbuf();
+    logview = gtk_text_view_new_with_buffer(textbuf);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(logview), FALSE);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+    gtk_container_add(GTK_CONTAINER(scwin), logview);
+    gtk_widget_show_all(scwin);
+
+    gtk_container_add(GTK_CONTAINER(window), scwin);
+
+    gwy_app_add_main_accel_group(window);
+    g_signal_connect(textbuf, "changed",
+                     G_CALLBACK(message_log_updated), logview);
+    g_signal_connect(window, "key-press-event",
+                     G_CALLBACK(message_log_key_pressed), NULL);
+    g_object_weak_ref(G_OBJECT(window), message_log_window_destroyed, proxy);
+}
+
+static void
+gwy_app_data_browser_show_hide_messages(GtkToggleButton *toggle,
+                                        GwyAppDataBrowser *browser)
+{
+    GwyAppDataProxy *proxy = browser->current;
+    gboolean active = gtk_toggle_button_get_active(toggle);
+    gboolean have_window = proxy && proxy->message_window;
+
+    if (!active == !have_window)
+        return;
+
+    if (have_window)
+        gtk_widget_destroy(proxy->message_window);
+    else {
+        create_message_log_window(proxy);
+        update_messages_textbuf_since(proxy, 0);
+        gtk_window_present(GTK_WINDOW(proxy->message_window));
+    }
+}
+
+static void
+gwy_app_data_proxy_destroy_messages(GwyAppDataProxy *proxy)
+{
+    GArray *messages = proxy->messages;
+    guint i;
+
+    g_printerr("destroy proxy %p\n", proxy);
+    if (proxy->message_window)
+        gtk_widget_destroy(proxy->message_window);
+
+    if (!messages)
+        return;
+
+    for (i = 0; i < messages->len; i++)
+        g_free(g_array_index(messages, GwyAppLogMessage, i).message);
+    g_array_free(messages, TRUE);
+    proxy->messages = NULL;
 }
 
 /**
@@ -8519,7 +8693,6 @@ gwy_app_data_browser_set_gui_enabled(gboolean setting)
     }
 
     gui_disabled = !setting;
-
 }
 
 /**
