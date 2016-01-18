@@ -16,6 +16,10 @@ Libraries:
 - libgwyapp: Data browser can show warnings ocurring during the opening or
   merging of specific files.
 
+Modules:
+- Nano Measuring Machine: Parameters from the main DSC file are imported as
+  metadata.
+
 
 2.44 (2016-01-11)
 Application:

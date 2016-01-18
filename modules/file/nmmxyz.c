@@ -144,6 +144,7 @@ static gboolean      gather_data_files         (const gchar *filename,
 static PointXYZ*     create_points_with_xy     (GArray *data,
                                                 guint nincluded);
 static void          create_data_field         (GwyContainer *container,
+                                                GwyContainer *meta,
                                                 const NMMXYZInfo *info,
                                                 const NMMXYZArgs *args,
                                                 GArray *dscs,
@@ -166,6 +167,7 @@ static void          free_profile_descriptions (GArray *dscs,
                                                 gboolean free_array);
 static void          copy_profile_descriptions (GArray *source,
                                                 GArray *dest);
+static GwyContainer* parse_dsc_file            (const gchar *filename);
 static void          nmmxyz_load_args          (GwyContainer *container,
                                                 NMMXYZArgs *args,
                                                 GArray *dscs);
@@ -185,7 +187,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nano Measuring Machine profile files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -228,7 +230,7 @@ nmmxyz_load(const gchar *filename,
     NMMXYZInfo info;
     NMMXYZArgs args;
     GwyContainer *settings;
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta = NULL;
     GArray *data = NULL;
     GArray *dscs = NULL;
     PointXYZ *points = NULL;
@@ -245,6 +247,7 @@ nmmxyz_load(const gchar *filename,
         return NULL;
     }
 
+    meta = parse_dsc_file(filename);
     info.filename = filename;
     args = nmmxyz_defaults;
     dscs = g_array_new(FALSE, FALSE, sizeof(NMMXYZProfileDescription));
@@ -311,7 +314,8 @@ nmmxyz_load(const gchar *filename,
         if (args.include_channel[i]) {
             gdouble f;
 
-            create_data_field(container, &info, &args, dscs, data, points, i,
+            create_data_field(container, meta, &info, &args, dscs,
+                              data, points, i,
                               args.plot_density && ntodo == 1);
             ntodo--;
             f = 1.0 - (gdouble)ntodo/args.nincluded;
@@ -328,6 +332,7 @@ fail:
     if (waiting)
         gwy_app_wait_finish();
 
+    gwy_object_unref(meta);
     g_free(args.include_channel);
     g_free(points);
     free_profile_descriptions(dscs, TRUE);
@@ -672,6 +677,7 @@ find_data_range(const PointXYZ *points, NMMXYZInfo *info)
 
 static void
 create_data_field(GwyContainer *container,
+                  GwyContainer *meta,
                   const NMMXYZInfo *info,
                   const NMMXYZArgs *args,
                   GArray *dscs,
@@ -753,17 +759,32 @@ create_data_field(GwyContainer *container,
     gwy_container_set_const_string(container, quark, dsc->long_name);
     gwy_file_channel_import_log_add(container, id, NULL, info->filename);
 
-    if (density_map) {
-        id++;
+    if (meta) {
+        quark = gwy_app_get_data_meta_key_for_id(id);
+        meta = gwy_container_duplicate(meta);
+        gwy_container_set_object(container, quark, meta);
+        g_object_unref(meta);
+    }
 
-        quark = gwy_app_get_data_key_for_id(id);
-        gwy_container_set_object(container, quark, density_map);
-        g_object_unref(density_map);
+    if (!density_map)
+        return;
 
-        quark = gwy_app_get_data_title_key_for_id(id);
-        gwy_container_set_const_string(container, quark,
-                                       _("Point density map"));
-        gwy_file_channel_import_log_add(container, id, NULL, info->filename);
+    id++;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    gwy_container_set_object(container, quark, density_map);
+    g_object_unref(density_map);
+
+    quark = gwy_app_get_data_title_key_for_id(id);
+    gwy_container_set_const_string(container, quark,
+                                   _("Point density map"));
+    gwy_file_channel_import_log_add(container, id, NULL, info->filename);
+
+    if (meta) {
+        quark = gwy_app_get_data_meta_key_for_id(id);
+        meta = gwy_container_duplicate(meta);
+        gwy_container_set_object(container, quark, meta);
+        g_object_unref(meta);
     }
 }
 
@@ -1089,6 +1110,66 @@ copy_profile_descriptions(GArray *source, GArray *dest)
         dsc.long_name = g_strdup(dsc.long_name);
         g_array_append_val(dest, dsc);
     }
+}
+
+static GwyContainer*
+parse_dsc_file(const gchar *filename)
+{
+    GwyContainer *meta;
+    gchar *buffer, *line, *p, *colon, *section = NULL;
+    GError *err = NULL;
+    GString *str;
+    gint i, ncom = 0;
+
+    if (!g_file_get_contents(filename, &buffer, NULL, &err)) {
+        g_warning("Cannot read the main dsc file: %s", err->message);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    meta = gwy_container_new();
+    str = g_string_new(NULL);
+    p = buffer;
+    while ((line = gwy_str_next_line(&p))) {
+        if (!*line)
+            continue;
+
+        if (gwy_strequal(line, DASHED_LINE))
+            section = NULL;
+        else if (!section && sscanf(line, "%d. ", &i) == 1) {
+            section = strchr(line, '.') + 1;
+            g_strstrip(section);
+        }
+        else if (section && gwy_strequal(section, "Additional comments")) {
+            ncom++;
+            g_string_printf(str, "%s::%d", section, ncom);
+            gwy_container_set_const_string_by_name(meta, str->str, line);
+        }
+        else if (section
+                 && g_str_has_prefix(line, "  ")
+                 && (colon = strstr(line, " : "))) {
+            gchar *key = line + 2, *value = colon + 3;
+
+            *colon = '\0';
+            g_strstrip(key);
+            g_strstrip(value);
+            g_string_printf(str, "%s::%s", section, key);
+            gwy_container_set_const_string_by_name(meta, str->str, value);
+        }
+        else if (g_str_has_prefix(line, "Creation time     :")) {
+            gchar *value = line + strlen("Creation time     :");
+            gwy_container_set_const_string_by_name(meta,
+                                                   "Creation time", value);
+        }
+    }
+
+    g_free(buffer);
+    g_string_free(str, TRUE);
+
+    if (!gwy_container_get_n_items(meta))
+        gwy_object_unref(meta);
+
+    return meta;
 }
 
 static const gchar include_channel_prefix[] = "/module/nmmxyz/include_channel/";
