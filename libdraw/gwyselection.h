@@ -39,9 +39,13 @@ typedef struct _GwySelectionClass GwySelectionClass;
 struct _GwySelection {
     GObject parent_instance;
 
+    /* Unfortunately, gtk-doc is broken and refuses to display the fields
+     * even when marked public. */
+    /*< public >*/
     GArray *objects;
     guint n;
 
+    /*< private >*/
     gpointer reserved1;
     gpointer reserved2;
     gint int1;

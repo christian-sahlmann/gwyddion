@@ -181,14 +181,14 @@ gwy_gradient_get_color(GwyGradient *gradient,
  * @gradient: A color gradient to get samples of.
  * @nsamples: A location to store the number of samples (or %NULL).
  *
- * Returns color gradient sampled to integers in #GdkPixbuf-like scheme.
+ * Returns color gradient sampled to integers in #GdkPixbuf<!-- -->-like scheme.
  *
  * The returned samples are owned by @gradient and must not be modified or
  * freed.  They are automatically updated when the gradient changes, although
  * their number never changes.  The returned pointer is valid only as long
  * as the gradient used, indicated by gwy_resource_use().
  *
- * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
+ * Returns: Sampled @gradient as a sequence of #GdkPixbuf<!-- -->-like RRGGBBAA
  *          quadruplets.
  **/
 const guchar*
@@ -213,7 +213,7 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  * @nsamples: Required number of samples.
  * @samples: Pointer to array to be filled.
  *
- * Samples a gradient to an array #GdkPixbuf-like samples.
+ * Samples a gradient to an array #GdkPixbuf<!-- -->-like samples.
  *
  * If @samples is not %NULL, it's resized to 4*@nsamples bytes, otherwise a
  * new buffer is allocated.
@@ -223,8 +223,8 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  * gradient definition change), use gwy_gradient_get_samples() instead.
  * This function does not need the gradient to be in use, though.
  *
- * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
- *          quadruplets.
+ * Returns: Sampled @gradient as a sequence of #GdkPixbuf<!-- -->-like
+ *          RRGGBBAA quadruplets.
  **/
 guchar*
 gwy_gradient_sample(GwyGradient *gradient,
@@ -760,7 +760,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
  * gwy_gradient_set_from_samples:
  * @gradient: A color gradient.
  * @nsamples: Number of samples, it must be at least one.
- * @samples: Sampled color gradient in #GdkPixbuf-like RRGGBBAA form.
+ * @samples: Sampled color gradient in #GdkPixbuf<!-- -->-like RRGGBBAA form.
  * @threshold: Maximum allowed difference (for color components in range 0..1).
  *             When negative, default value 1/80 suitable for most purposes
  *             is used.

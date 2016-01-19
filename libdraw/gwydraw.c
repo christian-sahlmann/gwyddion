@@ -67,4 +67,21 @@ gwy_draw_type_init(void)
  * initialization.
  **/
 
+/**
+ * SECTION:gwydrawenums
+ * @title: gwydrawenums
+ * @short_description: Common enumerations
+ **/
+
+/**
+ * GwyRenderingTarget:
+ * @GWY_RENDERING_TARGET_SCREEN: Selection is being rendered to screen
+ * @GWY_RENDERING_TARGET_PIXMAP_IMAGE: Selection is geing rendered to
+ *                                     a pixbuf.
+ *
+ * Type of target where selections can be rendered.
+ *
+ * The pixmap image target is rarely used now.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
