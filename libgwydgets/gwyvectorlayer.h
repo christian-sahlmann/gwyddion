@@ -49,7 +49,7 @@ struct _GwyVectorLayer {
     GQuark selection_key;
     gulong item_changed_id;
     gulong selection_changed_id;
-    gulong handler_id;
+    gulong selection_notify_id;
 
     gboolean editable;
     gint focus;

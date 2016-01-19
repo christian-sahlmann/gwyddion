@@ -73,8 +73,7 @@ static void     gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
 static void     gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
 static void     gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
 static void     gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
-static void     gwy_vector_layer_selection_changed   (GwyVectorLayer *layer,
-                                                      gint hint);
+static void     gwy_vector_layer_selection_changed   (GwyVectorLayer *layer);
 
 static guint vector_layer_signals[LAST_SIGNAL] = { 0 };
 
@@ -580,6 +579,10 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
         = g_signal_connect_swapped(layer->selection, "changed",
                                    G_CALLBACK(gwy_vector_layer_selection_changed),
                                    layer);
+    layer->selection_notify_id
+        = g_signal_connect_swapped(layer->selection, "notify",
+                                   G_CALLBACK(gwy_vector_layer_selection_changed),
+                                   layer);
 }
 
 /**
@@ -596,6 +599,8 @@ gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
 
     gwy_signal_handler_disconnect(layer->selection,
                                   layer->selection_changed_id);
+    gwy_signal_handler_disconnect(layer->selection,
+                                  layer->selection_notify_id);
     layer->selecting = -1;
     gwy_object_unref(layer->selection);
 }
@@ -763,8 +768,7 @@ gwy_vector_layer_item_changed(GwyVectorLayer *vector_layer)
 }
 
 static void
-gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
-                                   G_GNUC_UNUSED gint hint)
+gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
 {
     gwy_debug("selecting: %d", layer->selecting);
     if (layer->selecting >= 0)
