@@ -68,7 +68,7 @@ struct _GwyLayerPath {
     GdkCursor *move_cursor;
 
     /* Properties */
-    guint thickness;
+    gint thickness;
     gboolean point_numbers;
 
     /* Dynamic state */
@@ -144,7 +144,7 @@ static gboolean    gwy_layer_path_button_pressed       (GwyVectorLayer *layer,
 static gboolean    gwy_layer_path_button_released      (GwyVectorLayer *layer,
                                                         GdkEventButton *event);
 static void        gwy_layer_path_set_thickness        (GwyLayerPath *layer,
-                                                        guint thickness);
+                                                        gint thickness);
 static void        gwy_layer_path_realize              (GwyDataViewLayer *dlayer);
 static void        gwy_layer_path_unrealize            (GwyDataViewLayer *dlayer);
 static gint        gwy_layer_path_near_point           (GwyVectorLayer *layer,
@@ -250,11 +250,11 @@ gwy_layer_path_class_init(GwyLayerPathClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_THICKNESS,
-         g_param_spec_uint("thickness",
-                           "Thickness",
-                           "Radius of marker to draw",
-                           -1, 1024, 1,
-                           G_PARAM_READWRITE));
+         g_param_spec_int("thickness",
+                          "Thickness",
+                          "Radius of marker to draw",
+                          -1, 1024, 1,
+                          G_PARAM_READWRITE));
 }
 
 static void
@@ -522,7 +522,7 @@ gwy_layer_path_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_THICKNESS:
-        g_value_set_uint(value, layer->thickness);
+        g_value_set_int(value, layer->thickness);
         break;
 
         default:
@@ -766,7 +766,7 @@ gwy_layer_path_button_released(GwyVectorLayer *layer,
 }
 
 static void
-gwy_layer_path_set_thickness(GwyLayerPath *layer, guint thickness)
+gwy_layer_path_set_thickness(GwyLayerPath *layer, gint thickness)
 {
     GwyVectorLayer *vector_layer;
     GtkWidget *parent;
@@ -785,7 +785,7 @@ gwy_layer_path_set_thickness(GwyLayerPath *layer, guint thickness)
     if (parent && GTK_WIDGET_REALIZED(parent))
         gwy_layer_path_draw(vector_layer, parent->window,
                              GWY_RENDERING_TARGET_SCREEN);
-    g_object_notify(G_OBJECT(layer), "marker-thickness");
+    g_object_notify(G_OBJECT(layer), "thickness");
 }
 
 static void
