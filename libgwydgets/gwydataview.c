@@ -1358,6 +1358,38 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
 }
 
 /**
+ * gwy_data_view_coords_real_to_xy_float:
+ * @data_view: A data view.
+ * @xreal: A physical x-coordinate in the data sample.
+ * @yreal: A physical y-coordinate in the data sample.
+ * @xscr: Where the screen x-coordinate relative to widget origin should be
+ *        stored.
+ * @yscr: Where the screen y-coordinate relative to widget origin should be
+ *        stored.
+ *
+ * Recomputes physical coordinate in the sample to screen coordinate relative
+ * to widget origin, keeping them as floating point values.
+ *
+ * Note that data fields offsets are <emphasis>not</emphasis> taken into
+ * account.  Coordinates @xreal, @yreal are just relative coordinates to the
+ * top left field corner.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_data_view_coords_real_to_xy_float(GwyDataView *data_view,
+                                      gdouble xreal, gdouble yreal,
+                                      gdouble *xscr, gdouble *yscr)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    if (xscr)
+        *xscr = xreal/data_view->xmeasure + data_view->xoff;
+    if (yscr)
+        *yscr = yreal/data_view->ymeasure + data_view->yoff;
+}
+
+/**
  * gwy_data_view_get_pixel_data_sizes:
  * @data_view: A data view.
  * @xres: Location to store x-resolution of displayed data (or %NULL).
