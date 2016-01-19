@@ -54,6 +54,7 @@ struct _GwyNLFitPreset {
 struct _GwyNLFitPresetClass {
     GwyResourceClass parent_class;
 
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
 };

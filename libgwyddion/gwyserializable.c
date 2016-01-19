@@ -100,8 +100,7 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
  *
  * This is a high-level method.  Do not use it for implementation of child
  * object serialization (should you ever need to do it manually), it would
- * lead to repeated required buffer size calculations.  In such a case, use
- * gwy_serializable_do_serialize() FIXME: but that's not public.
+ * lead to repeated required buffer size calculations.
  *
  * Returns: @buffer or a newly allocated #GByteArray with serialized
  *          object appended.
@@ -1699,15 +1698,15 @@ gwy_deserialize_double_array(const guchar *buffer,
 
 /**
  * gwy_deserialize_string:
- * @buffer: A memory location containing a serialized nul-terminated string at
+ * @buffer: A memory location containing a serialized NUL-terminated string at
  *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the string in @buffer, it's updated to
  *            point after it.
  *
- * Deserializes a one nul-terminated string.
+ * Deserializes a one NUL-terminated string.
  *
- * Returns: A newly allocated, nul-terminated string.
+ * Returns: A newly allocated, NUL-terminated string.
  **/
 static inline guchar*
 gwy_deserialize_string(const guchar *buffer,
@@ -1733,7 +1732,7 @@ gwy_deserialize_string(const guchar *buffer,
 
 /**
  * gwy_deserialize_string_array:
- * @buffer: A memory location containing an array of serialized nul-terminated
+ * @buffer: A memory location containing an array of serialized NUL-terminated
  *          string at position @position.
  * @size: The size of @buffer.
  * @position: The position of the string array in @buffer, it's updated to
@@ -1742,7 +1741,7 @@ gwy_deserialize_string(const guchar *buffer,
  *
  * Deserializes a string array.
  *
- * Returns: A newly allocated array of nul-terminated strings.
+ * Returns: A newly allocated array of NUL-terminated strings.
  **/
 static inline guchar**
 gwy_deserialize_string_array(const guchar *buffer,
@@ -2012,18 +2011,18 @@ gwy_deserialize_spec_value(const guchar *buffer,
 
 /**
  * gwy_serialize_check_string:
- * @buffer: A memory location containing a nul-terminated string at position
+ * @buffer: A memory location containing a NUL-terminated string at position
  *          @position.
  * @size: The size of @buffer.
  * @position: The position of the string in @buffer.
  * @compare_to: String to compare @buffer to, or %NULL.
  *
  * Check whether @size bytes of memory in @buffer can be interpreted as a
- * nul-terminated string, and eventually whether it's equal to @compare_to.
+ * NUL-terminated string, and eventually whether it's equal to @compare_to.
  *
  * When @compare_to is %NULL, the comparsion is not performed.
  *
- * Returns: The length of the nul-terminated string including the nul
+ * Returns: The length of the NUL-terminated string including the NUL
  * character; zero otherwise.
  **/
 gsize
@@ -2107,7 +2106,7 @@ gwy_serialize_check_string(const guchar *buffer,
 /**
  * GwySerializeSpec:
  * @ctype: Component type, see description body for possible values.
- * @name: Component name as a nul-terminated string.
+ * @name: Component name as a NUL-terminated string.
  * @value: Pointer to component (always add one level of indirection; for
  *         an object, a #GObject** pointer should be stored).  If it is
  *         %NULL, the component is ignored.  For serialization it means it
@@ -2130,7 +2129,7 @@ gwy_serialize_check_string(const guchar *buffer,
  * <literal>'i'</literal> for a 32bit integer,
  * <literal>'q'</literal> for a 64bit integer,
  * <literal>'d'</literal> for a gdouble,
- * <literal>'s'</literal> for a nul-terminated string,
+ * <literal>'s'</literal> for a NUL-terminated string,
  * <literal>'o'</literal> for a serializable object.
  *
  * And array component types:
@@ -2138,14 +2137,14 @@ gwy_serialize_check_string(const guchar *buffer,
  * <literal>'I'</literal> for a 32bit integer array,
  * <literal>'Q'</literal> for a 64bit integer array,
  * <literal>'D'</literal> for a gdouble array,
- * <literal>'S'</literal> for an array of nul-terminated strings,
+ * <literal>'S'</literal> for an array of NUL-terminated strings,
  * <literal>'O'</literal> for an array of objects.
  **/
 
 /**
  * GwySerializeItem:
  * @ctype: Component type, see #GwySerializeSpec for details.
- * @name: Component name as a nul-terminated string.
+ * @name: Component name as a NUL-terminated string.
  * @value: Component value.
  * @array_size: Array size if component is an array, unused otherwise.
  *
@@ -2192,6 +2191,27 @@ gwy_serialize_check_string(const guchar *buffer,
  *    (GwyFoo, gwy_foo, G_TYPE_OBJECT, 0,
  *     GWY_IMPLEMENT_SERIALIZABLE(gwy_foo_serializable_init))
  * </programlisting></informalexample>
+ **/
+
+/**
+ * GwySerializeValue:
+ * @v_boolean: Boolean.
+ * @v_char: Character.
+ * @v_int32: 32bit integer.
+ * @v_int64: 64bit integer.
+ * @v_double: Double-precision float.
+ * @v_string: NUL-terminated string.
+ * @v_object: Object (serializable).
+ * @v_boolean_array: Array of booleans.  Not to be used.
+ * @v_char_array: Array of characters.
+ * @v_int32_array: Array of 32bit integers.
+ * @v_int64_array: Array of 64bit integers.
+ * @v_double_array: Array of double-precision floats.
+ * @v_string_array: Array of NUL-terminated strings.
+ * @v_object_array: Array of objects (serializable).
+ *
+ * Helper serialization type that can hold any atomic value or pointer to
+ * non-atomic value.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

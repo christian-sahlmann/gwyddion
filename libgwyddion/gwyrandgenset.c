@@ -93,7 +93,7 @@ gwy_rand_gen_set_init(GwyRandGenSet *rngset,
  *
  * Destroys a set of pseudorandom number generators.
  *
- * If you obtained individual generators using gwy_rand_gen_get_rng() you may
+ * If you obtained individual generators using gwy_rand_gen_set_rng() you may
  * not use them any more after calling this function.
  *
  * Since: 2.37
@@ -323,7 +323,7 @@ gwy_rand_gen_set_triangular(GwyRandGenSet *rngset,
  * gwy_rand_gen_set_multiplier:
  * @rngset: A set of pseudorandom number generators.
  * @i: Index of a generator from the set.
- * @sigma: Rms of the distribution.
+ * @range: Half-range of the distribution.
  *
  * Samples from a multiplier distribution using one generator from a
  * pseudorandom number generator set.
@@ -350,7 +350,6 @@ gwy_rand_gen_set_multiplier(GwyRandGenSet *rngset,
  * gwy_rand_gen_set_double:
  * @rngset: A set of pseudorandom number generators.
  * @i: Index of a generator from the set.
- * @sigma: Rms of the distribution.
  *
  * Samples uniform distribution over [0,1) using one generator from a
  * pseudorandom number generator set.

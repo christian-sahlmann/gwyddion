@@ -54,6 +54,7 @@ struct _GwyStringListClass {
 
     void (*value_changed)(GwyStringList *strlist);
 
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
     void (*reserved3)(void);

@@ -783,7 +783,7 @@ gwy_inventory_item_updated(GwyInventory *inventory,
  * Notifies inventory item on given position was updated.
  *
  * This function makes sense primarily for non-object items, as object items
- * can implement #GwyWatchable interface.
+ * can provide @watchable_signal.
  **/
 void
 gwy_inventory_nth_item_updated(GwyInventory *inventory,

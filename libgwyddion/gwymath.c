@@ -670,7 +670,6 @@ gwy_math_median(gsize n, gdouble *array)
  * @xc: Location to store x-coordinate of the centre of the quadratic surface.
  * @yc: Location to store y-coordinate of the centre of the quadratic surface.
  * @zc: Location to store value at the centre of the quadratic surface.
- * @returns: The number of curved dimensions (0 to 2).
  *
  * Calculates curvature parameters from two-dimensional quadratic polynomial
  * coefficients.
@@ -690,6 +689,8 @@ gwy_math_median(gsize n, gdouble *array)
  * simply returned as the centre position.  Consequently, you should use
  * Cartesian coordinates with origin in a natural centre, for instance centre
  * of image or grain.
+ *
+ * Returns: The number of curved dimensions (0 to 2).
  *
  * Since: 2.22
  **/
@@ -1223,11 +1224,10 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
  * @title: Math
  * @short_description: Mathematical utility functions
  * @see_also: #GwyNLFitter, non-linear least square fitter;
- *            <link linkend="gwymathfallback">Math Fallback</link>,
+ *            <link linkend="libgwyddion-Math-Fallback">Math Fallback</link>,
  *            fallback mathematical functions
  *
- * Functions gwy_math_SI_prefix() and gwy_math_humanize_numbers() deal with
- * number representation.
+ * Function gwy_math_humanize_numbers() deals with number representation.
  *
  * Nearest object finding functions gwy_math_find_nearest_line() and
  * gwy_math_find_nearest_point() can be useful in widget and vector layer
@@ -1295,10 +1295,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_cbrt:
  * @x: Floating point number.
- * @returns: Cubic root of @x.
  *
  * Fallback for the standard mathematical function
  * <function>cbrt</function>.
+ *
+ * Returns: Cubic root of @x.
  *
  * Since: 2.9
  **/
@@ -1313,10 +1314,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_pow10:
  * @x: Floating point number.
- * @returns: 10 raised to @x.
  *
  * Fallback for the standard mathematical function
  * <function>pow10</function>.
+ *
+ * Returns: 10 raised to @x.
  *
  * Since: 2.9
  **/
@@ -1332,11 +1334,12 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
  * gwy_math_fallback_hypot:
  * @x: Floating point number.
  * @y: Floating point number.
- * @returns: Length of hypotenuse of a right-angle triangle with sides of
- *           lengths @x and @y.
  *
  * Fallback for the standard mathematical function
  * <function>hypot</function>.
+ *
+ * Returns: Length of hypotenuse of a right-angle triangle with sides of
+ *          lengths @x and @y.
  *
  * Since: 2.9
  **/
@@ -1351,10 +1354,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_acosh:
  * @x: Floating point number greater or equal to 1.0.
- * @returns: Inverse hyperbolic cosine of @x.
  *
  * Fallback for the standard mathematical function
  * <function>acosh</function>.
+ *
+ * Returns: Inverse hyperbolic cosine of @x.
  *
  * Since: 2.9
  **/
@@ -1369,10 +1373,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_asinh:
  * @x: Floating point number.
- * @returns: Inverse hyperbolic sine of @x.
  *
  * Fallback for the standard mathematical function
  * <function>asinh</function>.
+ *
+ * Returns: Inverse hyperbolic sine of @x.
  *
  * Since: 2.9
  **/
@@ -1387,10 +1392,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_atanh:
  * @x: Floating point number in the range [-1, 1].
- * @returns: Inverse hyperbolic tangent of @x.
  *
  * Fallback for the standard mathematical function
  * <function>atanh</function>.
+ *
+ * Returns: Inverse hyperbolic tangent of @x.
  *
  * Since: 2.9
  **/
@@ -1405,10 +1411,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_isnan:
  * @x: Floating point number.
- * @returns: %TRUE if @x is infinity, %FALSE otherwise.
  *
  * Fallback for the standard mathematical function
  * <function>isnan</function>.
+ *
+ * Returns: %TRUE if @x is infinity, %FALSE otherwise.
  *
  * Since: 2.22
  **/
@@ -1417,7 +1424,7 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
  * gwy_isnan:
  *
  * Macro defined to working isnan() implementation, either a system one or
- * gwy_math_callback_isnan().
+ * gwy_math_fallback_isnan().
  *
  * Since: 2.22
  **/
@@ -1425,10 +1432,11 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
 /**
  * gwy_math_fallback_isinf:
  * @x: Floating point number.
- * @returns: %TRUE if @x is infinity, %FALSE otherwise.
  *
  * Fallback for the standard mathematical function
  * <function>isinf</function>.
+ *
+ * Returns: %TRUE if @x is infinity, %FALSE otherwise.
  *
  * Since: 2.22
  **/
@@ -1437,7 +1445,7 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
  * gwy_isinf:
  *
  * Macro defined to working isinf() implementation, either a system one or
- * gwy_math_callback_isinf().
+ * gwy_math_fallback_isinf().
  *
  * Since: 2.22
  **/

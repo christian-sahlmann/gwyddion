@@ -63,6 +63,7 @@ struct _GwySIUnitClass {
 
     void (*value_changed)(GwySIUnit *siunit);
 
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
 };

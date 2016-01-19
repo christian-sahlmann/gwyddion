@@ -46,6 +46,7 @@ struct _GwyFDCurvePreset {
 };
 
 struct _GwyFDCurvePresetClass {
+    /*< private >*/
     GwyNLFitPresetClass parent_class;
 };
 

@@ -111,6 +111,7 @@ struct _GwyInventoryClass {
                             const gint *new_order);
     void (*default_changed)(GwyInventory *inventory);
 
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
 };

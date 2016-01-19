@@ -56,6 +56,7 @@ struct _GwyContainerClass {
     GObjectClass parent_class;
 
     void (*item_changed)(GwyContainer *container, const gchar *key);
+    /*< private >*/
     void (*reserved1)(void);
 };
 

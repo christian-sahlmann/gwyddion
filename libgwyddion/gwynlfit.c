@@ -742,4 +742,23 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
  * Fitting function partial derivative type.
  */
 
+/**
+ * GwyNLFitter:
+ * @fmarq: Evaluates the fitted function.
+ * @dmarq: Evaluates derivatives of the fitted function.
+ * @maxiter: Maximum number of iteration.
+ * @eval: %TRUE if last evaluation succeeded.
+ * @covar: Covariance matrix (set upon successful fit).
+ * @dispersion: Mean residual sum of squares per point, set to -1 on failure.
+ * @mfi: Lambda parameter is multiplied by it.  Probably keep at 1.
+ * @mdec: Decrease of lambda parameter after an unsuccessful step.
+ * @minc: Increase of lambda parameter after a successful step.
+ * @mtol: If lambda parameter becomes zero it is set to this value.
+ *
+ * Non-linear least-squares fitter.
+ *
+ * Examining @eval, @covar and @dispersion can be useful though, as well as
+ * setting @maxiter, @mdec or @minc.  The rest is better left untouched.
+ */
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -2673,7 +2673,7 @@ fail:
  *
  * Items in a #GwyContainer can be identified by a #GQuark or the corresponding
  * string.  While #GQuark's are atomic values and allow faster acces, they are
- * less convenient for casual usage -- each #GQuark-key function like
+ * less convenient for casual usage -- each #GQuark key function like
  * gwy_container_set_double() thus has a string-key counterpart
  * gwy_container_set_double_by_name().
  **/
