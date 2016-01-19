@@ -39,9 +39,9 @@
 
 #define MAX_PARAMS 4
 
-enum { PREVIEW_SIZE = 400 };
-
-enum { RESPONSE_SAVE = 1 };
+enum {
+    RESPONSE_SAVE = 1
+};
 
 typedef enum {
     GWY_FIT_2D_DISPLAY_DATA   = 0,

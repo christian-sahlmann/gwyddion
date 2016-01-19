@@ -35,7 +35,6 @@
 #define POLYLEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 160,
     MAX_DEGREE = 11
 };
 
@@ -310,7 +309,7 @@ create_preview_data(GwyContainer *data,
     pdata = gwy_container_new();
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
+    zoomval = (gdouble)PREVIEW_HALF_SIZE/MAX(xres, yres);
     xres = MAX(xres*zoomval, 3);
     yres = MAX(yres*zoomval, 3);
 
@@ -398,12 +397,13 @@ poly_level_dialog(PolyLevelArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    controls.leveled_view = create_preview(controls.data, 0, PREVIEW_SIZE,
+    controls.leveled_view = create_preview(controls.data, 0, PREVIEW_HALF_SIZE,
                                            FALSE);
     gtk_table_attach(GTK_TABLE(table), controls.leveled_view,
                      0, 1, row, row+1, 0, 0, 0, 0);
 
-    controls.bg_view = create_preview(controls.data, 1, PREVIEW_SIZE, FALSE);
+    controls.bg_view = create_preview(controls.data, 1, PREVIEW_HALF_SIZE,
+                                      FALSE);
     gtk_table_attach(GTK_TABLE(table), controls.bg_view,
                      1, 2, row, row+1, 0, 0, 0, 0);
 

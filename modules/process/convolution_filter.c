@@ -39,10 +39,6 @@
 
 #define CONVOLUTION_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    PREVIEW_SIZE = 400
-};
-
 typedef struct {
     GwyConvolutionFilterPreset *preset;
 } ConvolutionArgs;

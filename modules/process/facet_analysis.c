@@ -45,7 +45,6 @@
 #define FVIEW_GRADIENT "DFit"
 
 enum {
-    PREVIEW_SIZE = 400,
     /* XXX: don't change */
     FDATA_RES = 2*113 + 1,
     MAX_PLANE_SIZE = 7,  /* this is actually half */

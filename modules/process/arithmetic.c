@@ -43,7 +43,6 @@ enum {
     HISTSIZE = 25,
     RESPONSE_PREVIEW = 1,
     USER_UNITS_ID = G_MAXINT,
-    PREVIEW_SIZE = 400,
 };
 
 enum {

@@ -43,8 +43,6 @@
 
 #define MAX_PARAMS 4
 
-enum { PREVIEW_SIZE = 200 };
-
 enum {
     RESPONSE_PREVIEW = 1,
     RESPONSE_LOAD = 2,
@@ -373,7 +371,8 @@ cc_view_dialog(CCViewArgs *args,
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             0);
-    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SMALL_SIZE,
+                                   FALSE);
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
@@ -382,15 +381,15 @@ cc_view_dialog(CCViewArgs *args,
 
     controls.message1 = gtk_label_new(_("No data used."));
     gtk_box_pack_start(GTK_BOX(vbox), controls.message1, FALSE, FALSE, 4);
-    controls.message2 = gtk_label_new("");
+    controls.message2 = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox), controls.message2, FALSE, FALSE, 4);
-    controls.message3 = gtk_label_new("");
+    controls.message3 = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox), controls.message3, FALSE, FALSE, 4);
-    controls.message4 = gtk_label_new("");
+    controls.message4 = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox), controls.message4, FALSE, FALSE, 4);
-    controls.message5 = gtk_label_new("");
+    controls.message5 = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox), controls.message5, FALSE, FALSE, 4);
-    controls.resmes = gtk_label_new("");
+    controls.resmes = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox), controls.resmes, FALSE, FALSE, 4);
 
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);

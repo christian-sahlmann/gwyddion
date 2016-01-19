@@ -41,12 +41,9 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define LATMEAS_RUN_MODES (GWY_RUN_INTERACTIVE)
-
-enum {
-    PREVIEW_SIZE = 400,
-};
 
 enum {
     RESPONSE_RESET = 1,

@@ -61,10 +61,6 @@
                                const LatSynthArgs *args)
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 

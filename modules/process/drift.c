@@ -41,10 +41,6 @@
 
 #define DRIFT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
-enum {
-    PREVIEW_SIZE = 400
-};
-
 typedef enum {
     PREVIEW_CORRECTED = 0,
     PREVIEW_MASK      = 1,

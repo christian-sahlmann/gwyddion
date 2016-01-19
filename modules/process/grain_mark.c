@@ -36,10 +36,6 @@
 #define MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 400
-};
-
-enum {
     MARK_HEIGHT = 0,
     MARK_SLOPE  = 1,
     MARK_LAP    = 2

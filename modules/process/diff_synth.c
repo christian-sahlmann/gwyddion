@@ -39,10 +39,6 @@
 #define WORK_UPDATE_CHECK 1000000
 
 enum {
-    PREVIEW_SIZE = 320,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 
@@ -432,9 +428,9 @@ diff_synth_dialog(DiffSynthArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
-    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
-                                dimsargs->measure*PREVIEW_SIZE,
-                                dimsargs->measure*PREVIEW_SIZE,
+    dfield = gwy_data_field_new(PREVIEW_SMALL_SIZE, PREVIEW_SMALL_SIZE,
+                                dimsargs->measure*PREVIEW_SMALL_SIZE,
+                                dimsargs->measure*PREVIEW_SMALL_SIZE,
                                 TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     if (dfield_template) {
@@ -442,10 +438,11 @@ diff_synth_dialog(DiffSynthArgs *args,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
         controls.surface = gwy_synth_surface_for_preview(dfield_template,
-                                                         PREVIEW_SIZE);
+                                                         PREVIEW_SMALL_SIZE);
         controls.zscale = 3.0*gwy_data_field_get_rms(dfield_template);
     }
-    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SMALL_SIZE,
+                                   FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     hbox2 = gwy_synth_instant_updates_new(&controls,

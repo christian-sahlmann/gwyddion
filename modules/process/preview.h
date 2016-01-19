@@ -31,6 +31,15 @@
 #include <app/gwymoduleutils.h>
 #include <app/data-browser.h>
 
+enum {
+    /* Standard preview size. */
+    PREVIEW_SIZE = 400,
+    /* For slow synth modules or if there are lots of other things to fit. */
+    PREVIEW_SMALL_SIZE = 320,
+    /* When we need to fit two preview-sized areas. */
+    PREVIEW_HALF_SIZE = 200,
+};
+
 G_GNUC_UNUSED
 static GwyPixmapLayer*
 create_basic_layer(GwyDataView *dataview, gint id)

@@ -52,10 +52,6 @@ typedef enum {
 } MaskEditMode;
 
 enum {
-    PREVIEW_SIZE = 240,
-};
-
-enum {
     RESPONSE_PREVIEW = 1,
 };
 
@@ -381,7 +377,7 @@ mark_dialog(MarkArgs *args,
     vbox2 = gtk_vbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
 
-    controls.view_source = create_preview(controls.mydata, 0, PREVIEW_SIZE,
+    controls.view_source = create_preview(controls.mydata, 0, PREVIEW_HALF_SIZE,
                                           TRUE);
     gtk_box_pack_start(GTK_BOX(vbox2), controls.view_source, FALSE, FALSE, 0);
 
@@ -393,7 +389,7 @@ mark_dialog(MarkArgs *args,
     vbox2 = gtk_vbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
 
-    controls.view_result = create_preview(controls.mydata, 1, PREVIEW_SIZE,
+    controls.view_result = create_preview(controls.mydata, 1, PREVIEW_HALF_SIZE,
                                           TRUE);
     gtk_box_pack_start(GTK_BOX(vbox2), controls.view_result, FALSE, FALSE, 0);
 

@@ -41,10 +41,6 @@
     static gdouble getcov_##name(gdouble aspect)
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 

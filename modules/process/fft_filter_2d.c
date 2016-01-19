@@ -39,10 +39,6 @@
 
 #define FFTF_2D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    PREVIEW_SIZE = 400
-};
-
 /* Convenience macros */
 #define get_toggled(obj) \
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(obj))

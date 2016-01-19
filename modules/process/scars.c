@@ -40,7 +40,6 @@ typedef enum {
 } GwyFeaturesType;
 
 enum {
-    PREVIEW_SIZE = 400,
     MAX_LENGTH = 1024
 };
 

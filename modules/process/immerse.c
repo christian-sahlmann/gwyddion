@@ -49,10 +49,6 @@
 /* But don't downsample kernels below certain size (in pixels) */
 #define downsample_limit 20
 
-enum {
-    PREVIEW_SIZE = 400
-};
-
 typedef enum {
     GWY_IMMERSE_SAMPLING_UP,
     GWY_IMMERSE_SAMPLING_DOWN,

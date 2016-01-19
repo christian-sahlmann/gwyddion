@@ -37,10 +37,6 @@
 #define FBM_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 

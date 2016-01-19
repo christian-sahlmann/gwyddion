@@ -47,10 +47,6 @@
 #define NEURAL_TRAIN_RUN_MODES GWY_RUN_INTERACTIVE
 #define NEURAL_APPLY_RUN_MODES GWY_RUN_INTERACTIVE
 
-enum {
-    PREVIEW_SIZE = 360,
-};
-
 typedef enum {
     PREVIEW_MODEL,
     PREVIEW_SIGNAL,
@@ -493,7 +489,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
-    controls.view = create_preview(mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.view = create_preview(mydata, 0, PREVIEW_SMALL_SIZE, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     controls.gmodel = gwy_graph_model_new();
@@ -963,7 +959,8 @@ train_data_changed(NeuralTrainControls *controls,
         g_critical("Chooser lacks id");
     }
 
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view),
+                              PREVIEW_SMALL_SIZE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),

@@ -40,10 +40,6 @@
 #define AFFINE_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
     USER_DEFINED_LATTICE = -1,
 };

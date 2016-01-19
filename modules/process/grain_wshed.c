@@ -33,10 +33,6 @@
 
 #define WSHED_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    PREVIEW_SIZE = 400
-};
-
 typedef struct {
     gboolean inverted;
     gint locate_steps;

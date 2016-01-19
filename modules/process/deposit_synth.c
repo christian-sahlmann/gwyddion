@@ -47,10 +47,8 @@
 // N. have function to insert result to data browser or swap it for present channel
 // N+1. run noninteractive or interactive with function N at end
 
-
 enum {
-    PREVIEW_SIZE = 400,
-    MAXN         = 5000,
+    MAXN = 5000,
 };
 
 enum {

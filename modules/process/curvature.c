@@ -36,10 +36,6 @@
 
 #define CURVATURE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    PREVIEW_SIZE = 320,
-};
-
 typedef enum {
     PARAM_X0,
     PARAM_Y0,
@@ -643,7 +639,7 @@ curvature_dialog(CurvatureArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    controls.view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
+    controls.view = create_preview(controls.data, 0, PREVIEW_SMALL_SIZE, FALSE);
     controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
                                              0, "Line", FALSE);
     g_object_set(controls.selection, "max-objects", 2, NULL);

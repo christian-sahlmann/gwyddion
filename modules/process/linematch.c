@@ -44,7 +44,6 @@
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
 enum {
-    PREVIEW_SIZE = 320,
     MAX_DEGREE = 5,
 };
 

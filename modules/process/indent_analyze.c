@@ -44,10 +44,6 @@ controls_changed => computed = FALSE
    GWY_RUN_INTERACTIVE
 
 enum {
-    PREVIEW_SIZE = 320
-};
-
-enum {
     GWY_PLANE_NONE = 0,
     GWY_PLANE_LEVEL,
     GWY_PLANE_ROTATE

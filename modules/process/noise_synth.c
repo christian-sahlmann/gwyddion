@@ -44,10 +44,6 @@
     static gdouble noise_##name##_down(GwyRandGenSet *rng, gdouble sigma);
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 

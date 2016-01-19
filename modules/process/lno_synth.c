@@ -60,10 +60,6 @@
     &load_args_##name, &save_args_##name
 
 enum {
-    PREVIEW_SIZE = 400,
-};
-
-enum {
     RESPONSE_RESET = 1,
 };
 
