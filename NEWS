@@ -19,6 +19,7 @@ Libraries:
 Modules:
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
   metadata.
+- Align rows: Median difference method no longer changes the overall data tilt.
 
 
 2.44 (2016-01-11)

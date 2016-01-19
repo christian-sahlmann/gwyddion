@@ -102,6 +102,8 @@ static void     linematch_do_modus      (GwyDataField *mask,
                                          const LineMatchArgs *args);
 static void     linematch_do_match      (GwyDataField *mask,
                                          const LineMatchArgs *args);
+static void     zero_level_row_shifts   (GwyDataLine *shifts);
+static void     slope_level_row_shifts  (GwyDataLine *shifts);
 static void     apply_row_shifts        (GwyDataField *dfield,
                                          GwyDataField *bg,
                                          GwyDataLine *shifts);
@@ -166,7 +168,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Aligns rows by various methods."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -533,6 +535,7 @@ linematch_do_median_diff(GwyDataField *mask,
                               median + gwy_data_line_get_val(medians, i));
     }
 
+    slope_level_row_shifts(medians);
     apply_row_shifts(dfield, bg, medians);
 
     g_object_unref(line);
@@ -694,9 +697,18 @@ linematch_do_match(GwyDataField *mask,
 }
 
 static void
-level_row_shifts(GwyDataLine *shifts)
+zero_level_row_shifts(GwyDataLine *shifts)
 {
     gwy_data_line_add(shifts, -gwy_data_line_get_avg(shifts));
+}
+
+static void
+slope_level_row_shifts(GwyDataLine *shifts)
+{
+    gdouble a, b;
+
+    gwy_data_line_get_line_coeffs(shifts, &a, &b);
+    gwy_data_line_line_level(shifts, a, b);
 }
 
 static void
@@ -707,7 +719,7 @@ apply_row_shifts(GwyDataField *dfield, GwyDataField *bg,
     const gdouble *s;
     gdouble *d, *b;
 
-    level_row_shifts(shifts);
+    zero_level_row_shifts(shifts);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
