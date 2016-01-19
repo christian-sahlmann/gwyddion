@@ -468,7 +468,7 @@ gwy_spline_sample_uniformly(GwySpline *spline,
     GArray *fixed_tangents = spline->fixed_tangents;
     gdouble length;
 
-    g_return_if_fail(spline->points->len > 0);
+    g_return_val_if_fail(spline->points->len > 0, 0.0);
 
     /* This ensures valid natural sampling. */
     length = gwy_spline_length(spline);
