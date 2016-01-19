@@ -1765,7 +1765,8 @@ gwy_fopen(const gchar *filename,
 * gwy_fprintf:
 * @file: the stream to write to.
 * @format: a standard printf() format string, but notice
-*          [string precision pitfalls][string-precision]
+*          <link linkend='glib-String-Utility-Functions'>string precision
+*          pitfalls</link>
 * @...: the arguments to insert in the output.
 *
 * An implementation of the standard fprintf() function which supports
@@ -1827,7 +1828,8 @@ gwy_fopen(const gchar *filename,
 * gwy_fprintf:
 * @file: the stream to write to.
 * @format: a standard printf() format string, but notice
-*          [string precision pitfalls][string-precision]
+*          <link linkend='glib-String-Utility-Functions'>string precision
+*          pitfalls</link>
 * @...: the arguments to insert in the output.
 *
 * An implementation of the standard fprintf() function which supports
