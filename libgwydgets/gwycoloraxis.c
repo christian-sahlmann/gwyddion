@@ -1114,7 +1114,7 @@ gwy_color_axis_changed(GwyColorAxis *axis)
  * gwy_color_axis_set_tick_map_func:
  * @axis: A color axis.
  * @func: Tick mapping function.
- * @data: Data to pass to @func.
+ * @user_data: Data to pass to @func.
  *
  * Set the tick mapping function for a color axis.
  *

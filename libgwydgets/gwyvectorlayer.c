@@ -259,7 +259,7 @@ gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
  * Returns the selection type of a vector layer class.
  *
  * Note this is a class method, to get the type from an instance one can use
- * gwy_vector_layer_class_selection_type().  To get the type from layer's
+ * gwy_vector_layer_get_selection_type().  To get the type from layer's
  * #GType one has to use g_type_class_peek().
  *
  * Returns: The type of selection used by layers of class @klass.

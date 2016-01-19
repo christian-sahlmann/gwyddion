@@ -1887,6 +1887,7 @@ gwy_graph_area_set_x_grid_data(GwyGraphArea *area,
 
 /**
  * gwy_graph_area_set_y_grid_data:
+ * @area: A graph area.
  * @ndata: The number of points in @grid_data.
  * @grid_data: Array of grid line positions on the y-axis (in real values,
  *             not pixels).
@@ -2098,10 +2099,10 @@ gwy_graph_area_edit_curve(GwyGraphArea *area,
 /**
  * gwy_graph_area_export_vector:
  * @area: A graph area.
- * @x:
- * @y:
- * @width:
- * @height:
+ * @x: Bounding box origin X-coordinate.
+ * @y: Bounding box origin Y-coordinate.
+ * @width: Bounding box width.
+ * @height: Bounding box height.
  *
  * Creates PostScript representation of a graph area.
  *

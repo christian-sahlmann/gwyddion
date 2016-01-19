@@ -1310,7 +1310,7 @@ gwy_3d_view_get_label(Gwy3DView *gwy3dview,
  * This is a convenience method that can be used instead of fetching the setup
  * object from the data container.
  *
- * Returns:
+ * Returns: The corresponding 3D setup.
  **/
 Gwy3DSetup*
 gwy_3d_view_get_setup(Gwy3DView *gwy3dview)
@@ -3401,7 +3401,7 @@ gwy_3d_view_class_disable_axis_drawing(gboolean disable)
  * OpenGL. You can create a new 3D view for a data container with
  * gwy_3d_view_new().  By default, it inherits properties like palette from
  * <link linkend="GwyDataView">data view</link> settings, but supports separate
- * settings -- see gwy_3d_view_set_palette() et al.
+ * settings -- see gwy_3d_view_set_gradient_key() et al.
  *
  * #Gwy3DView allows the user to interactively rotate, scale, z-scale the data
  * or move lights, depending on its <link linkend="Gwy3DMovement">movement
