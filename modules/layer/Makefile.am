@@ -7,6 +7,7 @@ layer_LTLIBRARIES = \
 	ellipse.la \
 	lattice.la \
 	line.la \
+	path.la \
 	point.la \
 	rectangle.la
 
@@ -36,8 +37,9 @@ axis_la_SOURCES =      axis.c
 ellipse_la_SOURCES =   ellipse.c
 lattice_la_SOURCES =   lattice.c
 line_la_SOURCES =      line.c
-rectangle_la_SOURCES = rectangle.c
+path_la_SOURCES =      path.c
 point_la_SOURCES =     point.c
+rectangle_la_SOURCES = rectangle.c
 
 clean-local:
 	rm -f core.* *~
