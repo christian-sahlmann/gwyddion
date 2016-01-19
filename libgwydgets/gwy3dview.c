@@ -298,8 +298,8 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
      *
      * The :reduced-size is the size of downsampled data in quick preview.
      *
-     * Deprecated: 2.44: The reduced size has no influence because the 3D view
-     *                   does not downsample anything.
+     * Note since 2.44 the reduced size has no influence because the 3D view
+     * does not downsample anything.
      **/
     g_object_class_install_property
         (gobject_class,
@@ -1242,8 +1242,8 @@ gwy_3d_view_set_movement_type(Gwy3DView *gwy3dview,
  * is pending and the view is shown in reduced size.  It only affects future
  * downsampling.
  *
- * Deprecated: 2.44: The reduced size has no influence because the 3D view does
- *                   not downsample anything.
+ * Note since 2.44 the reduced size has no influence because the 3D view
+ * does not downsample anything.
  **/
 void
 gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
