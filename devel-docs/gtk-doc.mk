@@ -7,7 +7,7 @@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 
-GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@
+GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@ @GTKDOC_EXTRA_CFLAGS@
 GWY_DOC_LIBS = \
 	$(top_builddir)/app/libgwyapp2.la \
 	$(top_builddir)/libgwymodule/libgwymodule2.la \
