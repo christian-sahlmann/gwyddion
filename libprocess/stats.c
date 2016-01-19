@@ -2024,7 +2024,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
     g_object_unref(din);
     g_object_unref(dout);
 
-    if (nstats > 0)
+    if (nstats > 1)
         gwy_data_line_resample(target_line, nstats, interpolation);
 }
 #else  /* HAVE_FFTW3 */
@@ -2093,7 +2093,7 @@ gwy_data_field_area_func_lame(GwyDataField *data_field,
     g_object_unref(data_line);
     g_object_unref(tmp_line);
 
-    if (nstats > 0)
+    if (nstats > 1)
         gwy_data_line_resample(target_line, nstats, interpolation);
 }
 #endif  /* HAVE_FFTW3 */
@@ -2299,7 +2299,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
                      || orientation == GWY_ORIENTATION_VERTICAL);
 
-    if (nstats < 0)
+    if (nstats < 1)
         nstats = size/2;
     gwy_data_line_resample(target_line, size/2, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
@@ -2554,7 +2554,7 @@ gwy_data_field_area_racf(GwyDataField *data_field,
                      && row + height <= yres);
 
     size = MIN(width, height)/2;
-    if (nstats < 0)
+    if (nstats < 1)
         nstats = size;
 
     acf_field = gwy_data_field_new(2*size - 1, 2*size - 1, 1.0, 1.0, FALSE);
@@ -6607,7 +6607,7 @@ gwy_data_field_angular_average(GwyDataField *data_field,
     dy = yreal/yres;
 
     /* Prefer sampling close to the shorter step. */
-    if (nstats <= 0) {
+    if (nstats < 1) {
         h = 2.0*dx*dy/(dx + dy);
         nstats = GWY_ROUND(r/h);
         nstats = MAX(nstats, 1);
