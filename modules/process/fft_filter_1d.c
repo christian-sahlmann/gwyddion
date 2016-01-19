@@ -48,11 +48,6 @@ typedef enum {
 } GwyFftf1dViewType;
 
 enum {
-    PREVIEW_SIZE = 240,
-    MAX_PREV = 240
-};
-
-enum {
     RESPONSE_PREVIEW = 1,
     RESPONSE_CLEAR   = 2
 };
@@ -126,7 +121,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -180,7 +175,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
         { N_("Suppress"),  GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD, },
     };
 
-    GtkWidget *dialog, *table, *hbox, *vbox, *align;
+    GtkWidget *dialog, *table, *hbox, *align;
     Fftf1dControls controls;
     GwyDataField *result_field;
     GwyGraphArea *area;
@@ -203,10 +198,6 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    hbox = gtk_hbox_new(FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       TRUE, TRUE, 4);
-
     /* store pointer to data container */
     controls.args = args;
     controls.original_data = data;
@@ -226,21 +217,24 @@ fftf_1d_dialog(Fftf1dArgs *args,
 
     controls.weights = NULL;
 
-    vbox = gtk_vbox_new(FALSE, 4);
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
     /*set up rescaled image of the surface*/
     controls.view_original = create_preview(controls.original_data,
-                                            id, PREVIEW_SIZE, FALSE);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_original, FALSE, FALSE, 4);
+                                            id, PREVIEW_SMALL_SIZE, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view_original, FALSE, FALSE, 4);
 
     /*set up rescaled image of the result*/
     controls.view_result = create_preview(controls.result_data,
-                                          0, PREVIEW_SIZE, FALSE);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+                                          0, PREVIEW_SMALL_SIZE, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view_result, FALSE, FALSE, 4);
 
     /*settings*/
-    vbox = gtk_vbox_new(FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       TRUE, TRUE, 4);
 
     /* `select areas with mouse' should be a tooltip or something...
     gtk_label_set_markup(GTK_LABEL(label),
@@ -249,8 +243,8 @@ fftf_1d_dialog(Fftf1dArgs *args,
     controls.gmodel = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.gmodel);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    gtk_widget_set_size_request(controls.graph, 300, 200);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
+    gtk_widget_set_size_request(controls.graph, -1, PREVIEW_HALF_SIZE);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 4);
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
@@ -260,7 +254,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
                      G_CALLBACK(graph_selected), &controls);
 
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(vbox), align, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
     table = gtk_table_new(6, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -389,17 +383,17 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gdouble m;
     gdouble *d;
 
-    dline = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
     dfield = controls->original_field;
+    res = gwy_data_field_get_xres(dfield);
+    dline = gwy_data_line_new(res, res, FALSE);
 
     gwy_data_field_psdf(dfield, dline, args->direction, args->interpolation,
-                        GWY_WINDOWING_RECT, MAX_PREV);
+                        GWY_WINDOWING_RECT, 0);
     if (!controls->weights)
         controls->weights = gwy_data_line_new(dline->res, dline->real, FALSE);
-    gwy_data_line_fill(controls->weights, 1);
-    gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
+    gwy_data_line_fill(controls->weights, 1.0);
 
-    /* use magnitude instead of power so lesser components become visible */
+    /* use magnitude instead of power so smaller components become visible */
     m = gwy_data_line_get_max(dline);
     d = gwy_data_line_get_data(dline);
     res = gwy_data_line_get_res(dline);
@@ -421,6 +415,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                  NULL);
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
+    g_object_unref(dline);
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XSEL);
@@ -448,15 +443,17 @@ graph_selected(GwySelection* selection,
         restore_ps(controls, controls->args);
     }
     else {
-        selection_data = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
+        selection_data = g_new(gdouble, 2*nofselection);
         gwy_selection_get_data(selection, selection_data);
 
         /*setup weights for inverse FFT computation*/
-        if (controls->weights == NULL)
-            controls->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
+        if (!controls->weights) {
+            gint res = gwy_data_field_get_xres(controls->original_field);
+            controls->weights = gwy_data_line_new(res, res, FALSE);
+        }
 
         if (controls->args->view_type == GWY_FFTF_1D_VIEW_UNMARKED) {
-            gwy_data_line_fill(controls->weights, 1);
+            gwy_data_line_fill(controls->weights, 1.0);
 
             for (k = 0; k < nofselection; k++) {
                 beg = selection_data[2*k];
@@ -477,7 +474,7 @@ graph_selected(GwySelection* selection,
                 update_view(controls, controls->args);
         }
         if (controls->args->view_type == GWY_FFTF_1D_VIEW_MARKED) {
-            gwy_data_line_fill(controls->weights, 0);
+            gwy_data_line_fill(controls->weights, 0.0);
 
             for (k = 0; k < nofselection; k++) {
                 beg = selection_data[2*k];
