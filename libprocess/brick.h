@@ -79,6 +79,7 @@ struct _GwyBrickClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwyBrick *brick);
+    /*< private >*/
     void (*reserved1)(void);
 };
 

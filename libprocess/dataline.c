@@ -1493,7 +1493,7 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
  * are indices in the data line.
  *
  * For polynomials of degree 0 and 1 it's better to use gwy_data_line_get_avg()
- * and gwy_data_line_line_coeffs() because they are faster.
+ * and gwy_data_line_get_line_coeffs() because they are faster.
  *
  * Returns: The coefficients of the polynomial (@coeffs when it was not %NULL,
  *          otherwise a newly allocated array).

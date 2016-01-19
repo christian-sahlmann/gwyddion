@@ -57,6 +57,7 @@ struct _GwyDataLineClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwyDataLine *data_line);
+    /*< private >*/
     void (*reserved1)(void);
 };
 

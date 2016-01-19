@@ -749,7 +749,7 @@ get_rect_extend_func(GwyExteriorType exterior)
 
 /**
  * gwy_data_field_extend:
- * @field: A two-dimensional data field.
+ * @data_field: A two-dimensional data field.
  * @left: Number of pixels to extend to the left (towards lower column indices).
  * @right: Number of pixels to extend to the right (towards higher column
  *         indices).

@@ -126,8 +126,8 @@ gwy_brick_finalize(GObject *object)
 /**
  * gwy_brick_new:
  * @xres: X resolution, i.e., the number of samples in x direction
- * @xres: Y resolution, i.e., the number of samples in y direction
- * @xres: Z resolution, i.e., the number of samples in z direction
+ * @yres: Y resolution, i.e., the number of samples in y direction
+ * @zres: Z resolution, i.e., the number of samples in z direction
  * @xreal: Real physical dimension in x direction.
  * @yreal: Real physical dimension in y direction.
  * @zreal: Real physical dimension in z direction.
@@ -816,12 +816,12 @@ gwy_brick_get_dval_real(GwyBrick *a, gdouble x, gdouble y, gdouble z, gint inter
  *
  * The returned buffer is not guaranteed to be valid through whole data
  * brick life time.  Some function may change it, most notably
- * gwy_brick_resize() and gwy_brick_resample().
+ * gwy_brick_resample().
  *
  * This function invalidates any cached information, use
  * gwy_brick_get_data_const() if you are not going to change the data.
  *
- * Returns: The data as an array of doubles of length gwy_brick_get_res().
+ * Returns: The data as an array of doubles of length @xres*@yres*@zres.
  *
  * Since: 2.31
  **/
@@ -840,11 +840,11 @@ gwy_brick_get_data(GwyBrick *brick)
  *
  * The returned buffer is not guaranteed to be valid through whole data
  * brick life time.  Some function may change it, most notably
- * gwy_brick_resize() and gwy_brick_resample().
+ * gwy_brick_resample().
  *
  * Use gwy_brick_get_data() if you want to change the data.
  *
- * Returns: The data as an array of doubles of length gwy_brick_get_res().
+ * Returns: The data as an array of doubles of length @xres*@yres*@zres.
  *
  * Since: 2.31
  **/
@@ -1740,7 +1740,7 @@ gwy_brick_get_val(GwyBrick *brick,
  * @col: Position in the brick (column index).
  * @row: Position in the brick (row index).
  * @lev: Position in the brick (level index).
- * @value: value to be set.
+ * @value: Value to be set.
  *
  * Sets value at given position in a data brick.
  *
@@ -1804,6 +1804,7 @@ gwy_brick_get_val_real(GwyBrick *brick,
  * @x: Position in the brick (x direction).
  * @y: Position in the brick (y direction).
  * @z: Position in the brick (z direction).
+ * @value: Value to be set.
  *
  * Sets value at given position in a data brick.
  *

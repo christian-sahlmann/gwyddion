@@ -808,7 +808,7 @@ gwy_cdline_fit(GwyCDLine* cdline,
 }
 
 /**
- * gwy_cdline_fit:
+ * gwy_cdline_fit_with_caldata:
  * @cdline: A critical dimension evaluator.
  * @n_dat: The number of data points (number of items in @x and @y).
  * @x: Abscissa points.

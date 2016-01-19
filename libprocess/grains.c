@@ -3884,7 +3884,7 @@ gwy_data_field_number_grains_periodic(GwyDataField *mask_field,
  *
  * Find bounding boxes of all grains.
  *
- * Returns: Either %bboxes (if it was not %NULL), or a newly allocated array
+ * Returns: Either @bboxes (if it was not %NULL), or a newly allocated array
  *          of size 4(@ngrains + 1).
  *
  * Since: 2.3

@@ -64,6 +64,7 @@ struct _GwyDataFieldClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwyDataField *data_field);
+    /*< private >*/
     void (*reserved1)(void);
 };
 

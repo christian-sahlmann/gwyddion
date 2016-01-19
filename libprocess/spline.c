@@ -242,6 +242,7 @@ gwy_spline_get_closed(GwySpline *spline)
 
 /**
  * gwy_spline_set_points:
+ * @spline: A spline curve.
  * @xy: Array of points in plane the curve will pass through.
  * @n: Number of points in @xy.
  *

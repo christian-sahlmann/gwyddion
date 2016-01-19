@@ -212,7 +212,7 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
 /**
  * gwy_data_field_fit_facet_plane:
  * @data_field: A data field.
- * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mfield: Mask specifying which values to take into account/exclude, or %NULL.
  * @masking: Masking mode to use.
  * @pa: Where constant coefficient should be stored (or %NULL).
  * @pbx: Where x plane coefficient should be stored.

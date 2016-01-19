@@ -2568,7 +2568,7 @@ gwy_data_field_area_racf(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_area_racf:
+ * gwy_data_field_racf:
  * @data_field: A data field.
  * @target_line: A data line to store the autocorrelation function to.  It
  *               will be resampled to requested width.
@@ -6541,7 +6541,7 @@ gwy_data_field_count_minima(GwyDataField *data_field)
  *           masking modes.
  * @x: X-coordinate of the averaging disc origin, in real coordinates
  *     including offsets.
- * @x: Y-coordinate of the averaging disc origin, in real coordinates
+ * @y: Y-coordinate of the averaging disc origin, in real coordinates
  *     including offsets.
  * @r: Radius, in real coordinates.  It determines the real length of the
  *     resulting line.

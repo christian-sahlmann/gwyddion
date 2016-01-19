@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 gdouble gwy_data_field_get_max_uncertainty                   (GwyDataField *data_field,
                                                               GwyDataField *uncz_field);
-gdouble gwy_data_field_area_get_max_uncertainty              (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_max_uncertainty              (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint mode,
@@ -39,7 +39,7 @@ gdouble gwy_data_field_area_get_max_uncertainty              (GwyDataField *dfie
                                                               gint height);
 gdouble gwy_data_field_get_min_uncertainty                   (GwyDataField *data_field,
                                                               GwyDataField *uncz_field);
-gdouble gwy_data_field_area_get_min_uncertainty              (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_min_uncertainty              (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint mode,
@@ -72,14 +72,14 @@ void    gwy_data_field_area_get_min_max_uncertainty_mask     (GwyDataField *data
                                                               gdouble *max_unc);
 gdouble gwy_data_field_get_avg_uncertainty                   (GwyDataField *data_field,
                                                               GwyDataField *uncz_field);
-gdouble gwy_data_field_area_get_avg_uncertainty              (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_avg_uncertainty              (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint col,
                                                               gint row,
                                                               gint width,
                                                               gint height);
-gdouble gwy_data_field_area_get_avg_uncertainty_mask         (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_avg_uncertainty_mask         (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               GwyMaskingType mode,
@@ -89,14 +89,14 @@ gdouble gwy_data_field_area_get_avg_uncertainty_mask         (GwyDataField *dfie
                                                               gint height);
 gdouble gwy_data_field_get_rms_uncertainty                   (GwyDataField *data_field,
                                                               GwyDataField *uncz_field);
-gdouble gwy_data_field_area_get_rms_uncertainty              (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_rms_uncertainty              (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint col,
                                                               gint row,
                                                               gint width,
                                                               gint height);
-gdouble gwy_data_field_area_get_rms_uncertainty_mask         (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_rms_uncertainty_mask         (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               GwyMaskingType mode,
@@ -111,7 +111,7 @@ void    gwy_data_field_get_stats_uncertainties               (GwyDataField *data
                                                               gdouble *rms_unc,
                                                               gdouble *skew_unc,
                                                               gdouble *kurtosis_unc);
-void    gwy_data_field_area_get_stats_uncertainties          (GwyDataField *dfield,
+void    gwy_data_field_area_get_stats_uncertainties          (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint col,
@@ -123,7 +123,7 @@ void    gwy_data_field_area_get_stats_uncertainties          (GwyDataField *dfie
                                                               gdouble *rms_unc,
                                                               gdouble *skew_unc,
                                                               gdouble *kurtosis_unc);
-void    gwy_data_field_area_get_stats_uncertainties_mask     (GwyDataField *dfield,
+void    gwy_data_field_area_get_stats_uncertainties_mask     (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               GwyMaskingType mode,
@@ -191,14 +191,14 @@ gdouble gwy_data_field_area_get_surface_area_mask_uncertainty(GwyDataField *data
                                                               gint row,
                                                               gint width,
                                                               gint height);
-gdouble gwy_data_field_area_get_median_uncertainty           (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_median_uncertainty           (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               gint col,
                                                               gint row,
                                                               gint width,
                                                               gint height);
-gdouble gwy_data_field_area_get_median_uncertainty_mask      (GwyDataField *dfield,
+gdouble gwy_data_field_area_get_median_uncertainty_mask      (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
                                                               GwyMaskingType mode,
@@ -229,9 +229,9 @@ void    gwy_data_field_area_get_normal_coeffs_uncertainty    (GwyDataField *data
                                                               gint row,
                                                               gint width,
                                                               gint height,
-                                                              gdouble *x,
-                                                              gdouble *y,
-                                                              gdouble *z,
+                                                              gdouble *nx,
+                                                              gdouble *ny,
+                                                              gdouble *nz,
                                                               gdouble *ux,
                                                               gdouble *uy,
                                                               gdouble *uz);
@@ -239,9 +239,9 @@ void    gwy_data_field_get_normal_coeffs_uncertainty         (GwyDataField *data
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *uncx_field,
                                                               GwyDataField *uncy_field,
-                                                              gdouble *x,
-                                                              gdouble *y,
-                                                              gdouble *z,
+                                                              gdouble *nx,
+                                                              gdouble *ny,
+                                                              gdouble *nz,
                                                               gdouble *ux,
                                                               gdouble *uy,
                                                               gdouble *uz);
@@ -261,7 +261,7 @@ void    gwy_data_field_get_inclination_uncertainty           (GwyDataField *data
                                                               GwyDataField *uncy_field,
                                                               gdouble *utheta,
                                                               gdouble *uphi);
-gdouble gwy_data_field_area_get_projected_area_uncertainty   ( gint nn,
+gdouble gwy_data_field_area_get_projected_area_uncertainty   (gint nn,
                                                               GwyDataField *uncx_field,
                                                               GwyDataField *uncy_field);
 void    gwy_data_field_area_cdh_uncertainty                  (GwyDataField *data_field,

@@ -1028,7 +1028,7 @@ gwy_data_field_get_yoffset(GwyDataField *data_field)
  * Sets the X offset of a data field origin.
  *
  * Note offsets don't affect any calculation, nor functions like
- * gwy_data_field_rotj().
+ * gwy_data_field_rtoj().
  **/
 void
 gwy_data_field_set_xoffset(GwyDataField *data_field, gdouble xoff)
@@ -2474,8 +2474,8 @@ fill_missing_points_all(GwyDataField *dfield,
 /**
  * gwy_data_field_average_xyz:
  * @data_field: A data field to fill with regularised XYZ data.
- * @densitymap: Optional data field to fill with XYZ point density map.  It can
- *              be %NULL.
+ * @density_map: Optional data field to fill with XYZ point density map.  It can
+ *               be %NULL.
  * @points: Array of XYZ points.  Coordinates X and Y represent positions in
  *          the plane; the Z-coordinate represents values.
  * @npoints: Number of points.

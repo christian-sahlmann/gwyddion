@@ -1078,14 +1078,13 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  * @avg_unc: Where uncertainty of average height value of the surface should be stored,
- * or %NULL.
+ *           or %NULL.
  * @ra_unc: Where uncertainty of average value of irregularities should be stored,
- * or %NULL.
+ *          or %NULL.
  * @rms_unc: Where uncertainty of root mean square value of irregularities (Rq) should be
- * stored, or %NULL.
+ *           stored, or %NULL.
  * @skew_unc: Where uncertainty of skew (symmetry of height distribution) should be stored, or
- *        %NULL.
- *
+ *            %NULL.
  * @kurtosis_unc: Where uncertainty of kurtosis (peakedness of height ditribution) should be
  *            stored, or %NULL.
  *
@@ -1126,7 +1125,6 @@ gwy_data_field_area_get_stats_uncertainties(GwyDataField *dfield,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @uncz_field: The corresponding uncertainty data field.
  * @avg_unc: Where uncertainty of average height value of the surface should be
  *           stored, or %NULL.
  * @ra_unc: Where uncertainty of average value of irregularities should be
@@ -1617,19 +1615,22 @@ gwy_data_field_area_acf_uncertainty(GwyDataField *data_field,
  * @target_line: A data line to store the uncertainties of the distribution to.
  * @orientation: Orientation of lines (ACF is simply averaged over the
  *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples the resulting line should have.
  *
  * Calculates uncertainty of one-dimensional autocorrelation function of a data
  * field.
  *
  * Since: 2.23
  **/
-    void
+void
 gwy_data_field_acf_uncertainty(GwyDataField *data_field,
-        GwyDataField *uncz_field,
-        GwyDataLine *target_line,
-        GwyOrientation orientation,
-        GwyInterpolationType interpolation,
-        gint nstats)
+                               GwyDataField *uncz_field,
+                               GwyDataLine *target_line,
+                               GwyOrientation orientation,
+                               GwyInterpolationType interpolation,
+                               gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
@@ -1653,6 +1654,9 @@ gwy_data_field_acf_uncertainty(GwyDataField *data_field,
  * @height: Area height (number of rows).
  * @orientation: Orientation of lines (HHCF is simply averaged over the
  *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples the resulting line should have.
  *
  * Calculates uncertainty of the one-dimensional autocorrelation function of a
  * rectangular part of a data field.
@@ -1691,6 +1695,9 @@ gwy_data_field_area_hhcf_uncertainty(GwyDataField *data_field,
  *               resampled to requested width.
  * @orientation: Orientation of lines (HHCF is simply averaged over the
  *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples the resulting line should have.
  *
  * Calculates uncertainty of one-dimensional autocorrelation function of a data
  * field.
@@ -3406,8 +3413,8 @@ gwy_data_field_dh_uncertainty(GwyDataField *data_field,
  * gwy_data_field_area_get_normal_coeffs_uncertainty:
  * @data_field: A data field.
  * @uncz_field: Corresponding uncertainty field.
- * @uncx: The uncertainty in the x direction.
- * @uncy: The uncertainty in the y direction.
+ * @uncx_field: The uncertainty in the x direction.
+ * @uncy_field: The uncertainty in the y direction.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -3585,8 +3592,8 @@ gwy_data_field_get_normal_coeffs_uncertainty(GwyDataField *data_field,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @theta: Where theta angle (in radians) should be stored, or %NULL.
- * @phi: Where phi angle (in radians) should be stored, or %NULL.
+ * @utheta: Where theta angle (in radians) should be stored, or %NULL.
+ * @uphi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the uncertainty of the inclination of the image (polar and azimuth angle).
  *
@@ -3636,8 +3643,8 @@ gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
  * @uncz_field: Corresponding uncertainty field.
  * @uncx_field: Corresponding uncertainty field.
  * @uncy_field: Corresponding uncertainty field.
- * @theta: Where theta angle (in radians) should be stored, or %NULL.
- * @phi: Where phi angle (in radians) should be stored, or %NULL.
+ * @utheta: Where theta angle (in radians) should be stored, or %NULL.
+ * @uphi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the uncertainty of the inclination of the image (polar and azimuth angle).
  *
@@ -3727,14 +3734,14 @@ gwy_data_line_cumulate_uncertainty(GwyDataLine *uncz_line)
  *
  * Since: 2.23
  **/
-    void
+void
 gwy_data_field_area_cdh_uncertainty(GwyDataField *data_field,
-        GwyDataField *uncz_field,
-        GwyDataField *mask,
-        GwyDataLine *target_line,
-        gint col, gint row,
-        gint width, gint height,
-        gint nstats)
+                                    GwyDataField *uncz_field,
+                                    GwyDataField *mask,
+                                    GwyDataLine *target_line,
+                                    gint col, gint row,
+                                    gint width, gint height,
+                                    gint nstats)
 {
     GwySIUnit *rhounit, *lineunit;
 

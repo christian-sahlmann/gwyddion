@@ -66,6 +66,7 @@ struct _GwySpectraClass {
     GObjectClass parent_class;
 
     void (*data_changed)(GwySpectra *spectra);
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
     void (*reserved3)(void);
