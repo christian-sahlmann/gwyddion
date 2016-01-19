@@ -16,6 +16,7 @@
   <xi:include href="xml/gwyglmaterial.xml"/>
   <xi:include href="xml/gwypixfield.xml"/>
   <xi:include href="xml/gwyselection.xml"/>
+  <xi:include href="xml/gwydrawenums.xml"/>
   <xi:include href="xml/gwydraw.xml"/>
   <!-- API INDICES BEGIN -->
   <index id="api-index-all">
