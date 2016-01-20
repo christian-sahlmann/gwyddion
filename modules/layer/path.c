@@ -650,10 +650,12 @@ gwy_layer_path_motion_notify(GwyVectorLayer *layer,
         return FALSE;
     }
 
+    gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
     g_assert(layer->selecting != -1);
     xy[0] = xreal;
     xy[1] = yreal;
     gwy_selection_set_object(layer->selection, i, xy);
+    gwy_layer_path_draw(layer, window, GWY_RENDERING_TARGET_SCREEN);
 
     return FALSE;
 }
@@ -699,7 +701,6 @@ gwy_layer_path_button_pressed(GwyVectorLayer *layer,
     /* handle existing selection */
     if (i >= 0) {
         layer->selecting = i;
-        gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
     }
     else {
         /* add an object, or do nothing when maximum is reached */
@@ -708,10 +709,11 @@ gwy_layer_path_button_pressed(GwyVectorLayer *layer,
             if (gwy_selection_get_max_objects(layer->selection) > 1)
                 return FALSE;
             i = 0;
-            gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
         }
+        gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
+        gwy_layer_path_draw(layer, window, GWY_RENDERING_TARGET_SCREEN);
     }
     layer->button = event->button;
 
@@ -742,6 +744,7 @@ gwy_layer_path_button_released(GwyVectorLayer *layer,
     g_return_val_if_fail(data_view, FALSE);
     window = GTK_WIDGET(data_view)->window;
 
+    gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
     layer->button = 0;
     x = event->x;
     y = event->y;
