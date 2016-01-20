@@ -98,6 +98,7 @@ process_LTLIBRARIES = \
 	shade.la \
 	slope_dist.la \
 	sphere-revolve.la \
+	straighten_path.la \
 	threshold.la \
 	tilt.la \
 	tip_blind.la \
@@ -220,6 +221,7 @@ scars_la_SOURCES               = scars.c preview.h
 shade_la_SOURCES               = shade.c preview.h
 slope_dist_la_SOURCES          = slope_dist.c preview.h
 sphere_revolve_la_SOURCES      = sphere-revolve.c
+straighten_path_la_SOURCES     = straighten_path.c preview.h
 #superresolution_la_SOURCES    = superresolution.c
 threshold_la_SOURCES           = threshold.c preview.h
 tilt_la_SOURCES                = tilt.c
