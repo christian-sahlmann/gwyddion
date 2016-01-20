@@ -122,7 +122,7 @@ static void        gwy_selection_path_move             (GwySelection *selection,
                                                         gdouble vx,
                                                         gdouble vy);
 static void        gwy_selection_path_set_slackness    (GwySelectionPath *selection,
-                                                        guint slackness);
+                                                        gdouble slackness);
 static void        gwy_selection_path_set_closed       (GwySelectionPath *selection,
                                                         gboolean closed);
 static void        gwy_layer_path_finalize             (GObject *object);
@@ -454,7 +454,7 @@ gwy_selection_path_move(GwySelection *selection,
 
 static void
 gwy_selection_path_set_slackness(GwySelectionPath *selection,
-                                 guint slackness)
+                                 gdouble slackness)
 {
     g_return_if_fail(slackness >= 0.0 && slackness <= 1.0);
     if (slackness == selection->slackness)
