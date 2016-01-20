@@ -1269,8 +1269,8 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
  *
  * Returns: The reduced data size.
  *
- * Deprecated: 2.44: The reduced size has no influence because the 3D view does
- *                   not downsample anything.
+ * Note since 2.44 the reduced size has no influence because the 3D view does
+ * not downsample anything.
  **/
 guint
 gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
