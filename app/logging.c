@@ -470,4 +470,25 @@ _gwy_app_log_add_message_to_textbuf(GtkTextBuffer *textbuf,
         gtk_text_buffer_insert(textbuf, &iter, message, -1);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:logging
+ * @title: logging
+ * @short_description: Program message log
+ **/
+
+/**
+ * GwyAppLoggingFlags:
+ * @GWY_APP_LOGGING_TO_FILE: Messages go to a log file, either gwyddion.log or
+ *                           given by environment variable GWYDDION_LOGFILE.
+ * @GWY_APP_LOGGING_TO_CONSOLE: Messages go to standard output and standard
+ *                              error depending on message type (emulating
+ *                              where GLib sends them).
+ *
+ * Flags controlling where program messages are written.
+ *
+ * Since: 2.45
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
