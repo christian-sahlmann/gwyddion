@@ -779,6 +779,7 @@ sample_curve_naturally(GwySpline *spline,
     if (G_UNLIKELY(!spline->control_points)) {
         spline->control_points = g_array_new(FALSE, FALSE,
                                              sizeof(ControlPoint));
+        control_points = spline->control_points;
     }
 
     nseg = points->len - (spline->closed ? 0 : 1);
