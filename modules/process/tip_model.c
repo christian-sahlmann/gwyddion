@@ -509,8 +509,8 @@ tip_process(TipModelArgs *args,
 
     /* process tip */
     /* FIXME: this must be solved within guess functions */
-    xres = CLAMP(xres, 20, 1000);
-    yres = CLAMP(yres, 20, 1000);
+    xres = CLAMP(xres, 10, 1000);
+    yres = CLAMP(yres, 10, 1000);
 
     g_snprintf(label, sizeof(label), _("Tip resolution: %d × %d pixels"),
                xres, yres);
