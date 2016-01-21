@@ -30,14 +30,13 @@
 /* INTERPOLATION: New (not applicable). */
 
 static void
-pyramid_guess(GwyDataField *data,
-              gdouble height,
-              gdouble radius,
-              gdouble *params,
-              gint *xres,
-              gint *yres)
+guess_symmetrical(GwyDataField *data,
+                  gdouble height,
+                  gdouble radius,
+                  gdouble angle,
+                  gint *xres,
+                  gint *yres)
 {
-    gdouble angle = params[1];
     gdouble xreal = 2*(height+radius)*tan(angle);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
@@ -45,6 +44,17 @@ pyramid_guess(GwyDataField *data,
 
     *xres = xpix;
     *yres = xpix;
+}
+
+static void
+pyramid_guess(GwyDataField *data,
+              gdouble height,
+              gdouble radius,
+              gdouble *params,
+              gint *xres,
+              gint *yres)
+{
+    guess_symmetrical(data, height, radius, params[1], xres, yres);
 }
 
 static void
@@ -55,14 +65,7 @@ contact_guess(GwyDataField *data,
               gint *xres,
               gint *yres)
 {
-    gdouble angle = atan(sqrt(2));
-    gdouble xreal = 2*(height+radius)*tan(angle);
-    gint xpix = gwy_data_field_rtoi(data, xreal);
-
-    xpix = CLAMP(xpix, 10, 1000);
-
-    *xres = xpix;
-    *yres = xpix;
+    guess_symmetrical(data, height, radius, atan(sqrt(2)), xres, yres);
 }
 
 static void
@@ -73,14 +76,7 @@ noncontact_guess(GwyDataField *data,
                  gint *xres,
                  gint *yres)
 {
-    gdouble angle = 70*G_PI/180;
-    gdouble xreal = 2*(height+radius)*tan(angle);
-    gint xpix = gwy_data_field_rtoi(data, xreal);
-
-    xpix = CLAMP(xpix, 10, 1000);
-
-    *xres = xpix;
-    *yres = xpix;
+    guess_symmetrical(data, height, radius, 70.0*G_PI/180.0, xres, yres);
 }
 
 static void
@@ -98,6 +94,17 @@ parabola_guess(GwyDataField *data,
 
     *xres = xpix;
     *yres = xpix;
+}
+
+static void
+cone_guess(GwyDataField *data,
+           gdouble height,
+           gdouble radius,
+           gdouble *params,
+           gint *xres,
+           gint *yres)
+{
+    guess_symmetrical(data, height, radius, params[1], xres, yres);
 }
 
 static void
@@ -259,6 +266,42 @@ parabola(GwyDataField *tip,
 }
 
 static void
+cone(GwyDataField *tip,
+     G_GNUC_UNUSED gdouble height,
+     gdouble radius,
+     G_GNUC_UNUSED gdouble rotation,
+     gdouble *params)
+{
+    gdouble angle = params[1];
+    gint col, row;
+    gdouble scol, srow;
+    gdouble ccol, crow;
+    gdouble br2, r2, z0, ta;
+
+    scol = tip->xres/2;
+    srow = tip->yres/2;
+
+    z0 = radius/cos(angle);
+    br2 = radius*sin(angle);
+    br2 *= br2;
+    ta = tan(angle);
+
+    for (col = 0; col < tip->xres; col++) {
+        for (row = 0; row < tip->yres; row++) {
+            ccol = col - scol;
+            crow = row - srow;
+            r2 = ccol*ccol + crow*crow;
+            if (r2 < br2)
+                tip->data[col + tip->xres*row] = z0 - sqrt(radius*radius - r2);
+            else
+                tip->data[col + tip->xres*row] = ta*sqrt(r2);
+        }
+    }
+
+    gwy_data_field_invalidate(tip);
+}
+
+static void
 delta(GwyDataField *tip, gdouble height,
       G_GNUC_UNUSED gdouble radius,
       G_GNUC_UNUSED gdouble rotation,
@@ -295,6 +338,13 @@ static const GwyTipModelPreset tip_presets[] = {
         N_("Symmetric"),
         &parabola,
         &parabola_guess,
+        0
+    },
+    {
+        N_("Cone"),
+        N_("Symmetric"),
+        &cone,
+        &cone_guess,
         0
     },
     {
