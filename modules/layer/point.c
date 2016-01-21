@@ -614,7 +614,7 @@ gwy_layer_point_render_string_bw(GwyLayerPoint *layer,
     guchar *data, *pixels;
     gint i, j;
 
-    wwidth = GWY_ROUND(3*(zoom*layer->digit_width));
+    wwidth = GWY_ROUND(4*(zoom*layer->digit_width));
     wstride = (wwidth + 31)/32*4;
     wwidth = wstride*8;
     wheight = GWY_ROUND(1.5*zoom*layer->digit_height);
