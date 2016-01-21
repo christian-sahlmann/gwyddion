@@ -94,6 +94,15 @@ function build_documentation() {
 }
 
 
+function build_msvc_sln() {
+  # Generate MSVC project files.
+  rm -rf msvc2015 gwyddion-msvc-sln-head.zip
+  ./utils/gen-gwyddion-msvc-sln.py
+  zip -r9 gwyddion-msvc-sln-head.zip msvc2015
+  rm -rf msvc2015
+}
+
+
 function check_coding_style() {
   # Source coding style
   # Keep the `GENERATED' string quoted to prevent match here
@@ -238,6 +247,7 @@ else
   call build_project
   call build_pygwy
   call build_documentation
+  call build_msvc_sln
   call install_to_tmp
   call check_headers
   call check_symbols

@@ -188,6 +188,7 @@ printerr build_pygwy >pygwy.log
 cat build_project.err build_pygwy.err >build-seen.err
 extract_translation_stats
 printerr build_documentation
+printerr build_msvc_sln
 extract_build_documentation
 extract_documentation_stats
 coding_style_report
