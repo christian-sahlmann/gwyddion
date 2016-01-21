@@ -38,10 +38,10 @@ pyramid_guess(GwyDataField *data,
               gint *yres)
 {
     gdouble angle = params[1];
-    gdouble xreal = 2*(height+radius)/tan(angle);
+    gdouble xreal = 2*(height+radius)*tan(angle);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
-    xpix = CLAMP(xpix, 10, 500);
+    xpix = CLAMP(xpix, 10, 1000);
 
     *xres = xpix;
     *yres = xpix;
@@ -56,15 +56,15 @@ contact_guess(GwyDataField *data,
               gint *yres)
 {
     gdouble angle = atan(sqrt(2));
-    gdouble xreal = 2*(height+radius)/tan(angle);
+    gdouble xreal = 2*(height+radius)*tan(angle);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
-    xpix = CLAMP(xpix, 10, 500);
+    xpix = CLAMP(xpix, 10, 1000);
 
     *xres = xpix;
     *yres = xpix;
-
 }
+
 static void
 noncontact_guess(GwyDataField *data,
                  gdouble height,
@@ -74,10 +74,27 @@ noncontact_guess(GwyDataField *data,
                  gint *yres)
 {
     gdouble angle = 70*G_PI/180;
-    gdouble xreal = 2*(height+radius)/tan(angle);
+    gdouble xreal = 2*(height+radius)*tan(angle);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
-    xpix = CLAMP(xpix, 10, 500);
+    xpix = CLAMP(xpix, 10, 1000);
+
+    *xres = xpix;
+    *yres = xpix;
+}
+
+static void
+parabola_guess(GwyDataField *data,
+               gdouble height,
+               gdouble radius,
+               G_GNUC_UNUSED gdouble *params,
+               gint *xres,
+               gint *yres)
+{
+    gdouble xreal = 2*sqrt(2*height*radius);
+    gint xpix = gwy_data_field_rtoi(data, xreal);
+
+    xpix = CLAMP(xpix, 10, 1000);
 
     *xres = xpix;
     *yres = xpix;
@@ -92,7 +109,6 @@ delta_guess(G_GNUC_UNUSED GwyDataField *data,
 {
     *xres = 20;
     *yres = 20;
-
 }
 
 static void
@@ -215,6 +231,34 @@ noncontact(GwyDataField *tip,
 }
 
 static void
+parabola(GwyDataField *tip,
+         G_GNUC_UNUSED gdouble height,
+         gdouble radius,
+         G_GNUC_UNUSED gdouble rotation,
+         G_GNUC_UNUSED gdouble *params)
+{
+    gdouble a = 0.5/radius;
+    gint col, row;
+    gdouble scol, srow;
+    gdouble ccol, crow;
+    gdouble r2;
+
+    scol = tip->xres/2;
+    srow = tip->yres/2;
+
+    for (col = 0; col < tip->xres; col++) {
+        for (row = 0; row < tip->yres; row++) {
+            ccol = col - scol;
+            crow = row - srow;
+            r2 = ccol*ccol + crow*crow;
+            tip->data[col + tip->xres*row] = a*r2;
+        }
+    }
+
+    gwy_data_field_invalidate(tip);
+}
+
+static void
 delta(GwyDataField *tip, gdouble height,
       G_GNUC_UNUSED gdouble radius,
       G_GNUC_UNUSED gdouble rotation,
@@ -246,7 +290,14 @@ static const GwyTipModelPreset tip_presets[] = {
         &noncontact_guess,
         0
     },
-     {
+    {
+        N_("Parabola"),
+        N_("Symmetric"),
+        &parabola,
+        &parabola_guess,
+        0
+    },
+    {
         N_("Delta function"),
         N_("Analytical"),
         &delta,
