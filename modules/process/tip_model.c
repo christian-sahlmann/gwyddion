@@ -381,41 +381,31 @@ static void
 tip_model_dialog_update_controls(TipModelControls *controls,
                                  TipModelArgs *args)
 {
-    gboolean all_sensitive = FALSE, contact_sensitive = FALSE, radius_sensitive = FALSE;
+    GwyTipType type = args->type;
+    gboolean nsides_sens = FALSE, slope_sens = FALSE, rotation_sens = FALSE,
+             radius_sens = FALSE;
 
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->type), args->type);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nsides),
-                             args->nsides);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta),
-                             args->theta);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->type), type);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nsides), args->nsides);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle), args->angle);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta), args->theta);
     sci_entry_set_value(GTK_ADJUSTMENT(controls->radius),
                         GTK_COMBO_BOX(controls->radius_unit),
                         args->radius);
-    switch (args->type) {
-        case GWY_TIP_PYRAMID:
-        all_sensitive = TRUE;
-        case GWY_TIP_CONTACT:
-        case GWY_TIP_NONCONTACT:
-        contact_sensitive = TRUE;
-        radius_sensitive = TRUE;
-        break;
 
-        case GWY_TIP_DELTA:
-        radius_sensitive = TRUE;
-        break;
+    radius_sens = (type != GWY_TIP_DELTA);
+    nsides_sens = (type == GWY_TIP_PYRAMID);
+    rotation_sens = (type == GWY_TIP_PYRAMID
+                     || type == GWY_TIP_CONTACT
+                     || type == GWY_TIP_NONCONTACT);
+    slope_sens = (type == GWY_TIP_PYRAMID || type == GWY_TIP_CONE);
 
-        default:
-        g_return_if_reached();
-        break;
-    }
-    gwy_table_hscale_set_sensitive(controls->angle, all_sensitive);
-    gwy_table_hscale_set_sensitive(controls->theta, contact_sensitive);
-    gwy_table_hscale_set_sensitive(controls->nsides, all_sensitive);
-    gtk_widget_set_sensitive(controls->radius_spin, radius_sensitive);
-    gtk_widget_set_sensitive(controls->radius_unit, radius_sensitive);
-    gtk_widget_set_sensitive(controls->radius_label, radius_sensitive);
+    gwy_table_hscale_set_sensitive(controls->angle, slope_sens);
+    gwy_table_hscale_set_sensitive(controls->theta, rotation_sens);
+    gwy_table_hscale_set_sensitive(controls->nsides, nsides_sens);
+    gtk_widget_set_sensitive(controls->radius_spin, radius_sens);
+    gtk_widget_set_sensitive(controls->radius_unit, radius_sens);
+    gtk_widget_set_sensitive(controls->radius_label, radius_sens);
 }
 
 static void
@@ -548,7 +538,7 @@ static void
 tip_model_sanitize_args(TipModelArgs *args)
 {
     args->nsides = CLAMP(args->nsides, 3, 100);
-    args->type = MIN(args->type, GWY_TIP_DELTA);
+    args->type = MIN(args->type, GWY_TIP_CONE);
 }
 
 static void
