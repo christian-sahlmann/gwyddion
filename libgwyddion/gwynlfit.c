@@ -173,7 +173,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     gdouble mlambda = 1e-4;
     gdouble sumr = G_MAXDOUBLE;
     gdouble sumr1;
-    gdouble *der, *v, *xr, *saveparam, *resid, *a, *save_a;
+    gdouble *der, *v, *xr, *saveparam, *origparam, *resid, *a, *save_a;
     gdouble *w = NULL;
     gint *var_param_id;
     gboolean *fixed;
@@ -210,6 +210,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     }
 
     /* Sync slave param values with master */
+    origparam = g_memdup(param, n_param*sizeof(gdouble));
     for (i = 0; i < n_param; i++) {
         if (link_map[i] != i)
             param[i] = param[link_map[i]];
@@ -224,6 +225,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         g_warning("Initial residua evaluation failed");
         g_free(w);
         g_free(resid);
+        g_free(origparam);
         return -1;
     }
 
@@ -252,6 +254,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         g_free(w);
         g_free(var_param_id);
         g_free(resid);
+        g_free(origparam);
         return sumr;
     }
 
@@ -371,9 +374,8 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                                        x, y, weight,
                                        n_param, param,
                                        user_data, resid);
-        /* Catch failed evaluation even if it's not reported.
-         * FIXME: isfinite() is C99, finite() is BSD, make a wrapper? */
-        if (!(sumr1 == sumr1)) {
+        /* Catch failed evaluation even if it's not reported. */
+        if (gwy_isinf(sumr1) || gwy_isnan(sumr1)) {
             nlfit->eval = FALSE;
             break;
         }
@@ -425,9 +427,34 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             /* XXX: else what? */
             //g_warning("Cannot invert covariance matrix");
             sumr = -1.0;
+            g_free(nlfit->covar);
+            nlfit->covar = NULL;
         }
     }
 
+    for (i = 0; i < n_param; i++) {
+        if (gwy_isinf(param[i]) || gwy_isnan(param[i])) {
+            sumr = -1.0;
+            g_free(nlfit->covar);
+            nlfit->covar = NULL;
+            memcpy(param, origparam, n_param*sizeof(gdouble));
+            break;
+        }
+    }
+
+    if (nlfit->covar) {
+        for (i = 0; i < n_param*(n_param + 1)/2; i++) {
+             if (gwy_isinf(nlfit->covar[i]) || gwy_isnan(nlfit->covar[i])) {
+                 sumr = -1.0;
+                 g_free(nlfit->covar);
+                 nlfit->covar = NULL;
+                 memcpy(param, origparam, n_param*sizeof(gdouble));
+                 break;
+             }
+        }
+    }
+
+    g_free(origparam);
     g_free(save_a);
     g_free(a);
     g_free(saveparam);
