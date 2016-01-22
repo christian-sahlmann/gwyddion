@@ -48,7 +48,7 @@ enum {
 
 typedef struct {
     FILE *file;
-    GString *str;
+    GString *message;
     GString *last;
     GQuark last_domain;
     guint last_count;
@@ -61,23 +61,27 @@ typedef struct {
     guint capturing_from;
 } LoggingSetup;
 
-static void           logger                    (const gchar *log_domain_str,
-                                                 GLogLevelFlags log_level,
-                                                 const gchar *message,
-                                                 gpointer user_data);
-static void           flush_last_message        (LoggingSetup *setup);
-static void           format_log_message        (GString *str,
-                                                 GQuark log_domain,
-                                                 GLogLevelFlags log_level,
-                                                 const gchar *message);
-static void           append_escaped_message    (GString *str,
-                                                 const gchar *message);
-static void           emit_log_message          (LoggingSetup *setup,
-                                                 GQuark log_domain,
-                                                 GLogLevelFlags log_level);
-static void           append_level_prefix       (GString *str,
-                                                 GLogLevelFlags log_level);
-static FILE*          get_console_stream        (GLogLevelFlags log_level);
+static void  logger                (const gchar *log_domain_str,
+                                    GLogLevelFlags log_level,
+                                    const gchar *message,
+                                    gpointer user_data);
+static void  flush_last_message    (LoggingSetup *setup);
+static void  emit_message_to_file  (FILE *fh,
+                                    GLogLevelFlags log_level,
+                                    const gchar *message,
+                                    gboolean add_eol);
+static void  format_log_message    (GString *str,
+                                    GQuark log_domain,
+                                    GLogLevelFlags log_level,
+                                    const gchar *message);
+static void  append_escaped_message(GString *str,
+                                    const gchar *message);
+static void  emit_log_message      (LoggingSetup *setup,
+                                    GQuark log_domain,
+                                    GLogLevelFlags log_level);
+static void  append_level_prefix   (GString *str,
+                                    GLogLevelFlags log_level);
+static FILE* get_console_stream    (GLogLevelFlags log_level);
 
 static LoggingSetup log_setup;
 
@@ -121,7 +125,7 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
         log_setup.to_file = !!log_setup.file;
     }
 
-    log_setup.str = g_string_new(NULL);
+    log_setup.message = g_string_new(NULL);
     log_setup.last = g_string_new(NULL);
     log_setup.last_domain = 0;
     log_setup.last_count = G_MAXUINT;
@@ -193,7 +197,7 @@ flush_last_message(LoggingSetup *setup)
     just_log_level = (setup->last_level & G_LOG_LEVEL_MASK);
     g_string_printf(setup->last, "Last message repeated %u times",
                     setup->last_count);
-    format_log_message(setup->str, setup->last_domain, just_log_level,
+    format_log_message(setup->message, setup->last_domain, just_log_level,
                        setup->last->str);
     emit_log_message(setup, setup->last_domain, just_log_level);
     setup->last_count = G_MAXUINT;
@@ -223,8 +227,9 @@ logger(const gchar *log_domain_str,
     g_string_assign(setup->last, message);
     setup->last_domain = log_domain;
     setup->last_level = log_level;
+    setup->last_count = 0;
 
-    format_log_message(setup->str, log_domain, just_log_level, message);
+    format_log_message(setup->message, log_domain, just_log_level, message);
     emit_log_message(setup, log_domain, just_log_level);
 }
 
@@ -233,27 +238,44 @@ emit_log_message(LoggingSetup *setup,
                  GQuark log_domain, GLogLevelFlags log_level)
 {
     GwyAppLogMessage logmessage;
-
-    if (setup->to_file) {
-        fputs(setup->str->str, setup->file);
-        fflush(setup->file);
-    }
+    gchar *message = setup->message->str;
 
     if (setup->to_console) {
-        FILE *console_stream = get_console_stream(log_level);
-        fputs(setup->str->str, console_stream);
-        fflush(console_stream);
+        emit_message_to_file(get_console_stream(log_level),
+                             log_level, message, TRUE);
     }
 
-    logmessage.message = g_strdup(setup->str->str);
+    if (setup->to_file)
+        emit_message_to_file(setup->file, log_level, message, FALSE);
+
+    /* This should not have any extras because the just clutter the GUI. */
+    logmessage.message = g_strdup(message);
     logmessage.log_domain = log_domain;
     logmessage.log_level = log_level;
     g_array_append_val(setup->message_history, logmessage);
 
-    if (setup->textbuf) {
-        _gwy_app_log_add_message_to_textbuf(setup->textbuf,
-                                            setup->str->str, log_level);
-    }
+    if (setup->textbuf)
+        _gwy_app_log_add_message_to_textbuf(setup->textbuf, message, log_level);
+}
+
+static void
+emit_message_to_file(FILE *fh,
+                     GLogLevelFlags log_level, const gchar *message,
+                     gboolean add_eol)
+{
+    const gchar *prg_name = g_get_prgname();
+    gulong pid = getpid();
+
+    if (add_eol && (log_level & ALERT_LEVELS))
+        fputs("\n", fh);
+
+    if (!prg_name)
+        gwy_fprintf(fh, "(process:%lu): ", pid);
+    else
+        gwy_fprintf(fh, "(%s:%lu): ", prg_name, pid);
+
+    fputs(message, fh);
+    fflush(fh);
 }
 
 static void
@@ -263,35 +285,15 @@ format_log_message(GString *str,
                    const gchar *message)
 {
     g_string_truncate(str, 0);
-    if (log_level & ALERT_LEVELS)
-        g_string_append_c(str, '\n');
-    if (!log_domain)
-        g_string_append(str, "** ");
 
-    /* GLib uses g_log_msg_prefix but we do not have access to it. */
-    if (TRUE) {
-        const gchar *prg_name = g_get_prgname();
-        gulong pid = getpid();
-
-        if (!prg_name)
-            g_string_append_printf(str, "(process:%lu): ", pid);
-        else
-            g_string_append_printf(str, "(%s:%lu): ", prg_name, pid);
-    }
     if (log_domain) {
         g_string_append(str, g_quark_to_string(log_domain));
         g_string_append_c(str, '-');
     }
 
     append_level_prefix(str, log_level);
-    if (log_level & ALERT_LEVELS)
-        g_string_append(str, " **");
-
     g_string_append(str, ": ");
-    if (!message)
-        g_string_append(str, "(NULL) message");
-    else
-        append_escaped_message(str, message);
+    append_escaped_message(str, message);
     g_string_append_c(str, '\n');
 }
 
@@ -302,6 +304,11 @@ append_escaped_message(GString *str, const gchar *message)
     gboolean escape_this;
     const gchar *p;
     guchar c;
+
+    if (!message) {
+        g_string_append(str, "(NULL) message");
+        return;
+    }
 
     g_utf8_validate(message, -1, &p);
     utf8_valid_only_to = p - message;
