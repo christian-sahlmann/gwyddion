@@ -770,15 +770,6 @@ fit_do(FitControls *controls)
                                param, error, fixed);
     errorknown = (args->fitter->covar != NULL);
 
-    for (i = 0; errorknown && i < nparams; i++) {
-        arg = &g_array_index(args->param, FitParamArg, i);
-        if (gwy_isnan(arg->value)
-            || gwy_isinf(arg->value)
-            || gwy_isnan(arg->error)
-            || gwy_isinf(arg->error))
-            errorknown = FALSE;
-    }
-
     for (i = 0; i < nparams; i++) {
         arg = &g_array_index(args->param, FitParamArg, i);
         arg->value = param[i];
