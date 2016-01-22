@@ -23,7 +23,7 @@ cat >build_project.ignore <<':'
 ^TRANSLATION [a-z]
 [0-9]+ translated messages
 ^\.* done\.$
-^/usr/bin/glib-mkenums: ./.*\.h:[0-9]*: lowercase_name is deprecated, use underscore_name
+^/usr/bin/ld: warning: link\.res contains output sections; did you forget -T?$
 ^[ ^]*$
 ':'
 :
