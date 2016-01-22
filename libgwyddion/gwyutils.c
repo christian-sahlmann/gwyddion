@@ -1778,8 +1778,8 @@ gwy_fopen(const gchar *filename,
 **/
 gint
 gwy_fprintf(FILE        *file,
-    gchar const *format,
-    ...)
+            gchar const *format,
+            ...)
 {
     va_list args;
     gint retval;
@@ -1813,13 +1813,13 @@ gwy_fprintf(FILE        *file,
 * See your C library manual for more details about fopen().
 *
 * Returns: A FILE* if the file was successfully opened, or %NULL if
-*     an error occurred
+*          an error occurred
 *
 * Since: 2.43
 */
 FILE *
 gwy_fopen(const gchar *filename,
-    const gchar *mode)
+          const gchar *mode)
 {
     return fopen(filename, mode);
 }
