@@ -106,7 +106,7 @@ module_register(void)
 {
     gwy_process_func_register("pid",
                               (GwyProcessFunc)&pid,
-                              N_("/_Tip/_PID simulation..."),
+                              N_("/_Tip and Indentation/_PID simulation..."),
                               NULL,
                               PID_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

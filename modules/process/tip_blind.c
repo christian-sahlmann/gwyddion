@@ -187,7 +187,7 @@ module_register(void)
 {
     gwy_process_func_register("tip_blind",
                               (GwyProcessFunc)&tip_blind,
-                              N_("/_Tip/_Blind Estimation..."),
+                              N_("/_Tip and Indentation/_Blind Estimation..."),
                               NULL,
                               TIP_BLIND_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

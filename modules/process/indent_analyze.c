@@ -317,7 +317,7 @@ module_register(void)
 {
     gwy_process_func_register("indent_analyze",
                               (GwyProcessFunc)&indent_analyze,
-                              N_("/Indento_r/_Analyze..."),
+                              N_("/_Tip and Indentation/_Analyze Imprint..."),
                               NULL,
                               INDENT_ANALYZE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

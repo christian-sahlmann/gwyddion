@@ -100,7 +100,7 @@ module_register(void)
 {
     gwy_process_func_register("nanoindent_adjust",
                               (GwyProcessFunc)&nanoindent_adjust,
-                              N_("/Indento_r/Ad_just..."),
+                              N_("/_Tip and Indentation/Ad_just..."),
                               NULL,
                               NANOINDENT_ADJUST_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

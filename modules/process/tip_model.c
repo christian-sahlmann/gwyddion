@@ -121,7 +121,7 @@ module_register(void)
 
     gwy_process_func_register("tip_model",
                               (GwyProcessFunc)&tip_model,
-                              N_("/_Tip/_Model Tip..."),
+                              N_("/_Tip and Indentation/_Model Tip..."),
                               NULL,
                               TIP_MODEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

@@ -86,7 +86,7 @@ module_register(void)
 {
     gwy_process_func_register("latsim",
                               (GwyProcessFunc)&latsim,
-                              N_("/_Tip/_Lateral force..."),
+                              N_("/_Tip and Indentation/_Lateral force..."),
                               NULL,
                               LATSIM_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
