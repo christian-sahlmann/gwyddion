@@ -247,18 +247,19 @@ parabola(GwyDataField *tip,
     gdouble a = 0.5/radius;
     gint col, row;
     gdouble scol, srow;
-    gdouble ccol, crow;
-    gdouble r2;
+    gdouble x, y, r2, z0;
 
     scol = tip->xres/2;
     srow = tip->yres/2;
+    x = gwy_data_field_jtor(tip, scol);
+    z0 = a*x*x;
 
-    for (col = 0; col < tip->xres; col++) {
-        for (row = 0; row < tip->yres; row++) {
-            ccol = col - scol;
-            crow = row - srow;
-            r2 = ccol*ccol + crow*crow;
-            tip->data[col + tip->xres*row] = a*r2;
+    for (row = 0; row < tip->yres; row++) {
+        y = gwy_data_field_jtor(tip, row - srow);
+        for (col = 0; col < tip->xres; col++) {
+            x = gwy_data_field_itor(tip, col - scol);
+            r2 = x*x + y*y;
+            tip->data[col + tip->xres*row] = z0 - a*r2;
         }
     }
 
@@ -275,30 +276,30 @@ cone(GwyDataField *tip,
     gdouble angle = params[1];
     gint col, row;
     gdouble scol, srow;
-    gdouble ccol, crow;
-    gdouble br2, r2, z0, ta;
+    gdouble x, y, br2, r2, z0, ta;
 
     scol = tip->xres/2;
     srow = tip->yres/2;
 
-    z0 = radius/cos(angle);
-    br2 = radius*sin(angle);
+    z0 = radius/sin(angle);
+    br2 = radius*cos(angle);
     br2 *= br2;
-    ta = tan(angle);
+    ta = 1.0/tan(angle);
 
-    for (col = 0; col < tip->xres; col++) {
-        for (row = 0; row < tip->yres; row++) {
-            ccol = col - scol;
-            crow = row - srow;
-            r2 = ccol*ccol + crow*crow;
+    for (row = 0; row < tip->yres; row++) {
+        y = gwy_data_field_jtor(tip, row - srow);
+        for (col = 0; col < tip->xres; col++) {
+            x = gwy_data_field_itor(tip, col - scol);
+            r2 = x*x + y*y;
             if (r2 < br2)
-                tip->data[col + tip->xres*row] = z0 - sqrt(radius*radius - r2);
+                tip->data[col + tip->xres*row] = sqrt(radius*radius - r2);
             else
-                tip->data[col + tip->xres*row] = ta*sqrt(r2);
+                tip->data[col + tip->xres*row] = z0 - ta*sqrt(r2);
         }
     }
 
     gwy_data_field_invalidate(tip);
+    gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
 }
 
 static void
@@ -334,6 +335,13 @@ static const GwyTipModelPreset tip_presets[] = {
         0
     },
     {
+        N_("Delta function"),
+        N_("Analytical"),
+        &delta,
+        &delta_guess,
+        0
+    },
+    {
         N_("Parabola"),
         N_("Symmetric"),
         &parabola,
@@ -345,13 +353,6 @@ static const GwyTipModelPreset tip_presets[] = {
         N_("Symmetric"),
         &cone,
         &cone_guess,
-        0
-    },
-    {
-        N_("Delta function"),
-        N_("Analytical"),
-        &delta,
-        &delta_guess,
         0
     },
 };
