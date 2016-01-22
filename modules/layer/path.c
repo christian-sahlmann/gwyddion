@@ -508,7 +508,7 @@ gwy_layer_path_set_property(GObject *object,
 
     switch (prop_id) {
         case PROP_THICKNESS:
-        gwy_layer_path_set_thickness(layer, g_value_get_uint(value));
+        gwy_layer_path_set_thickness(layer, g_value_get_int(value));
         break;
 
         default:
@@ -549,7 +549,7 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     GwyTriangulationPointXY *screenxy;
     const GwyTriangulationPointXY *segmentxy;
     GdkPoint *ixy;
-    gint width, height, xsize, ysize;
+    gint width, height, xsize, ysize, thickness;
     gdouble xreal, yreal;
     guint i, n, nseg;
 
@@ -561,15 +561,14 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     g_return_if_fail(data_view);
 
     layer_path = GWY_LAYER_PATH(layer);
+    thickness = layer_path->thickness;
     n = selection->n;
 
     /* Scale coordinates to screen/image pixels. */
     gdk_drawable_get_size(drawable, &width, &height);
     gwy_data_view_get_pixel_data_sizes(data_view, &xsize, &ysize);
     screenxy = g_new(GwyTriangulationPointXY, n);
-    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
-        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
-    }
+    gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
 
     for (i = 0; i < n; i++) {
         GwyTriangulationPointXY *pt = screenxy + i;
@@ -595,7 +594,6 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     /* Construct a segmented approximation of the spline. */
     spline = layer_path->spline;
     gwy_spline_set_points(spline, screenxy, n);
-    g_free(screenxy);
 
     gwy_spline_set_closed(spline, GWY_SELECTION_PATH(selection)->closed);
     gwy_spline_set_slackness(spline, GWY_SELECTION_PATH(selection)->slackness);
@@ -610,6 +608,32 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     }
     gdk_draw_lines(drawable, layer->gc, ixy, nseg);
     g_free(ixy);
+
+    if (thickness > 1) {
+        const GwyTriangulationPointXY *tangents
+            = gwy_spline_get_tangents(spline);
+
+        for (i = 0; i < n; i++) {
+            const GwyTriangulationPointXY *t = tangents + i;
+            gint xl0, yl0, xl1, yl1;
+            gdouble xd, yd;
+
+            if (t->x == 0.0 && t->y == 0.0)
+                continue;
+
+            xd = thickness*t->y/2;
+            yd = -thickness*t->x/2;
+
+            xl0 = (gint)floor(screenxy[i].x + xd + 0.001);
+            yl0 = (gint)floor(screenxy[i].y + yd + 0.001);
+            xl1 = (gint)floor(screenxy[i].x - xd + 0.001);
+            yl1 = (gint)floor(screenxy[i].y - yd + 0.001);
+
+            gdk_draw_line(drawable, layer->gc, xl0, yl0, xl1, yl1);
+        }
+    }
+
+    g_free(screenxy);
 }
 
 static gboolean
