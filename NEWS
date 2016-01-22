@@ -15,11 +15,17 @@ Libraries:
   displayed in a text view.
 - libgwyapp: Data browser can show warnings ocurring during the opening or
   merging of specific files.
+- libgwyprocess: Wrong estimated sizes for tip models were corrected.
+- libgwyprocess: Two new tip models were added: Parabola and Cone.
 
 Modules:
+- Path layer (new): A single spline curve with arbitrary number of points.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
   metadata.
 - Align rows: Median difference method no longer changes the overall data tilt.
+- Spectro tool: Always disabled ‘Apply’ button works again.
+- Points, Lines layers: Numbering works with more than 999 objects.
+- 1D FFT filter: GUI was reorganised and the previews enlarged.
 
 
 2.44 (2016-01-11)
