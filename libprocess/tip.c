@@ -37,9 +37,10 @@ guess_symmetrical(GwyDataField *data,
                   gint *xres,
                   gint *yres)
 {
-    gdouble xreal = 2*(height+radius)*tan(angle);
+    gdouble xreal = (height + radius)*tan(angle);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
+    xpix = 2*xpix + 1;
     xpix = CLAMP(xpix, 10, 1000);
 
     *xres = xpix;
@@ -87,9 +88,10 @@ parabola_guess(GwyDataField *data,
                gint *xres,
                gint *yres)
 {
-    gdouble xreal = 2*sqrt(2*height*radius);
+    gdouble xreal = sqrt(2*height*radius);
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
+    xpix = 2*xpix + 1;
     xpix = CLAMP(xpix, 10, 1000);
 
     *xres = xpix;
@@ -114,8 +116,8 @@ delta_guess(G_GNUC_UNUSED GwyDataField *data,
             G_GNUC_UNUSED gdouble *params,
             gint *xres, gint *yres)
 {
-    *xres = 20;
-    *yres = 20;
+    *xres = 21;
+    *yres = 21;
 }
 
 static void
@@ -309,7 +311,8 @@ delta(GwyDataField *tip, gdouble height,
       G_GNUC_UNUSED gdouble *params)
 {
     gwy_data_field_clear(tip);
-    tip->data[tip->xres/2 + tip->xres*tip->yres/2] = height;
+    tip->data[tip->xres/2 + tip->xres*(tip->yres/2)] = height;
+    gwy_data_field_invalidate(tip);
 }
 
 static const GwyTipModelPreset tip_presets[] = {
