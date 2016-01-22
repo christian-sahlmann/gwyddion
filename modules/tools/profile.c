@@ -750,11 +750,11 @@ static void
 gwy_tool_profile_selection_changed(GwyPlainTool *plain_tool,
                                    gint hint)
 {
-    GwyToolProfile *tool;
+    GwyToolProfile *tool = GWY_TOOL_PROFILE(plain_tool);
+    GtkDialog *dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     GwyNullStore *store;
     gint n;
 
-    tool = GWY_TOOL_PROFILE(plain_tool);
     store = GWY_NULL_STORE(tool->model);
     n = gwy_null_store_get_n_rows(store);
     g_return_if_fail(hint <= n);
@@ -791,7 +791,7 @@ gwy_tool_profile_selection_changed(GwyPlainTool *plain_tool,
         gtk_tree_path_free(path);
     }
 
-    gtk_widget_set_sensitive(tool->apply, n > 0);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, n > 0);
 }
 
 static void

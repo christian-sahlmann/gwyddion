@@ -616,6 +616,7 @@ gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
                                   gpointer user_data)
 {
     GwyToolSpectro *tool = (GwyToolSpectro*)user_data;
+    GtkDialog *dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     GtkTreeIter iter;
     guint i, n, nsel;
 
@@ -626,6 +627,7 @@ gwy_tool_spectro_tree_sel_changed(GtkTreeSelection *selection,
     /* FIXME: Inefficient */
     gwy_graph_model_remove_all_curves(tool->gmodel);
     n = gwy_null_store_get_n_rows(GWY_NULL_STORE(tool->model));
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, n > 0);
     if (!n)
         return;
 
