@@ -57,6 +57,7 @@ typedef struct {
     GtkObject *thickness;
     GtkObject *slackness;
     GtkWidget *closed;
+    gdouble zoom;
 } StraightenControls;
 
 static gboolean module_register         (void);
@@ -178,6 +179,7 @@ straighten_dialogue(StraightenArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
     controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.zoom = gwy_data_view_get_real_zoom(GWY_DATA_VIEW(controls.view));
     controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
                                              0, "Path", TRUE);
     g_object_ref(controls.selection);
@@ -233,6 +235,12 @@ straighten_dialogue(StraightenArgs *args,
     row++;
 
     gtk_widget_show_all(controls.dialogue);
+
+    /* We do not get the right value before the data view is shown. */
+    controls.zoom = gwy_data_view_get_real_zoom(GWY_DATA_VIEW(controls.view));
+    g_object_set(controls.vlayer, "thickness",
+                 GWY_ROUND(controls.zoom*args->thickness), NULL);
+
     do {
         response = gtk_dialog_run(dialogue);
         switch (response) {
@@ -317,7 +325,11 @@ path_selection_changed(StraightenControls *controls)
 static void
 thickness_changed(StraightenControls *controls, GtkAdjustment *adj)
 {
-    controls->args->thickness = gwy_adjustment_get_int(adj);
+    StraightenArgs *args = controls->args;
+
+    args->thickness = gwy_adjustment_get_int(adj);
+    g_object_set(controls->vlayer, "thickness",
+                 GWY_ROUND(controls->zoom*args->thickness), NULL);
 }
 
 static void
