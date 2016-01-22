@@ -50,7 +50,7 @@ typedef struct {
     FILE *file;
     GString *str;
     GString *last;
-    GString *last_domain;
+    GQuark last_domain;
     guint last_count;
     GLogLevelFlags last_level;
     GwyAppLoggingFlags flags;
@@ -61,18 +61,19 @@ typedef struct {
     guint capturing_from;
 } LoggingSetup;
 
-static void           logger                    (const gchar *log_domain,
+static void           logger                    (const gchar *log_domain_str,
                                                  GLogLevelFlags log_level,
                                                  const gchar *message,
                                                  gpointer user_data);
 static void           flush_last_message        (LoggingSetup *setup);
 static void           format_log_message        (GString *str,
-                                                 const gchar *log_domain,
+                                                 GQuark log_domain,
                                                  GLogLevelFlags log_level,
                                                  const gchar *message);
 static void           append_escaped_message    (GString *str,
                                                  const gchar *message);
 static void           emit_log_message          (LoggingSetup *setup,
+                                                 GQuark log_domain,
                                                  GLogLevelFlags log_level);
 static void           append_level_prefix       (GString *str,
                                                  GLogLevelFlags log_level);
@@ -122,7 +123,7 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
 
     log_setup.str = g_string_new(NULL);
     log_setup.last = g_string_new(NULL);
-    log_setup.last_domain = g_string_new(NULL);
+    log_setup.last_domain = 0;
     log_setup.last_count = G_MAXUINT;
     log_setup.message_history = g_array_new(FALSE, FALSE,
                                             sizeof(GwyAppLogMessage));
@@ -192,25 +193,27 @@ flush_last_message(LoggingSetup *setup)
     just_log_level = (setup->last_level & G_LOG_LEVEL_MASK);
     g_string_printf(setup->last, "Last message repeated %u times",
                     setup->last_count);
-    format_log_message(setup->str, setup->last_domain->str, just_log_level,
+    format_log_message(setup->str, setup->last_domain, just_log_level,
                        setup->last->str);
-    emit_log_message(setup, just_log_level);
+    emit_log_message(setup, setup->last_domain, just_log_level);
     setup->last_count = G_MAXUINT;
 }
 
 static void
-logger(const gchar *log_domain,
+logger(const gchar *log_domain_str,
        GLogLevelFlags log_level,
        const gchar *message,
        gpointer user_data)
 {
     LoggingSetup *setup = (LoggingSetup*)user_data;
     GLogLevelFlags just_log_level = (log_level & G_LOG_LEVEL_MASK);
-    const gchar *safe_log_domain = log_domain ? log_domain : "";
+    GQuark log_domain = (log_domain_str
+                         ? g_quark_from_string(log_domain_str)
+                         : 0);
 
     if (setup->last_count != G_MAXUINT
         && log_level == setup->last_level
-        && gwy_strequal(safe_log_domain, setup->last_domain->str)
+        && log_domain == setup->last_domain
         && gwy_strequal(message, setup->last->str)) {
         setup->last_count++;
         return;
@@ -218,15 +221,16 @@ logger(const gchar *log_domain,
 
     flush_last_message(setup);
     g_string_assign(setup->last, message);
-    g_string_assign(setup->last_domain, safe_log_domain);
+    setup->last_domain = log_domain;
     setup->last_level = log_level;
 
     format_log_message(setup->str, log_domain, just_log_level, message);
-    emit_log_message(setup, just_log_level);
+    emit_log_message(setup, log_domain, just_log_level);
 }
 
 static void
-emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
+emit_log_message(LoggingSetup *setup,
+                 GQuark log_domain, GLogLevelFlags log_level)
 {
     GwyAppLogMessage logmessage;
 
@@ -242,6 +246,7 @@ emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
     }
 
     logmessage.message = g_strdup(setup->str->str);
+    logmessage.log_domain = log_domain;
     logmessage.log_level = log_level;
     g_array_append_val(setup->message_history, logmessage);
 
@@ -253,7 +258,7 @@ emit_log_message(LoggingSetup *setup, GLogLevelFlags log_level)
 
 static void
 format_log_message(GString *str,
-                   const gchar *log_domain,
+                   GQuark log_domain,
                    GLogLevelFlags log_level,
                    const gchar *message)
 {
@@ -274,7 +279,7 @@ format_log_message(GString *str,
             g_string_append_printf(str, "(%s:%lu): ", prg_name, pid);
     }
     if (log_domain) {
-        g_string_append(str, log_domain);
+        g_string_append(str, g_quark_to_string(log_domain));
         g_string_append_c(str, '-');
     }
 

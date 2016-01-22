@@ -76,6 +76,7 @@ typedef enum {
 
 typedef struct {
     GLogLevelFlags log_level;
+    GQuark log_domain;
     gchar *message;
 } GwyAppLogMessage;
 
