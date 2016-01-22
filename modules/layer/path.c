@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/spline.h>
@@ -147,6 +148,10 @@ static void        gwy_layer_path_set_thickness        (GwyLayerPath *layer,
                                                         gint thickness);
 static void        gwy_layer_path_realize              (GwyDataViewLayer *dlayer);
 static void        gwy_layer_path_unrealize            (GwyDataViewLayer *dlayer);
+static void        add_point_to_either_end             (GwyVectorLayer *layer,
+                                                        gdouble xreal,
+                                                        gdouble yreal,
+                                                        gdouble *xy);
 static gint        gwy_layer_path_near_point           (GwyVectorLayer *layer,
                                                         gdouble xreal,
                                                         gdouble yreal);
@@ -662,7 +667,7 @@ gwy_layer_path_motion_notify(GwyVectorLayer *layer,
 
 static gboolean
 gwy_layer_path_button_pressed(GwyVectorLayer *layer,
-                               GdkEventButton *event)
+                              GdkEventButton *event)
 {
     GwyDataView *data_view;
     GdkWindow *window;
@@ -711,8 +716,7 @@ gwy_layer_path_button_pressed(GwyVectorLayer *layer,
             i = 0;
         }
         gwy_layer_path_undraw(layer, window, GWY_RENDERING_TARGET_SCREEN);
-        layer->selecting = 0;    /* avoid "update" signal emission */
-        layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
+        add_point_to_either_end(layer, xreal, yreal, xy);
         gwy_layer_path_draw(layer, window, GWY_RENDERING_TARGET_SCREEN);
     }
     layer->button = event->button;
@@ -725,7 +729,7 @@ gwy_layer_path_button_pressed(GwyVectorLayer *layer,
 
 static gboolean
 gwy_layer_path_button_released(GwyVectorLayer *layer,
-                                GdkEventButton *event)
+                               GdkEventButton *event)
 {
     GwyDataView *data_view;
     GdkWindow *window;
@@ -816,9 +820,42 @@ gwy_layer_path_unrealize(GwyDataViewLayer *dlayer)
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_path_parent_class)->unrealize(dlayer);
 }
 
+static void
+add_point_to_either_end(GwyVectorLayer *layer, gdouble xreal, gdouble yreal,
+                        gdouble *xy)
+{
+    gdouble metric[4];
+    gdouble firstlast[2*OBJECT_SIZE];
+    gdouble *data;
+    gint n, i;
+
+    layer->selecting = 0;    /* avoid "update" signal emission */
+
+    if ((n = gwy_selection_get_data(layer->selection, NULL)) < 2) {
+        layer->selecting = gwy_selection_set_object(layer->selection, -1, xy);
+        return;
+    }
+
+    gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
+                             metric);
+    gwy_selection_get_object(layer->selection, 0, firstlast+0);
+    gwy_selection_get_object(layer->selection, n-1, firstlast+OBJECT_SIZE);
+    i = gwy_math_find_nearest_point(xreal, yreal, NULL, 2, firstlast, metric);
+    if (i == 1) {
+        layer->selecting = gwy_selection_set_object(layer->selection, -1, xy);
+        return;
+    }
+
+    data = g_new(gdouble, OBJECT_SIZE*(n + 1));
+    gwy_selection_get_data(layer->selection, data + OBJECT_SIZE);
+    memcpy(data, xy, OBJECT_SIZE*sizeof(gdouble));
+    gwy_selection_set_data(layer->selection, n+1, data);
+    g_free(data);
+}
+
 static gint
 gwy_layer_path_near_point(GwyVectorLayer *layer,
-                           gdouble xreal, gdouble yreal)
+                          gdouble xreal, gdouble yreal)
 {
     gdouble d2min, metric[4];
     gint i, n;
