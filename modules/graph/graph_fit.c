@@ -184,7 +184,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -815,7 +815,7 @@ fit_do(FitControls *controls)
     param = g_newa(gdouble, nparams);
     error = g_newa(gdouble, nparams);
     for (i = 0; i < nparams; i++)
-        param[i] =g_array_index(args->param, FitParamArg, i).value;
+        param[i] = g_array_index(args->param, FitParamArg, i).value;
     args->fitter
         = gwy_nlfit_preset_fit(args->fitfunc, NULL,
                                gwy_data_line_get_res(args->xdata),
@@ -823,6 +823,15 @@ fit_do(FitControls *controls)
                                gwy_data_line_get_data_const(args->ydata),
                                param, error, fixed);
     errorknown = (args->fitter->covar != NULL);
+
+    for (i = 0; errorknown && i < nparams; i++) {
+        arg = &g_array_index(args->param, FitParamArg, i);
+        if (gwy_isnan(arg->value)
+            || gwy_isinf(arg->value)
+            || gwy_isnan(arg->error)
+            || gwy_isinf(arg->error))
+            errorknown = FALSE;
+    }
 
     for (i = 0; i < nparams; i++) {
         arg = &g_array_index(args->param, FitParamArg, i);
@@ -852,7 +861,7 @@ fit_do(FitControls *controls)
     else
         gtk_label_set_markup(SLi(controls->covar, GtkLabel*, 0, 0), _("N.A."));
 
-    fit_set_state(controls, TRUE, TRUE);
+    fit_set_state(controls, errorknown, TRUE);
     fit_plot_curve(args);
 }
 
