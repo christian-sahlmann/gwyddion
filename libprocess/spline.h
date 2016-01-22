@@ -35,6 +35,7 @@ GwySpline*                     gwy_spline_from_points     (const GwyTriangulatio
                                                            guint n);
 guint                          gwy_spline_get_npoints     (GwySpline *spline);
 const GwyTriangulationPointXY* gwy_spline_get_points      (GwySpline *spline);
+const GwyTriangulationPointXY* gwy_spline_get_tangents    (GwySpline *spline);
 gdouble                        gwy_spline_get_slackness   (GwySpline *spline);
 gboolean                       gwy_spline_get_closed      (GwySpline *spline);
 void                           gwy_spline_set_points      (GwySpline *spline,
