@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004,2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,14 +28,17 @@
 #include <libprocess/correct.h>
 #include <libprocess/interpolation.h>
 
-static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
-                                                  guint m,
-                                                  gdouble phi);
-static void         compute_fourier_coeffs       (gint nder,
-                                                  const gdouble *der,
-                                                  guint symmetry,
-                                                  gdouble *st,
-                                                  gdouble *ct);
+static gdouble unrotate_refine_correction(GwyDataLine *derdist,
+                                          guint m,
+                                          gdouble phi);
+static void    compute_fourier_coeffs    (gint nder,
+                                          const gdouble *der,
+                                          guint symmetry,
+                                          gdouble *st,
+                                          gdouble *ct);
+static void    interpolate_segment       (GwyDataLine *data_line,
+                                          gint from,
+                                          gint to);
 
 /**
  * gwy_data_field_correct_laplace_iteration:
@@ -734,6 +737,88 @@ gwy_data_field_affine(GwyDataField *source,
     }
 
     g_object_unref(coeffield);
+}
+
+/**
+ * gwy_data_line_correct_laplace:
+ * @data_line: A data line.
+ * @mask_field: Mask of places to be corrected.
+ *
+ * Fills missing values in a data line using Laplace data correction.
+ *
+ * Both data lines must have the same number of values.
+ *
+ * For one-dimensional data the missing data interpolation is explicit.
+ * Interior missing segments are filled with linear dependence between the edge
+ * points.  Missing segments with one end open are filled with the edge value.
+ *
+ * Returns: %TRUE if the line contained any data at all.  If there are no data
+ *          the %FALSE is returned and @data_line is filled with zeros.
+ *
+ * Since: 2.45
+ **/
+gboolean
+gwy_data_line_correct_laplace(GwyDataLine *data_line,
+                              GwyDataLine *mask_line)
+{
+    gint start = -1, i, res;
+    const gdouble *m;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), FALSE);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(mask_line), FALSE);
+    g_return_val_if_fail(data_line->res == mask_line->res, FALSE);
+
+    res = data_line->res;
+    m = mask_line->data;
+    for (i = 0; i < res; i++) {
+        if (start == -1) {
+            if (m[i] > 0.0)
+                start = i;
+        }
+        else {
+            if (!(m[i] > 0.0)) {
+                interpolate_segment(data_line, start, i-1);
+                start = -1;
+            }
+        }
+    }
+
+    if (start == 0) {
+        gwy_data_line_clear(data_line);
+        return FALSE;
+    }
+
+    if (start != -1)
+        interpolate_segment(data_line, start, res-1);
+
+    return TRUE;
+}
+
+static void
+interpolate_segment(GwyDataLine *data_line, gint from, gint to)
+{
+    gint i, res = data_line->res;
+    gdouble *d = data_line->data;
+    gdouble zl, zr;
+
+    g_assert(to < res-1 || from > 0);
+
+    if (from == 0) {
+        zr = d[to+1];
+        for (i = from; i <= to; i++)
+            d[i] = zr;
+    }
+    else if (to == res-1) {
+        zl = d[from-1];
+        for (i = from; i <= to; i++)
+            d[i] = zl;
+    }
+    else {
+        zl = d[from-1]/(to - from + 2);
+        zr = d[to+1]/(to - from + 2);
+        for (i = from; i <= to; i++)
+            d[i] = zr*(i+1) + zl*(to+1 - from - i);
+    }
 }
 
 /************************** Documentation ****************************/
