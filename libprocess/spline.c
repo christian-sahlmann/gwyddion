@@ -71,7 +71,7 @@ struct _GwySpline {
     /* Cached data.  These change whenever anything above changes.  */
     gboolean natural_sampling_valid;
     GArray *control_points;
-    GArray *natural_points;
+    GArray *tl_points;
     GArray *tangents;
 
     gboolean drawing_sampling_valid;
@@ -84,7 +84,6 @@ struct _GwySpline {
     guint nfixed;
     GArray *fixed_samples;
     GArray *fixed_tangents;
-    GArray *fixed_auxpts;
 };
 
 static void gwy_spline_invalidate   (GwySpline *spline);
@@ -142,16 +141,14 @@ void
 gwy_spline_free(GwySpline *spline)
 {
     g_return_if_fail(spline);
-    if (spline->fixed_auxpts)
-        g_array_free(spline->fixed_auxpts, TRUE);
     if (spline->fixed_tangents)
         g_array_free(spline->fixed_tangents, TRUE);
     if (spline->fixed_samples)
         g_array_free(spline->fixed_samples, TRUE);
     if (spline->drawing_points)
         g_array_free(spline->drawing_points, TRUE);
-    if (spline->natural_points)
-        g_array_free(spline->natural_points, TRUE);
+    if (spline->tl_points)
+        g_array_free(spline->tl_points, TRUE);
     if (spline->tangents)
         g_array_free(spline->tangents, TRUE);
     if (spline->control_points)
@@ -395,25 +392,28 @@ gwy_spline_set_closed(GwySpline *spline,
 gdouble
 gwy_spline_length(GwySpline *spline)
 {
-    GArray *natural_points = spline->natural_points;
+    GArray *tl_points = spline->tl_points;
 
-    if (G_UNLIKELY(!natural_points)) {
-        spline->natural_points = g_array_sized_new(FALSE, FALSE,
-                                                   sizeof(PointXY),
-                                                   2*(spline->points->len + 1));
-        natural_points = spline->natural_points;
+    if (G_UNLIKELY(!tl_points)) {
+        spline->tl_points = g_array_sized_new(FALSE, FALSE, sizeof(PointXY),
+                                              2*(spline->points->len + 1));
+        tl_points = spline->tl_points;
     }
 
     if (!spline->natural_sampling_valid) {
-        sample_curve_naturally(spline, natural_points,
-                               G_MAXDOUBLE, 0.005, CURVE_RECURSE_OUTPUT_X_Y);
+        guint i;
+        sample_curve_naturally(spline, tl_points,
+                               G_MAXDOUBLE, 0.005, CURVE_RECURSE_OUTPUT_T_L);
+        for (i = 0; i < tl_points->len; i++) {
+            g_printerr("[%u] %g %g\n", i, point_index(tl_points, i).x, point_index(tl_points, i).y);
+        }
         spline->natural_sampling_valid = TRUE;
     }
 
-    if (!natural_points->len)
+    if (!tl_points->len)
         return 0.0;
 
-    return point_index(natural_points, natural_points->len-1).y;
+    return point_index(tl_points, tl_points->len-1).y;
 }
 
 /**
@@ -873,9 +873,8 @@ sample_segment_naturally(const PointXY *pt, const PointXY *ptm,
                          GwySplineSampleParams *cparam,
                          guint i)
 {
-    guint start = natural_points->len;
+    guint j, start = natural_points->len;
     GwySplineSampleItem c0, c1;
-    guint j;
 
     c0.t = 0.0;
     c0.z = *ptm;
@@ -949,7 +948,7 @@ sample_curve_uniformly(GwySpline *spline,
                        PointXY *coords,
                        PointXY *velocities)
 {
-    GArray *auxpts = spline->fixed_auxpts;
+    GArray *tl_points = spline->tl_points;
     GArray *control_points = spline->control_points;
     GArray *points = spline->points;
     guint i, j, k, npts;
@@ -978,14 +977,7 @@ sample_curve_uniformly(GwySpline *spline,
         return;
     }
 
-    if (G_UNLIKELY(!auxpts)) {
-        spline->fixed_auxpts = g_array_new(FALSE, FALSE, sizeof(PointXY));
-        auxpts = spline->fixed_auxpts;
-    }
-
-    sample_curve_naturally(spline, auxpts, G_MAXDOUBLE, 0.005,
-                           CURVE_RECURSE_OUTPUT_T_L);
-    length = point_index(auxpts, auxpts->len-1).y;
+    length = point_index(tl_points, tl_points->len-1).y;
     j = 1;
     for (i = 0; i < nsamples; i++) {
         if (spline->closed)
@@ -995,19 +987,19 @@ sample_curve_uniformly(GwySpline *spline,
         else
             pos = 0.5*length;
 
-        while (point_index(auxpts, j).y < pos)
+        while (point_index(tl_points, j).y < pos)
             j++;
 
-        g_assert(j < auxpts->len);
+        g_assert(j < tl_points->len);
 
-        k = (guint)floor(point_index(auxpts, j).x);
+        k = (guint)floor(point_index(tl_points, j).x);
         if (k == npts)
             k--;
 
-        t0 = point_index(auxpts, j-1).x;
-        l0 = point_index(auxpts, j-1).y;
-        t1 = point_index(auxpts, j).x;
-        l1 = point_index(auxpts, j).y;
+        t0 = point_index(tl_points, j-1).x;
+        l0 = point_index(tl_points, j-1).y;
+        t1 = point_index(tl_points, j).x;
+        l1 = point_index(tl_points, j).y;
 
         pt0 = &point_index(points, k);
         pt1 = &point_index(points, (k+1) % npts);
