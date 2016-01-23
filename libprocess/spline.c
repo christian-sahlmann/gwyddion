@@ -948,7 +948,7 @@ sample_curve_uniformly(GwySpline *spline,
     GArray *tl_points = spline->tl_points;
     GArray *control_points = spline->control_points;
     GArray *points = spline->points;
-    guint i, j, k, npts;
+    guint i, j, k, kmax, npts;
     gdouble pos, t, q, v0l, v1l, t0, t1, l0, l1, length;
     const PointXY *pt0, *pt1;
     ControlPoint *uv;
@@ -975,6 +975,7 @@ sample_curve_uniformly(GwySpline *spline,
     }
 
     length = point_index(tl_points, tl_points->len-1).y;
+    kmax = (spline->closed ? npts : npts-1);
     j = 1;
     for (i = 0; i < nsamples; i++) {
         if (spline->closed)
@@ -984,14 +985,14 @@ sample_curve_uniformly(GwySpline *spline,
         else
             pos = 0.5*length;
 
-        while (point_index(tl_points, j).y < pos)
+        while (j < tl_points->len && point_index(tl_points, j).y < pos)
             j++;
 
         g_assert(j < tl_points->len);
 
         k = (guint)floor(point_index(tl_points, j).x);
-        if (k == npts)
-            k--;
+        if (k >= kmax)
+            k = kmax-1;
 
         t0 = point_index(tl_points, j-1).x;
         l0 = point_index(tl_points, j-1).y;
@@ -999,6 +1000,8 @@ sample_curve_uniformly(GwySpline *spline,
         l1 = point_index(tl_points, j).y;
 
         pt0 = &point_index(points, k);
+        /* We always use the next-to-last point for non-closed curves so this
+         * works for both. */
         pt1 = &point_index(points, (k+1) % npts);
         uv = &cpoint_index(control_points, k);
         interpolate_v(pt0, pt1, uv, t0, &v0);
@@ -1012,8 +1015,8 @@ sample_curve_uniformly(GwySpline *spline,
 
         if ((guint)floor(t) != k) {
             k = (guint)floor(t);
-            if (k == npts)
-                k--;
+            if (k >= kmax)
+                k = kmax-1;
 
             pt0 = &point_index(points, k);
             pt1 = &point_index(points, (k+1) % npts);
