@@ -111,7 +111,7 @@ static void calculate_point_tangents(GwySpline *spline);
  * Creates a new empty spline curve.
  *
  * You need to set the curve points using gwy_spline_set_points() before any
- * sampling along the curve.  Alternatively, use gwy_spline_from_points()
+ * sampling along the curve.  Alternatively, use gwy_spline_new_from_points()
  * to construct the spline already with some points.
  *
  * Returns: A newly created spline curve.
@@ -158,7 +158,7 @@ gwy_spline_free(GwySpline *spline)
 }
 
 /**
- * gwy_spline_from_points:
+ * gwy_spline_new_from_points:
  * @xy: Array of points in plane the curve will pass through.
  * @n: Number of points in @xy.
  *
@@ -171,8 +171,8 @@ gwy_spline_free(GwySpline *spline)
  * Since: 2.45
  **/
 GwySpline*
-gwy_spline_from_points(const PointXY *xy,
-                       guint n)
+gwy_spline_new_from_points(const PointXY *xy,
+                           guint n)
 {
     GwySpline *spline = gwy_spline_new();
     gwy_spline_set_points(spline, xy, n);

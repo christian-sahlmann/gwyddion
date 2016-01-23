@@ -31,7 +31,7 @@ typedef struct _GwySpline GwySpline;
 
 GwySpline*                     gwy_spline_new             (void);
 void                           gwy_spline_free            (GwySpline *spline);
-GwySpline*                     gwy_spline_from_points     (const GwyTriangulationPointXY *xy,
+GwySpline*                     gwy_spline_new_from_points (const GwyTriangulationPointXY *xy,
                                                            guint n);
 guint                          gwy_spline_get_npoints     (GwySpline *spline);
 const GwyTriangulationPointXY* gwy_spline_get_points      (GwySpline *spline);
