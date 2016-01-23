@@ -232,7 +232,7 @@ straighten_dialogue(StraightenArgs *args,
                              G_CALLBACK(thickness_changed), &controls);
     row++;
 
-    controls.slackness = gtk_adjustment_new(args->slackness, 0.0, 1.0,
+    controls.slackness = gtk_adjustment_new(args->slackness, 0.0, G_SQRT2,
                                             0.001, 0.1, 0.0);
     gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Slackness:"), NULL,
                             controls.slackness, GWY_HSCALE_DEFAULT);
@@ -476,7 +476,7 @@ straighten_sanitize_args(StraightenArgs *args)
 {
     /* Upper limit is set based on image dimensions. */
     args->thickness = MAX(args->thickness, 3);
-    args->slackness = CLAMP(args->slackness, 0.0, 1.0);
+    args->slackness = CLAMP(args->slackness, 0.0, G_SQRT2);
     args->closed = !!args->closed;
 }
 

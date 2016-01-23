@@ -314,7 +314,7 @@ gwy_spline_set_points(GwySpline *spline,
 /**
  * gwy_spline_set_slackness:
  * @spline: A spline curve.
- * @slackness: New slackness parameter value from the range [0, 1].
+ * @slackness: New slackness parameter value from the range [0, %G_SQRT2].
  *
  * Sets the slackness parameter of a spline curve.
  *
@@ -323,8 +323,9 @@ gwy_spline_set_points(GwySpline *spline,
  * The curve always passes through the given XY points.  For zero slackness
  * the curve is maximally taut, i.e. the shortest possible passing
  * through the points.  Such curve is formed by straight segments.  For
- * slackness of 1 the curve is a ‘free’ spline.  The default value is
- * 1/sqrt(2).
+ * slackness of 1 the curve is a ‘free’ spline.  Values smaller than 1 mean
+ * tensile stress while values larger than 1 compressive stres.  The default
+ * value is 1/sqrt(2).
  *
  * Since: 2.45
  **/
@@ -337,7 +338,7 @@ gwy_spline_set_slackness(GwySpline *spline,
 
     /* XXX: We may permit slackness > 1 for some interesting and possibly still
      * useful curves.  Up to approximately sqrt(2) seems reasonable. */
-    if (!(slackness >= 0.0 && slackness <= 1.0)) {
+    if (!(slackness >= 0.0 && slackness <= G_SQRT2)) {
         g_warning("Slackness parameter %g is out of bounds.", slackness);
         return;
     }
@@ -681,7 +682,7 @@ calculate_control_points(gint n,
 
     g_return_if_fail(n >= 1);
     g_return_if_fail(xy);
-    g_return_if_fail(slackness >= 0.0 && slackness <= 1.0);
+    g_return_if_fail(slackness >= 0.0 && slackness <= G_SQRT2);
     if (!uv)
         return;
 

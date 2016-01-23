@@ -204,7 +204,7 @@ gwy_selection_path_class_init(GwySelectionPathClass *klass)
          g_param_spec_double("slackness",
                              "Slackness",
                              "Slackness parameter of the spline curve",
-                             0.0, 1.0, 1.0/G_SQRT2,
+                             0.0, G_SQRT2, 1.0/G_SQRT2,
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 
     g_object_class_install_property
@@ -461,7 +461,7 @@ static void
 gwy_selection_path_set_slackness(GwySelectionPath *selection,
                                  gdouble slackness)
 {
-    g_return_if_fail(slackness >= 0.0 && slackness <= 1.0);
+    g_return_if_fail(slackness >= 0.0 && slackness <= G_SQRT2);
     if (slackness == selection->slackness)
         return;
 
