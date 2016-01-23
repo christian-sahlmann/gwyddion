@@ -26,7 +26,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
-#include <libprocess/stats.h>
+#include <libprocess/correct.h>
 #include <libprocess/spline.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
@@ -37,12 +37,15 @@
 
 #define STRAIGHTEN_RUN_MODES (GWY_RUN_INTERACTIVE)
 
+#define PointXY GwyTriangulationPointXY
+
 enum {
     RESPONSE_RESET = 1,
 };
 
 typedef struct {
     gint thickness;
+    GwyInterpolationType interp;
     gdouble slackness;
     gboolean closed;
 } StraightenArgs;
@@ -60,31 +63,37 @@ typedef struct {
     gdouble zoom;
 } StraightenControls;
 
-static gboolean module_register         (void);
-static void     straighten_path         (GwyContainer *data,
-                                         GwyRunType run);
-static gint     straighten_dialogue     (StraightenArgs *args,
-                                         GwyContainer *data,
-                                         GwyDataField *dfield,
-                                         gint id);
-static void     init_selection          (GwySelection *selection,
-                                         GwyDataField *dfield,
-                                         const StraightenArgs *args);
-static void     path_selection_changed  (StraightenControls *controls);
-static void     thickness_changed       (StraightenControls *controls,
-                                         GtkAdjustment *adj);
-static void     slackness_changed       (StraightenControls *controls,
-                                         GtkAdjustment *adj);
-static void     closed_changed          (StraightenControls *controls,
-                                         GtkToggleButton *toggle);
-static void     straighten_load_args    (GwyContainer *container,
-                                         StraightenArgs *args);
-static void     straighten_save_args    (GwyContainer *container,
-                                         StraightenArgs *args);
-static void     straighten_sanitize_args(StraightenArgs *args);
+static gboolean      module_register         (void);
+static void          straighten_path         (GwyContainer *data,
+                                              GwyRunType run);
+static gint          straighten_dialogue     (StraightenArgs *args,
+                                              GwyContainer *data,
+                                              GwyDataField *dfield,
+                                              gint id,
+                                              gint maxthickness);
+static void          init_selection          (GwySelection *selection,
+                                              GwyDataField *dfield,
+                                              const StraightenArgs *args);
+static void          path_selection_changed  (StraightenControls *controls);
+static void          thickness_changed       (StraightenControls *controls,
+                                              GtkAdjustment *adj);
+static void          slackness_changed       (StraightenControls *controls,
+                                              GtkAdjustment *adj);
+static void          closed_changed          (StraightenControls *controls,
+                                              GtkToggleButton *toggle);
+static GwyDataField* straighten_do           (GwyDataField *dfield,
+                                              GwyDataField *result,
+                                              GwySelection *selection,
+                                              const StraightenArgs *args,
+                                              gboolean realsquare);
+static void          straighten_load_args    (GwyContainer *container,
+                                              StraightenArgs *args);
+static void          straighten_save_args    (GwyContainer *container,
+                                              StraightenArgs *args);
+static void          straighten_sanitize_args(StraightenArgs *args);
 
 static const StraightenArgs straighten_defaults = {
-    1,
+    1, GWY_INTERPOLATION_LINEAR,
     1.0/G_SQRT2, FALSE,
 };
 
@@ -119,7 +128,7 @@ straighten_path(GwyContainer *data, GwyRunType run)
 {
     StraightenArgs args;
     GwyDataField *dfield;
-    gint id, newid;
+    gint id, newid, maxthickness;
 
     g_return_if_fail(run & STRAIGHTEN_RUN_MODES);
     g_return_if_fail(g_type_from_name("GwyLayerPath"));
@@ -129,7 +138,11 @@ straighten_path(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    newid = straighten_dialogue(&args, data, dfield, id);
+    maxthickness = MAX(gwy_data_field_get_xres(dfield),
+                       gwy_data_field_get_yres(dfield))/2;
+    maxthickness = MAX(maxthickness, 3);
+
+    newid = straighten_dialogue(&args, data, dfield, id, maxthickness);
     straighten_save_args(gwy_app_settings_get(), &args);
     if (newid != -1)
         gwy_app_channel_log_add_proc(data, id, newid);
@@ -139,12 +152,14 @@ static gint
 straighten_dialogue(StraightenArgs *args,
                     GwyContainer *data,
                     GwyDataField *dfield,
-                    gint id)
+                    gint id,
+                    gint maxthickness)
 {
     GtkWidget *hbox, *alignment;
     GtkDialog *dialogue;
     GtkTable *table;
     StraightenControls controls;
+    GwyDataField *result, *mask;
     gint response, row, newid = -1;
     GObject *selection;
     gchar selkey[40];
@@ -190,7 +205,7 @@ straighten_dialogue(StraightenArgs *args,
 
     g_snprintf(selkey, sizeof(selkey), "/%d/select/path", id);
     if (gwy_container_gis_object_by_name(data, selkey, &selection)
-        && gwy_selection_get_data(GWY_SELECTION(selection), NULL) == 1) {
+        && gwy_selection_get_data(GWY_SELECTION(selection), NULL) > 1) {
         gwy_serializable_clone(selection, G_OBJECT(controls.selection));
         g_object_get(selection,
                      "slackness", &args->slackness,
@@ -209,7 +224,7 @@ straighten_dialogue(StraightenArgs *args,
     gtk_box_pack_end(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
-    controls.thickness = gtk_adjustment_new(args->thickness, 1.0, 128.0,
+    controls.thickness = gtk_adjustment_new(args->thickness, 3.0, maxthickness,
                                             1.0, 10.0, 0.0);
     gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), "px",
                             controls.thickness, GWY_HSCALE_SQRT);
@@ -264,19 +279,22 @@ straighten_dialogue(StraightenArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    /*
-    if (!controls.calculated)
-        do_correction(&controls);
+    result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+    mask = straighten_do(dfield, result, controls.selection, args, FALSE);
 
-    corrected = gwy_container_get_object_by_name(controls.mydata, "/2/data");
-    newid = gwy_app_data_browser_add_data_field(corrected, data, TRUE);
-    gwy_app_set_data_field_title(data, newid, "Corrected");
+    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+    gwy_app_set_data_field_title(data, newid, _("Straightened"));
     gwy_app_sync_data_items(data, data, id, newid, FALSE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
                             0);
-                            */
+    if (mask) {
+        gwy_container_set_object(data,
+                                 gwy_app_get_mask_key_for_id(newid), mask);
+        g_object_unref(mask);
+    }
 
     gtk_widget_destroy(controls.dialogue);
 
@@ -356,6 +374,99 @@ closed_changed(StraightenControls *controls, GtkToggleButton *toggle)
         g_object_set(controls->selection, "closed", args->closed, NULL);
 }
 
+static GwyDataField*
+straighten_do(GwyDataField *dfield, GwyDataField *result,
+              GwySelection *selection,
+              const StraightenArgs *args, gboolean realsquare)
+{
+    GwyDataField *mask;
+    GwySpline *spline;
+    PointXY *points, *tangents;
+    GwyInterpolationType interp;
+    gdouble dx, dy, h, length;
+    guint n, i, j, thickness;
+    gboolean have_exterior = FALSE;
+    gint xres, yres;
+    gdouble *d, *m;
+
+    n = gwy_selection_get_data(selection, NULL);
+    if (n < 2)
+        return NULL;
+
+    /* TODO: Actually support realsquare. */
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    h = MIN(dx, dy);
+
+    points = g_new(PointXY, n);
+    for (i = 0; i < n; i++) {
+        gdouble xy[2];
+
+        gwy_selection_get_object(selection, i, xy);
+        points[i].x = xy[0]/dx;
+        points[i].y = xy[1]/dy;
+    }
+    spline = gwy_spline_new_from_points(points, n);
+    /* Assume args and selection agree on the parameters... */
+    gwy_spline_set_closed(spline, args->closed);
+    gwy_spline_set_slackness(spline, args->slackness);
+    g_free(points);
+
+    length = gwy_spline_length(spline);
+    /* This would give natural sampling for a straight line along some axis. */
+    n = GWY_ROUND(length + 1.0);
+    points = g_new(PointXY, n);
+    tangents = g_new(PointXY, n);
+
+    thickness = args->thickness;
+    interp = args->interp; // TODO: Fix non-interpolating bases.
+    gwy_data_field_resample(result, thickness, n, GWY_INTERPOLATION_NONE);
+    gwy_data_field_set_xreal(result, h*thickness);
+    gwy_data_field_set_yreal(result, h*n);
+    gwy_data_field_set_xoffset(result, 0.0);
+    gwy_data_field_set_yoffset(result, 0.0);
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(result)));
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(dfield)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(result)));
+    d = gwy_data_field_get_data(result);
+
+    mask = gwy_data_field_new_alike(result, TRUE);
+    m = gwy_data_field_get_data(mask);
+
+    gwy_spline_sample_uniformly(spline, points, tangents, n);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    for (i = 0; i < n; i++) {
+        gdouble xc = points[i].x, yc = points[i].y;
+        gdouble vx = tangents[i].y, vy = -tangents[i].x;
+        /* TODO: Handle zero (undefined) tangents. */
+
+        for (j = 0; j < thickness; j++) {
+            gdouble x = xc + (j + 0.5 - 0.5*thickness)*vx;
+            gdouble y = yc + (j + 0.5 - 0.5*thickness)*vy;
+
+            if (x >= 0.0 && x <= xres && y >= 0.0 && y <= yres) {
+                d[i*thickness + j] = gwy_data_field_get_dval(dfield, x, y,
+                                                             interp);
+            }
+            else {
+                m[i*thickness + j] = 1.0;
+                have_exterior = TRUE;
+            }
+        }
+    }
+    g_free(points);
+    g_free(tangents);
+
+    if (have_exterior)
+        gwy_data_field_correct_average_unmasked(result, mask);
+    else
+        gwy_object_unref(mask);
+
+    return mask;
+}
+
 static const gchar closed_key[]    = "/module/straighten_path/closed";
 static const gchar slackness_key[] = "/module/straighten_path/slackness";
 static const gchar thickness_key[] = "/module/straighten_path/thickness";
@@ -363,8 +474,8 @@ static const gchar thickness_key[] = "/module/straighten_path/thickness";
 static void
 straighten_sanitize_args(StraightenArgs *args)
 {
-    /* Set upper limit based on image dimensions. */
-    args->thickness = MAX(args->thickness, 1);
+    /* Upper limit is set based on image dimensions. */
+    args->thickness = MAX(args->thickness, 3);
     args->slackness = CLAMP(args->slackness, 0.0, 1.0);
     args->closed = !!args->closed;
 }
