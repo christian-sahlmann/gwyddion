@@ -559,7 +559,7 @@ affcor_dialog(AffcorArgs *args,
 
     corrected = gwy_container_get_object_by_name(controls.mydata, "/2/data");
     newid = gwy_app_data_browser_add_data_field(corrected, data, TRUE);
-    gwy_app_set_data_field_title(data, newid, "Corrected");
+    gwy_app_set_data_field_title(data, newid, _("Corrected"));
     gwy_app_sync_data_items(data, data, id, newid, FALSE,
                             GWY_DATA_ITEM_RANGE_TYPE,
                             GWY_DATA_ITEM_RANGE,
