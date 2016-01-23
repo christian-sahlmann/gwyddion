@@ -128,15 +128,28 @@ create_preview(GwyContainer *data,
 
 G_GNUC_UNUSED
 static void
-load_mask_color(GtkWidget *color_button,
-                GwyContainer *data)
+ensure_mask_color(GwyContainer *data, gint id)
 {
+    const gchar *key = g_quark_to_string(gwy_app_get_mask_key_for_id(id));
     GwyRGBA rgba;
 
-    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+    if (!gwy_rgba_get_from_container(&rgba, data, key)) {
         gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+        gwy_rgba_store_to_container(&rgba, data, key);
     }
+}
+
+G_GNUC_UNUSED
+static void
+load_mask_color_to_button(GtkWidget *color_button,
+                          GwyContainer *data,
+                          gint id)
+{
+    const gchar *key = g_quark_to_string(gwy_app_get_mask_key_for_id(id));
+    GwyRGBA rgba;
+
+    ensure_mask_color(data, id);
+    gwy_rgba_get_from_container(&rgba, data, key);
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
@@ -157,7 +170,7 @@ mask_color_changed(GtkWidget *color_button)
     gwy_mask_color_selector_run(NULL, dialog,
                                 GWY_COLOR_BUTTON(color_button), data,
                                 g_quark_to_string(quark));
-    load_mask_color(color_button, data);
+    load_mask_color_to_button(color_button, data, id);
 }
 
 G_GNUC_UNUSED
@@ -174,7 +187,7 @@ create_mask_color_button(GwyContainer *data, GtkWidget *dialog, gint id)
     g_object_set_data(object, "id", GINT_TO_POINTER(id));
 
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(color_button), TRUE);
-    load_mask_color(color_button, data);
+    load_mask_color_to_button(color_button, data, id);
     g_signal_connect(color_button, "clicked",
                      G_CALLBACK(mask_color_changed), NULL);
 

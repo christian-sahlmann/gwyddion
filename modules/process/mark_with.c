@@ -109,8 +109,6 @@ static void          update_changed             (GtkToggleButton *button,
                                                  MarkControls *controls);
 static void          perform_operation          (MarkControls *controls);
 static void          setup_source_view_data     (MarkControls *controls);
-static void          ensure_mask_color          (GwyContainer *container,
-                                                 const gchar *prefix);
 static void          update_source_mask         (MarkControls *controls);
 static void          gwy_data_field_threshold_to(GwyDataField *source,
                                                  GwyDataField *dest,
@@ -369,7 +367,7 @@ mark_dialog(MarkArgs *args,
         dfield = create_mask_field(dfield);
     gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
     g_object_unref(dfield);
-    ensure_mask_color(controls.mydata, "/1/mask");
+    ensure_mask_color(controls.mydata, 1);
 
     /* Source mask preview, must be done when we have some data field in the
      * container.*/
@@ -613,19 +611,7 @@ setup_source_view_data(MarkControls *controls)
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
-    ensure_mask_color(controls->mydata, "/0/mask");
-}
-
-static void
-ensure_mask_color(GwyContainer *container,
-                  const gchar *prefix)
-{
-    GwyRGBA rgba;
-
-    if (!gwy_rgba_get_from_container(&rgba, container, prefix)) {
-        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, container, prefix);
-    }
+    ensure_mask_color(controls->mydata, 0);
 }
 
 static void
