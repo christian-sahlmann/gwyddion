@@ -121,7 +121,7 @@ module_register(void)
 
 static gint
 gxyzf_detect(const GwyFileDetectInfo *fileinfo,
-              gboolean only_name)
+             gboolean only_name)
 {
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
@@ -135,8 +135,8 @@ gxyzf_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 gxyzf_load(const gchar *filename,
-         G_GNUC_UNUSED GwyRunType mode,
-         GError **error)
+           G_GNUC_UNUSED GwyRunType mode,
+           GError **error)
 {
     GwyContainer *container = NULL;
     GwyTextHeaderParser parser;
