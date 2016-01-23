@@ -401,12 +401,8 @@ gwy_spline_length(GwySpline *spline)
     }
 
     if (!spline->natural_sampling_valid) {
-        guint i;
         sample_curve_naturally(spline, tl_points,
                                G_MAXDOUBLE, 0.005, CURVE_RECURSE_OUTPUT_T_L);
-        for (i = 0; i < tl_points->len; i++) {
-            g_printerr("[%u] %g %g\n", i, point_index(tl_points, i).x, point_index(tl_points, i).y);
-        }
         spline->natural_sampling_valid = TRUE;
     }
 
