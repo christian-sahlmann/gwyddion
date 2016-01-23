@@ -500,16 +500,18 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     plain_tool = GWY_PLAIN_TOOL(tool);
     gwy_selection_get_object(plain_tool->selection, idx, line);
 
-
     switch (id) {
         case COLUMN_DX:
         vf = plain_tool->coord_format;
         val = line[2] - line[0];
         if (tool->has_calibration) {
-            unc = gwy_data_field_get_dval_real(tool->xunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+            unc = gwy_data_field_get_dval_real(tool->xunc, line[0], line[1],
+                                               GWY_INTERPOLATION_BILINEAR);
             unc *= unc;
-            unc += gwy_data_field_get_dval_real(tool->xunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
-                *gwy_data_field_get_dval_real(tool->xunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+            unc += (gwy_data_field_get_dval_real(tool->xunc, line[2], line[3],
+                                                 GWY_INTERPOLATION_BILINEAR)
+                    * gwy_data_field_get_dval_real(tool->xunc, line[2], line[3],
+                                                   GWY_INTERPOLATION_BILINEAR));
             unc = sqrt(unc);
         }
         break;
@@ -518,18 +520,21 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
         vf = plain_tool->coord_format;
         val = line[3] - line[1];
         if (tool->has_calibration) {
-            unc = gwy_data_field_get_dval_real(tool->yunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+            unc = gwy_data_field_get_dval_real(tool->yunc, line[0], line[1],
+                                               GWY_INTERPOLATION_BILINEAR);
             unc *= unc;
-            unc += gwy_data_field_get_dval_real(tool->yunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
-                *gwy_data_field_get_dval_real(tool->yunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+            unc += (gwy_data_field_get_dval_real(tool->yunc, line[2], line[3],
+                                                 GWY_INTERPOLATION_BILINEAR)
+                    * gwy_data_field_get_dval_real(tool->yunc, line[2], line[3],
+                                                  GWY_INTERPOLATION_BILINEAR));
             unc = sqrt(unc);
         }
-         break;
+        break;
 
         case COLUMN_R:
         vf = plain_tool->coord_format;
         val = hypot(line[2] - line[0], line[3] - line[1]);
-         break;
+        break;
 
         case COLUMN_PHI:
         vf = tool->angle_format;
@@ -546,10 +551,15 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
             val -= gwy_data_field_get_val(plain_tool->data_field, x, y);
             vf = plain_tool->value_format;
             if (tool->has_calibration) {
-                unc = gwy_data_field_get_dval_real(tool->zunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+                unc = gwy_data_field_get_dval_real(tool->zunc, line[0], line[1],
+                                                   GWY_INTERPOLATION_BILINEAR);
                 unc *= unc;
-                unc += gwy_data_field_get_dval_real(tool->zunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
-                    *gwy_data_field_get_dval_real(tool->zunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+                unc += (gwy_data_field_get_dval_real(tool->zunc,
+                                                     line[2], line[3],
+                                                     GWY_INTERPOLATION_BILINEAR)
+                        * gwy_data_field_get_dval_real(tool->zunc,
+                                                       line[2], line[3],
+                                                       GWY_INTERPOLATION_BILINEAR));
                 unc = sqrt(unc);
             }
         }
@@ -560,15 +570,19 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
         break;
     }
 
-    if (tool->has_calibration)
-    {
+    if (tool->has_calibration) {
         if (vf)
-            g_snprintf(buf, sizeof(buf), "%.*f±%.*f", vf->precision, val/vf->magnitude, vf->precision, unc/vf->magnitude);
+            g_snprintf(buf, sizeof(buf), "%.*f±%.*f",
+                       vf->precision, val/vf->magnitude,
+                       vf->precision, unc/vf->magnitude);
         else
             g_snprintf(buf, sizeof(buf), "%.3g±%.3g", val, unc);
-    } else {
-        if (vf)
-            g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
+    }
+    else {
+        if (vf) {
+            g_snprintf(buf, sizeof(buf), "%.*f",
+                       vf->precision, val/vf->magnitude);
+        }
         else
             g_snprintf(buf, sizeof(buf), "%.3g", val);
 
