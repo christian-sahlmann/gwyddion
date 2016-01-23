@@ -354,6 +354,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_CONVOLUTION:
+ *
+ * The "Convolution" stock icon.
+ * <inlinegraphic fileref="gwy_convolution-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
  * GWY_STOCK_CORRECT_AFFINE:
  *
  * The "Correct-Affine" stock icon.
@@ -393,6 +402,24 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_DISTRIBUTION_ANGLE:
+ *
+ * The "Distribution-Angle" stock icon.
+ * <inlinegraphic fileref="gwy_distribution_angle-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_DISTRIBUTION_SLOPE:
+ *
+ * The "Distribution-Slope" stock icon.
+ * <inlinegraphic fileref="gwy_distribution_slope-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
  * GWY_STOCK_DRIFT:
  *
  * The "Drift" stock icon.
@@ -413,6 +440,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Edge" stock icon.
  * <inlinegraphic fileref="gwy_edge-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_ENTROPY:
+ *
+ * The "Entropy" stock icon.
+ * <inlinegraphic fileref="gwy_entropy-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -443,6 +479,13 @@ file_to_icon_source(const gchar *path,
  *
  * The "FFT" stock icon.
  * <inlinegraphic fileref="gwy_fft-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_FFT_FILTER_2D:
+ *
+ * The "FFT-Filter-2D" stock icon.
+ * <inlinegraphic fileref="gwy_fft_filter_2d-24.png" format="PNG"/>
  **/
 
 /**
@@ -511,6 +554,13 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_GRAINS_EDGE:
+ *
+ * The "Grains-Edge" stock icon.
+ * <inlinegraphic fileref="gwy_grains_edge-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_GRAINS_GRAPH:
  *
  * The "Grains-Graph" stock icon.
@@ -541,10 +591,73 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_GRAIN_CORRELATION:
+ *
+ * The "Grain-Correlation" stock icon.
+ * <inlinegraphic fileref="gwy_grain_correlation-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAIN_EXSCRIBED_CIRCLE:
+ *
+ * The "Grain-Exscribed-Circle" stock icon.
+ * <inlinegraphic fileref="gwy_grain_exscribed_circle-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAIN_INSCRIBED_CIRCLE:
+ *
+ * The "Grain-Inscribed-Circle" stock icon.
+ * <inlinegraphic fileref="gwy_grain_inscribed_circle-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_GRAPH:
  *
  * The "Graph" stock icon.
  * <inlinegraphic fileref="gwy_graph-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_ALIGN:
+ *
+ * The "Graph-Align" stock icon.
+ * <inlinegraphic fileref="gwy_graph_align-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_CUT:
+ *
+ * The "Graph-Cut" stock icon.
+ * <inlinegraphic fileref="gwy_graph_cut-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_EXPORT_ASCII:
+ *
+ * The "Graph-Export-Ascii" stock icon.
+ * <inlinegraphic fileref="gwy_graph_export_ascii-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_EXPORT_BITMAP:
+ *
+ * The "Graph-Export-Bitmap" stock icon.
+ * <inlinegraphic fileref="gwy_graph_export_bitmap-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_EXPORT_VECTOR:
+ *
+ * The "Graph-Export-Vector" stock icon.
+ * <inlinegraphic fileref="gwy_graph_export_vector-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_FILTER:
+ *
+ * The "Graph-Filter" stock icon.
+ * <inlinegraphic fileref="gwy_graph_filter-24.png" format="PNG"/>
  **/
 
 /**
@@ -559,6 +672,13 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Halfgauss" stock icon.
  * <inlinegraphic fileref="gwy_graph_halfgauss-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_LEVEL:
+ *
+ * The "Graph-Level" stock icon.
+ * <inlinegraphic fileref="gwy_graph_level-24.png" format="PNG"/>
  **/
 
 /**
@@ -625,6 +745,13 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_HOUGH:
+ *
+ * The "Hough" stock icon.
+ * <inlinegraphic fileref="gwy_hough-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_IMMERSE:
  *
  * The "Immerse" stock icon.
@@ -664,6 +791,20 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_LEVEL_FLATTEN_BASE:
+ *
+ * The "Level-Flatten-Base" stock icon.
+ * <inlinegraphic fileref="gwy_level_flatten_base-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LEVEL_MEDIAN:
+ *
+ * The "Level-Median" stock icon.
+ * <inlinegraphic fileref="gwy_level_median-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_LEVEL_TRIANGLE:
  *
  * The "Level-Triangle" stock icon.
@@ -682,6 +823,34 @@ file_to_icon_source(const gchar *path,
  *
  * The "Line-Level" stock icon.
  * <inlinegraphic fileref="gwy_line_level-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOAD_DEBUG:
+ *
+ * The "Load-Debug" stock icon.
+ * <inlinegraphic fileref="gwy_load_debug-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOAD_INFO:
+ *
+ * The "Load-Info" stock icon.
+ * <inlinegraphic fileref="gwy_load_info-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOAD_WARNING:
+ *
+ * The "Load-Warning" stock icon.
+ * <inlinegraphic fileref="gwy_load_warning-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_LOCAL_SLOPE:
+ *
+ * The "Local-Slope" stock icon.
+ * <inlinegraphic fileref="gwy_local_slope-24.png" format="PNG"/>
  **/
 
 /**
@@ -743,6 +912,13 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_MASK_DISTRIBUTE:
+ *
+ * The "Mask-Distribute" stock icon.
+ * <inlinegraphic fileref="gwy_mask_distribute-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_MASK_EDITOR:
  *
  * The "Mask-Editor" stock icon.
@@ -761,6 +937,13 @@ file_to_icon_source(const gchar *path,
  *
  * The "Mask-Exclude-Circle" stock icon.
  * <inlinegraphic fileref="gwy_mask_exclude_circle-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MASK_EXTRACT:
+ *
+ * The "Mask-Extract" stock icon.
+ * <inlinegraphic fileref="gwy_mask_extract-24.png" format="PNG"/>
  **/
 
 /**
@@ -809,6 +992,13 @@ file_to_icon_source(const gchar *path,
  * <inlinegraphic fileref="gwy_mask_line-24.png" format="PNG"/>
  *
  * Since: 2.7
+ **/
+
+/**
+ * GWY_STOCK_MASK_MORPH:
+ *
+ * The "Mask-Morph" stock icon.
+ * <inlinegraphic fileref="gwy_mask_morph-24.png" format="PNG"/>
  **/
 
 /**
@@ -865,6 +1055,20 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_MASK_THIN:
+ *
+ * The "Mask-Thin" stock icon.
+ * <inlinegraphic fileref="gwy_mask_thin-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_MEASURE_LATTICE:
+ *
+ * The "Measure-Lattice" stock icon.
+ * <inlinegraphic fileref="gwy_measure_lattice-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_MERGE:
  *
  * The "Merge" stock icon.
@@ -878,6 +1082,20 @@ file_to_icon_source(const gchar *path,
  *
  * The "More" stock icon.
  * <inlinegraphic fileref="gwy_more-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_NEURAL_APPLY:
+ *
+ * The "Neural-Apply" stock icon.
+ * <inlinegraphic fileref="gwy_neural_apply-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_NEURAL_TRAIN:
+ *
+ * The "Neural-Train" stock icon.
+ * <inlinegraphic fileref="gwy_neural_train-24.png" format="PNG"/>
  **/
 
 /**
@@ -917,6 +1135,83 @@ file_to_icon_source(const gchar *path,
  * <inlinegraphic fileref="gwy_polynom_level-24.png" format="PNG"/>
  *
  * Since: 2.29
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_ATTACH:
+ *
+ * The "Presentation-Attach" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_attach-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_INCLINATION:
+ *
+ * The "Presentation-Edge-Inclination" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_inclination-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_LOCAL_NON_LINEARITY:
+ *
+ * The "Presentation-Edge-Local-Non-Linearity" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_local_non_linearity-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_STEP:
+ *
+ * The "Presentation-Edge-Step" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_step-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_ZERO_CROSSING:
+ *
+ * The "Presentation-Edge-Zero-Crossing" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_zero_crossing-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EXTRACT:
+ *
+ * The "Presentation-Extract" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_extract-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_LOCAL_CONTRAST:
+ *
+ * The "Presentation-Local-Contrast" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_local_contrast-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_LOG:
+ *
+ * The "Presentation-Log" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_log-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_RANK:
+ *
+ * The "Presentation-Rank" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_rank-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_REMOVE:
+ *
+ * The "Presentation-Remove" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_remove-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_SHADING:
+ *
+ * The "Presentation-Shading" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_shading-24.png" format="PNG"/>
  **/
 
 /**
@@ -1050,6 +1345,20 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_SYNTHETIC_BALLISTIC_DEPOSITION:
+ *
+ * The "Synthetic-Ballistic-Deposition" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_ballistic_deposition-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_SYNTHETIC_BROWNIAN_MOTION:
+ *
+ * The "Synthetic-Brownian-Motion" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_brownian_motion-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_SYNTHETIC_COLUMNAR:
  *
  * The "Synthetic-Columnar" stock icon.
@@ -1131,12 +1440,61 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_SYNTHETIC_SPECTRAL:
+ *
+ * The "Synthetic-Spectral" stock icon.
+ * <inlinegraphic fileref="gwy_synthetic_spectral-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_SYNTHETIC_WAVES:
  *
  * The "Synthetic-Waves" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_waves-24.png" format="PNG"/>
  *
  * Since: 2.37
+ **/
+
+/**
+ * GWY_STOCK_TILT:
+ *
+ * The "Tilt" stock icon.
+ * <inlinegraphic fileref="gwy_tilt-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_TIP_DILATION:
+ *
+ * The "Tip-Dilation" stock icon.
+ * <inlinegraphic fileref="gwy_tip_dilation-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_TIP_EROSION:
+ *
+ * The "Tip-Erosion" stock icon.
+ * <inlinegraphic fileref="gwy_tip_erosion-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_TIP_ESTIMATION:
+ *
+ * The "Tip-Estimation" stock icon.
+ * <inlinegraphic fileref="gwy_tip_estimation-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_TIP_MAP:
+ *
+ * The "Tip-Map" stock icon.
+ * <inlinegraphic fileref="gwy_tip_map-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_TIP_MODEL:
+ *
+ * The "Tip-Model" stock icon.
+ * <inlinegraphic fileref="gwy_tip_model-24.png" format="PNG"/>
  **/
 
 /**
