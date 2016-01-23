@@ -23,12 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/correct.h>
 #include <libprocess/spline.h>
-#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
@@ -43,6 +44,10 @@ enum {
     RESPONSE_RESET = 1,
 };
 
+enum {
+    COLUMN_I, COLUMN_X, COLUMN_Y, NCOLUMNS
+};
+
 typedef struct {
     gint thickness;
     GwyInterpolationType interp;
@@ -52,11 +57,15 @@ typedef struct {
 
 typedef struct {
     StraightenArgs *args;
+    GwyDataField *dfield;
+    GwyDataField *interpfield;
     GtkWidget *dialogue;
     GtkWidget *view;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyContainer *mydata;
+    GtkWidget *coordlist;
+    GtkWidget *interp;
     GtkObject *thickness;
     GtkObject *slackness;
     GtkWidget *closed;
@@ -74,13 +83,25 @@ static gint          straighten_dialogue     (StraightenArgs *args,
 static void          init_selection          (GwySelection *selection,
                                               GwyDataField *dfield,
                                               const StraightenArgs *args);
-static void          path_selection_changed  (StraightenControls *controls);
+static void          path_selection_changed  (StraightenControls *controls,
+                                              gint hint);
+static void          interpolation_changed   (GtkComboBox *combo,
+                                              StraightenControls *controls);
 static void          thickness_changed       (StraightenControls *controls,
                                               GtkAdjustment *adj);
 static void          slackness_changed       (StraightenControls *controls,
                                               GtkAdjustment *adj);
 static void          closed_changed          (StraightenControls *controls,
                                               GtkToggleButton *toggle);
+static GtkWidget*    create_coord_list       (StraightenControls *controls);
+static void          render_coord_cell       (GtkCellLayout *layout,
+                                              GtkCellRenderer *renderer,
+                                              GtkTreeModel *model,
+                                              GtkTreeIter *iter,
+                                              gpointer user_data);
+static gboolean      delete_selection_object (GtkTreeView *treeview,
+                                              GdkEventKey *event,
+                                              StraightenControls *controls);
 static GwyDataField* straighten_do           (GwyDataField *dfield,
                                               GwyDataField *result,
                                               GwySelection *selection,
@@ -155,7 +176,7 @@ straighten_dialogue(StraightenArgs *args,
                     gint id,
                     gint maxthickness)
 {
-    GtkWidget *hbox, *alignment;
+    GtkWidget *hbox, *alignment, *scwin;
     GtkDialog *dialogue;
     GtkTable *table;
     StraightenControls controls;
@@ -166,6 +187,7 @@ straighten_dialogue(StraightenArgs *args,
 
     gwy_clear(&controls, 1);
     controls.args = args;
+    controls.dfield = dfield;
 
     controls.dialogue = gtk_dialog_new_with_buttons(_("Straighten Path"),
                                                     NULL, 0, NULL);
@@ -200,29 +222,28 @@ straighten_dialogue(StraightenArgs *args,
     g_object_ref(controls.selection);
     gwy_selection_set_max_objects(controls.selection, 1024);
     controls.vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls.view));
-    g_signal_connect_swapped(controls.selection, "changed",
-                             G_CALLBACK(path_selection_changed), &controls);
-
-    g_snprintf(selkey, sizeof(selkey), "/%d/select/path", id);
-    if (gwy_container_gis_object_by_name(data, selkey, &selection)
-        && gwy_selection_get_data(GWY_SELECTION(selection), NULL) > 1) {
-        gwy_serializable_clone(selection, G_OBJECT(controls.selection));
-        g_object_get(selection,
-                     "slackness", &args->slackness,
-                     "closed", &args->closed,
-                     NULL);
-    }
-    else
-        init_selection(controls.selection, dfield, args);
-
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
 
-    table = GTK_TABLE(gtk_table_new(3, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_end(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
+
+    scwin = create_coord_list(&controls);
+    gtk_table_attach(table, scwin, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+    row++;
+
+    controls.interp
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interpolation_changed), &controls,
+                                 args->interp, TRUE);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row,
+                            _("_Interpolation type:"), NULL,
+                            GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
+    row++;
 
     controls.thickness = gtk_adjustment_new(args->thickness, 3.0, maxthickness,
                                             1.0, 10.0, 0.0);
@@ -251,6 +272,21 @@ straighten_dialogue(StraightenArgs *args,
 
     gtk_widget_show_all(controls.dialogue);
 
+    g_signal_connect_swapped(controls.selection, "changed",
+                             G_CALLBACK(path_selection_changed), &controls);
+
+    g_snprintf(selkey, sizeof(selkey), "/%d/select/path", id);
+    if (gwy_container_gis_object_by_name(data, selkey, &selection)
+        && gwy_selection_get_data(GWY_SELECTION(selection), NULL) > 1) {
+        gwy_serializable_clone(selection, G_OBJECT(controls.selection));
+        g_object_get(selection,
+                     "slackness", &args->slackness,
+                     "closed", &args->closed,
+                     NULL);
+    }
+    else
+        init_selection(controls.selection, dfield, args);
+
     /* We do not get the right value before the data view is shown. */
     controls.zoom = gwy_data_view_get_real_zoom(GWY_DATA_VIEW(controls.view));
     g_object_set(controls.vlayer, "thickness",
@@ -270,7 +306,7 @@ straighten_dialogue(StraightenArgs *args,
             break;
 
             case RESPONSE_RESET:
-            init_selection(controls.selection, dfield, NULL);
+            init_selection(controls.selection, dfield, args);
             break;
 
             default:
@@ -309,21 +345,134 @@ finalize:
     return newid;
 }
 
+static GtkWidget*
+create_coord_list(StraightenControls *controls)
+{
+    static const gchar *column_labels[] = { "n", "x", "y" };
+
+    GwyNullStore *store;
+    GtkTreeView *treeview;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkWidget *label, *scwin;
+    guint i;
+
+    store = gwy_null_store_new(0);
+    controls->coordlist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    treeview = GTK_TREE_VIEW(controls->coordlist);
+    g_signal_connect(treeview, "key-press-event",
+                     G_CALLBACK(delete_selection_object), controls);
+
+    for (i = 0; i < NCOLUMNS; i++) {
+        column = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_expand(column, TRUE);
+        gtk_tree_view_column_set_alignment(column, 0.5);
+        g_object_set_data(G_OBJECT(column), "id", GUINT_TO_POINTER(i));
+        renderer = gtk_cell_renderer_text_new();
+        g_object_set(renderer, "xalign", 1.0, NULL);
+        gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+        gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(column), renderer,
+                                           render_coord_cell, controls,
+                                           NULL);
+        label = gtk_label_new(column_labels[i]);
+        gtk_tree_view_column_set_widget(column, label);
+        gtk_widget_show(label);
+        gtk_tree_view_append_column(treeview, column);
+    }
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_container_add(GTK_CONTAINER(scwin), controls->coordlist);
+
+    return scwin;
+}
+
+static void
+render_coord_cell(GtkCellLayout *layout,
+                  GtkCellRenderer *renderer,
+                  GtkTreeModel *model,
+                  GtkTreeIter *iter,
+                  gpointer user_data)
+{
+    StraightenControls *controls = (StraightenControls*)user_data;
+    gchar buf[32];
+    guint idx, id;
+    gint ival;
+
+    id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
+    gtk_tree_model_get(model, iter, 0, &idx, -1);
+    if (id == COLUMN_I)
+        ival = idx+1;
+    else {
+        gdouble xy[2];
+
+        gwy_selection_get_object(controls->selection, idx, xy);
+        if (id == COLUMN_X)
+            ival = gwy_data_field_rtoj(controls->dfield, xy[0]);
+        else
+            ival = gwy_data_field_rtoi(controls->dfield, xy[1]);
+    }
+
+    g_snprintf(buf, sizeof(buf), "%d", ival);
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+static gboolean
+delete_selection_object(GtkTreeView *treeview,
+                        GdkEventKey *event,
+                        StraightenControls *controls)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gint *indices;
+
+    if (event->keyval != GDK_Delete)
+        return FALSE;
+
+    selection = gtk_tree_view_get_selection(treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return FALSE;
+
+    /* Do not permit reduction to a single point. */
+    if (gwy_selection_get_data(controls->selection, NULL) < 3)
+        return FALSE;
+
+    path = gtk_tree_model_get_path(model, &iter);
+    indices = gtk_tree_path_get_indices(path);
+    gwy_selection_delete_object(controls->selection, indices[0]);
+    gtk_tree_path_free(path);
+
+    return TRUE;
+}
+
 static void
 init_selection(GwySelection *selection,
                GwyDataField *dfield,
                const StraightenArgs *args)
 {
-    gdouble xy[6];
+    gdouble xreal = gwy_data_field_get_xreal(dfield);
+    gdouble yreal = gwy_data_field_get_yreal(dfield);
+    gdouble xy[8];
 
-    if (!args)
-        args = &straighten_defaults;
-
-    xy[0] = xy[2] = xy[4] = 0.5*dfield->xreal;
-    xy[1] = 0.2*dfield->yreal;
-    xy[3] = 0.5*dfield->yreal;
-    xy[5] = 0.8*dfield->yreal;
-    gwy_selection_set_data(selection, 3, xy);
+    if (args->closed) {
+        xy[0] = 0.75*xreal;
+        xy[1] = xy[5] = 0.5*yreal;
+        xy[2] = xy[6] = 0.5*xreal;
+        xy[3] = 0.25*yreal;
+        xy[4] = 0.25*xreal;
+        xy[7] = 0.75*yreal;
+        gwy_selection_set_data(selection, 4, xy);
+    }
+    else {
+        xy[0] = xy[2] = xy[4] = 0.5*xreal;
+        xy[1] = 0.2*yreal;
+        xy[3] = 0.5*yreal;
+        xy[5] = 0.8*yreal;
+        gwy_selection_set_data(selection, 3, xy);
+    }
 
     g_object_set(selection,
                  "slackness", args->slackness,
@@ -332,12 +481,51 @@ init_selection(GwySelection *selection,
 }
 
 static void
-path_selection_changed(StraightenControls *controls)
+path_selection_changed(StraightenControls *controls, gint hint)
 {
+    GtkTreeView *treeview;
+    GtkTreeModel *model;
+    GwyNullStore *store;
     gint n;
 
-    n = gwy_selection_get_data(controls->selection, NULL);
-    g_print("Curve has %d points now.\n", n);
+    treeview = GTK_TREE_VIEW(controls->coordlist);
+    model = gtk_tree_view_get_model(treeview);
+    store = GWY_NULL_STORE(model);
+    n = gwy_null_store_get_n_rows(store);
+    g_return_if_fail(hint <= n);
+
+    if (hint < 0) {
+        g_object_ref(model);
+        gtk_tree_view_set_model(treeview, NULL);
+        n = gwy_selection_get_data(controls->selection, NULL);
+        gwy_null_store_set_n_rows(store, n);
+        gtk_tree_view_set_model(treeview, model);
+        g_object_unref(model);
+    }
+    else {
+        GtkTreeSelection *selection;
+        GtkTreePath *path;
+        GtkTreeIter iter;
+
+        if (hint < n)
+            gwy_null_store_row_changed(store, hint);
+        else
+            gwy_null_store_set_n_rows(store, n+1);
+
+        gtk_tree_model_iter_nth_child(model, &iter, NULL, hint);
+        path = gtk_tree_model_get_path(model, &iter);
+        selection = gtk_tree_view_get_selection(treeview);
+        gtk_tree_selection_select_iter(selection, &iter);
+        gtk_tree_view_scroll_to_cell(treeview, path, NULL, FALSE, 0.0, 0.0);
+        gtk_tree_path_free(path);
+    }
+}
+
+static void
+interpolation_changed(GtkComboBox *combo, StraightenControls *controls)
+{
+    StraightenArgs *args = controls->args;
+    args->interp = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
@@ -419,7 +607,8 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     tangents = g_new(PointXY, n);
 
     thickness = args->thickness;
-    interp = args->interp; // TODO: Fix non-interpolating bases.
+    // TODO: Handle non-interpolating bases.
+    interp = args->interp;
     gwy_data_field_resample(result, thickness, n, GWY_INTERPOLATION_NONE);
     gwy_data_field_set_xreal(result, h*thickness);
     gwy_data_field_set_yreal(result, h*n);
@@ -440,8 +629,9 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     for (i = 0; i < n; i++) {
         gdouble xc = points[i].x, yc = points[i].y;
         gdouble vx = tangents[i].y, vy = -tangents[i].x;
-        /* TODO: Handle zero (undefined) tangents. */
 
+        /* If the derivative is zero we just fill the entire row with the
+         * same value.  I declare it acceptable. */
         for (j = 0; j < thickness; j++) {
             gdouble x = xc + (j + 0.5 - 0.5*thickness)*vx;
             gdouble y = yc + (j + 0.5 - 0.5*thickness)*vy;
@@ -468,6 +658,7 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
 }
 
 static const gchar closed_key[]    = "/module/straighten_path/closed";
+static const gchar interp_key[]    = "/module/straighten_path/interp";
 static const gchar slackness_key[] = "/module/straighten_path/slackness";
 static const gchar thickness_key[] = "/module/straighten_path/thickness";
 
@@ -476,6 +667,8 @@ straighten_sanitize_args(StraightenArgs *args)
 {
     /* Upper limit is set based on image dimensions. */
     args->thickness = MAX(args->thickness, 3);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->slackness = CLAMP(args->slackness, 0.0, G_SQRT2);
     args->closed = !!args->closed;
 }
@@ -487,6 +680,7 @@ straighten_load_args(GwyContainer *container,
     *args = straighten_defaults;
 
     gwy_container_gis_int32_by_name(container, thickness_key, &args->thickness);
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_double_by_name(container, slackness_key,
                                      &args->slackness);
     gwy_container_gis_boolean_by_name(container, closed_key, &args->closed);
@@ -499,6 +693,7 @@ straighten_save_args(GwyContainer *container,
                      StraightenArgs *args)
 {
     gwy_container_set_int32_by_name(container, thickness_key, args->thickness);
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_double_by_name(container, slackness_key, args->slackness);
     gwy_container_set_boolean_by_name(container, closed_key, args->closed);
 }
