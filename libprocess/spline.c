@@ -84,6 +84,7 @@ struct _GwySpline {
     guint nfixed;
     GArray *fixed_samples;
     GArray *fixed_tangents;
+    GArray *fixed_auxpts;
 };
 
 static void gwy_spline_invalidate   (GwySpline *spline);
@@ -94,7 +95,7 @@ static void sample_curve_naturally  (GwySpline *spline,
                                      GwySplineRecurseOutputType otype);
 static void sample_segment_naturally(const PointXY *pt,
                                      const PointXY *ptm,
-                                     GArray *control_points,
+                                     const ControlPoint *uv,
                                      GArray *natural_points,
                                      GwySplineSampleParams *cparam,
                                      guint i);
@@ -141,6 +142,8 @@ void
 gwy_spline_free(GwySpline *spline)
 {
     g_return_if_fail(spline);
+    if (spline->fixed_auxpts)
+        g_array_free(spline->fixed_auxpts, TRUE);
     if (spline->fixed_tangents)
         g_array_free(spline->fixed_tangents, TRUE);
     if (spline->fixed_samples)
@@ -804,7 +807,7 @@ sample_curve_naturally(GwySpline *spline,
     if (!points->len)
         return;
 
-    if (G_UNLIKELY(!spline->tangents)) {
+    if (G_UNLIKELY(!tangents)) {
         spline->tangents = g_array_sized_new(FALSE, FALSE, sizeof(PointXY),
                                              points->len);
         tangents = spline->tangents;
@@ -819,15 +822,14 @@ sample_curve_naturally(GwySpline *spline,
         return;
     }
 
-    if (G_UNLIKELY(!spline->control_points)) {
+    nseg = points->len - (spline->closed ? 0 : 1);
+    if (G_UNLIKELY(!control_points)) {
         spline->control_points = g_array_sized_new(FALSE, FALSE,
-                                                   sizeof(ControlPoint),
-                                                   points->len);
+                                                   sizeof(ControlPoint), nseg);
         control_points = spline->control_points;
     }
-
-    nseg = points->len - (spline->closed ? 0 : 1);
     g_array_set_size(control_points, nseg);
+
     calculate_control_points(points->len - 1,
                              &point_index(points, 0),
                              spline->slackness, spline->closed,
@@ -851,14 +853,15 @@ sample_curve_naturally(GwySpline *spline,
     }
 
     for (i = 1; i <= nseg; i++) {
+        const ControlPoint *uv = &cpoint_index(control_points, i - 1);
+
         ptm = pt;
         if (i == points->len)
             pt = &point_index(points, 0);
         else
             pt = &point_index(points, i);
 
-        sample_segment_naturally(pt, ptm, control_points, natural_points,
-                                 &cparam, i);
+        sample_segment_naturally(pt, ptm, uv, natural_points, &cparam, i);
     }
 
     calculate_point_tangents(spline);
@@ -866,11 +869,10 @@ sample_curve_naturally(GwySpline *spline,
 
 static void
 sample_segment_naturally(const PointXY *pt, const PointXY *ptm,
-                         GArray *control_points, GArray *natural_points,
+                         const ControlPoint *uv, GArray *natural_points,
                          GwySplineSampleParams *cparam,
                          guint i)
 {
-    const ControlPoint *uv = &cpoint_index(control_points, i - 1);
     guint start = natural_points->len;
     GwySplineSampleItem c0, c1;
     guint j;
@@ -947,7 +949,7 @@ sample_curve_uniformly(GwySpline *spline,
                        PointXY *coords,
                        PointXY *velocities)
 {
-    GArray *natural_points = spline->natural_points;
+    GArray *auxpts = spline->fixed_auxpts;
     GArray *control_points = spline->control_points;
     GArray *points = spline->points;
     guint i, j, k, npts;
@@ -976,7 +978,14 @@ sample_curve_uniformly(GwySpline *spline,
         return;
     }
 
-    length = point_index(natural_points, natural_points->len-1).y;
+    if (G_UNLIKELY(!auxpts)) {
+        spline->fixed_auxpts = g_array_new(FALSE, FALSE, sizeof(PointXY));
+        auxpts = spline->fixed_auxpts;
+    }
+
+    sample_curve_naturally(spline, auxpts, G_MAXDOUBLE, 0.005,
+                           CURVE_RECURSE_OUTPUT_T_L);
+    length = point_index(auxpts, auxpts->len-1).y;
     j = 1;
     for (i = 0; i < nsamples; i++) {
         if (spline->closed)
@@ -986,19 +995,19 @@ sample_curve_uniformly(GwySpline *spline,
         else
             pos = 0.5*length;
 
-        while (point_index(natural_points, j).y < pos)
+        while (point_index(auxpts, j).y < pos)
             j++;
 
-        g_assert(j < natural_points->len);
+        g_assert(j < auxpts->len);
 
-        k = (guint)floor(point_index(natural_points, j).x);
+        k = (guint)floor(point_index(auxpts, j).x);
         if (k == npts)
             k--;
 
-        t0 = point_index(natural_points, j-1).x;
-        l0 = point_index(natural_points, j-1).y;
-        t1 = point_index(natural_points, j).x;
-        l1 = point_index(natural_points, j).y;
+        t0 = point_index(auxpts, j-1).x;
+        l0 = point_index(auxpts, j-1).y;
+        t1 = point_index(auxpts, j).x;
+        l1 = point_index(auxpts, j).y;
 
         pt0 = &point_index(points, k);
         pt1 = &point_index(points, (k+1) % npts);
