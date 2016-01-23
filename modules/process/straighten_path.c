@@ -41,7 +41,8 @@
 #define PointXY GwyTriangulationPointXY
 
 enum {
-    RESPONSE_RESET = 1,
+    RESPONSE_RESET   = 1,
+    RESPONSE_PREVIEW = 2,
 };
 
 enum {
@@ -58,9 +59,9 @@ typedef struct {
 typedef struct {
     StraightenArgs *args;
     GwyDataField *dfield;
-    GwyDataField *interpfield;
     GtkWidget *dialogue;
     GtkWidget *view;
+    GtkWidget *view_result;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
     GwyContainer *mydata;
@@ -80,6 +81,7 @@ static gint          straighten_dialogue     (StraightenArgs *args,
                                               GwyDataField *dfield,
                                               gint id,
                                               gint maxthickness);
+static void          preview                 (StraightenControls *controls);
 static void          init_selection          (GwySelection *selection,
                                               GwyDataField *dfield,
                                               const StraightenArgs *args);
@@ -192,6 +194,10 @@ straighten_dialogue(StraightenArgs *args,
     controls.dialogue = gtk_dialog_new_with_buttons(_("Straighten Path"),
                                                     NULL, 0, NULL);
     dialogue = GTK_DIALOG(controls.dialogue);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialogue),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
     gtk_dialog_add_button(dialogue, _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(dialogue, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(dialogue, GTK_STOCK_OK, GTK_RESPONSE_OK);
@@ -212,23 +218,22 @@ straighten_dialogue(StraightenArgs *args,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
-    alignment = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
-
-    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
-    controls.zoom = gwy_data_view_get_real_zoom(GWY_DATA_VIEW(controls.view));
-    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
-                                             0, "Path", TRUE);
-    g_object_ref(controls.selection);
-    gwy_selection_set_max_objects(controls.selection, 1024);
-    controls.vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls.view));
-    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
+    result = gwy_data_field_new(5, gwy_data_field_get_yres(dfield),
+                                5, gwy_data_field_get_yres(dfield),
+                                TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/1/data", result);
+    gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            0);
 
     table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_end(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
     scwin = create_coord_list(&controls);
@@ -270,6 +275,25 @@ straighten_dialogue(StraightenArgs *args,
                              G_CALLBACK(closed_changed), &controls);
     row++;
 
+    alignment = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.view),
+                                             0, "Path", TRUE);
+    g_object_ref(controls.selection);
+    gwy_selection_set_max_objects(controls.selection, 1024);
+    controls.vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls.view));
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
+
+    alignment = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+
+    controls.view_result = create_preview(controls.mydata, 1, PREVIEW_SIZE,
+                                          TRUE);
+    ensure_mask_color(controls.mydata, 1);
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view_result);
+
     gtk_widget_show_all(controls.dialogue);
 
     g_signal_connect_swapped(controls.selection, "changed",
@@ -309,13 +333,17 @@ straighten_dialogue(StraightenArgs *args,
             init_selection(controls.selection, dfield, args);
             break;
 
+            case RESPONSE_PREVIEW:
+            preview(&controls);
+            break;
+
             default:
             g_assert_not_reached();
             break;
         }
     } while (response != GTK_RESPONSE_OK);
 
-    result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+    result = gwy_container_get_object_by_name(controls.mydata, "/1/data");
     mask = straighten_do(dfield, result, controls.selection, args, FALSE);
 
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
@@ -343,6 +371,27 @@ finalize:
     g_object_unref(controls.mydata);
 
     return newid;
+}
+
+static void
+preview(StraightenControls *controls)
+{
+    GwyDataField *result, *mask;
+
+    result = gwy_container_get_object_by_name(controls->mydata, "/1/data");
+    mask = straighten_do(controls->dfield, result, controls->selection,
+                         controls->args, FALSE);
+    gwy_data_field_data_changed(result);
+
+    if (mask) {
+        gwy_container_set_object_by_name(controls->mydata, "/1/mask", mask);
+        g_object_unref(mask);
+    }
+    else
+        gwy_container_remove_by_name(controls->mydata, "/1/mask");
+
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view_result),
+                              PREVIEW_SIZE);
 }
 
 static GtkWidget*
