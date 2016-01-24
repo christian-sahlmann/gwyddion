@@ -55,6 +55,12 @@ void gwy_data_field_distort                  (GwyDataField *source,
                                               GwyInterpolationType interp,
                                               GwyExteriorType exterior,
                                               gdouble fill_value);
+void gwy_data_field_sample_distorted         (GwyDataField *source,
+                                              GwyDataField *dest,
+                                              const GwyTriangulationPointXY *coords,
+                                              GwyInterpolationType interp,
+                                              GwyExteriorType exterior,
+                                              gdouble fill_value);
 void gwy_data_field_affine                   (GwyDataField *source,
                                               GwyDataField *dest,
                                               const gdouble *invtrans,

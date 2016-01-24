@@ -28,17 +28,27 @@
 #include <libprocess/correct.h>
 #include <libprocess/interpolation.h>
 
-static gdouble unrotate_refine_correction(GwyDataLine *derdist,
-                                          guint m,
-                                          gdouble phi);
-static void    compute_fourier_coeffs    (gint nder,
-                                          const gdouble *der,
-                                          guint symmetry,
-                                          gdouble *st,
-                                          gdouble *ct);
-static void    interpolate_segment       (GwyDataLine *data_line,
-                                          gint from,
-                                          gint to);
+#define PointXY GwyTriangulationPointXY
+
+static void    gwy_data_field_distort_internal(GwyDataField *source,
+                                               GwyDataField *dest,
+                                               GwyInterpolationType interp,
+                                               GwyExteriorType exterior,
+                                               gdouble fill_value,
+                                               const PointXY *coords,
+                                               GwyCoordTransform2DFunc invtrans,
+                                               gpointer user_data);
+static gdouble unrotate_refine_correction     (GwyDataLine *derdist,
+                                               guint m,
+                                               gdouble phi);
+static void    compute_fourier_coeffs         (gint nder,
+                                               const gdouble *der,
+                                               guint symmetry,
+                                               gdouble *st,
+                                               gdouble *ct);
+static void    interpolate_segment            (GwyDataLine *data_line,
+                                               gint from,
+                                               gint to);
 
 /**
  * gwy_data_field_correct_laplace_iteration:
@@ -460,6 +470,36 @@ unrotate_refine_correction(GwyDataLine *derdist,
 }
 
 /**
+ * gwy_data_field_sample_distorted:
+ * @source: Source data field.
+ * @dest: Destination data field.
+ * @coords: Array of @source coordinates with the same number of items as
+ *          @dest, ordered as data field data.
+ *          See gwy_data_field_distort() for coordinate convention discussion.
+ * @interp: Interpolation type to use.
+ * @exterior: Exterior pixels handling.
+ * @fill_value: The value to use with @GWY_EXTERIOR_FIXED_VALUE.
+ *
+ * Resamples a data field in an arbitrarily distorted manner.
+ *
+ * Each item in @coords corresponds to one pixel in @dest and gives the
+ * coordinates in @source defining the value to set in this pixel.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_data_field_sample_distorted(GwyDataField *source,
+                                GwyDataField *dest,
+                                const PointXY *coords,
+                                GwyInterpolationType interp,
+                                GwyExteriorType exterior,
+                                gdouble fill_value)
+{
+    gwy_data_field_distort_internal(source, dest, interp, exterior, fill_value,
+                                    coords, NULL, NULL);
+}
+
+/**
  * gwy_data_field_distort:
  * @source: Source data field.
  * @dest: Destination data field.
@@ -492,6 +532,20 @@ gwy_data_field_distort(GwyDataField *source,
                        GwyExteriorType exterior,
                        gdouble fill_value)
 {
+    gwy_data_field_distort_internal(source, dest, interp, exterior, fill_value,
+                                    NULL, invtrans, user_data);
+}
+
+static void
+gwy_data_field_distort_internal(GwyDataField *source,
+                                GwyDataField *dest,
+                                GwyInterpolationType interp,
+                                GwyExteriorType exterior,
+                                gdouble fill_value,
+                                const PointXY *coords,
+                                GwyCoordTransform2DFunc invtrans,
+                                gpointer user_data)
+{
     GwyDataField *coeffield;
     gdouble *data, *coeff;
     const gdouble *cdata;
@@ -502,7 +556,8 @@ gwy_data_field_distort(GwyDataField *source,
 
     g_return_if_fail(GWY_IS_DATA_FIELD(source));
     g_return_if_fail(GWY_IS_DATA_FIELD(dest));
-    g_return_if_fail(invtrans);
+    g_return_if_fail(coords || invtrans);
+    g_return_if_fail(!coords || !invtrans);
 
     suplen = gwy_interpolation_get_support_size(interp);
     g_return_if_fail(suplen > 0);
@@ -529,7 +584,14 @@ gwy_data_field_distort(GwyDataField *source,
 
     for (newi = 0; newi < newyres; newi++) {
         for (newj = 0; newj < newxres; newj++) {
-            invtrans(newj + 0.5, newi + 0.5, &x, &y, user_data);
+            if (invtrans)
+                invtrans(newj + 0.5, newi + 0.5, &x, &y, user_data);
+            else {
+                x = coords->x;
+                y = coords->y;
+                coords++;
+            }
+
             vset = FALSE;
             x -= 0.5;
             y -= 0.5;
