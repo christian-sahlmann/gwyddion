@@ -35,14 +35,7 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
-#include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwycoloraxis.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-mask.h>
-#include <libgwydgets/gwygraphwindow.h>
-#include <libgwydgets/gwy3dwindow.h>
-#include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 #include "app/gwyappinternal.h"
 
@@ -167,6 +160,7 @@ struct _GwyAppDataProxy {
     GArray *messages;
     GtkTextBuffer *message_textbuf;
     GtkWidget *message_window;
+    GLogLevelFlags log_levels_seen;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -5116,7 +5110,7 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
     /* Messages button */
     browser->messages_button = button = gtk_toggle_button_new();
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-    image = gtk_image_new_from_stock(GTK_STOCK_INFO, GTK_ICON_SIZE_BUTTON);
+    image = gtk_image_new_from_stock(GWY_STOCK_LOAD_INFO, GTK_ICON_SIZE_BUTTON);
     gtk_container_add(GTK_CONTAINER(button), image);
     gtk_tooltips_set_tip(tips, button, _("Show file messages"), NULL);
     gtk_widget_set_no_show_all(browser->messages_button, TRUE);
@@ -6301,6 +6295,7 @@ update_messages_textbuf_since(GwyAppDataProxy *proxy, guint from)
     for (i = from; i < messages->len; i++) {
         const GwyAppLogMessage *message = &g_array_index(messages,
                                                          GwyAppLogMessage, i);
+        proxy->log_levels_seen |= message->log_level;
         _gwy_app_log_add_message_to_textbuf(textbuf,
                                             message->message,
                                             message->log_level);
@@ -6349,22 +6344,46 @@ update_message_button(void)
 {
     GwyAppDataBrowser *browser = gwy_app_get_data_browser();
     GwyAppDataProxy *proxy = browser->current;
+    GtkWidget *button = browser->messages_button, *image;
+    GLogLevelFlags log_levels_seen;
 
     if (!browser->window)
         return;
 
     if (!proxy || !proxy->messages || !proxy->messages->len) {
-        gtk_widget_set_no_show_all(browser->messages_button, TRUE);
-        gtk_widget_hide(browser->messages_button);
+        gtk_widget_set_no_show_all(button, TRUE);
+        gtk_widget_hide(button);
+        return;
     }
-    else {
-        gtk_widget_set_no_show_all(browser->messages_button, FALSE);
-        gtk_widget_show_all(browser->messages_button);
-        /* The "toggled" handler can deal with setting state to the existing
-         * state. */
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(browser->messages_button),
-                                     !!proxy->message_window);
+
+    log_levels_seen = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button),
+                                                         "log-level-seen"));
+    if (log_levels_seen != proxy->log_levels_seen) {
+        const gchar *stock_name = GWY_STOCK_LOAD_INFO;
+
+        gtk_widget_destroy(gtk_bin_get_child(GTK_BIN(button)));
+        if (proxy->log_levels_seen & (G_LOG_LEVEL_ERROR
+                                      | G_LOG_LEVEL_CRITICAL
+                                      | G_LOG_LEVEL_WARNING))
+            stock_name = GWY_STOCK_LOAD_WARNING;
+        else if (proxy->log_levels_seen & (G_LOG_LEVEL_MESSAGE
+                                           | G_LOG_LEVEL_INFO))
+            stock_name = GWY_STOCK_LOAD_INFO;
+        else if (proxy->log_levels_seen & G_LOG_LEVEL_DEBUG)
+            stock_name = GWY_STOCK_LOAD_DEBUG;
+
+        image = gtk_image_new_from_stock(stock_name, GTK_ICON_SIZE_BUTTON);
+        gtk_container_add(GTK_CONTAINER(button), image);
+        g_object_set_data(G_OBJECT(button), "log-level-seen",
+                          GUINT_TO_POINTER(proxy->log_levels_seen));
     }
+
+    gtk_widget_set_no_show_all(button, FALSE);
+    gtk_widget_show_all(button);
+    /* The "toggled" handler can deal with setting state to the existing
+     * state. */
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
+                                 !!proxy->message_window);
 }
 
 static void
