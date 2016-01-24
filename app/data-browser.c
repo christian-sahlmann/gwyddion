@@ -7906,7 +7906,7 @@ gwy_app_sync_data_items(GwyContainer *source,
 {
     /* FIXME: copy ALL selections */
     static const gchar *sel_keys[] = {
-        "point", "pointer", "line", "rectangle", "ellipse",
+        "point", "pointer", "line", "rectangle", "ellipse", "lattice", "path",
     };
     static const gchar *cal_keys[] = {
         "cal_xerr", "cal_yerr", "cal_zerr", "cal_xunc", "cal_yunc", "cal_zunc",
