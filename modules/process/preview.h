@@ -110,7 +110,7 @@ static GtkWidget*
 create_preview(GwyContainer *data,
                gint id, gint preview_size, gboolean have_mask)
 {
-    GQuark quark = gwy_app_get_mask_key_for_id(id);
+    GQuark quark = gwy_app_get_data_key_for_id(id);
     const gchar *key = g_quark_to_string(quark);
     GwyDataView *dataview;
     GtkWidget *widget;
