@@ -191,8 +191,10 @@ flush_last_message(LoggingSetup *setup)
 {
     GLogLevelFlags just_log_level;
 
-    if (!setup->last_count || setup->last_count == G_MAXUINT)
+    if (!setup->last_count || setup->last_count == G_MAXUINT) {
+        setup->last_count = G_MAXUINT;
         return;
+    }
 
     just_log_level = (setup->last_level & G_LOG_LEVEL_MASK);
     g_string_printf(setup->last, "Last message repeated %u times",
