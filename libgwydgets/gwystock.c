@@ -482,10 +482,21 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_FFT_2D:
+ *
+ * The "FFT-2D" stock icon.
+ * <inlinegraphic fileref="gwy_fft_2d-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
  * GWY_STOCK_FFT_FILTER_2D:
  *
  * The "FFT-Filter-2D" stock icon.
  * <inlinegraphic fileref="gwy_fft_filter_2d-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -558,6 +569,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Grains-Edge" stock icon.
  * <inlinegraphic fileref="gwy_grains_edge-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -595,6 +608,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Grain-Correlation" stock icon.
  * <inlinegraphic fileref="gwy_grain_correlation-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -602,6 +617,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Grain-Exscribed-Circle" stock icon.
  * <inlinegraphic fileref="gwy_grain_exscribed_circle-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -609,6 +626,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Grain-Inscribed-Circle" stock icon.
  * <inlinegraphic fileref="gwy_grain_inscribed_circle-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -623,6 +642,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Align" stock icon.
  * <inlinegraphic fileref="gwy_graph_align-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -630,6 +651,17 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Cut" stock icon.
  * <inlinegraphic fileref="gwy_graph_cut-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_DOS:
+ *
+ * The "Graph-Dos" stock icon.
+ * <inlinegraphic fileref="gwy_graph_dos-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -637,6 +669,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Export-Ascii" stock icon.
  * <inlinegraphic fileref="gwy_graph_export_ascii-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -644,6 +678,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Export-Bitmap" stock icon.
  * <inlinegraphic fileref="gwy_graph_export_bitmap-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -651,6 +687,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Export-Vector" stock icon.
  * <inlinegraphic fileref="gwy_graph_export_vector-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -658,6 +696,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Filter" stock icon.
  * <inlinegraphic fileref="gwy_graph_filter-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -679,6 +719,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Level" stock icon.
  * <inlinegraphic fileref="gwy_graph_level-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -749,6 +791,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Hough" stock icon.
  * <inlinegraphic fileref="gwy_hough-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -795,6 +839,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Level-Flatten-Base" stock icon.
  * <inlinegraphic fileref="gwy_level_flatten_base-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -802,6 +848,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Level-Median" stock icon.
  * <inlinegraphic fileref="gwy_level_median-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -830,6 +878,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Load-Debug" stock icon.
  * <inlinegraphic fileref="gwy_load_debug-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -837,6 +887,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Load-Info" stock icon.
  * <inlinegraphic fileref="gwy_load_info-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -844,6 +896,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Load-Warning" stock icon.
  * <inlinegraphic fileref="gwy_load_warning-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -851,6 +905,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Local-Slope" stock icon.
  * <inlinegraphic fileref="gwy_local_slope-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -916,6 +972,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Mask-Distribute" stock icon.
  * <inlinegraphic fileref="gwy_mask_distribute-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -944,6 +1002,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Mask-Extract" stock icon.
  * <inlinegraphic fileref="gwy_mask_extract-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -999,6 +1059,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Mask-Morph" stock icon.
  * <inlinegraphic fileref="gwy_mask_morph-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1059,6 +1121,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Mask-Thin" stock icon.
  * <inlinegraphic fileref="gwy_mask_thin-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1066,6 +1130,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Measure-Lattice" stock icon.
  * <inlinegraphic fileref="gwy_measure_lattice-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1089,6 +1155,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Neural-Apply" stock icon.
  * <inlinegraphic fileref="gwy_neural_apply-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1096,6 +1164,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Neural-Train" stock icon.
  * <inlinegraphic fileref="gwy_neural_train-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1142,6 +1212,35 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Attach" stock icon.
  * <inlinegraphic fileref="gwy_presentation_attach-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_CANNY:
+ *
+ * The "Presentation-Edge-Canny" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_canny-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_HARRIS_CORNER:
+ *
+ * The "Presentation-Edge-Harris-Corner" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_harris_corner-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_HOUGH:
+ *
+ * The "Presentation-Edge-Hough" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_hough-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1149,6 +1248,17 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Edge-Inclination" stock icon.
  * <inlinegraphic fileref="gwy_presentation_edge_inclination-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_LAPLACE_GAUSS:
+ *
+ * The "Presentation-Edge-Laplace-Gauss" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_laplace_gauss-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1156,6 +1266,44 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Edge-Local-Non-Linearity" stock icon.
  * <inlinegraphic fileref="gwy_presentation_edge_local_non_linearity-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_PREWITT:
+ *
+ * The "Presentation-Edge-Prewitt" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_prewitt-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_RMS:
+ *
+ * The "Presentation-Edge-RMS" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_rms-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_RMS_EDGE:
+ *
+ * The "Presentation-Edge-RMS-Edge" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_rms_edge-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_EDGE_SOBEL:
+ *
+ * The "Presentation-Edge-Sobel" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_edge_sobel-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1163,6 +1311,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Edge-Step" stock icon.
  * <inlinegraphic fileref="gwy_presentation_edge_step-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1170,6 +1320,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Edge-Zero-Crossing" stock icon.
  * <inlinegraphic fileref="gwy_presentation_edge_zero_crossing-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1177,6 +1329,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Extract" stock icon.
  * <inlinegraphic fileref="gwy_presentation_extract-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1184,6 +1338,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Local-Contrast" stock icon.
  * <inlinegraphic fileref="gwy_presentation_local_contrast-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1191,6 +1347,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Log" stock icon.
  * <inlinegraphic fileref="gwy_presentation_log-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1198,6 +1356,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Rank" stock icon.
  * <inlinegraphic fileref="gwy_presentation_rank-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1205,6 +1365,17 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Remove" stock icon.
  * <inlinegraphic fileref="gwy_presentation_remove-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PRESENTATION_SEM:
+ *
+ * The "Presentation-Sem" stock icon.
+ * <inlinegraphic fileref="gwy_presentation_sem-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1212,6 +1383,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Presentation-Shading" stock icon.
  * <inlinegraphic fileref="gwy_presentation_shading-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1219,6 +1392,24 @@ file_to_icon_source(const gchar *path,
  *
  * The "Profile" stock icon.
  * <inlinegraphic fileref="gwy_profile-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_PSDF_LOG_PHI:
+ *
+ * The "PSDF-Log-Phi" stock icon.
+ * <inlinegraphic fileref="gwy_psdf_log_phi-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_PSD_SECTION:
+ *
+ * The "PSD-Section" stock icon.
+ * <inlinegraphic fileref="gwy_psd_section-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1349,6 +1540,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Synthetic-Ballistic-Deposition" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_ballistic_deposition-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1356,6 +1549,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Synthetic-Brownian-Motion" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_brownian_motion-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1444,6 +1639,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Synthetic-Spectral" stock icon.
  * <inlinegraphic fileref="gwy_synthetic_spectral-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1460,6 +1657,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tilt" stock icon.
  * <inlinegraphic fileref="gwy_tilt-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1467,6 +1666,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tip-Dilation" stock icon.
  * <inlinegraphic fileref="gwy_tip_dilation-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1474,6 +1675,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tip-Erosion" stock icon.
  * <inlinegraphic fileref="gwy_tip_erosion-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1481,6 +1684,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tip-Estimation" stock icon.
  * <inlinegraphic fileref="gwy_tip_estimation-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1488,6 +1693,8 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tip-Map" stock icon.
  * <inlinegraphic fileref="gwy_tip_map-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
@@ -1495,6 +1702,17 @@ file_to_icon_source(const gchar *path,
  *
  * The "Tip-Model" stock icon.
  * <inlinegraphic fileref="gwy_tip_model-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_TIP_PID:
+ *
+ * The "Tip-Pid" stock icon.
+ * <inlinegraphic fileref="gwy_tip_pid-24.png" format="PNG"/>
+ *
+ * Since: 2.45
  **/
 
 /**
