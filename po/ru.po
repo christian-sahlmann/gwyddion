@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-20 08:32+0300\n"
-"PO-Revision-Date: 2016-01-20 08:37+0300\n"
+"POT-Creation-Date: 2016-01-24 09:10+0300\n"
+"PO-Revision-Date: 2016-01-24 09:19+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -724,40 +724,52 @@ msgstr[0] "Найден %d внутренний локальный максим�
 msgstr[1] "Найдено %d внутренних локальных максимума"
 msgstr[2] "Найдено %d внутренних локальных максимумов"
 
-#: libprocess/tip.c:229
+#: libprocess/tip.c:320
 msgid "Pyramid"
 msgstr "Пирамида"
 
-#: libprocess/tip.c:230 libprocess/tip.c:237 libprocess/tip.c:244
+#: libprocess/tip.c:321 libprocess/tip.c:328 libprocess/tip.c:335
 msgid "Pyramidal"
 msgstr "Пирамидальный"
 
-#: libprocess/tip.c:236
+#: libprocess/tip.c:327
 msgid "Contact"
 msgstr "Контактный"
 
-#: libprocess/tip.c:243
+#: libprocess/tip.c:334
 msgid "Noncontact"
 msgstr "Бесконтактный"
 
-#: libprocess/tip.c:250
+#: libprocess/tip.c:341
 msgid "Delta function"
 msgstr "Дельта-функция"
 
-#: libprocess/tip.c:251
+#: libprocess/tip.c:342
 msgid "Analytical"
 msgstr "Аналитический"
 
-#: libprocess/tip.c:774 libprocess/tip.c:802 libprocess/tip.c:851
-#: libprocess/tip.c:878
+#: libprocess/tip.c:348
+msgid "Parabola"
+msgstr "Парабола"
+
+#: libprocess/tip.c:349 libprocess/tip.c:356
+msgid "Symmetric"
+msgstr "Симметричный"
+
+#: libprocess/tip.c:355
+msgid "Cone"
+msgstr "Конический"
+
+#: libprocess/tip.c:879 libprocess/tip.c:907 libprocess/tip.c:956
+#: libprocess/tip.c:983
 msgid "Converting fields"
 msgstr "Преобразуются поля"
 
-#: libprocess/tip.c:784
+#: libprocess/tip.c:889
 msgid "Starting partial estimation"
 msgstr "Запускается частичная оценка"
 
-#: libprocess/tip.c:861
+#: libprocess/tip.c:966
 msgid "Starting full estimation"
 msgstr "Запускается полная оценка"
 
@@ -969,13 +981,13 @@ msgstr "точек"
 #: modules/process/rotate.c:259 modules/process/scale.c:196
 #: modules/process/scars.c:453 modules/process/semsim.c:211
 #: modules/process/shade.c:209 modules/process/slope_dist.c:277
-#: modules/process/sphere-revolve.c:218 modules/process/tilt.c:160
-#: modules/process/tip_model.c:168 modules/process/unrotate.c:221
-#: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:353
-#: modules/process/wpour_mark.c:283 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
-#: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
-#: modules/volume/volume_slice.c:291
+#: modules/process/sphere-revolve.c:218 modules/process/straighten_path.c:201
+#: modules/process/tilt.c:160 modules/process/tip_model.c:168
+#: modules/process/unrotate.c:221 modules/process/volumize_layers.c:213
+#: modules/process/wave_synth.c:353 modules/process/wpour_mark.c:283
+#: modules/volume/volume_calibrate.c:370 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
+#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:291
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -4167,9 +4179,10 @@ msgstr "Изображение"
 #: modules/process/fft_filter_1d.c:299 modules/process/fft_profile.c:296
 #: modules/process/fractal.c:257 modules/process/nanoindent_adjust.c:229
 #: modules/process/polydistort.c:251 modules/process/rotate.c:288
-#: modules/process/scale.c:252 modules/process/unrotate.c:278
-#: modules/tools/linestats.c:413 modules/tools/profile.c:559
-#: modules/tools/roughness.c:868 modules/tools/sfunctions.c:449
+#: modules/process/scale.c:252 modules/process/straighten_path.c:249
+#: modules/process/unrotate.c:278 modules/tools/linestats.c:413
+#: modules/tools/profile.c:559 modules/tools/roughness.c:868
+#: modules/tools/sfunctions.c:449
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -5515,13 +5528,13 @@ msgstr "Формат данных"
 #: modules/process/entropy.c:180 modules/process/fft_filter_1d.c:188
 #: modules/process/grain_edge.c:215 modules/process/grain_filter.c:317
 #: modules/process/grain_mark.c:249 modules/process/grain_wshed.c:168
-#: modules/process/mark_disconn.c:209 modules/process/mark_with.c:201
+#: modules/process/mark_disconn.c:209 modules/process/mark_with.c:199
 #: modules/process/polydistort.c:209 modules/process/scars.c:450
-#: modules/process/slope_dist.c:274 modules/process/synth.h:509
-#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:278
-#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
-#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287
+#: modules/process/slope_dist.c:274 modules/process/straighten_path.c:198
+#: modules/process/synth.h:509 modules/process/tip_model.c:165
+#: modules/process/wpour_mark.c:278 modules/tools/linestats.c:454
+#: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
+#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -6906,7 +6919,7 @@ msgstr "Слой, позволяющий выбирать двумерную р�
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Слой, позволяющий выбрать произвольные прямые линии."
 
-#: modules/layer/path.c:162
+#: modules/layer/path.c:167
 msgid "Layer allowing selection of a single long curve."
 msgstr "Слой, позволяющий выбрать одну длинную кривую."
 
@@ -7587,7 +7600,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/calcoefs_view.c:572 modules/process/deposit_synth.c:647
 #: modules/process/edge.c:710 modules/process/fft_filter_1d.c:304
 #: modules/process/grain_edge.c:295 modules/process/grain_filter.c:351
-#: modules/process/grain_mark.c:377 modules/process/mark_with.c:324
+#: modules/process/grain_mark.c:377 modules/process/mark_with.c:322
 #: modules/process/polydistort.c:320 modules/process/scars.c:541
 #: modules/process/slope_dist.c:408 modules/process/synth.h:513
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
@@ -7946,6 +7959,10 @@ msgstr "Сохранять площадь"
 #: modules/process/correct_affine.c:511
 msgid "Preserve X scale"
 msgstr "Сохранять масштаб X"
+
+#: modules/process/correct_affine.c:562
+msgid "Corrected"
+msgstr "Исправленное"
 
 #: modules/process/correct_affine.c:618 modules/process/measure_lattice.c:495
 msgid "length"
@@ -8867,7 +8884,7 @@ msgstr "О_бъединить с имеющейся маской"
 
 #: modules/process/facet_analysis.c:402 modules/process/grain_edge.c:281
 #: modules/process/grain_mark.c:363 modules/process/mark_disconn.c:305
-#: modules/process/mark_with.c:236 modules/process/mask_morph.c:209
+#: modules/process/mark_with.c:234 modules/process/mask_morph.c:209
 msgid "Operation:"
 msgstr "Операция:"
 
@@ -9289,7 +9306,7 @@ msgid "Function type:"
 msgstr "Тип функции:"
 
 #: modules/process/fit_2d.c:334 modules/process/fractal.c:312
-#: modules/process/mark_with.c:396 modules/process/neural.c:562
+#: modules/process/mark_with.c:394 modules/process/neural.c:562
 msgid "Result"
 msgstr "Результат"
 
@@ -10048,8 +10065,8 @@ msgstr ""
 "поверхности, ...)."
 
 #: modules/process/indent_analyze.c:320
-msgid "/Indento_r/_Analyze..."
-msgstr "/Инденто_р/_Анализ..."
+msgid "/_Tip and Indentation/_Analyze Imprint..."
+msgstr "/_Зонд и индентация/_Анализировать отпечаток..."
 
 #: modules/process/indent_analyze.c:439
 msgid "Marked _areas:"
@@ -10356,8 +10373,8 @@ msgid "Lateral force simulator"
 msgstr "Симулятор латеральных сил"
 
 #: modules/process/latsim.c:89
-msgid "/_Tip/_Lateral force..."
-msgstr "/_Зонд/_Латеральная сила..."
+msgid "/_Tip and Indentation/_Lateral force..."
+msgstr "/_Зонд и индентация/_Латеральная сила..."
 
 #: modules/process/latsim.c:93
 msgid "Simulate topograpy artefacts in lateral force channels"
@@ -10690,67 +10707,67 @@ msgstr "Фильтрация..."
 msgid "Marking outliers..."
 msgstr "Помечаются выпадающие области..."
 
-#: modules/process/mark_with.c:145
+#: modules/process/mark_with.c:143
 msgid "Creates or modifies a mask using other channels."
 msgstr "Создаёт или изменяет маску используя другие каналы."
 
-#: modules/process/mark_with.c:159
+#: modules/process/mark_with.c:157
 msgid "/_Mask/Mark _With..."
 msgstr "/_Маска/_Пометить с помощью..."
 
-#: modules/process/mark_with.c:163
+#: modules/process/mark_with.c:161
 msgid "Mask combining and modification"
 msgstr "Изменение и комбинирование масок"
 
-#: modules/process/mark_with.c:198
+#: modules/process/mark_with.c:196
 msgid "Mark With"
 msgstr "Пометить с помощью"
 
-#: modules/process/mark_with.c:244
+#: modules/process/mark_with.c:242
 msgid "Se_t mask"
 msgstr "_Установить маску"
 
-#: modules/process/mark_with.c:245
+#: modules/process/mark_with.c:243
 msgid "_Add mask"
 msgstr "_Добавить маску"
 
-#: modules/process/mark_with.c:246
+#: modules/process/mark_with.c:244
 msgid "_Subtract mask"
 msgstr "_Вычесть маску"
 
-#: modules/process/mark_with.c:247
+#: modules/process/mark_with.c:245
 msgid "_Intersect masks"
 msgstr "_Пересечение масок"
 
-#: modules/process/mark_with.c:253
+#: modules/process/mark_with.c:251
 msgid "Mark with:"
 msgstr "Пометить с помощью:"
 
-#: modules/process/mark_with.c:261
+#: modules/process/mark_with.c:259
 msgid "with|_Mask"
 msgstr "_Маски"
 
-#: modules/process/mark_with.c:263
+#: modules/process/mark_with.c:261
 msgid "with|_Data"
 msgstr "Данн_ых"
 
-#: modules/process/mark_with.c:265
+#: modules/process/mark_with.c:263
 msgid "with|_Presentation"
 msgstr "П_резентации"
 
-#: modules/process/mark_with.c:299
+#: modules/process/mark_with.c:297
 msgid "Marked data range:"
 msgstr "Помеченный диапазон данных:"
 
-#: modules/process/mark_with.c:307
+#: modules/process/mark_with.c:305
 msgid "_Minimum:"
 msgstr "М_инимум:"
 
-#: modules/process/mark_with.c:316
+#: modules/process/mark_with.c:314
 msgid "M_aximum:"
 msgstr "М_аксимум:"
 
-#: modules/process/mark_with.c:384
+#: modules/process/mark_with.c:382
 msgid "Operand"
 msgstr "Операнд"
 
@@ -11170,8 +11187,8 @@ msgid "Adjust images of two indentor prints."
 msgstr "Подгоняет друг к другу изображения двух отпечатков индентора."
 
 #: modules/process/nanoindent_adjust.c:103
-msgid "/Indento_r/Ad_just..."
-msgstr "/Инденто_р/_Подогнать..."
+msgid "/_Tip and Indentation/Ad_just..."
+msgstr "/_Зонд и индентация/_Настроить..."
 
 #: modules/process/nanoindent_adjust.c:107
 msgid "Adjust two nanoindentation imprints"
@@ -11562,8 +11579,8 @@ msgid "A simple PID simulator"
 msgstr "Простой симулятор ПИД"
 
 #: modules/process/pid.c:109
-msgid "/_Tip/_PID simulation..."
-msgstr "/_Зонд/Модель _ПИД..."
+msgid "/_Tip and Indentation/_PID simulation..."
+msgstr "/_Зонд и индентация/Модель _ПИД..."
 
 #: modules/process/pid.c:113
 msgid "Simulate PID effects on measurement"
@@ -11709,7 +11726,7 @@ msgstr "_Максимальная степень полинома:"
 msgid "Polynomial Coefficients"
 msgstr "Полиномиальные коэффициенты"
 
-#: modules/process/polylevel.c:935 modules/tools/distance.c:585
+#: modules/process/polylevel.c:935 modules/tools/distance.c:599
 msgid "Save Table"
 msgstr "Сохранение таблицы"
 
@@ -12067,6 +12084,39 @@ msgstr "О_ба направления"
 msgid "Revolve Arc"
 msgstr "Вращение дуги"
 
+#: modules/process/straighten_path.c:126
+msgid "Extracts a straightened part of image along a curve."
+msgstr "Извлекает выпрямленную часть изображения вдоль кривой"
+
+#: modules/process/straighten_path.c:140
+msgid "/_Correct Data/Straighten _Path..."
+msgstr "/Исправить _данные/Выпрямить _путь..."
+
+#: modules/process/straighten_path.c:144
+msgid "Straighten along a path"
+msgstr "Выпрямить вдоль пути"
+
+#: modules/process/straighten_path.c:194
+msgid "Straighten Path"
+msgstr "Выпрямить путь"
+
+#: modules/process/straighten_path.c:255 modules/tools/pathlevel.c:256
+#: modules/tools/profile.c:511 modules/tools/roughness.c:858
+msgid "_Thickness:"
+msgstr "_Толщина:"
+
+#: modules/process/straighten_path.c:263
+msgid "_Slackness:"
+msgstr "_Неточность:"
+
+#: modules/process/straighten_path.c:269
+msgid "C_losed curve"
+msgstr "_Замкнутая кривая"
+
+#: modules/process/straighten_path.c:350
+msgid "Straightened"
+msgstr "Выпрямленное"
+
 #: modules/process/superresolution.c:83
 msgid ""
 "Simple supres operations with two data fields (or a data field and a scalar)."
@@ -12213,8 +12263,8 @@ msgid "Blind estimation of SPM tip using Villarubia's algorithm."
 msgstr "Слепая оценка зонда СЗМ используя алгоритм Вильярубия."
 
 #: modules/process/tip_blind.c:190
-msgid "/_Tip/_Blind Estimation..."
-msgstr "/_Зонд/_Слепая оценка..."
+msgid "/_Tip and Indentation/_Blind Estimation..."
+msgstr "/_Зонд и индентация/_Слепая оценка..."
 
 #: modules/process/tip_blind.c:194
 msgid "Blind tip estimation"
@@ -12295,8 +12345,8 @@ msgid "Models SPM tip."
 msgstr "Моделирует зонд СЗМ."
 
 #: modules/process/tip_model.c:124
-msgid "/_Tip/_Model Tip..."
-msgstr "/_Зонд/_Модель зонда..."
+msgid "/_Tip and Indentation/_Model Tip..."
+msgstr "/_Зонд и индентация/_Модель зонда..."
 
 #: modules/process/tip_model.c:128
 msgid "Model AFM tip"
@@ -12326,11 +12376,11 @@ msgstr "_Поворот зонда:"
 msgid "Tip _apex radius:"
 msgstr "_Радиус острия зонда:"
 
-#: modules/process/tip_model.c:467
+#: modules/process/tip_model.c:457
 msgid "Modeled tip"
 msgstr "Модель зонда"
 
-#: modules/process/tip_model.c:515
+#: modules/process/tip_model.c:505
 #, c-format
 msgid "Tip resolution: %d × %d pixels"
 msgstr "Разрешение зонда: %d × %d пикселей"
@@ -12344,28 +12394,28 @@ msgstr ""
 "достоверности."
 
 #: modules/process/tipops.c:80
-msgid "/_Tip/_Dilation..."
-msgstr "/_Зонд/_Расширение..."
+msgid "/_Tip and Indentation/_Dilation..."
+msgstr "/_Зонд и индентация/_Расширение..."
 
 #: modules/process/tipops.c:84
 msgid "Surface dilation by defined tip"
 msgstr "Расширение поверхности известным зондом"
 
 #: modules/process/tipops.c:87
-msgid "/_Tip/_Surface Reconstruction..."
-msgstr "/_Зонд/_Восстановление поверхности..."
+msgid "/_Tip and Indentation/_Surface Reconstruction..."
+msgstr "/_Зонд и индентация/_Восстановление поверхности..."
 
 #: modules/process/tipops.c:91
 msgid "Surface reconstruction by defined tip"
 msgstr "Восстановление поверхности по известному зонду"
 
 #: modules/process/tipops.c:94
-msgid "/_Tip/_Certainty Map..."
-msgstr "/_Зонд/Карта _достоверности..."
+msgid "/_Tip and Indentation/_Certainty Map..."
+msgstr "/_Зонд и индентация/Карта _достоверности..."
 
 #: modules/process/tipops.c:98
 msgid "Tip certainty map"
-msgstr "Карта достоверности зонда"
+msgstr "Карта достоверности для зонда"
 
 #: modules/process/tipops.c:139
 msgid "Tip Dilation"
@@ -13149,11 +13199,6 @@ msgstr "Выровнять вдоль линии"
 #: modules/tools/pathlevel.c:145
 msgid "Level rows using intersections with given lines"
 msgstr "Выровнять строки используя пересечения с заданными линиями"
-
-#: modules/tools/pathlevel.c:256 modules/tools/profile.c:511
-#: modules/tools/roughness.c:858
-msgid "_Thickness:"
-msgstr "_Толщина:"
 
 #: modules/tools/profile.c:222
 msgid "Profile tool, creates profile graphs from selected lines."
@@ -14169,6 +14214,33 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "/Indento_r/_Analyze..."
+#~ msgstr "/Инденто_р/_Анализ..."
+
+#~ msgid "/_Tip/_Lateral force..."
+#~ msgstr "/_Зонд/_Латеральная сила..."
+
+#~ msgid "/Indento_r/Ad_just..."
+#~ msgstr "/Инденто_р/_Подогнать..."
+
+#~ msgid "/_Tip/_PID simulation..."
+#~ msgstr "/_Зонд/Модель _ПИД..."
+
+#~ msgid "/_Tip/_Blind Estimation..."
+#~ msgstr "/_Зонд/_Слепая оценка..."
+
+#~ msgid "/_Tip/_Model Tip..."
+#~ msgstr "/_Зонд/_Модель зонда..."
+
+#~ msgid "/_Tip/_Dilation..."
+#~ msgstr "/_Зонд/_Расширение..."
+
+#~ msgid "/_Tip/_Surface Reconstruction..."
+#~ msgstr "/_Зонд/_Восстановление поверхности..."
+
+#~ msgid "/_Tip/_Certainty Map..."
+#~ msgstr "/_Зонд/Карта _достоверности..."
 
 #~ msgid "File contains less than XSize*YSize data points."
 #~ msgstr "Файл содержит меньше точек данных, чем XSize*YSize."
