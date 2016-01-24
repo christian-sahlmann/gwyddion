@@ -46,7 +46,7 @@ enum {
 #define GWY_TOOL_SELECTION_MANAGER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SELECTION_MANAGER, GwyToolSelectionManagerClass))
 
 enum {
-    NLAYERTYPES = 6
+    NLAYERTYPES = 7
 };
 
 enum {
@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -129,6 +129,7 @@ static const gchar *const layer_types[NLAYERTYPES] = {
     "GwyLayerEllipse",
     "GwyLayerLattice",
     "GwyLayerLine",
+    "GwyLayerPath",
     "GwyLayerPoint",
     "GwyLayerRectangle",
 };
@@ -258,10 +259,11 @@ render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
     type_names[] = {
         { "GwySelectionAxis",      N_("Horiz./vert. lines"), },
         { "GwySelectionEllipse",   N_("Ellipses"),           },
+        { "GwySelectionLattice",   N_("Lattice"),            },
         { "GwySelectionLine",      N_("Lines"),              },
+        { "GwySelectionPath",      N_("Spline path"),        },
         { "GwySelectionPoint",     N_("Points"),             },
         { "GwySelectionRectangle", N_("Rectangles"),         },
-        { "GwySelectionLattice",   N_("Lattice"),            },
     };
 
     GwySelection *sel;
