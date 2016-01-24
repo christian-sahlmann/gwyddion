@@ -46,8 +46,8 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionAxis"), NULL);
     </synopsis>
     <para>
-      Layer allows to select one or more horizontal or vertical (full-width or
-      full-height) lines, called axes.  It can be also viewes as a way to
+      The layer allows selecting one or more horizontal or vertical (full-width
+      or full-height) lines, called axes.  It can be also viewes as a way to
       select separate x or y coordinates.
     </para>
     <para>
@@ -66,7 +66,7 @@
           <listitem>
             <para>
               Line orientation: horizontal or vertical.
-              Default orientation is horizontal.
+              The default orientation is horizontal.
             </para>
           </listitem>
         </varlistentry>
@@ -80,7 +80,7 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionEllipse"), NULL);
     </synopsis>
     <para>
-      Layer allows to select a number of ellipses.
+      The layer allows selecting a number of ellipses.
     </para>
     <para>
       Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
@@ -105,8 +105,8 @@
         <varlistentry><term><anchor id="GwyLayerEllipse--snap-to-center"/>&quot;<literal>snap-to-center</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
             <para>
-              Whether the selection should snap to the center. Default is to
-              not snap.
+              Whether the selection should snap to the center. The default is
+              not to snap.
             </para>
           </listitem>
         </varlistentry>
@@ -124,8 +124,8 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionLine"), NULL);
     </synopsis>
     <para>
-      Layer allows to select one or more lines of arbitrary orientation and length,
-      optionally can display line numbers next to each line.
+      The layer allows selecting one or more lines of arbitrary orientation and
+      length, optionally can display line numbers next to each line.
     </para>
     <para>
       Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
@@ -142,7 +142,7 @@
           <listitem>
             <para>
               Whether line numbers should be displayed next to them.
-              Default is to show line numbers.
+              The default is to show line numbers.
             </para>
           </listitem>
         </varlistentry>
@@ -150,7 +150,7 @@
           <listitem>
             <para>
               Width of orthogonal ticks at line ends.
-              Default is no ticks.
+              The default is no ticks.
             </para>
           </listitem>
         </varlistentry>
@@ -158,7 +158,7 @@
           <listitem>
             <para>
               Whether an tick is drawn in the line centre.
-              Default is not to drawn the central tick.
+              The default is not to drawn the central tick.
             </para>
             <para role="since">Since: 2.42</para>
           </listitem>
@@ -177,9 +177,9 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionPoint"), NULL);
     </synopsis>
     <para>
-      Layer allows to select a number of points, either displayed as crosses,
-      crosses with concentric circles, or with no graphical representation (the
-      latter mainly useful with only one selected point).
+      The layer allows selecting a number of points, either displayed as
+      crosses, crosses with concentric circles, or with no graphical
+      representation (the latter mainly useful with only one selected point).
     </para>
     <para>
       Selection data consists of coordinate pairs (x, y) representing selected points.
@@ -200,7 +200,7 @@
               Specifies the radius of the circle to draw around all selected points.
               If set to zero and/or if &quot;<literal>draw-marker</literal>&quot; is
               set to FALSE, no circle will be drawn.
-              Default is a radius of zero.
+              The default radius is zero.
             </para>
           </listitem>
         </varlistentry>
@@ -208,7 +208,7 @@
           <listitem>
             <para>
               Whether point numbers should be displayed next to them.
-              Default is not to show point numbers.
+              The default is not to show point numbers.
             </para>
           </listitem>
         </varlistentry>
@@ -217,7 +217,7 @@
             <para>
               Whether points should be instead drawn as vector from the origin.
               This setting may interact poorly with other drawing options.
-              Default is to draw points as points.
+              The default is to draw points as points.
             </para>
           </listitem>
         </varlistentry>
@@ -235,8 +235,8 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionRectangle"), NULL);
     </synopsis>
     <para>
-      Layer allows to select a number of rectangles, that can be drawn with a couple of
-      fancy/special styles.
+      The layer allows selecting a number of rectangles, that can be drawn with
+      a couple of fancy/special styles.
     </para>
     <para>
       Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
@@ -269,8 +269,8 @@
         <varlistentry><term><anchor id="GwyLayerRectangle--snap-to-center"/>&quot;<literal>snap-to-center</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
             <para>
-              Whether the selection should snap to the center. Default is to
-              not snap.
+              Whether the selection should snap to the center. The default is
+              to not snap.
             </para>
           </listitem>
         </varlistentry>
@@ -288,7 +288,8 @@
 <link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionLattice"), NULL);
     </synopsis>
     <para>
-      Layer allows to select a pair of two-dimensional vectors, that represent a lattice in the plane.
+      The layer allows selecting a pair of two-dimensional vectors, that
+      represent a lattice in the plane.
       The selection is also visualised as a lattice.
     </para>
     <para>
@@ -318,6 +319,60 @@
     <sect2>
       <title>GwySelectionLattice properties</title>
       <para>None.</para>
+    </sect2>
+  </refsect1>
+  <refsect1>
+    <title>GwyLayerPath, GwySelectionPath</title>
+    <synopsis>
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerPath"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionPath"), NULL);
+    </synopsis>
+    <para>
+      The layer allows selecting a long spline curve passing through given
+      points.
+    </para>
+    <para>
+      Selection data consists of coordinate pairs (x, y) representing the
+      points defining the curve.  The curve is implicitly oriented from the
+      first pair to the last one.
+    </para>
+    <sect2>
+      <title>GwyLayerPath properties</title>
+      <variablelist>
+        <varlistentry><term><anchor id="GwyLayerPath--thickness"/>&quot;<literal>thickness</literal>&quot; (gint : Read / Write)</term>
+          <listitem>
+            <para>
+              Width of orthogonal ticks at line ends.
+              The default is no ticks.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+    <sect2>
+      <title>GwySelectionPath properties</title>
+      <variablelist>
+        <varlistentry><term><anchor id="GwySelectionPath--slackness"/>&quot;<literal>closed</literal>&quot; (gdouble : Read / Write)</term>
+          <listitem>
+            <para>
+              How much the curve is slack/taut, from the interval [0, sqrt(2)].
+              Value of 0 corresponds to completely taut curve, i.e. straight
+              lines connecting the points.
+              Value of 1 corresponds to free curve.
+              The default value is 1/sqrt(2).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term><anchor id="GwySelectionPath--closed"/>&quot;<literal>closed</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether the curve is closed, i.e. continues smoothly from the
+              last point back to the first point.
+              The default is open-ended (not closed) curve.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
     </sect2>
   </refsect1>
 </refentry>
