@@ -257,8 +257,8 @@ autoscale_changed_cb(GtkToggleButton *button, GwyAxisDialog *dialog)
 }
 */
 
-/**
- ** SECTION:gwyaxisdialog
+/*
+ * SECTION:gwyaxisdialog
  * @title: GwyAxisDialog
  * @short_description: Axis properties dialog
  *

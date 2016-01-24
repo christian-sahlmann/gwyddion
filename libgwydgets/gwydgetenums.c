@@ -193,6 +193,7 @@ gwy_graph_curve_type_get_enum(void)
  **/
 
 /**
+ * GwyGraphModelExportStyle:
  * @GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN: White-space separated data values,
  *                                      plain description lines and column
  *                                      headers, missing data represented with
