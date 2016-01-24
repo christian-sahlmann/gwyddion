@@ -42,8 +42,7 @@
 #define PointXY GwyTriangulationPointXY
 
 enum {
-    RESPONSE_RESET   = 1,
-    RESPONSE_PREVIEW = 2,
+    RESPONSE_PREVIEW = 1,
 };
 
 enum {
@@ -65,6 +64,7 @@ typedef struct {
     GtkWidget *view_result;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
+    GwySelection *orig_selection;
     GwyContainer *mydata;
     GtkWidget *coordlist;
     GtkWidget *interp;
@@ -84,6 +84,9 @@ static gint          straighten_dialogue     (StraightenArgs *args,
                                               gint id,
                                               gint maxthickness);
 static void          preview                 (StraightenControls *controls);
+static void          reset_path              (StraightenControls *controls);
+static void          restore_path            (StraightenControls *controls);
+static void          reverse_path            (StraightenControls *controls);
 static void          init_selection          (GwySelection *selection,
                                               GwyDataField *dfield,
                                               const StraightenArgs *args);
@@ -180,7 +183,7 @@ straighten_dialogue(StraightenArgs *args,
                     gint id,
                     gint maxthickness)
 {
-    GtkWidget *hbox, *alignment, *scwin;
+    GtkWidget *hbox, *alignment, *scwin, *hbox2, *button;
     GtkDialog *dialogue;
     GtkTable *table;
     StraightenControls controls;
@@ -200,7 +203,6 @@ straighten_dialogue(StraightenArgs *args,
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
-    gtk_dialog_add_button(dialogue, _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(dialogue, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(dialogue, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(dialogue, GTK_RESPONSE_OK);
@@ -233,7 +235,7 @@ straighten_dialogue(StraightenArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
 
-    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -245,6 +247,27 @@ straighten_dialogue(StraightenArgs *args,
                      GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
     row++;
 
+    hbox2 = gtk_hbox_new(TRUE, 0);
+    gtk_table_attach(table, hbox2, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    button = gtk_button_new_with_mnemonic(_("_Reset"));
+    gtk_box_pack_start(GTK_BOX(hbox2), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(reset_path), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("Res_tore"));
+    gtk_box_pack_start(GTK_BOX(hbox2), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(restore_path), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("Re_verse"));
+    gtk_box_pack_start(GTK_BOX(hbox2), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(reverse_path), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
                                  G_CALLBACK(interpolation_changed), &controls,
@@ -319,6 +342,8 @@ straighten_dialogue(StraightenArgs *args,
     else
         init_selection(controls.selection, dfield, args);
 
+    controls.orig_selection = gwy_selection_duplicate(controls.selection);
+
     /* We do not get the right value before the data view is shown. */
     controls.zoom = gwy_data_view_get_real_zoom(GWY_DATA_VIEW(controls.view));
     g_object_set(controls.vlayer, "thickness",
@@ -335,10 +360,6 @@ straighten_dialogue(StraightenArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            break;
-
-            case RESPONSE_RESET:
-            init_selection(controls.selection, dfield, args);
             break;
 
             case RESPONSE_PREVIEW:
@@ -377,9 +398,38 @@ finalize:
     gwy_container_set_object_by_name(data, selkey, selection);
     g_object_unref(selection);
     g_object_unref(controls.selection);
+    g_object_unref(controls.orig_selection);
     g_object_unref(controls.mydata);
 
     return newid;
+}
+
+static void
+reset_path(StraightenControls *controls)
+{
+    init_selection(controls->selection, controls->dfield, controls->args);
+}
+
+static void
+restore_path(StraightenControls *controls)
+{
+    gwy_serializable_clone(G_OBJECT(controls->orig_selection),
+                           G_OBJECT(controls->selection));
+}
+
+static void
+reverse_path(StraightenControls *controls)
+{
+    guint i, n = gwy_selection_get_data(controls->selection, NULL);
+    gdouble *xy = g_new(gdouble, 2*n);
+
+    gwy_selection_get_data(controls->selection, xy);
+    for (i = 0; i < n/2; i++) {
+        GWY_SWAP(gdouble, xy[2*i], xy[2*(n-1 - i)]);
+        GWY_SWAP(gdouble, xy[2*i + 1], xy[2*(n-1 - i) + 1]);
+    }
+    gwy_selection_set_data(controls->selection, n, xy);
+    g_free(xy);
 }
 
 static void
