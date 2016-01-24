@@ -28,6 +28,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/correct.h>
+#include <libprocess/interpolation.h>
 #include <libprocess/spline.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
@@ -71,6 +72,7 @@ typedef struct {
     GtkObject *slackness;
     GtkWidget *closed;
     gdouble zoom;
+    gboolean realsquare;
 } StraightenControls;
 
 static gboolean      module_register         (void);
@@ -217,6 +219,8 @@ straighten_dialogue(StraightenArgs *args,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
+    gwy_container_gis_boolean_by_name(controls.mydata, "/0/data/realsquare",
+                                      &controls.realsquare);
 
     result = gwy_data_field_new(5, gwy_data_field_get_yres(dfield),
                                 5, gwy_data_field_get_yres(dfield),
@@ -307,6 +311,10 @@ straighten_dialogue(StraightenArgs *args,
                      "slackness", &args->slackness,
                      "closed", &args->closed,
                      NULL);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.slackness),
+                                 args->slackness);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.closed),
+                                     args->closed);
     }
     else
         init_selection(controls.selection, dfield, args);
@@ -344,7 +352,8 @@ straighten_dialogue(StraightenArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     result = gwy_container_get_object_by_name(controls.mydata, "/1/data");
-    mask = straighten_do(dfield, result, controls.selection, args, FALSE);
+    mask = straighten_do(dfield, result, controls.selection,
+                         args, controls.realsquare);
 
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Straightened"));
@@ -380,7 +389,7 @@ preview(StraightenControls *controls)
 
     result = gwy_container_get_object_by_name(controls->mydata, "/1/data");
     mask = straighten_do(controls->dfield, result, controls->selection,
-                         controls->args, FALSE);
+                         controls->args, controls->realsquare);
     gwy_data_field_data_changed(result);
 
     if (mask) {
@@ -618,22 +627,27 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
 {
     GwyDataField *mask;
     GwySpline *spline;
-    PointXY *points, *tangents;
-    GwyInterpolationType interp;
-    gdouble dx, dy, h, length;
-    guint n, i, j, thickness;
+    PointXY *points, *tangents, *coords;
+    gdouble dx, dy, qx, qy, h, length;
+    guint n, i, j, k, thickness;
     gboolean have_exterior = FALSE;
     gint xres, yres;
-    gdouble *d, *m;
+    gdouble *m;
 
     n = gwy_selection_get_data(selection, NULL);
     if (n < 2)
         return NULL;
 
-    /* TODO: Actually support realsquare. */
     dx = gwy_data_field_get_xmeasure(dfield);
     dy = gwy_data_field_get_ymeasure(dfield);
     h = MIN(dx, dy);
+    if (realsquare) {
+        qx = h/dx;
+        qy = h/dy;
+        dx = dy = h;
+    }
+    else
+        qx = qy = 1.0;
 
     points = g_new(PointXY, n);
     for (i = 0; i < n; i++) {
@@ -650,14 +664,13 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     g_free(points);
 
     length = gwy_spline_length(spline);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    thickness = args->thickness;
+
     /* This would give natural sampling for a straight line along some axis. */
     n = GWY_ROUND(length + 1.0);
-    points = g_new(PointXY, n);
-    tangents = g_new(PointXY, n);
 
-    thickness = args->thickness;
-    // TODO: Handle non-interpolating bases.
-    interp = args->interp;
     gwy_data_field_resample(result, thickness, n, GWY_INTERPOLATION_NONE);
     gwy_data_field_set_xreal(result, h*thickness);
     gwy_data_field_set_yreal(result, h*n);
@@ -667,34 +680,41 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
                            G_OBJECT(gwy_data_field_get_si_unit_xy(result)));
     gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(dfield)),
                            G_OBJECT(gwy_data_field_get_si_unit_z(result)));
-    d = gwy_data_field_get_data(result);
 
     mask = gwy_data_field_new_alike(result, TRUE);
     m = gwy_data_field_get_data(mask);
 
+    points = g_new(PointXY, n);
+    tangents = g_new(PointXY, n);
+    coords = g_new(PointXY, n*thickness);
     gwy_spline_sample_uniformly(spline, points, tangents, n);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    for (i = 0; i < n; i++) {
-        gdouble xc = points[i].x, yc = points[i].y;
-        gdouble vx = tangents[i].y, vy = -tangents[i].x;
+    for (i = k = 0; i < n; i++) {
+        gdouble xc = qx*points[i].x, yc = qy*points[i].y;
+        gdouble vx = qx*tangents[i].y, vy = -qy*tangents[i].x;
 
         /* If the derivative is zero we just fill the entire row with the
          * same value.  I declare it acceptable. */
-        for (j = 0; j < thickness; j++) {
+        for (j = 0; j < thickness; j++, k++) {
             gdouble x = xc + (j + 0.5 - 0.5*thickness)*vx;
             gdouble y = yc + (j + 0.5 - 0.5*thickness)*vy;
 
-            if (x >= 0.0 && x <= xres && y >= 0.0 && y <= yres) {
-                d[i*thickness + j] = gwy_data_field_get_dval(dfield, x, y,
-                                                             interp);
-            }
-            else {
+            coords[k].x = x;
+            coords[k].y = y;
+            if (y > yres || x > xres || y < 0.0 || x < 0.0) {
                 m[i*thickness + j] = 1.0;
                 have_exterior = TRUE;
             }
         }
     }
+    /* Pass mirror because we handle exterior ourselves here and mirror is
+     * the least code which simultaneously does not produce undefined pixels
+     * where we disagree with the function on which pixels are numerically
+     * outside. */
+    gwy_data_field_sample_distorted(dfield, result, coords,
+                                    args->interp,
+                                    GWY_EXTERIOR_MIRROR_EXTEND, 0.0);
+
+    g_free(coords);
     g_free(points);
     g_free(tangents);
 
