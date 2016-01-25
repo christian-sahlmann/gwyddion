@@ -1042,9 +1042,13 @@ gwy_data_window_gradient_update(GwyDataWindow *data_window,
     layer = gwy_data_view_get_base_layer(view);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
     if (gradient)
-        gwy_container_set_string_by_name(data, key, g_strdup(gradient));
-    else
+        gwy_container_set_const_string_by_name(data, key, gradient);
+    else {
+        /* Enforce checking if the default gradient name has changed. */
+        gradient = gwy_inventory_get_default_item_name(gwy_gradients());
+        gwy_container_set_const_string_by_name(data, key, gradient);
         gwy_container_remove_by_name(data, key);
+    }
 }
 
 static void
