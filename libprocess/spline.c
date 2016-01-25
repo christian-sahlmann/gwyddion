@@ -232,6 +232,7 @@ gwy_spline_get_points(GwySpline *spline)
 const PointXY*
 gwy_spline_get_tangents(GwySpline *spline)
 {
+    gwy_spline_length(spline);
     return &point_index(spline->tangents, 0);
 }
 
