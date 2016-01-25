@@ -154,6 +154,7 @@ struct _ImgExportEnv {
     GQuark vlayer_sel_key;
     gboolean sel_line_have_layer;
     gboolean sel_point_have_layer;
+    gboolean sel_path_have_layer;
     gdouble sel_line_thickness;
     gdouble sel_point_radius;
 };
@@ -359,6 +360,7 @@ DECLARE_SELECTION_DRAWING(path);
 
 static void     options_sel_line    (ImgExportControls *controls);
 static void     options_sel_point   (ImgExportControls *controls);
+static void     options_sel_path    (ImgExportControls *controls);
 
 static const GwyRGBA black = GWYRGBA_BLACK;
 static const GwyRGBA white = GWYRGBA_WHITE;
@@ -463,7 +465,7 @@ static const ImgExportSelectionType known_selections[] =
     },
     {
         "GwySelectionPath", N_("Path"),
-        NULL, &draw_sel_path,
+        &options_sel_path, &draw_sel_path,
     },
 };
 
@@ -4726,6 +4728,14 @@ img_export_load_env(ImgExportEnv *env,
             gwy_debug("got radius from layer %d", pr);
             env->sel_point_radius = pr;
         }
+        else if (gwy_strequal(typename, "GwySelectionPath")) {
+            gint lt;
+
+            env->sel_path_have_layer = TRUE;
+            g_object_get(vlayer, "thickness", &lt, NULL);
+            gwy_debug("got thickness from layer %d", lt);
+            env->sel_line_thickness = lt;
+        }
     }
 
     g_string_free(s, TRUE);
@@ -4796,7 +4806,7 @@ img_export_export(GwyContainer *data,
     gwy_debug("feasible selection %s", args.selection);
 
     if (mode == GWY_RUN_INTERACTIVE) {
-        if (env.sel_line_have_layer) {
+        if (env.sel_line_have_layer || env.sel_path_have_layer) {
             args.sel_line_thickness = env.sel_line_thickness;
         }
         if (env.sel_point_have_layer) {
@@ -5923,17 +5933,20 @@ draw_sel_path(const ImgExportArgs *args,
     gdouble olw = sizes->sizes.outline_width;
     const GwyRGBA *colour = &args->sel_color;
     const GwyRGBA *outcolour = &args->sel_outline_color;
-    gdouble slackness, q, vx, vy, len, xy[2];
+    gdouble slackness, q, px, py, vx, vy, len, xy[2];
     GwyTriangulationPointXY *pts;
     const GwyTriangulationPointXY *natpts, *tangents;
     GwySpline *spline;
     gboolean closed;
-    guint n, i;
+    guint n, nn, i;
 
     g_object_get(sel, "slackness", &slackness, "closed", &closed, NULL);
     n = gwy_selection_get_data(sel, NULL);
     if (n < 2)
         return;
+
+    px = sizes->image.w/gwy_data_field_get_xres(args->env->dfield);
+    py = sizes->image.h/gwy_data_field_get_yres(args->env->dfield);
 
     /* XXX: This is dirty.  Unfortunately, we need to know the natural units
      * for good spline sampline and the vector ones are too coarse.   Hence
@@ -5948,12 +5961,12 @@ draw_sel_path(const ImgExportArgs *args,
     spline = gwy_spline_new_from_points(pts, n);
     gwy_spline_set_slackness(spline, slackness);
     gwy_spline_set_closed(spline, closed);
-    g_free(pts);
 
-    natpts = gwy_spline_sample_naturally(spline, &n);
-    g_return_if_fail(n >= 2);
+    tangents = gwy_spline_get_tangents(spline);
+    natpts = gwy_spline_sample_naturally(spline, &nn);
+    g_return_if_fail(nn >= 2);
 
-    /* Outline */
+    /* Path outline */
     if (olw > 0.0) {
         cairo_save(cr);
         cairo_set_line_width(cr, lw + 2.0*olw);
@@ -5971,41 +5984,70 @@ draw_sel_path(const ImgExportArgs *args,
             cairo_move_to(cr, natpts[0].x/q + vx, natpts[0].y/q + vy);
         }
 
-        for (i = 1; i < n-1; i++)
+        for (i = 1; i < nn-1; i++)
             cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
 
         if (closed) {
-            cairo_line_to(cr, natpts[n-1].x/q, natpts[n-1].y/q);
+            cairo_line_to(cr, natpts[nn-1].x/q, natpts[nn-1].y/q);
             cairo_close_path(cr);
         }
         else {
             /* BUTT caps */
-            vx = natpts[n-1].x - natpts[n-2].x;
-            vy = natpts[n-1].y - natpts[n-2].y;
+            vx = natpts[nn-1].x - natpts[nn-2].x;
+            vy = natpts[nn-1].y - natpts[nn-2].y;
             len = sqrt(vx*vx + vy*vy);
             vx *= olw/len;
             vy *= olw/len;
-            cairo_line_to(cr, natpts[n-1].x/q + vx, natpts[n-1].y/q + vy);
+            cairo_line_to(cr, natpts[nn-1].x/q + vx, natpts[nn-1].y/q + vy);
         }
 
         cairo_stroke(cr);
         cairo_restore(cr);
     }
-    /* NB: When lt > 0.0 we also have to draw orthogonal line but *only* in
-     * original points using gwy_spline_get_tangents()! */
 
+    /* Tick outline */
+    if (olw > 0.0 && lt > 0.0) {
+        for (i = 0; i < n; i++) {
+            vx = tangents[i].y;
+            vy = -tangents[i].x;
+            len = sqrt(vx*vx + vy*vy);
+            vx *= lt*px/len;
+            vy *= lt*py/len;
+            draw_line_outline(cr,
+                              pts[i].x/q - 0.5*vx, pts[i].y/q - 0.5*vy,
+                              pts[i].x/q + 0.5*vx, pts[i].y/q + 0.5*vy,
+                              outcolour, lw, olw);
+        }
+    }
+
+    /* Path */
     if (lw > 0.0) {
         cairo_set_line_width(cr, lw);
         set_cairo_source_rgb(cr, colour);
         cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
-        for (i = 1; i < n; i++)
+        for (i = 1; i < nn; i++)
             cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
         if (closed)
             cairo_close_path(cr);
         cairo_stroke(cr);
     }
 
+    /* Tick */
+    if (lw > 0.0 && lt > 0.0) {
+        for (i = 0; i < n; i++) {
+            vx = tangents[i].y;
+            vy = -tangents[i].x;
+            len = sqrt(vx*vx + vy*vy);
+            vx *= lt*px/len;
+            vy *= lt*py/len;
+            cairo_move_to(cr, pts[i].x/q - 0.5*vx, pts[i].y/q - 0.5*vy);
+            cairo_line_to(cr, pts[i].x/q + 0.5*vx, pts[i].y/q + 0.5*vy);
+        }
+        cairo_stroke(cr);
+    }
+
     gwy_spline_free(spline);
+    g_free(pts);
 }
 
 static void
@@ -6064,7 +6106,7 @@ options_sel_line(ImgExportControls *controls)
     controls->sel_options = g_slist_prepend(controls->sel_options, check);
     row++;
 
-    adj = gtk_adjustment_new(args->sel_line_thickness, 0.0, 32.0, 1.0, 5.0, 0);
+    adj = gtk_adjustment_new(args->sel_line_thickness, 0.0, 128.0, 1.0, 5.0, 0);
     gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                 _("_End marker length:"), "px", adj);
     controls->sel_options = add_table_row_to_list(GTK_WIDGET(table), row, 3,
@@ -6100,6 +6142,25 @@ options_sel_point(ImgExportControls *controls)
                                                   controls->sel_options);
     g_signal_connect_swapped(adj, "value-changed",
                              G_CALLBACK(sel_point_radius_changed), controls);
+    row++;
+}
+
+static void
+options_sel_path(ImgExportControls *controls)
+{
+    GtkTable *table = GTK_TABLE(controls->table_selection);
+    ImgExportArgs *args = controls->args;
+    GtkObject *adj;
+    gint row = controls->sel_row_start;
+
+    adj = gtk_adjustment_new(args->sel_line_thickness, 0.0, 1024.0, 1.0, 5.0,
+                             0);
+    gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
+                                _("_End marker length:"), "px", adj);
+    controls->sel_options = add_table_row_to_list(GTK_WIDGET(table), row, 3,
+                                                  controls->sel_options);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(sel_line_thickness_changed), controls);
     row++;
 }
 
