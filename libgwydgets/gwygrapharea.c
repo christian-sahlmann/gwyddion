@@ -1082,11 +1082,8 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         gwy_graph_area_clamp_coords_for_child(area, &x, &y);
         x -= area->x0 - area->active->allocation.x;
         y -= area->y0 - area->active->allocation.y;
-        if (x != area->active->allocation.x
-            || y != area->active->allocation.y) {
-            gtk_layout_move(GTK_LAYOUT(area), area->active, x, y);
-        }
         calculate_rxy0(area, x, y);
+
         g_object_get(gmodel, "label-position", &pos, NULL);
         if (area->rx0 < 0.04 && area->ry0 < 0.04)
             newpos = GWY_GRAPH_LABEL_NORTHWEST;
@@ -1100,8 +1097,13 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             newpos = GWY_GRAPH_LABEL_USER;
 
         area->active = NULL;
-        if (newpos != pos)
-            g_object_set(gmodel, "label-position", newpos, NULL);
+        if (newpos != pos || newpos == GWY_GRAPH_LABEL_USER) {
+            g_object_set(gmodel,
+                         "label-position", newpos,
+                         "label-relative-x", area->rx0,
+                         "label-relative-y", area->ry0,
+                         NULL);
+        }
     }
     return FALSE;
 }
@@ -1589,7 +1591,9 @@ gwy_graph_area_model_notify(GwyGraphArea *area,
         return;
     }
 
-    if (gwy_strequal(pspec->name, "label-position")) {
+    if (gwy_strequal(pspec->name, "label-position")
+        || gwy_strequal(pspec->name, "label-relative-x")
+        || gwy_strequal(pspec->name, "label-relative-y")) {
         gwy_graph_area_restore_label_pos(area);
         return;
     }
@@ -1603,9 +1607,6 @@ gwy_graph_area_restore_label_pos(GwyGraphArea *area)
 
     if (gmodel)
         g_object_get(gmodel, "label-position", &pos, NULL);
-
-    if (pos == GWY_GRAPH_LABEL_USER)
-        return;
 
     if (pos == GWY_GRAPH_LABEL_NORTHWEST) {
         area->rx0 = 0.0;
@@ -1622,6 +1623,12 @@ gwy_graph_area_restore_label_pos(GwyGraphArea *area)
     else if (pos == GWY_GRAPH_LABEL_SOUTHEAST) {
         area->rx0 = 1.0;
         area->ry0 = 1.0;
+    }
+    else {
+        g_object_get(gmodel,
+                     "label-relative-x", &area->rx0,
+                     "label-relative-y", &area->ry0,
+                     NULL);
     }
 
     if (GTK_WIDGET_DRAWABLE(area))

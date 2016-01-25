@@ -84,7 +84,7 @@ struct _GwyGraphModel {
     gint int2;
     GwyGraphPointType enum1;
     GwyGraphPointType enum2;
-    gpointer reserved1;
+    gpointer label_priv;
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;

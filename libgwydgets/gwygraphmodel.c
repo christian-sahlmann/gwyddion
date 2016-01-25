@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libprocess/triangulation.h>
 #include <libgwydgets/gwydgettypes.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
@@ -58,6 +59,8 @@ enum {
     PROP_LABEL_REVERSE,
     PROP_LABEL_VISIBLE,
     PROP_GRID_TYPE,
+    PROP_LABEL_RELATIVE_X,
+    PROP_LABEL_RELATIVE_Y,
     PROP_LAST
 };
 
@@ -350,6 +353,44 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                            G_PARAM_READWRITE));
 
     /**
+     * GwyGraphModel:label-relative-x
+     *
+     * Relative screen X-coordinate of label inside the area.
+     *
+     * This value has any effect only if the label position is
+     * %GWY_GRAPH_LABEL_USER.
+     *
+     * Since: 2.45
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_RELATIVE_X,
+         g_param_spec_double("label-relative-x",
+                             "Label relative X",
+                             "Relative x-coordinate of label inside the area.",
+                             0.0, 1.0, 1.0,
+                             G_PARAM_READWRITE));
+
+    /**
+     * GwyGraphModel:label-relative-y
+     *
+     * Relative screen Y-coordinate of label inside the area.
+     *
+     * This value has any effect only if the label position is
+     * %GWY_GRAPH_LABEL_USER.
+     *
+     * Since: 2.45
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_LABEL_RELATIVE_Y,
+         g_param_spec_double("label-relative-y",
+                             "Label relative Y",
+                             "Relative y-coordinate of label inside the area.",
+                             0.0, 1.0, 0.0,
+                             G_PARAM_READWRITE));
+
+    /**
      * GwyGraphModel::curve-data-changed:
      * @gwygraphmodel: The #GwyGraphModel which received the signal.
      * @arg1: The index of the changed curve in the model.
@@ -388,6 +429,8 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
 static void
 gwy_graph_model_init(GwyGraphModel *gmodel)
 {
+    GwyTriangulationPointXY *label_priv;
+
     gwy_debug_objects_creation((GObject*)gmodel);
 
     gmodel->curves = g_ptr_array_new();
@@ -408,6 +451,11 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->label_frame_thickness = 1;
     gmodel->label_reverse = FALSE;
     gmodel->label_visible = TRUE;
+
+    gmodel->label_priv = g_new(GwyTriangulationPointXY, 1);
+    label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+    label_priv->x = 1.0;
+    label_priv->y = 0.0;
 }
 
 /**
@@ -438,6 +486,8 @@ gwy_graph_model_finalize(GObject *object)
 
     gmodel = GWY_GRAPH_MODEL(object);
 
+    g_free(gmodel->label_priv);
+
     gwy_object_unref(gmodel->x_unit);
     gwy_object_unref(gmodel->y_unit);
 
@@ -461,11 +511,13 @@ gwy_graph_model_serialize(GObject *obj,
                           GByteArray *buffer)
 {
     GwyGraphModel *gmodel;
+    GwyTriangulationPointXY *label_priv;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), NULL);
 
     gmodel = GWY_GRAPH_MODEL(obj);
+    label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
     {
         guint32 ncurves = gmodel->curves->len;
         GwySerializeSpec spec[] = {
@@ -492,6 +544,8 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'd', "label.relative.x", &label_priv->x, NULL },
+            { 'd', "label.relative.y", &label_priv->y, NULL },
             { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
@@ -506,11 +560,13 @@ static gsize
 gwy_graph_model_get_size(GObject *obj)
 {
     GwyGraphModel *gmodel;
+    GwyTriangulationPointXY *label_priv;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), 0);
 
     gmodel = GWY_GRAPH_MODEL(obj);
+    label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
     {
         guint32 ncurves = gmodel->curves->len;
         GwySerializeSpec spec[] = {
@@ -537,6 +593,8 @@ gwy_graph_model_get_size(GObject *obj)
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'd', "label.relative.x", &label_priv->x, NULL },
+            { 'd', "label.relative.y", &label_priv->y, NULL },
             { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &gmodel->curves->pdata, &ncurves },
         };
@@ -552,10 +610,12 @@ gwy_graph_model_deserialize(const guchar *buffer,
                             gsize *position)
 {
     GwyGraphModel *gmodel;
+    GwyTriangulationPointXY *label_priv;
 
     g_return_val_if_fail(buffer, NULL);
 
     gmodel = gwy_graph_model_new();
+    label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
     {
         gchar *top_label, *bottom_label, *left_label, *right_label, *title;
         gboolean b;
@@ -595,6 +655,8 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'b', "label.reverse", &gmodel->label_reverse, NULL },
             { 'b', "label.visible", &gmodel->label_visible, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'd', "label.relative.x", &label_priv->x, NULL },
+            { 'd', "label.relative.y", &label_priv->y, NULL },
             { 'i', "grid-type", &gmodel->grid_type, NULL },
             { 'O', "curves", &curves, &ncurves },
         };
@@ -644,6 +706,8 @@ gwy_graph_model_deserialize(const guchar *buffer,
             }
             g_free(curves);
         }
+        label_priv->x = CLAMP(label_priv->x, 0.0, 1.0);
+        label_priv->y = CLAMP(label_priv->y, 0.0, 1.0);
     }
 
     return (GObject*)gmodel;
@@ -677,6 +741,7 @@ gwy_graph_model_clone_real(GObject *source,
                            GObject *copy)
 {
     GwyGraphModel *gmodel, *clone;
+    GwyTriangulationPointXY *gmodel_label_priv, *clone_label_priv;
     guint i;
 
     g_return_if_fail(GWY_IS_GRAPH_MODEL(source));
@@ -684,6 +749,9 @@ gwy_graph_model_clone_real(GObject *source,
 
     gmodel = GWY_GRAPH_MODEL(source);
     clone = GWY_GRAPH_MODEL(copy);
+
+    gmodel_label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+    clone_label_priv = (GwyTriangulationPointXY*)clone->label_priv;
 
     g_object_freeze_notify(copy);
 
@@ -804,6 +872,16 @@ gwy_graph_model_clone_real(GObject *source,
         g_object_notify(copy, "grid-type");
     }
 
+    if (clone_label_priv->x != gmodel_label_priv->x) {
+        clone_label_priv->x = gmodel_label_priv->x;
+        g_object_notify(copy, "label-relative-x");
+    }
+
+    if (clone_label_priv->y != gmodel_label_priv->y) {
+        clone_label_priv->y = gmodel_label_priv->y;
+        g_object_notify(copy, "label-relative-y");
+    }
+
     /* There is no promise of keeping the identity of member objects in
      * clone().  So do the simple thing and reconstruct the graph fully. */
     gwy_graph_model_remove_all_curves(clone);
@@ -824,6 +902,7 @@ gwy_graph_model_set_property(GObject *object,
                              GParamSpec *pspec)
 {
     GwyGraphModel *gmodel = GWY_GRAPH_MODEL(object);
+    GwyTriangulationPointXY *label_priv;
 
     switch (prop_id) {
         case PROP_TITLE:
@@ -922,6 +1001,16 @@ gwy_graph_model_set_property(GObject *object,
         gmodel->grid_type = g_value_get_enum(value);
         break;
 
+        case PROP_LABEL_RELATIVE_X:
+        label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+        label_priv->x = g_value_get_double(value);
+        break;
+
+        case PROP_LABEL_RELATIVE_Y:
+        label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+        label_priv->y = g_value_get_double(value);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -935,6 +1024,7 @@ gwy_graph_model_get_property(GObject*object,
                              GParamSpec *pspec)
 {
     GwyGraphModel *gmodel = GWY_GRAPH_MODEL(object);
+    GwyTriangulationPointXY *label_priv;
 
     switch (prop_id) {
         case PROP_TITLE:
@@ -1035,6 +1125,16 @@ gwy_graph_model_get_property(GObject*object,
         g_value_set_enum(value, gmodel->grid_type);
         break;
 
+        case PROP_LABEL_RELATIVE_X:
+        label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+        g_value_set_double(value, label_priv->x);
+        break;
+
+        case PROP_LABEL_RELATIVE_Y:
+        label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+        g_value_set_double(value, label_priv->y);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1056,10 +1156,13 @@ GwyGraphModel*
 gwy_graph_model_new_alike(GwyGraphModel *gmodel)
 {
     GwyGraphModel *duplicate;
+    GwyTriangulationPointXY *gmodel_label_priv, *dup_label_priv;
 
     gwy_debug("");
 
     duplicate = gwy_graph_model_new();
+    gmodel_label_priv = (GwyTriangulationPointXY*)gmodel->label_priv;
+    dup_label_priv = (GwyTriangulationPointXY*)duplicate->label_priv;
 
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->x_is_logarithmic = gmodel->x_is_logarithmic;
@@ -1084,9 +1187,11 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     duplicate->left_label = g_string_new(gmodel->left_label->str);
     duplicate->right_label = g_string_new(gmodel->right_label->str);
 
+    dup_label_priv->x = gmodel_label_priv->x;
+    dup_label_priv->y = gmodel_label_priv->y;
+
     return duplicate;
 }
-
 
 /**
  * gwy_graph_model_add_curve:
