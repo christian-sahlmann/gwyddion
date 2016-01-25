@@ -13,19 +13,28 @@ Libraries:
   curves.
 - libgwyapp: All program messages are gathered by the default logger and
   displayed in a text view.
-- libgwyapp: Data browser can show warnings ocurring during the opening or
-  merging of specific files.
+- libgwyapp: Data browser can show warnings and other messages ocurring during
+  the opening or merging of specific files.
 - libgwyprocess: Wrong estimated sizes for tip models were corrected.
 - libgwyprocess: Two new tip models were added: Parabola and Cone.
 - libgwyprocess: Function for filling missing valies in GwyDataLine using
   Laplace data correction was added.
 - libgwyddion: GwyNLFitter fit returns -1 and NULLs the covariance matrix when
   it gets infinities or NaNs anywhere in the matrix or parameters.
+- libprocess: New DataField distortion function that takes explicit list of
+  coordinates in the original data field.
+- libgwydgets: A large number of new stock icons were added.
+- libgwyddion: New macro gwy_info() emits an INFO-level log message.
+- libgwyapp: gwy_app_sync_data_items() only replicates non-empty selections
+  now.
+- libgwydgets: The gradient can be unset using data window colour axis menu.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
   direction perpendicular to the curve.
 - Path layer (new): A single spline curve with arbitrary number of points.
+- Data processing modules with preview: Data with non-square aspect ratio
+  should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
   metadata.
 - Align rows: Median difference method no longer changes the overall data tilt.
