@@ -63,10 +63,11 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include <libdraw/gwypixfield.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libprocess/spline.h>
+#include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -341,54 +342,21 @@ static gboolean write_pixbuf_targa  (GdkPixbuf *pixbuf,
                                      const gchar *name,
                                      const gchar *filename,
                                      GError **error);
-static void     draw_sel_axis       (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
-static void     draw_sel_ellipse    (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
-static void     draw_sel_line       (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
-static void     draw_sel_point      (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
-static void     draw_sel_rectangle  (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
-static void     draw_sel_lattice    (const ImgExportArgs *args,
-                                     const ImgExportSizes *sizes,
-                                     GwySelection *sel,
-                                     gdouble qx,
-                                     gdouble qy,
-                                     PangoLayout *layout,
-                                     GString *s,
-                                     cairo_t *cr);
+
+#define DECLARE_SELECTION_DRAWING(name) \
+    static void draw_sel_##name(const ImgExportArgs *args, \
+                                const ImgExportSizes *sizes, \
+                                GwySelection *sel, gdouble qx, gdouble qy, \
+                                PangoLayout *layout, GString *s, cairo_t *cr)
+
+DECLARE_SELECTION_DRAWING(axis);
+DECLARE_SELECTION_DRAWING(ellipse);
+DECLARE_SELECTION_DRAWING(line);
+DECLARE_SELECTION_DRAWING(point);
+DECLARE_SELECTION_DRAWING(rectangle);
+DECLARE_SELECTION_DRAWING(lattice);
+DECLARE_SELECTION_DRAWING(path);
+
 static void     options_sel_line    (ImgExportControls *controls);
 static void     options_sel_point   (ImgExportControls *controls);
 
@@ -481,17 +449,21 @@ static const ImgExportSelectionType known_selections[] =
         "GwySelectionLine", N_("Lines"),
         &options_sel_line, &draw_sel_line,
     },
-    { 
+    {
         "GwySelectionPoint", N_("Points"),
         &options_sel_point, &draw_sel_point,
     },
-    { 
+    {
         "GwySelectionRectangle", N_("Rectangles"),
         NULL, &draw_sel_rectangle,
     },
-    { 
+    {
         "GwySelectionLattice", N_("Lattice"),
         NULL, &draw_sel_lattice,
+    },
+    {
+        "GwySelectionPath", N_("Path"),
+        NULL, &draw_sel_path,
     },
 };
 
@@ -520,7 +492,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -5742,7 +5714,7 @@ draw_sel_line(const ImgExportArgs *args,
 
         if (olw > 0.0) {
             draw_line_outline(cr, xf, yf, xt, yt, outcolour, lw, olw);
-            if (args->sel_line_thickness > 0.0) {
+            if (lt > 0.0) {
                 gdouble xd = yt - yf, yd = xf - xt;
                 gdouble len = sqrt(xd*xd + yd*yd);
                 xd *= lt*px/len;
@@ -5762,8 +5734,8 @@ draw_sel_line(const ImgExportArgs *args,
         cairo_move_to(cr, xf, yf);
         cairo_line_to(cr, xt, yt);
 
-        gwy_debug("sel_line_thickness %g", args->sel_line_thickness);
-        if (args->sel_line_thickness > 0.0) {
+        gwy_debug("sel_line_thickness %g", lt);
+        if (lt > 0.0) {
             gdouble xd = yt - yf, yd = xf - xt;
             gdouble len = sqrt(xd*xd + yd*yd);
             xd *= lt*px/len;
@@ -5934,6 +5906,80 @@ draw_sel_lattice(const ImgExportArgs *args,
         cairo_line_to(cr, xt, yt);
     }
     stroke_path_with_outline(cr, colour, outcolour, lw, olw);
+}
+
+static void
+draw_sel_path(const ImgExportArgs *args,
+              const ImgExportSizes *sizes,
+              GwySelection *sel,
+              gdouble qx, gdouble qy,
+              G_GNUC_UNUSED PangoLayout *layout,
+              G_GNUC_UNUSED GString *s,
+              cairo_t *cr)
+{
+    gboolean is_vector = !!args->env->format->write_vector;
+    gdouble lw = sizes->sizes.line_width;
+    /* TODO gdouble lt = args->sel_line_thickness; */
+    gdouble olw = sizes->sizes.outline_width;
+    const GwyRGBA *colour = &args->sel_color;
+    const GwyRGBA *outcolour = &args->sel_outline_color;
+    gdouble slackness, q, xy[2];
+    GwyTriangulationPointXY *pts;
+    const GwyTriangulationPointXY *natpts;
+    GwySpline *spline;
+    gboolean closed;
+    guint n, i;
+
+    g_object_get(sel, "slackness", &slackness, "closed", &closed, NULL);
+    n = gwy_selection_get_data(sel, NULL);
+    if (n < 2)
+        return;
+
+    /* XXX: This is dirty.  Unfortunately, we need to know the natural units
+     * for good spline sampline and the vector ones are too coarse. */
+    q = is_vector ? 8.0 : 1.0;
+    pts = g_new(GwyTriangulationPointXY, n);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(sel, i, xy);
+        pts[i].x = q*qx*xy[0];
+        pts[i].y = q*qy*xy[1];
+    }
+    spline = gwy_spline_new_from_points(pts, n);
+    gwy_spline_set_slackness(spline, slackness);
+    gwy_spline_set_closed(spline, closed);
+    g_free(pts);
+
+    natpts = gwy_spline_sample_naturally(spline, &n);
+
+    if (olw > 0.0) {
+        cairo_save(cr);
+        cairo_set_line_width(cr, lw + 2.0*olw);
+        set_cairo_source_rgb(cr, outcolour);
+        /* TODO: BUTT line if not closed */
+        cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
+        for (i = 1; i < n; i++)
+            cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
+        if (closed)
+            cairo_close_path(cr);
+        cairo_stroke(cr);
+        cairo_restore(cr);
+    }
+    /* NB: When lt > 0.0 we also have to draw orthogonal line but *only* in
+     * original points using gwy_spline_get_tangents()! */
+
+    if (lw > 0.0) {
+        cairo_set_line_width(cr, lw);
+        set_cairo_source_rgb(cr, colour);
+        /* TODO: BUTT line if not closed */
+        cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
+        for (i = 1; i < n; i++)
+            cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
+        if (closed)
+            cairo_close_path(cr);
+        cairo_stroke(cr);
+    }
+
+    gwy_spline_free(spline);
 }
 
 static void
