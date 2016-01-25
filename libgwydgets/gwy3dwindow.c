@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -120,6 +120,7 @@ static void     gwy_3d_window_auto_scale_changed   (GtkToggleButton *check,
 static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_labels_reset_clicked (Gwy3DWindow *window);
+static void     gwy_3d_window_reset_visualisation  (Gwy3DWindow *window);
 static void     gwy_3d_window_set_tooltip          (GtkWidget *widget,
                                                     const gchar *tip_text);
 static gboolean gwy_3d_window_view_clicked         (GtkWidget *gwy3dwindow,
@@ -880,7 +881,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     Gwy3DSetup *setup;
     gboolean is_material = FALSE, is_gradient = FALSE;
     gboolean is_overlay = FALSE, light = FALSE;
-    GtkWidget *vbox, *spin, *table, *menu, *label;
+    GtkWidget *vbox, *spin, *table, *menu, *label, *button;
     GtkObject *adj;
     const guchar *name;
     gint row;
@@ -911,7 +912,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
 
     vbox = gtk_vbox_new(FALSE, 0);
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(11, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -1003,6 +1004,15 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
 
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    button = gtk_button_new_with_mnemonic(_("_Reset"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_3d_window_reset_visualisation),
+                             window);
     row++;
 
     g_signal_connect(setup, "notify::visualization",
@@ -1337,9 +1347,9 @@ gwy_3d_window_set_gradient(GtkTreeSelection *selection,
         gtk_tree_model_get(model, &iter, 0, &resource, -1);
         view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
         name = gwy_resource_get_name(resource);
-        gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
-                                         gwy_3d_view_get_gradient_key(view),
-                                         g_strdup(name));
+        gwy_container_set_const_string_by_name(gwy_3d_view_get_data(view),
+                                               gwy_3d_view_get_gradient_key(view),
+                                               name);
     }
 }
 
@@ -1357,9 +1367,9 @@ gwy_3d_window_set_material(GtkTreeSelection *selection,
         gtk_tree_model_get(model, &iter, 0, &resource, -1);
         view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
         name = gwy_resource_get_name(resource);
-        gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
-                                         gwy_3d_view_get_material_key(view),
-                                         g_strdup(name));
+        gwy_container_set_const_string_by_name(gwy_3d_view_get_data(view),
+                                               gwy_3d_view_get_material_key(view),
+                                               name);
     }
 }
 
@@ -1609,6 +1619,26 @@ gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window)
 }
 
 static void
+gwy_3d_window_reset_visualisation(Gwy3DWindow *window)
+{
+    Gwy3DView *view = GWY_3D_VIEW(window->gwy3dview);
+    GwyContainer *data = gwy_3d_view_get_data(view);
+    const gchar *name, *key;
+
+    /* This sequence ensures gradient changes to the *current* default, even
+     * if it unset presently. */
+    key = gwy_3d_view_get_gradient_key(view);
+    name = gwy_inventory_get_default_item_name(gwy_gradients());
+    gwy_container_set_const_string_by_name(data, key, name);
+    gwy_container_remove_by_name(data, key);
+
+    key = gwy_3d_view_get_material_key(view);
+    name = gwy_inventory_get_default_item_name(gwy_gl_materials());
+    gwy_container_set_const_string_by_name(data, key, name);
+    gwy_container_remove_by_name(data, key);
+}
+
+static void
 gwy_3d_window_set_tooltip(GtkWidget *widget,
                           const gchar *tip_text)
 {
@@ -1740,9 +1770,9 @@ gwy_3d_window_gradient_selected(GtkWidget *item,
     /* FIXME: Double update if tree view is visible. Remove once selection
      * buttons can emit signals. */
     view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
-    gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
-                                     gwy_3d_view_get_gradient_key(view),
-                                     g_strdup(name));
+    gwy_container_set_const_string_by_name(gwy_3d_view_get_data(view),
+                                           gwy_3d_view_get_gradient_key(view),
+                                           name);
 }
 
 static void
@@ -1757,9 +1787,9 @@ gwy_3d_window_material_selected(GtkWidget *item,
     /* FIXME: Double update if tree view is visible. Remove once selection
      * buttons can emit signals. */
     view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
-    gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
-                                     gwy_3d_view_get_material_key(view),
-                                     g_strdup(name));
+    gwy_container_set_const_string_by_name(gwy_3d_view_get_data(view),
+                                           gwy_3d_view_get_material_key(view),
+                                           name);
 }
 
 static void
