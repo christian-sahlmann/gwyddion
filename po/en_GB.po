@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2016-01-18 20:22+0100\n"
-"PO-Revision-Date: 2016-01-18 20:44+0100\n"
+"PO-Revision-Date: 2016-01-25 11:00+0100\n"
 "Last-Translator: David Nečas <yeti@gwyddion.net>\n"
 "Language-Team: \n"
 "Language: en_GB\n"
@@ -3800,7 +3800,7 @@ msgstr "_Width:"
 #: modules/volume/volume_calibrate.c:441 modules/volume/volume_calibrate.c:468
 #: modules/volume/volume_calibrate.c:546
 msgid "verb|Change"
-msgstr "verb|Change"
+msgstr "Change"
 
 #: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:907
 #: modules/file/rawfile.c:694 modules/process/crosscor.c:232
@@ -3969,7 +3969,7 @@ msgstr "Lattice"
 
 #: modules/file/imgexport.c:499 modules/file/imgexport.c:505
 msgid "ruler|_None"
-msgstr "ruler|_None"
+msgstr "_None"
 
 #: modules/file/imgexport.c:500
 msgid "_Rulers"
@@ -3985,7 +3985,7 @@ msgstr "_False colour ruler"
 
 #: modules/file/imgexport.c:510
 msgid "title|None"
-msgstr "title|None"
+msgstr "None"
 
 #: modules/file/imgexport.c:511
 msgid "At the top"
@@ -4193,12 +4193,12 @@ msgstr "Lateral"
 #: modules/file/imgexport.c:4378 modules/file/rawfile.c:1040
 #: modules/process/calcoefs_load.c:217 modules/process/neural.c:700
 msgid "verb|_Load"
-msgstr "verb|_Load"
+msgstr "_Load"
 
 #: modules/file/imgexport.c:4384 modules/file/rawfile.c:1046
 #: modules/process/neural.c:706
 msgid "verb|_Store"
-msgstr "verb|_Store"
+msgstr "_Store"
 
 #: modules/file/imgexport.c:4390 modules/file/rawfile.c:1052
 #: modules/process/neural.c:712
