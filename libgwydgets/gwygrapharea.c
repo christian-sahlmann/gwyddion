@@ -266,8 +266,8 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->x_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
     area->y_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
 
-    area->rx0 = 1;
-    area->ry0 = 0;
+    area->rx0 = 1.0;
+    area->ry0 = 0.0;
 
     area->enable_user_input = TRUE;
 
@@ -462,6 +462,19 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     area->label_old_height = lab_alloc->height;
 }
 
+/* Here x and y are the position where the label is or would be moved to. */
+static void
+calculate_rxy0(GwyGraphArea *area, gint x, gint y)
+{
+    GtkWidget *widget = GTK_WIDGET(area);
+    GtkWidget *child = area->active;
+    gint red_width = widget->allocation.width - child->allocation.width;
+    gint red_height = widget->allocation.height - child->allocation.height;
+
+    area->rx0 = (red_width > 0) ? (gdouble)x/red_width : 0.5;
+    area->ry0 = (red_height > 0) ? (gdouble)y/red_height : 0.5;
+}
+
 static void
 gwy_graph_area_repos_label(GwyGraphArea *area,
                            GtkAllocation *area_allocation,
@@ -470,8 +483,10 @@ gwy_graph_area_repos_label(GwyGraphArea *area,
 
     gint posx, posy, oldposx, oldposy;
 
-    posx = (gint)(area->rx0*area_allocation->width);
-    posy = (gint)(area->ry0*area_allocation->height);
+    posx = (gint)(area->rx0*(area_allocation->width
+                             - label_allocation->width));
+    posy = (gint)(area->ry0*(area_allocation->height
+                             - label_allocation->height));
     posx = CLAMP(posx,
                  5, area_allocation->width - label_allocation->width - 5);
     posy = CLAMP(posy,
@@ -1064,21 +1079,21 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             ispos = 1;
         }
         gwy_graph_area_clamp_coords_for_child(area, &x, &y);
-        if (x != area->x0 || y != area->y0) {
-            x -= area->x0 - area->active->allocation.x;
-            y -= area->y0 - area->active->allocation.y;
+        x -= area->x0 - area->active->allocation.x;
+        y -= area->y0 - area->active->allocation.y;
+        if (x != area->active->allocation.x
+            || y != area->active->allocation.y) {
             gtk_layout_move(GTK_LAYOUT(area), area->active, x, y);
         }
-        area->rx0 = ((gdouble)event->x - area->rxoff)/(gdouble)area->old_width;
-        area->ry0 = ((gdouble)event->y - area->ryoff)/(gdouble)area->old_height;
+        calculate_rxy0(area, x, y);
         g_object_get(gmodel, "label-position", &pos, NULL);
-        if (area->rx0 < 0.01 && area->ry0 < 0.01)
+        if (area->rx0 < 0.04 && area->ry0 < 0.04)
             newpos = GWY_GRAPH_LABEL_NORTHWEST;
-        else if (area->rx0 > 0.99 && area->ry0 < 0.01)
+        else if (area->rx0 > 0.96 && area->ry0 < 0.04)
             newpos = GWY_GRAPH_LABEL_NORTHEAST;
-        else if (area->rx0 > 0.99 && area->ry0 > 0.99)
+        else if (area->rx0 > 0.96 && area->ry0 > 0.96)
             newpos = GWY_GRAPH_LABEL_SOUTHEAST;
-        else if (area->rx0 < 0.01 && area->ry0 > 0.99)
+        else if (area->rx0 < 0.04 && area->ry0 > 0.96)
             newpos = GWY_GRAPH_LABEL_SOUTHWEST;
         else
             newpos = GWY_GRAPH_LABEL_USER;
@@ -1221,7 +1236,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         break;
     }
 
-    /*widget (label) movement*/
+    /* Widget (label) movement. */
     if (area->active) {
 
         if (!ispos) {
@@ -1231,20 +1246,14 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         }
         gwy_graph_area_clamp_coords_for_child(area, &x, &y);
 
-        if (x - area->x0 == area->xoff
-            && y - area->y0 == area->yoff)
+        if (x - area->x0 == area->xoff && y - area->y0 == area->yoff)
             return FALSE;
 
         gwy_graph_area_draw_child_rectangle(area);
         area->xoff = x - area->x0;
         area->yoff = y - area->y0;
-
-
-        area->rx0 = ((gdouble)event->x - area->rxoff)/(gdouble)area->old_width;
-        area->ry0 = ((gdouble)event->y - area->ryoff)/(gdouble)area->old_height;
         gwy_graph_area_draw_child_rectangle(area);
     }
-
 
     return FALSE;
 }
