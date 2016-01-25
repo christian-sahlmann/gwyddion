@@ -8029,7 +8029,8 @@ gwy_app_sync_data_items(GwyContainer *source,
                            from_id, sel_keys[i]);
                 g_snprintf(key_to, sizeof(key_to), "/%d/select/%s",
                            to_id, sel_keys[i]);
-                if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                if (gwy_container_gis_object_by_name(source, key_from, &obj)
+                    && gwy_selection_get_data(GWY_SELECTION(obj), NULL)) {
                     obj = gwy_serializable_duplicate(obj);
                     gwy_container_set_object_by_name(dest, key_to, obj);
                     g_object_unref(obj);
