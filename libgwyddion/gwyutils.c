@@ -1883,9 +1883,32 @@ gwy_fprintf(FILE        *file,
  * gwy_debug:
  * @...: Format string, as in printf(), followed by arguments.
  *
- * Prints a debugging message.
+ * Emits a debugging message to the program log.
  *
- * Does nothing if compiled without DEBUG defined.
+ * The message is amended with additional information such as source file,
+ * line number or time (when possible) and emitted at log level
+ * %G_LOG_LEVEL_DEBUG via g_log().
+ *
+ * It should be noted that the default GLib log handler discards
+ * %G_LOG_LEVEL_DEBUG messages but the default Gwyddion handler does not.
+ *
+ * The macro expands to nothing if compiled without DEBUG defined.
+ **/
+
+/**
+ * gwy_info:
+ * @...: Format string, as in printf(), followed by arguments.
+ *
+ * Emits an informational message.
+ *
+ * The message is emitted at log level %G_LOG_LEVEL_INFO via g_log().  This
+ * macro is primarily meant for reporting of non-fatal issues in file import
+ * modules.
+ *
+ * It should be noted that the default GLib log handler discards
+ * %G_LOG_LEVEL_INFO messages but the default Gwyddion handler does not.
+ *
+ * Since: 2.45
  **/
 
 /**

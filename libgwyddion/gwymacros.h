@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -89,6 +89,8 @@ G_BEGIN_DECLS
 #  else
 #    define gwy_debug(format...) /* */
 #  endif
+#  define gwy_info(format...) \
+          g_log(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, format)
 #elif defined(G_HAVE_ISO_VARARGS)
 #  ifdef DEBUG
 #    define gwy_debug(...) \
@@ -99,6 +101,8 @@ G_BEGIN_DECLS
 #  else
 #    define gwy_debug(...) /* */
 #  endif
+#  define gwy_info(...) \
+          g_log(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, __VA_ARGS__)
 #else
 /* no varargs macros */
 #  ifdef DEBUG
@@ -108,6 +112,14 @@ gwy_debug(const gchar *format, ...)
     va_list args;
     va_start(args, format);
     g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format, args);
+    va_end(args);
+}
+
+gwy_info(const gchar *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_INFO, format, args);
     va_end(args);
 }
 #  else
@@ -129,4 +141,3 @@ G_END_DECLS
 #endif /* __GWY_MACROS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
