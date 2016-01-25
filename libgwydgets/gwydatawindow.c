@@ -70,6 +70,7 @@ static gboolean gwy_data_window_key_pressed       (GtkWidget *widget,
 static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                                    GdkEventButton *event);
 static void     gwy_data_window_show_more_gradients(GwyDataWindow *data_window);
+static void     gwy_data_window_unset_gradient    (GwyDataWindow *data_window);
 static void     gwy_data_window_gradient_selected (GtkWidget *item,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_gradient_changed  (GtkTreeSelection *selection,
@@ -883,8 +884,16 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
 
     menu = gwy_menu_gradient(G_CALLBACK(gwy_data_window_gradient_selected),
                              data_window);
+
+    item = gtk_menu_item_new_with_mnemonic(gwy_sgettext("_Unset "
+                                                        "Color Gradient"));
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_data_window_unset_gradient),
+                             data_window);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
     /* TRANSLATORS: Countable (more false colour gradients). */
-    item = gtk_menu_item_new_with_label(_("More..."));
+    item = gtk_menu_item_new_with_mnemonic(_("_More..."));
     g_signal_connect_swapped(item, "activate",
                              G_CALLBACK(gwy_data_window_show_more_gradients),
                              data_window);
@@ -937,6 +946,21 @@ gwy_data_window_show_more_gradients(GwyDataWindow *data_window)
 
     gtk_widget_show_all(scwin);
     gtk_window_present(GTK_WINDOW(window));
+}
+
+static void
+gwy_data_window_unset_gradient(GwyDataWindow *data_window)
+{
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+
+    if (data_window->grad_selector) {
+        treeview = GTK_TREE_VIEW(data_window->grad_selector);
+        selection = gtk_tree_view_get_selection(treeview);
+        gtk_tree_selection_unselect_all(selection);
+    }
+    gwy_data_window_gradient_update(data_window, NULL);
+    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), NULL);
 }
 
 static void
@@ -1017,7 +1041,10 @@ gwy_data_window_gradient_update(GwyDataWindow *data_window,
     data = gwy_data_view_get_data(view);
     layer = gwy_data_view_get_base_layer(view);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
-    gwy_container_set_string_by_name(data, key, g_strdup(gradient));
+    if (gradient)
+        gwy_container_set_string_by_name(data, key, g_strdup(gradient));
+    else
+        gwy_container_remove_by_name(data, key);
 }
 
 static void
