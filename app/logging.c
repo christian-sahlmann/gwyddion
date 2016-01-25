@@ -217,6 +217,11 @@ logger(const gchar *log_domain_str,
                          ? g_quark_from_string(log_domain_str)
                          : 0);
 
+    /* Can't use gwy_debug() for debugging here... */
+    /*
+    fprintf(stderr, "Received(%s,0x%04x) <%s>\n",
+            log_domain_str ? log_domain_str : "*", log_level, message);
+            */
     if (setup->last_count != G_MAXUINT
         && log_level == setup->last_level
         && log_domain == setup->last_domain
