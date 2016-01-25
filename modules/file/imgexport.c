@@ -5919,13 +5919,13 @@ draw_sel_path(const ImgExportArgs *args,
 {
     gboolean is_vector = !!args->env->format->write_vector;
     gdouble lw = sizes->sizes.line_width;
-    /* TODO gdouble lt = args->sel_line_thickness; */
+    gdouble lt = args->sel_line_thickness;
     gdouble olw = sizes->sizes.outline_width;
     const GwyRGBA *colour = &args->sel_color;
     const GwyRGBA *outcolour = &args->sel_outline_color;
-    gdouble slackness, q, xy[2];
+    gdouble slackness, q, vx, vy, len, xy[2];
     GwyTriangulationPointXY *pts;
-    const GwyTriangulationPointXY *natpts;
+    const GwyTriangulationPointXY *natpts, *tangents;
     GwySpline *spline;
     gboolean closed;
     guint n, i;
@@ -5936,7 +5936,8 @@ draw_sel_path(const ImgExportArgs *args,
         return;
 
     /* XXX: This is dirty.  Unfortunately, we need to know the natural units
-     * for good spline sampline and the vector ones are too coarse. */
+     * for good spline sampline and the vector ones are too coarse.   Hence
+     * we artificially refine them and cross fingers. */
     q = is_vector ? 8.0 : 1.0;
     pts = g_new(GwyTriangulationPointXY, n);
     for (i = 0; i < n; i++) {
@@ -5950,17 +5951,43 @@ draw_sel_path(const ImgExportArgs *args,
     g_free(pts);
 
     natpts = gwy_spline_sample_naturally(spline, &n);
+    g_return_if_fail(n >= 2);
 
+    /* Outline */
     if (olw > 0.0) {
         cairo_save(cr);
         cairo_set_line_width(cr, lw + 2.0*olw);
         set_cairo_source_rgb(cr, outcolour);
-        /* TODO: BUTT line if not closed */
-        cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
-        for (i = 1; i < n; i++)
-            cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
+
         if (closed)
+            cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
+        else {
+            /* BUTT caps */
+            vx = natpts[0].x - natpts[1].x;
+            vy = natpts[0].y - natpts[1].y;
+            len = sqrt(vx*vx + vy*vy);
+            vx *= olw/len;
+            vy *= olw/len;
+            cairo_move_to(cr, natpts[0].x/q + vx, natpts[0].y/q + vy);
+        }
+
+        for (i = 1; i < n-1; i++)
+            cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
+
+        if (closed) {
+            cairo_line_to(cr, natpts[n-1].x/q, natpts[n-1].y/q);
             cairo_close_path(cr);
+        }
+        else {
+            /* BUTT caps */
+            vx = natpts[n-1].x - natpts[n-2].x;
+            vy = natpts[n-1].y - natpts[n-2].y;
+            len = sqrt(vx*vx + vy*vy);
+            vx *= olw/len;
+            vy *= olw/len;
+            cairo_line_to(cr, natpts[n-1].x/q + vx, natpts[n-1].y/q + vy);
+        }
+
         cairo_stroke(cr);
         cairo_restore(cr);
     }
@@ -5970,7 +5997,6 @@ draw_sel_path(const ImgExportArgs *args,
     if (lw > 0.0) {
         cairo_set_line_width(cr, lw);
         set_cairo_source_rgb(cr, colour);
-        /* TODO: BUTT line if not closed */
         cairo_move_to(cr, natpts[0].x/q, natpts[0].y/q);
         for (i = 1; i < n; i++)
             cairo_line_to(cr, natpts[i].x/q, natpts[i].y/q);
