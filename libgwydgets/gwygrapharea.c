@@ -85,6 +85,7 @@ static void       selection_changed                    (GwyGraphArea *area);
 static void       gwy_graph_area_model_notify          (GwyGraphArea *area,
                                                         GParamSpec *pspec,
                                                         GwyGraphModel *gmodel);
+static void       gwy_graph_area_restore_label_pos     (GwyGraphArea *area);
 static void       gwy_graph_area_n_curves_changed      (GwyGraphArea *area);
 static void       gwy_graph_area_curve_notify          (GwyGraphArea *area,
                                                         gint i,
@@ -385,7 +386,7 @@ gwy_graph_area_set_model(GwyGraphArea *area,
     }
 
     gwy_graph_label_set_model(area->lab, gmodel);
-    gtk_widget_queue_draw(GTK_WIDGET(area));
+    gwy_graph_area_restore_label_pos(area);
 }
 
 /**
@@ -1576,7 +1577,7 @@ scr_to_data_x(GtkWidget *widget, gint scr)
 static void
 gwy_graph_area_model_notify(GwyGraphArea *area,
                             GParamSpec *pspec,
-                            GwyGraphModel *gmodel)
+                            G_GNUC_UNUSED GwyGraphModel *gmodel)
 {
     if (gwy_strequal(pspec->name, "n-curves")) {
         gwy_graph_area_n_curves_changed(area);
@@ -1589,31 +1590,42 @@ gwy_graph_area_model_notify(GwyGraphArea *area,
     }
 
     if (gwy_strequal(pspec->name, "label-position")) {
-        GwyGraphLabelPosition pos;
-        g_object_get(gmodel, "label-position", &pos, NULL);
-        if (pos == GWY_GRAPH_LABEL_USER)
-            return;
-
-        if (pos == GWY_GRAPH_LABEL_NORTHWEST) {
-            area->rx0 = 0.0;
-            area->ry0 = 0.0;
-        }
-        else if (pos == GWY_GRAPH_LABEL_NORTHEAST) {
-            area->rx0 = 1.0;
-            area->ry0 = 0.0;
-        }
-        else if (pos == GWY_GRAPH_LABEL_SOUTHWEST) {
-            area->rx0 = 0.0;
-            area->ry0 = 1.0;
-        }
-        else if (pos == GWY_GRAPH_LABEL_SOUTHEAST) {
-            area->rx0 = 1.0;
-            area->ry0 = 1.0;
-        }
-        if (GTK_WIDGET_DRAWABLE(area))
-            gtk_widget_queue_draw(GTK_WIDGET(area));
+        gwy_graph_area_restore_label_pos(area);
         return;
     }
+}
+
+static void
+gwy_graph_area_restore_label_pos(GwyGraphArea *area)
+{
+    GwyGraphModel *gmodel = area->graph_model;
+    GwyGraphLabelPosition pos = GWY_GRAPH_LABEL_NORTHWEST;
+
+    if (gmodel)
+        g_object_get(gmodel, "label-position", &pos, NULL);
+
+    if (pos == GWY_GRAPH_LABEL_USER)
+        return;
+
+    if (pos == GWY_GRAPH_LABEL_NORTHWEST) {
+        area->rx0 = 0.0;
+        area->ry0 = 0.0;
+    }
+    else if (pos == GWY_GRAPH_LABEL_NORTHEAST) {
+        area->rx0 = 1.0;
+        area->ry0 = 0.0;
+    }
+    else if (pos == GWY_GRAPH_LABEL_SOUTHWEST) {
+        area->rx0 = 0.0;
+        area->ry0 = 1.0;
+    }
+    else if (pos == GWY_GRAPH_LABEL_SOUTHEAST) {
+        area->rx0 = 1.0;
+        area->ry0 = 1.0;
+    }
+
+    if (GTK_WIDGET_DRAWABLE(area))
+        gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 static void
