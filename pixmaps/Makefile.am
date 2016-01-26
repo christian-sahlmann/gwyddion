@@ -280,7 +280,7 @@ xcf_sources = \
 	gwy_zoom-24.xcf
 
 svg_sources = \
-	gwy_neural.svg \
+	gwy_neural.svg
 
 EXTRA_DIST = \
 	gwyddion.icns \
