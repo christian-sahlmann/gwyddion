@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2016-01-18 20:22+0100\n"
-"PO-Revision-Date: 2016-01-25 11:00+0100\n"
+"PO-Revision-Date: 2016-01-26 23:07+0100\n"
 "Last-Translator: David Nečas <yeti@gwyddion.net>\n"
 "Language-Team: \n"
 "Language: en_GB\n"
@@ -445,9 +445,9 @@ msgstr "Id"
 msgid "Position"
 msgstr "Position"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:384
-#: modules/file/imgexport.c:4349 modules/process/curvature.c:767
-#: modules/tools/level3.c:468 modules/tools/readvalue.c:297
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:384 modules/file/imgexport.c:4349
+#: modules/process/curvature.c:767 modules/tools/level3.c:468
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Value"
 
@@ -1258,8 +1258,7 @@ msgstr "Curve:"
 msgid "Method:"
 msgstr "Method:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
 msgid "Angle"
 msgstr "Angle"
 
@@ -1605,9 +1604,8 @@ msgid "Data Browser"
 msgstr "Data Browser"
 
 #: app/data-browser.c:5121
-#, fuzzy
 msgid "Show file messages"
-msgstr "Show _labels"
+msgstr "Show file messages"
 
 #: app/data-browser.c:5133
 msgid "Close file"
@@ -3253,7 +3251,7 @@ msgstr "Header is too short (only %d bytes)."
 #: modules/file/dmefile.c:212
 #, c-format
 msgid "Data size %u does not match data dimensions (%u×%u)."
-msgstr ""
+msgstr "Data size %u does not match data dimensions (%u×%u)."
 
 #: modules/file/dumbfile.c:70
 msgid "Reads and exports Gwyddion dumb dump files."
@@ -3308,7 +3306,7 @@ msgstr "Cannot read from file: %s."
 #: modules/file/err.h:70
 #, c-format
 msgid "No data file corresponding to `%s' was found."
-msgstr "No data file corresponding to ‘%s’ was found."
+msgstr "No data file corresponding to ‘%s’ has been found."
 
 #: modules/file/err.h:78
 msgid "File is too short to be of the assumed file type."
@@ -3509,7 +3507,7 @@ msgstr "Gwyddion native format (.gwy)"
 
 #: modules/file/gwyfile.c:179
 msgid "Data deserialization failed."
-msgstr "Data deserialisation failed."
+msgstr "Data deserialisation has failed."
 
 #: modules/file/gwyfile.c:184
 #, c-format
@@ -3683,7 +3681,7 @@ msgstr "TIFF and BigTIFF images with high depth (.tiff)"
 #: modules/file/hdrimage.cc:391
 #, c-format
 msgid "EXR image writing failed with libImf error: %s"
-msgstr "EXR image writing failed with libImf error: %s"
+msgstr "EXR image writing has failed with libImf error: %s"
 
 #: modules/file/hdrimage.cc:414
 msgid "Export EXR Image"
@@ -3728,7 +3726,7 @@ msgstr "_Use"
 #: modules/file/hdrimage.cc:825
 #, c-format
 msgid "EXR image loading failed with libImf error: %s"
-msgstr "EXR image loading failed with libImf error: %s"
+msgstr "EXR image loading has failed with libImf error: %s"
 
 #: modules/file/hdrimage.cc:974
 #, c-format
@@ -4306,7 +4304,7 @@ msgstr "List ‘%s’ has %u items which differs from the number %u given by ‘
 #: modules/file/wsffile.c:215
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
-msgstr "End of file reached when reading sample #%d of %d"
+msgstr "End of file was reached when reading sample #%d of %d"
 
 #: modules/file/iso28600.c:764 modules/file/iso28600.c:876
 #: modules/file/spip-asc.c:237 modules/file/witec-asc.c:230
@@ -4492,7 +4490,7 @@ msgstr "Matlab MAT 5 files (.mat)"
 
 #: modules/file/matfile.c:308
 msgid "Compressed data inside compressed data found."
-msgstr "Compressed data inside compressed data found."
+msgstr "Compressed data have been found inside compressed data"
 
 #: modules/file/matfile.c:346
 #, c-format
@@ -4502,7 +4500,7 @@ msgstr "Invalid short tag of type %u claims to consists of %u bytes."
 #: modules/file/matfile.c:614
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
-msgstr "Decompression of compressed variable failed with error %d."
+msgstr "Decompression of compressed variable has failed with error %d."
 
 #: modules/file/metropro.c:340
 msgid "Imports binary MetroPro (Zygo) data files."
@@ -4970,621 +4968,629 @@ msgstr ""
 
 #: modules/file/nrrdfile.c:1130
 msgid "Field byteskip cannot be -1 for text encodings."
-msgstr ""
+msgstr "Field byteskip cannot be -1 for text encodings."
 
 #: modules/file/nrrdfile.c:1141
 msgid "Field lineskip specifies more lines than there are in the file."
-msgstr ""
+msgstr "Field lineskip specifies more lines than there are in the file."
 
 #: modules/file/nrrdfile.c:1184
 msgid "Field byteskip specifies more bytes than there are in the file."
-msgstr ""
+msgstr "Field byteskip specifies more bytes than there are in the file."
 
 #: modules/file/nrrdfile.c:1589
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
-msgstr ""
+msgstr "Items of per-axis header field %s are not quoted."
 
 #: modules/file/nrrdfile.c:1600
 #, c-format
 msgid "Per-axis header field %s contains too many items."
-msgstr ""
+msgstr "Per-axis header field %s contains too many items."
 
 #: modules/file/nrrdfile.c:1609
 #, c-format
 msgid "Per-axis header field %s contains too few items."
-msgstr ""
+msgstr "Per-axis header field %s contains too few items."
 
 #: modules/file/nt-mdt.c:843
 msgid "Imports NT-MDT data files."
-msgstr ""
+msgstr "Imports NT-MDT data files."
 
 #: modules/file/nt-mdt.c:856
 msgid "NT-MDT files (.mdt)"
-msgstr ""
+msgstr "NT-MDT files (.mdt)"
 
 #: modules/file/nt-mdt.c:1491 modules/file/nt-mdt.c:1599
 msgid "Frame is too short for Frame Mode."
-msgstr ""
+msgstr "Frame is too short for Frame Mode."
 
 #: modules/file/nt-mdt.c:1506 modules/file/nt-mdt.c:1614
 msgid "Frame is too short for dots or data."
-msgstr ""
+msgstr "Frame is too short for dots or data."
 
 #: modules/file/nt-mdt.c:1869
 #, c-format
 msgid "End of file reached in frame header #%u."
-msgstr ""
+msgstr "End of file reached in frame header #%u."
 
 #: modules/file/nt-mdt.c:1877
 #, c-format
 msgid "End of file reached in frame data #%u."
-msgstr ""
+msgstr "End of file reached in frame data #%u."
 
 #: modules/file/nt-mdt.c:1910
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
-msgstr ""
+msgstr "Frame #%u is too short for scanned data header."
 
 #: modules/file/nt-mdt.c:1927
 #, c-format
 msgid "Frame #%u is too short for spectroscopy data header."
-msgstr ""
+msgstr "Frame #%u is too short for spectroscopy data header."
 
 #: modules/file/nxiifile.c:116
 msgid "Imports EM4SYS data files."
-msgstr ""
+msgstr "Imports EM4SYS data files."
 
 #: modules/file/nxiifile.c:129
 msgid "EM4SYS NX II files (.bmp)"
-msgstr ""
+msgstr "EM4SYS NX II files (.bmp)"
 
 #: modules/file/oldmda.c:151
 msgid "Imports old NTMDT MDA Spectra files."
-msgstr ""
+msgstr "Imports old NTMDT MDA Spectra files."
 
 #: modules/file/oldmda.c:164
 msgid "NTMDT old MDA Spectra data (.sxml .dat)"
-msgstr ""
+msgstr "NTMDT old MDA Spectra data (.sxml .dat)"
 
 #: modules/file/oldmda.c:237
 msgid "Incorrect number of axes in parameter file."
-msgstr ""
+msgstr "Incorrect number of axes in parameter file."
 
 #: modules/file/oldmda.c:252
 #, c-format
 msgid "Cannot load data file: %s"
-msgstr ""
+msgstr "Cannot load data file: %s"
 
 #: modules/file/oldmda.c:260
 msgid "Data file too small."
-msgstr ""
+msgstr "Data file is too small."
 
 #: modules/file/ols.c:65
 msgid "Imports OLS data files."
-msgstr ""
+msgstr "Imports OLS data files."
 
 #: modules/file/ols.c:78
 msgid "Olympus LEXT OLS3000 (.ols)"
-msgstr ""
+msgstr "Olympus LEXT OLS3000 (.ols)"
 
 #: modules/file/ometiff.c:146
 msgid "Imports OME-TIFF data files."
-msgstr ""
+msgstr "Imports OME-TIFF data files."
 
 #: modules/file/ometiff.c:159
 msgid "Open Microscopy OME-TIFF (.ome.tiff)"
-msgstr ""
+msgstr "Open Microscopy OME-TIFF (.ome.tiff)"
 
 #: modules/file/ometiff.c:565
 #, c-format
 msgid "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
-msgstr ""
+msgstr "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
 
 #: modules/file/ometiff.c:573
 msgid ""
 "The OME TIFF header specifies more TIFF directories than there are in the "
 "file."
 msgstr ""
+"The OME TIFF header specifies more TIFF directories than there are in the "
+"file."
 
 #: modules/file/ometiff.c:584
 #, c-format
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
-msgstr ""
+msgstr "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 
 #: modules/file/omicron.c:163
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
-msgstr ""
+msgstr "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 
 #: modules/file/omicron.c:176
 msgid "Omicron files (.par + data)"
-msgstr ""
+msgstr "Omicron files (.par + data)"
 
 #: modules/file/omicron.c:421
 msgid "Header line starts with a colon."
-msgstr ""
+msgstr "Header line starts with a colon."
 
 #: modules/file/omicron.c:528
 msgid "Channel information ended unexpectedly."
-msgstr ""
+msgstr "Channel information has ended unexpectedly."
 
 #: modules/file/omicronflat.c:358
 msgid "Imports Omicron flat files."
-msgstr ""
+msgstr "Imports Omicron flat files."
 
 #: modules/file/omicronflat.c:371
 msgid "Omicron flat files (*.*_flat)"
-msgstr ""
+msgstr "Omicron flat files (*.*_flat)"
 
 #: modules/file/omicronflat.c:1727
 msgid "File name does not have the expected form for Omicron Flat files."
-msgstr ""
+msgstr "File name does not have the expected form for Omicron Flat files."
 
 #: modules/file/omicronflat.c:2146
 msgid "Cannot understand the axis hierarchy."
-msgstr ""
+msgstr "Cannot understand the axis hierarchy."
 
 #. TRANSLATORS: %s is replaced with an expression of the data shape.
 #: modules/file/omicronflat.c:2564
 #, c-format
 msgid "Cannot figure out how to load data in the following form: %s."
-msgstr ""
+msgstr "Cannot figure out how to load data in the following form: %s."
 
 #: modules/file/omicronmatrix.c:196
 msgid "Omicron MATRIX (param.mtrx & data.mtrx)"
-msgstr ""
+msgstr "Omicron MATRIX (param.mtrx & data.mtrx)"
 
 #: modules/file/omicronmatrix.c:212
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
-msgstr ""
+msgstr "Omicron MATRIX (.mtrx & .mtrx)"
 
 #: modules/file/opdfile.c:188
 msgid "Imports Wyko OPD and ASC files."
-msgstr ""
+msgstr "Imports Wyko OPD and ASC files."
 
 #: modules/file/opdfile.c:201
 msgid "Wyko OPD files (.opd)"
-msgstr ""
+msgstr "Wyko OPD files (.opd)"
 
 #: modules/file/opdfile.c:208
 msgid "Wyko ASCII export files (.asc)"
-msgstr ""
+msgstr "Wyko ASCII export files (.asc)"
 
 #: modules/file/opdfile.c:299
 #, c-format
 msgid "Item `%s' is beyond the end of the file."
-msgstr ""
+msgstr "Item ‘%s’ is beyond the end of the file."
 
 #: modules/file/opdfile.c:614
 msgid "Nested directories found"
-msgstr ""
+msgstr "Nested directories found"
 
 #: modules/file/opdfile.c:805
 #, c-format
 msgid "Truncated data in block %s"
-msgstr ""
+msgstr "Truncated data in block %s"
 
 #: modules/file/opengps.c:134
 msgid "Reads ISO 5436-2 OpenGPS .x3p files."
-msgstr ""
+msgstr "Reads ISO 5436-2 OpenGPS .x3p files."
 
 #: modules/file/opengps.c:147
 msgid "ISO 5436-2 OpenGPS data (.x3p)"
-msgstr ""
+msgstr "ISO 5436-2 OpenGPS data (.x3p)"
 
 #: modules/file/opengps.c:421 modules/file/opengps.c:454
 msgid "Too many DataList items for given matrix dimensions."
-msgstr ""
+msgstr "Too many DataList items for given matrix dimensions."
 
 #: modules/file/opengps.c:542
 msgid "File main.xml contains multiple data elements."
-msgstr ""
+msgstr "File main.xml contains multiple data elements."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
 #: modules/file/opengps.c:574 modules/file/opengps.c:582
 #: modules/file/opengps.c:590
 #, c-format
 msgid "Only type %s is supported for axis %s."
-msgstr ""
+msgstr "Only type %s is supported for axis %s."
 
 #: modules/file/pixmap.c:161
 msgid "All channels"
-msgstr ""
+msgstr "All channels"
 
 #: modules/file/pixmap.c:162
 msgid "Red"
-msgstr ""
+msgstr "Red"
 
 #: modules/file/pixmap.c:163
 msgid "Green"
-msgstr ""
+msgstr "Green"
 
 #: modules/file/pixmap.c:164
 msgid "Blue"
-msgstr ""
+msgstr "Blue"
 
 #: modules/file/pixmap.c:165
 msgid "Value (max)"
-msgstr ""
+msgstr "Value (max)"
 
 #: modules/file/pixmap.c:166
 msgid "RGB sum"
-msgstr ""
+msgstr "RGB sum"
 
 #: modules/file/pixmap.c:167
 msgid "Luma"
-msgstr ""
+msgstr "Luma"
 
 #: modules/file/pixmap.c:168
 msgid "Alpha"
-msgstr ""
+msgstr "Alpha"
 
 #: modules/file/pixmap.c:206
 msgid "JPEG 2000 (.jpx)"
-msgstr ""
+msgstr "JPEG 2000 (.jpx)"
 
 #: modules/file/pixmap.c:210
 msgid "PCX (.pcx)"
-msgstr ""
+msgstr "PCX (.pcx)"
 
 #: modules/file/pixmap.c:214
 msgid "X Pixmap (.xpm)"
-msgstr ""
+msgstr "X Pixmap (.xpm)"
 
 #: modules/file/pixmap.c:218
 msgid "Sun raster image (.ras)"
-msgstr ""
+msgstr "Sun raster image (.ras)"
 
 #: modules/file/pixmap.c:222
 msgid "Apple icon (.icns)"
-msgstr ""
+msgstr "Apple icon (.icns)"
 
 #: modules/file/pixmap.c:236
 msgid ""
 "Imports data from low-depth pixmap images (PNG, TIFF, JPEG, ...).  The set "
 "of available formats depends on available GDK pixbuf loaders."
 msgstr ""
+"Imports data from low-depth pixmap images (PNG, TIFF, JPEG, ...).  The set "
+"of available formats depends on available GDK pixbuf loaders."
 
 #: modules/file/pixmap.c:491
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
-msgstr ""
+msgstr "Pixmap has not registered file type `%s'."
 
 #: modules/file/pixmap.c:506
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
-msgstr ""
+msgstr "Cannot get pixbuf loader: %s."
 
 #: modules/file/pixmap.c:519 modules/file/pixmap.c:532
 #: modules/file/renishaw.c:569 modules/file/renishaw.c:579
 #, c-format
 msgid "Pixbuf loader refused data: %s."
-msgstr ""
+msgstr "Pixbuf loader refused data: %s."
 
 #: modules/file/pixmap.c:959
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
+"Warning: Colourful images cannot be reliably mapped to meaningful values."
 
 #: modules/file/pixmap.c:978
 msgid "verb|Use"
-msgstr ""
+msgstr "Use"
 
 #: modules/file/pixmap.c:978
 msgid "as data"
-msgstr ""
+msgstr "as data"
 
 #: modules/file/pltfile.c:79
 msgid "Imports Nanosurf PLT files."
-msgstr ""
+msgstr "Imports Nanosurf PLT files."
 
 #: modules/file/pltfile.c:92
 msgid "Nanosurf PLT files (.plt)"
-msgstr ""
+msgstr "Nanosurf PLT files (.plt)"
 
 #: modules/file/pnifile.c:121
 msgid "Imports Pacific Nanotechnology PNI data files."
-msgstr ""
+msgstr "Imports Pacific Nanotechnology PNI data files."
 
 #: modules/file/pnifile.c:134
 msgid "PNI files (.pni)"
-msgstr ""
+msgstr "PNI files (.pni)"
 
 #: modules/file/princetonspe.c:110
 msgid "Princeton Instruments camera SPE files."
-msgstr ""
+msgstr "Princeton Instruments camera SPE files."
 
 #: modules/file/princetonspe.c:123
 msgid "Princeton Instruments SPE files"
-msgstr ""
+msgstr "Princeton Instruments SPE files"
 
 #: modules/file/princetonspe.c:333
 msgid "XML footer overlaps with data."
-msgstr ""
+msgstr "XML footer overlaps with data."
 
 #: modules/file/psia.c:241
 msgid "Imports Park Systems data files."
-msgstr ""
+msgstr "Imports Park Systems data files."
 
 #: modules/file/psia.c:254
 msgid "Park Systems data files (.tiff, .tif)"
-msgstr ""
+msgstr "Park Systems data files (.tiff, .tif)"
 
 #: modules/file/psia.c:342
 msgid "Data tag is missing."
-msgstr ""
+msgstr "Data tag is missing."
 
 #: modules/file/psia.c:513
 #, c-format
 msgid "Header is too short (only %lu bytes)."
-msgstr ""
+msgstr "Header is too short (only %lu bytes)."
 
 #: modules/file/psia.c:630
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
-msgstr ""
+msgstr "Spectroscopy header is too short (only %lu bytes)."
 
 #: modules/file/pt3file.c:296
 msgid "Imports SymPhoTime data files, version 2.0."
-msgstr ""
+msgstr "Imports SymPhoTime data files, version 2.0."
 
 #: modules/file/pt3file.c:309
 msgid "PicoHarp files (.pt3)"
-msgstr ""
+msgstr "PicoHarp files (.pt3)"
 
 #: modules/file/pt3file.c:395
 msgid "T2 measurement mode is not implemented."
-msgstr ""
+msgstr "T2 measurement mode is not implemented."
 
 #: modules/file/pt3file.c:401
 msgid "Only PI E710 and KDT180-100-Im imaging formats are implemented."
-msgstr ""
+msgstr "Only PI E710 and KDT180-100-Im imaging formats are implemented."
 
 #: modules/file/pt3file.c:541
 #, c-format
 msgid "Measurement mode must be 2 or 3; %u is invalid."
-msgstr ""
+msgstr "Measurement mode must be 2 or 3; %u is invalid."
 
 #: modules/file/pt3file.c:547 modules/file/pt3file.c:559
 msgid "Only area imaging files are supported."
-msgstr ""
+msgstr "Only area imaging files are supported."
 
 #: modules/file/pt3file.c:578
 #, c-format
 msgid "Unknown instrument number %u."
-msgstr ""
+msgstr "Unknown instrument number %u."
 
 #: modules/file/pt3file.c:585
 #, c-format
 msgid "Wrong imaging header size: %u instead of %u."
-msgstr ""
+msgstr "Wrong imaging header size: %u instead of %u."
 
 #: modules/file/pt3file.c:735
 #, c-format
 msgid "Number of line triggers %u is smaller than the number of scan lines %u."
 msgstr ""
+"Number of line triggers %u is smaller than the number of scan lines %u."
 
 #: modules/file/quesant.c:68
 msgid "Imports Quesant file format."
-msgstr ""
+msgstr "Imports Quesant file format."
 
 #: modules/file/quesant.c:81
 msgid "Quesant files (.afm)"
-msgstr ""
+msgstr "Quesant files (.afm)"
 
 #: modules/file/rawfile.c:245
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
 msgstr ""
+"Imports raw data files, both ASCII and binary, according to user-specified "
+"format."
 
 #: modules/file/rawfile.c:266
 msgid "User-specified"
-msgstr ""
+msgstr "User-specified"
 
 #: modules/file/rawfile.c:267
 msgid "Signed byte"
-msgstr ""
+msgstr "Signed byte"
 
 #: modules/file/rawfile.c:268
 msgid "Unsigned byte"
-msgstr ""
+msgstr "Unsigned byte"
 
 #: modules/file/rawfile.c:269
 msgid "Signed 16bit word"
-msgstr ""
+msgstr "Signed 16bit word"
 
 #: modules/file/rawfile.c:270
 msgid "Unsigned 16bit word"
-msgstr ""
+msgstr "Unsigned 16bit word"
 
 #: modules/file/rawfile.c:271
 msgid "Signed 32bit word"
-msgstr ""
+msgstr "Signed 32bit word"
 
 #: modules/file/rawfile.c:272
 msgid "Unsigned 32bit word"
-msgstr ""
+msgstr "Unsigned 32bit word"
 
 #: modules/file/rawfile.c:273
 msgid "Signed 64bit word"
-msgstr ""
+msgstr "Signed 64bit word"
 
 #: modules/file/rawfile.c:274
 msgid "Unsigned 64bit word"
-msgstr ""
+msgstr "Unsigned 64bit word"
 
 #: modules/file/rawfile.c:275
 msgid "IEEE single"
-msgstr ""
+msgstr "IEEE single"
 
 #: modules/file/rawfile.c:276
 msgid "IEEE double"
-msgstr ""
+msgstr "IEEE double"
 
 #: modules/file/rawfile.c:277
 msgid "IEEE half"
-msgstr ""
+msgstr "IEEE half"
 
 #: modules/file/rawfile.c:278
 msgid "Pascal real"
-msgstr ""
+msgstr "Pascal real"
 
 #: modules/file/rawfile.c:333
 msgid "Raw data files"
-msgstr ""
+msgstr "Raw data files"
 
 #: modules/file/rawfile.c:375
 msgid "Raw data import must be run as interactive."
-msgstr ""
+msgstr "Raw data import must be run as interactive."
 
 #: modules/file/rawfile.c:423
 msgid "Read Raw File"
-msgstr ""
+msgstr "Read Raw File"
 
 #: modules/file/rawfile.c:455
 msgid "Data Format"
-msgstr ""
+msgstr "Data Format"
 
 #: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:236 modules/process/calcoefs_view.c:327
-#: modules/process/convolution_filter.c:241
-#: modules/process/deposit_synth.c:645 modules/process/drift.c:251
-#: modules/process/edge.c:644 modules/process/entropy.c:180
-#: modules/process/fft_filter_1d.c:193 modules/process/grain_edge.c:219
-#: modules/process/grain_filter.c:318 modules/process/grain_mark.c:253
-#: modules/process/grain_wshed.c:172 modules/process/mark_disconn.c:213
-#: modules/process/mark_with.c:205 modules/process/polydistort.c:210
-#: modules/process/scars.c:451 modules/process/slope_dist.c:275
-#: modules/process/synth.h:509 modules/process/tip_model.c:165
-#: modules/process/wpour_mark.c:282 modules/tools/linestats.c:454
-#: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
-#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
+#: modules/process/convolution_filter.c:241 modules/process/deposit_synth.c:645
+#: modules/process/drift.c:251 modules/process/edge.c:644
+#: modules/process/entropy.c:180 modules/process/fft_filter_1d.c:193
+#: modules/process/grain_edge.c:219 modules/process/grain_filter.c:318
+#: modules/process/grain_mark.c:253 modules/process/grain_wshed.c:172
+#: modules/process/mark_disconn.c:213 modules/process/mark_with.c:205
+#: modules/process/polydistort.c:210 modules/process/scars.c:451
+#: modules/process/slope_dist.c:275 modules/process/synth.h:509
+#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:282
+#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
+#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
+#: modules/volume/volume_linestat.c:287
 msgid "_Update"
-msgstr ""
+msgstr "_Update"
 
 #: modules/file/rawfile.c:602
 msgid "<b>File</b>"
-msgstr ""
+msgstr "<b>File</b>"
 
 #: modules/file/rawfile.c:643 modules/file/rawxyz.c:665
 msgid "S_quare sample"
-msgstr ""
+msgstr "S_quare sample"
 
 #: modules/file/rawfile.c:745
 msgid "Missin_g value substitute:"
-msgstr ""
+msgstr "Missin_g value substitute:"
 
 #: modules/file/rawfile.c:761
 msgid "_Automatically offer raw data import of unknown files"
-msgstr ""
+msgstr "_Automatically offer raw data import of unknown files"
 
 #: modules/file/rawfile.c:790
 msgid "_Text data"
-msgstr ""
+msgstr "_Text data"
 
 #: modules/file/rawfile.c:791
 msgid "_Binary data"
-msgstr ""
+msgstr "_Binary data"
 
 #: modules/file/rawfile.c:800
 msgid "Start from _line:"
-msgstr ""
+msgstr "Start from _line:"
 
 #: modules/file/rawfile.c:807
 msgid "E_ach row skip:"
-msgstr ""
+msgstr "E_ach row skip:"
 
 #: modules/file/rawfile.c:808
 msgid "fields"
-msgstr ""
+msgstr "fields"
 
 #: modules/file/rawfile.c:812
 msgid "_Field delimiter:"
-msgstr ""
+msgstr "_Field delimiter:"
 
 #: modules/file/rawfile.c:820
 msgid "Any whitespace"
-msgstr ""
+msgstr "Any white-space"
 
 #: modules/file/rawfile.c:821
 msgid "TAB character"
-msgstr ""
+msgstr "TAB character"
 
 #: modules/file/rawfile.c:822
 msgid "Other character"
-msgstr ""
+msgstr "Other character"
 
 #: modules/file/rawfile.c:830
 msgid "_Other delimiter:"
-msgstr ""
+msgstr "_Other delimiter:"
 
 #: modules/file/rawfile.c:861
 msgid "Byte s_wap pattern:"
-msgstr ""
+msgstr "Byte s_wap pattern:"
 
 #: modules/file/rawfile.c:876
 msgid "Start at _offset:"
-msgstr ""
+msgstr "Start at _offset:"
 
 #: modules/file/rawfile.c:877
 msgid "bytes"
-msgstr ""
+msgstr "bytes"
 
 #: modules/file/rawfile.c:883
 msgid "_Sample size:"
-msgstr ""
+msgstr "_Sample size:"
 
 #: modules/file/rawfile.c:884 modules/file/rawfile.c:892
 #: modules/file/rawfile.c:900
 msgid "bits"
-msgstr ""
+msgstr "bits"
 
 #: modules/file/rawfile.c:891
 msgid "After each sample s_kip:"
-msgstr ""
+msgstr "After each sample s_kip:"
 
 #: modules/file/rawfile.c:899
 msgid "After each _row skip:"
-msgstr ""
+msgstr "After each _row skip:"
 
 #: modules/file/rawfile.c:905
 msgid "_Reverse bits in bytes"
-msgstr ""
+msgstr "_Reverse bits in bytes"
 
 #: modules/file/rawfile.c:910
 msgid "Reverse bi_ts in samples"
-msgstr ""
+msgstr "Reverse bi_ts in samples"
 
 #: modules/file/rawfile.c:915
 msgid "Samples are si_gned"
-msgstr ""
+msgstr "Samples are si_gned"
 
 #: modules/file/rawfile.c:945
 msgid "Binary"
-msgstr ""
+msgstr "Binary"
 
 #: modules/file/rawfile.c:945
 msgid "Text"
-msgstr ""
+msgstr "Text"
 
 #: modules/file/rawfile.c:967
 msgid "Delimiter: whitespace"
-msgstr ""
+msgstr "Delimiter: white-space"
 
 #: modules/file/rawfile.c:970
 #, c-format
 msgid "Delimiter: 0x%02x"
-msgstr ""
+msgstr "Delimiter: 0x%02x"
 
 #: modules/file/rawfile.c:972
 #, c-format
 msgid "Delimiter: %s"
-msgstr ""
+msgstr "Delimiter: %s"
 
 #: modules/file/rawfile.c:998
 msgid "Info"
-msgstr ""
+msgstr "Info"
 
 #: modules/file/rawfile.c:1182
 #, c-format
@@ -5593,6 +5599,9 @@ msgid ""
 "The format would require %u bytes long file (at least), but the length of `"
 "%s' is only %u bytes."
 msgstr ""
+"<b>Too short file</b>\n"
+"The format would require %u bytes long file (at least), but the length of "
+"‘%s’ is only %u bytes."
 
 #: modules/file/rawfile.c:1198
 #, c-format
@@ -5600,37 +5609,39 @@ msgid ""
 "<b>Parsing failed</b>\n"
 "The contents of `%s' does not match format: %s."
 msgstr ""
+"<b>Parsing failed</b>\n"
+"The contents of ‘%s’ does not match format: %s."
 
 #: modules/file/rawfile.c:1690 modules/process/neural.c:1597
 #, c-format
 msgid "The name `%s' is invalid."
-msgstr ""
+msgstr "The name ‘%s’ is invalid."
 
 #: modules/file/rawfile.c:2302
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
-msgstr ""
+msgstr "Not enough lines (%d) for offset (%d)"
 
 #: modules/file/rawfile.c:2327
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
-msgstr ""
+msgstr "Expected white-space to skip more fields in row %u, got `%.16s'"
 
 #: modules/file/rawfile.c:2341
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
-msgstr ""
+msgstr "Expected ‘%c’ to skip more fields in row %u but found ‘%.16s’"
 
 #: modules/file/rawfile.c:2355
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
-msgstr ""
+msgstr "Expected ‘%s’ to skip more fields in row %u but found ‘%.16s’"
 
 #: modules/file/rawfile.c:2372 modules/file/rawfile.c:2386
 #: modules/file/rawfile.c:2412
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
-msgstr ""
+msgstr "Rubbish ‘%.16s’ in row %u, column %u"
 
 #: modules/file/rawfile.c:2398
 #, c-format
@@ -5644,115 +5655,115 @@ msgstr ""
 
 #: modules/file/rawgraph.c:107
 msgid "Imports simple text files as graph curves."
-msgstr ""
+msgstr "Imports simple text files as graph curves."
 
 #: modules/file/rawgraph.c:120
 msgid "ASCII graph curve files"
-msgstr ""
+msgstr "ASCII graph curve files"
 
 #: modules/file/rawgraph.c:188
 msgid "ASCII graph import must be run as interactive."
-msgstr ""
+msgstr "ASCII graph import must be run as interactive."
 
 #: modules/file/rawgraph.c:242
 msgid "Import Graph Data"
-msgstr ""
+msgstr "Import Graph Data"
 
 #: modules/file/rawgraph.c:267
 msgid "_Title:"
-msgstr ""
+msgstr "_Title:"
 
 #: modules/file/rawgraph.c:274
 msgid "_X label:"
-msgstr ""
+msgstr "_X label:"
 
 #: modules/file/rawgraph.c:279
 msgid "_Y label:"
-msgstr ""
+msgstr "_Y label:"
 
 #: modules/file/rawgraph.c:284
 msgid "X _units:"
-msgstr ""
+msgstr "X _units:"
 
 #: modules/file/rawgraph.c:290
 msgid "Y un_its:"
-msgstr ""
+msgstr "Y un_its:"
 
 #: modules/file/rawgraph.c:460
 msgid "Only files with two columns can be imported."
-msgstr ""
+msgstr "Only files with two columns can be imported."
 
 #: modules/file/rawgraph.c:579
 msgid "Curve"
-msgstr ""
+msgstr "Curve"
 
 #: modules/file/rawxyz.c:243
 msgid "Imports raw XYZ data files."
-msgstr ""
+msgstr "Imports raw XYZ data files."
 
 #: modules/file/rawxyz.c:256
 msgid "XYZ data files"
-msgstr ""
+msgstr "XYZ data files"
 
 #: modules/file/rawxyz.c:335
 msgid "Raw XYZ data import must be run as interactive."
-msgstr ""
+msgstr "Raw XYZ data import must be run as interactive."
 
 #: modules/file/rawxyz.c:371
 msgid "Regularized XYZ"
-msgstr ""
+msgstr "Regularised XYZ"
 
 #: modules/file/rawxyz.c:421
 msgid "Import XYZ Data"
-msgstr ""
+msgstr "Import XYZ Data"
 
 #: modules/file/rawxyz.c:450
 msgid "Reset Ran_ges"
-msgstr ""
+msgstr "Reset Ran_ges"
 
 #: modules/file/rawxyz.c:629
 msgid "_X-range:"
-msgstr ""
+msgstr "_X-range:"
 
 #: modules/file/rawxyz.c:647
 msgid "_Y-range:"
-msgstr ""
+msgstr "_Y-range:"
 
 #: modules/file/rawxyz.c:684
 msgid "_Lateral units:"
-msgstr ""
+msgstr "_Lateral units:"
 
 #: modules/file/rawxyz.c:701 modules/process/dimensions.h:494
 msgid "_Value units:"
-msgstr ""
+msgstr "_Value units:"
 
 #: modules/file/rawxyz.c:744
 msgid "Field"
-msgstr ""
+msgstr "Field"
 
 #: modules/file/rawxyz.c:745 modules/process/merge.c:197
 msgid "Average"
-msgstr ""
+msgstr "Average"
 
 #: modules/file/rawxyz.c:752 modules/process/extend.c:275
 #: modules/process/polydistort.c:268
 msgid "_Exterior type:"
-msgstr ""
+msgstr "_Exterior type:"
 
 #: modules/file/rawxyz.c:760 modules/process/extend.c:268
 #: modules/process/polydistort.c:261
 msgid "exterior|Border"
-msgstr ""
+msgstr "Border"
 
 #: modules/file/rawxyz.c:762 modules/process/extend.c:270
 #: modules/process/polydistort.c:263
 msgid "exterior|Mirror"
-msgstr ""
+msgstr "Mirror"
 
 #: modules/file/rawxyz.c:764 modules/process/extend.c:272
 #: modules/process/polydistort.c:265
 msgid "exterior|Periodic"
-msgstr ""
+msgstr "Periodic"
 
 #: modules/file/rawxyz.c:1087
 #, c-format
@@ -5771,7 +5782,7 @@ msgstr ""
 
 #: modules/file/rawxyz.c:1126
 msgid "Physical dimensions are invalid."
-msgstr ""
+msgstr "Physical dimensions are invalid."
 
 #: modules/file/rawxyz.c:1173 modules/process/bdep_synth.c:247
 #: modules/process/bdep_synth.c:603 modules/process/calcoefs_simple.c:633
@@ -5790,17 +5801,19 @@ msgstr ""
 #: modules/process/xydenoise.c:217 modules/volume/volume_kmeans.c:364
 #: modules/volume/volume_kmedians.c:365
 msgid "Initializing..."
-msgstr ""
+msgstr "Initialising..."
 
 #: modules/file/rawxyz.c:1194 modules/process/superresolution.c:554
 msgid "Interpolating..."
-msgstr ""
+msgstr "Interpolating..."
 
 #: modules/file/rawxyz.c:1206
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
 msgstr ""
+"XYZ data regularisation failed due to numerical instability or was "
+"interrupted."
 
 #: modules/file/renishaw.c:368
 msgid "Imports Renishaw WiRE data files (WDF)."
@@ -7075,15 +7088,15 @@ msgstr "/_Basic Operations/Rotate C_lockwise"
 
 #: modules/process/basicops.c:103
 msgid "Rotate data 90 degrees clockwise"
-msgstr ""
+msgstr "Rotate data 90 degrees clockwise"
 
 #: modules/process/basicops.c:106
 msgid "/_Basic Operations/Rotate _Counterclockwise"
-msgstr "/_Basic Operations/Rotate _Counterclockwise"
+msgstr "/_Basic Operations/Rotate Anti-_clockwise"
 
 #: modules/process/basicops.c:110
 msgid "Rotate data 90 degrees counterclockwise"
-msgstr ""
+msgstr "Rotate data 90 degrees anti-clockwise"
 
 #: modules/process/basicops.c:113
 msgid "/_Basic Operations/S_quare Samples"
