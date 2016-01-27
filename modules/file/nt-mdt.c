@@ -2088,8 +2088,8 @@ extract_scanned_spectrum (MDTSpectroscopyDataFrame *dataframe, guint number)
 
     res = dataframe->fm_xres;
 
-    xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
-    ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
+    xdata = g_new(gdouble, res);
+    ydata = g_new(gdouble, res);
 
     p = (gint16*)dataframe->data;
     for (i = 0; i < dataframe->fm_xres; i++) {
@@ -2296,7 +2296,7 @@ static GwySpectra* extract_sps_curve (MDTSpectroscopyDataFrame *dataframe,
     gwy_spectra_set_si_unit_xy(spectra, siunitcoordxy);
     g_object_unref(siunitcoordxy);
 
-    coordinates = (MDTDotsData *)g_malloc(numpoints*sizeof(MDTDotsData));
+    coordinates = g_new(MDTDotsData, numpoints);
 
     /* reading sps coordinates */
     for (i = 0; i < numpoints; i++) {
@@ -2631,8 +2631,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
     /* If res == 0, fallback to arraysize */
     res = res ? res : dataframe->arraySize;
 
-    xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
-    ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
+    xdata = g_new(gdouble, res);
+    ydata = g_new(gdouble, res);
 
     p = (gchar*)dataframe->image;
 
@@ -3265,8 +3265,8 @@ extract_brick(MDTMDAFrame *dataframe,
 
         p = base;
         if (nmes > 1) {
-            sdata = g_malloc((nmes - 1) * sizeof(gdouble*));
-            tscale = g_malloc((nmes - 1) * sizeof(gdouble));
+            sdata = g_new(gdouble *, (nmes - 1));
+            tscale = g_new(gdouble, (nmes - 1));
             for (i = 0; i < nmes - 1; i++) {
                 scandata = gwy_data_field_new(xres, yres,
                                               xres * xreal,

@@ -537,8 +537,7 @@ wdf_load(const gchar *filename,
                 }
                 else if (!gwystrcmp0(origin_name, "Z")) {
                     zunits = units;
-                    zdata
-                      = g_malloc(fileheader.nspectra * sizeof(gdouble));
+                    zdata = g_new(gdouble, fileheader.nspectra);
                     for (j = 0; j < fileheader.nspectra; j++)
                         *(zdata++) = gwy_get_gdouble_le(&p);
                     zdata -= fileheader.nspectra;
@@ -690,12 +689,12 @@ wdf_load(const gchar *filename,
             err_FILE_TYPE(error, "Renishaw WDF");
             goto fail;
         }
-        ydata = g_malloc(zres * sizeof(gdouble));
+        ydata = g_new(gdouble, zres);
         gwy_convert_raw_data(filedata.data, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
                              ydata, wscale, 0.0);
-        xdata = g_malloc(zres * sizeof(gdouble));
+        xdata = g_new(gdouble, zres);
         gwy_convert_raw_data(filedata.xlistdata, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
@@ -737,14 +736,14 @@ wdf_load(const gchar *filename,
                               "si-unit-y", siunitw,
                               NULL);
         g_free(title);
-        xdata = g_malloc(zres * sizeof(gdouble));
+        xdata = g_new(gdouble, zres);
         gwy_convert_raw_data(filedata.xlistdata, zres, 1,
                              GWY_RAW_DATA_FLOAT,
                              GWY_BYTE_ORDER_LITTLE_ENDIAN,
                              xdata, zscale, 0.0);
 
         for (i = 0; i < fileheader.nspectra; i++) {
-            ydata = g_malloc(zres * sizeof(gdouble));
+            ydata = g_new(gdouble, zres);
             gwy_convert_raw_data(filedata.data + i * zres,
                                  zres, 1,
                                  GWY_RAW_DATA_FLOAT,
@@ -1162,7 +1161,7 @@ wdf_load(const gchar *filename,
             }
 
             hasspectrum = FALSE;
-            ydata = g_malloc(zres * sizeof(gdouble));
+            ydata = g_new(gdouble, zres);
             if (gwy_container_gis_string_by_name(pset_data,
                                                  "/overlaySpectrum",
                                                  &spectrum)) {
@@ -1194,7 +1193,7 @@ wdf_load(const gchar *filename,
                 xscale = 1.0;
             }
 
-            xdata = g_malloc(zres * sizeof(gdouble));
+            xdata = g_new(gdouble, zres);
             if (gwy_container_gis_string_by_name(pset_data,
                                                  "/overlayXList",
                                                  &spectrumx)) {
@@ -1571,12 +1570,9 @@ wdf_read_pset(const guchar *buffer,
                 break;
                 case WDF_PTYPE_STRING:
                     pset->size = gwy_get_guint32_le(&buffer);
-                    str = g_malloc(pset->size + 1);
-                    for (i = 0; i < pset->size; i++) {
-                        str[i] = *(buffer++);
-                    }
-                    gwy_debug("u size=%d str=%s", pset->size,
-                              g_strndup(str, pset->size));
+                    str = g_strndup(buffer, pset->size);
+                    buffer += pset->size;
+                    gwy_debug("u size=%d str=%s", pset->size, str);
                     g_hash_table_replace(values,
                                          GINT_TO_POINTER(pset->key),
                                          g_strndup(str, pset->size));
@@ -1610,11 +1606,9 @@ wdf_read_pset(const guchar *buffer,
                 break;
                 case WDF_PTYPE_KEY:
                     pset->size = gwy_get_guint32_le(&buffer);
-                    str = g_malloc(pset->size + 1);
-                    for (i = 0; i < pset->size; i++) {
-                        str[i] = *(buffer++);
-                    }
-                    gwy_debug("k key=%s", g_strndup(str, pset->size));
+                    str = g_strndup(buffer, pset->size);
+                    buffer += pset->size;
+                    gwy_debug("k key=%s", str);
                     g_hash_table_replace(keys,
                                          GINT_TO_POINTER(pset->key),
                                          g_strdup_printf("/%.*s",
@@ -1772,7 +1766,7 @@ wdf_read_datetime(gint64 ticks)
     GDate *date;
     gchar *s, *result;
 
-    s = g_malloc(32);
+    s = g_new(gchar, 32);
     time = (ticks / 10000000LL) - 11644473600LL;
     date = g_date_new();
     g_date_set_time_t(date, time);

@@ -63,8 +63,8 @@ static void         stage_data_cb        (GwyDataChooser *chooser,
                                                StageControls *controls);
 static const gchar* stage_check          (StageArgs *args);
 static void         stage_do             (StageArgs *args);
-static void         flip_xy              (GwyDataField *source, 
-                                          GwyDataField *dest, 
+static void         flip_xy              (GwyDataField *source,
+                                          GwyDataField *dest,
                                           gboolean minor);
 
 
@@ -215,32 +215,34 @@ stage_data_cb(GwyDataChooser *chooser,
 }
 
 void
-get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold, 
+get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
                 gdouble *xs, gdouble *ys, gint *nobjects, GwyCorrelationType type)
 {
     GwyDataField *score = gwy_data_field_new_alike(data, 0);
     GwyDataField *retfield;
     gdouble *sdata, *maxval, min, max;
-    gint i, *grains, *maxpos, ngrains;
+    gint i, *grains, *maxpos, ngrains, n;
 
     gwy_data_field_correlate(data, kernel, score, type);
     max = gwy_data_field_get_max(score);
     min = gwy_data_field_get_min(score);
 
     retfield = gwy_data_field_duplicate(score);
-    gwy_data_field_threshold(retfield, threshold, 0.0, 1.0); 
+    gwy_data_field_threshold(retfield, threshold, 0.0, 1.0);
 
-    grains = (gint *)g_malloc(gwy_data_field_get_xres(score)*gwy_data_field_get_yres(score)*sizeof(int));
+    n = gwy_data_field_get_xres(score)*gwy_data_field_get_yres(score);
+    grains = g_new0(gint, n);
     ngrains = gwy_data_field_number_grains(retfield, grains);
 
-    maxpos = (gint *) g_malloc(ngrains*sizeof(gint));
-    maxval = (gdouble *) g_malloc(ngrains*sizeof(gdouble));
+    maxpos = g_new(gint, ngrains);
+    maxval = g_new(gdouble, ngrains);
     sdata = gwy_data_field_get_data(score);
 
-    for (i=0; i<ngrains; i++) maxval[i] = -G_MAXDOUBLE;
-    
+    for (i = 0; i < ngrains; i++)
+        maxval[i] = -G_MAXDOUBLE;
+
     //find correlation maximum of each grain
-    for (i=0; i<(gwy_data_field_get_xres(score)*gwy_data_field_get_yres(score)); i++)
+    for (i=0; i < n; i++)
     {
         if (grains[i]!=0) {
             if (maxval[grains[i]-1]<sdata[i]) {
@@ -264,9 +266,9 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
 
 }
 
-void fill_matrix(gdouble *xs, gdouble *ys, gint n, gint tl, 
+void fill_matrix(gdouble *xs, gdouble *ys, gint n, gint tl,
                  gdouble xxshift, gdouble xyshift,
-                 gdouble yxshift, gdouble yyshift, 
+                 gdouble yxshift, gdouble yyshift,
                  GwyDataField *x_matrix, GwyDataField *y_matrix, gint nn)
 {
     gint i, j, k, pos;
@@ -293,7 +295,7 @@ void fill_matrix(gdouble *xs, gdouble *ys, gint n, gint tl,
             }
             gwy_data_field_set_val(x_matrix, i, j, xs[pos]);
             gwy_data_field_set_val(y_matrix, i, j, ys[pos]);
-//            printf("Point %d %d, idpos %g %g, found pos %g %g\n", 
+//            printf("Point %d %d, idpos %g %g, found pos %g %g\n",
 //                   i, j, idxpos, idypos, xs[pos], ys[pos]);
         }
     }
@@ -301,7 +303,7 @@ void fill_matrix(gdouble *xs, gdouble *ys, gint n, gint tl,
 
 }
 
-gdouble 
+gdouble
 get_prod_grid(GwyDataField *a, GwyDataField *b, gdouble period)
 {
     gint i, j;
@@ -324,8 +326,8 @@ get_prod_grid(GwyDataField *a, GwyDataField *b, gdouble period)
 }
 
 void
-stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig, 
-                  GwyDataField *x_shif, GwyDataField *y_shif, 
+stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
+                  GwyDataField *x_shif, GwyDataField *y_shif,
                   GwyDataField *x_rot, GwyDataField *y_rot, gdouble period)
 {
     GwyDataField *v0x, *v0y, *u0x, *u0y, *v1x, *v1y, *u1x, *u1y, *v2x, *v2y, *u2x, *u2y;
@@ -334,7 +336,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
     GwyDataField *Fxr, *Fxi, *Fyr, *Fyi, *Gx, *Gy;
     gdouble theta0, t0x, t0y, theta1, t1x, t1y, rstage, ostage, xix, xiy, xit, sumA, sumB, sumC;
     gdouble *zx, *zy, arg;
-    
+
     gint i, j, shift;
     gint xres = gwy_data_field_get_xres(x_orig);
     gint yres = gwy_data_field_get_yres(y_orig);
@@ -391,8 +393,8 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
 
 
 
-    zx = (gdouble *) g_malloc(xres*sizeof(gdouble));
-    zy = (gdouble *) g_malloc(xres*sizeof(gdouble));
+    zx = g_new(gdouble, xres);
+    zy = g_new(gdouble, xres);
 
     /***********************************   step 1  ************************************/
     //create v0x, v0y
@@ -420,7 +422,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             gwy_data_field_set_val(u0y, i, j, gwy_data_field_get_val(v0y, i, j) - t0y - theta0*period*(i+shift));
         }
     }
- 
+
    //check the aligned data, just for sure:
     t0x = gwy_data_field_get_avg(u0x);
     t0y = gwy_data_field_get_avg(u0y);
@@ -457,9 +459,9 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
     theta1 = get_prod_grid(u1y, u1x, period);
     printf("Rotated post: ts: %g %g, theta %g\n", t1x, t1y, theta1);
 
-    
+
     /***********************************   step 3  ************************************/
-  
+
     sumoscale = sumrscale = sumb = 0;
     for (i=0; i<xres; i++)
     {
@@ -470,26 +472,26 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             sumb += period*period*((i+shift)*(i+shift) + (j+shift)*(j+shift));
         }
     }
- 
+
     theta0 = get_prod_grid(u1x, u1y, period);
     theta1 = get_prod_grid(u0x, u0y, period);
     ostage = 0.5*(theta1 + sumoscale/sumb);
     rstage = 0.5*(theta0 + sumrscale/sumb);
 
     printf("Nonorthogonality: %g,   scale difference %g\n", ostage, rstage);
-   
+
     /***********************************   step 4  ************************************/
 
     for (i=0; i<xres; i++)
     {
         for (j=0; j<yres; j++)
         {
-            gwy_data_field_set_val(P, i, j, -2*ostage*((j+shift)*period) - 2*rstage*((i+shift)*period) 
+            gwy_data_field_set_val(P, i, j, -2*ostage*((j+shift)*period) - 2*rstage*((i+shift)*period)
                                    + gwy_data_field_get_val(u0x, i, j) - gwy_data_field_get_val(u1y, i, j));
-            gwy_data_field_set_val(Q, i, j, -2*ostage*((i+shift)*period) + 2*rstage*((j+shift)*period) 
+            gwy_data_field_set_val(Q, i, j, -2*ostage*((i+shift)*period) + 2*rstage*((j+shift)*period)
                                    + gwy_data_field_get_val(u0y, i, j) + gwy_data_field_get_val(u1x, i, j));
          }
-    } 
+    }
 
     gwy_data_field_2dfft_raw(P, NULL, pr, pi, GWY_TRANSFORM_DIRECTION_FORWARD);
     gwy_data_field_2dfft_raw(Q, NULL, qr, qi, GWY_TRANSFORM_DIRECTION_FORWARD);
@@ -505,7 +507,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
                                                  + gwy_data_field_get_val(qr, i, yres-j-1)));
         }
     }
-  
+
     printf("End of step 4: real part of a,b:\n");
     for (j=0; j<yres; j++)
     {
@@ -514,7 +516,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(ar, i, j), gwy_data_field_get_val(br, i, j));
         }
         printf("\n");
-    } 
+    }
 
 
     /***********************************   step 5  ************************************/
@@ -538,7 +540,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             zx[i] += gwy_data_field_get_val(u2x, i, j) - gwy_data_field_get_val(u0x, i, j);
             zy[i] += gwy_data_field_get_val(u2y, i, j) - gwy_data_field_get_val(u0y, i, j);
         }
-    } 
+    }
 
     printf("Step 6: zxs:\n");
     for (i=0; i<xres; i++)
@@ -571,8 +573,8 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             gwy_data_field_set_val(T, i, j, gwy_data_field_get_val(u2y, i, j) - gwy_data_field_get_val(u0y, i, j));
             gwy_data_field_set_val(Nu, i, j, 1);
         }
-    } 
-    for (j=0; j<yres; j++) 
+    }
+    for (j=0; j<yres; j++)
     {
         suma = sumb = 0;
         for (i=0; i<(xres-1); i++) {
@@ -591,7 +593,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             gwy_data_field_set_val(Sigma, i, j, -gwy_data_field_get_val(Nu, i, j)*(j+shift)*period);
             gwy_data_field_set_val(Tau, i, j, (i+shift)*period);
         }
-    } 
+    }
     /*output all arrays*/
     printf("W matrix:\n");
     for (j=0; j<yres; j++)
@@ -601,9 +603,9 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("%g  ", gwy_data_field_get_val(W, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
- 
+
     printf("T matrix:\n");
     for (j=0; j<yres; j++)
     {
@@ -612,9 +614,9 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("%g  ", gwy_data_field_get_val(T, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
- 
+
     printf("Nu matrix:\n");
     for (j=0; j<yres; j++)
     {
@@ -623,7 +625,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("%g  ", gwy_data_field_get_val(Nu, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
     printf("Sigma matrix:\n");
     for (j=0; j<yres; j++)
@@ -633,7 +635,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("%g  ", gwy_data_field_get_val(Sigma, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
     printf("Tau matrix:\n");
     for (j=0; j<yres; j++)
@@ -643,7 +645,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("%g  ", gwy_data_field_get_val(Tau, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
 
     //eq 68
@@ -693,7 +695,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(wr, i, j), gwy_data_field_get_val(wi, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
     printf("t fft components:\n");
     for (j=0; j<yres; j++)
@@ -704,7 +706,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
         }
         printf("\n");
     }
-    printf("\n"); 
+    printf("\n");
     printf("nu fft components:\n");
     for (j=0; j<yres; j++)
     {
@@ -713,7 +715,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(nur, i, j), gwy_data_field_get_val(nui, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
     printf("sigma fft components:\n");
     for (j=0; j<yres; j++)
@@ -723,7 +725,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(sigmar, i, j), gwy_data_field_get_val(sigmai, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("\n");
     printf("tau fft components:\n");
     for (j=0; j<yres; j++)
@@ -733,7 +735,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(taur, i, j), gwy_data_field_get_val(taui, i, j));
         }
         printf("\n");
-    } 
+    }
 
 
     //eq 69
@@ -748,8 +750,8 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g %g)  ",  gwy_data_field_get_val(gammar, i, j), gwy_data_field_get_val(gammai, i, j));
         }
         printf("\n");
-    } 
- 
+    }
+
     printf("determining xi_theta: (69a)\n");
     for (j=0; j<yres; j++)
     {
@@ -772,7 +774,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
     }
     xit = 1.2; //FIXME
 
-    //eq 62  
+    //eq 62
     sumA = sumB = sumC = 0;
     for (i=0; i<(xres-1); i++)
     {
@@ -787,7 +789,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
     xiy = -(xres*sumB*xit + sumC)/xres/sumA;
 
     printf("xitheta %g, xiy %g\n", xit, xiy);
- 
+
 
     /****************************** step 8 ************************************/
     //eq 69, only imaginary part
@@ -806,7 +808,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
                                    (gwy_data_field_get_val(ti, i, j) + xiy*gwy_data_field_get_val(nui, i, j) + xit*gwy_data_field_get_val(taui, i, j)));
          }
     }
-    
+
     for (j=0; j<yres; j++)
     {
         gwy_data_field_set_val(ai, -shift, j,  0.25*(gwy_data_field_get_val(pr, -shift, j)        //FIXME swap i j for br or move up to real part
@@ -823,7 +825,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(ai, i, j), gwy_data_field_get_val(bi, i, j));
         }
         printf("\n");
-    } 
+    }
 
     /****************************** step 9 ************************************/
     //eq 38
@@ -845,9 +847,9 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
     gwy_data_field_resample(Fxi, xres, yres, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(Fyr, xres, yres, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(Fyi, xres, yres, GWY_INTERPOLATION_BILINEAR);
-  
 
-    /****************************** step 10 ************************************/    
+
+    /****************************** step 10 ************************************/
     //eq 11
     for (j=0; j<yres; j++)
     {
@@ -856,7 +858,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             gwy_data_field_set_val(Gx, i, j, (j+shift)*period*ostage + (i+shift)*period*rstage + gwy_data_field_get_val(Fxr, i, j));
             gwy_data_field_set_val(Gy, i, j, (i+shift)*period*ostage - (j+shift)*period*rstage + gwy_data_field_get_val(Fyr, i, j));
         }
-    } 
+    }
 
     printf("End of step 10, final matrix Gx, Gy:\n");
     for (j=0; j<yres; j++)
@@ -866,7 +868,7 @@ stage_calibration(GwyDataField *x_orig, GwyDataField *y_orig,
             printf("(%g, %g)  ", gwy_data_field_get_val(Gx, i, j), gwy_data_field_get_val(Gy, i, j));
         }
         printf("\n");
-    } 
+    }
 
 
 
@@ -913,8 +915,8 @@ stage_do(StageArgs *args)
     //________________________________________________________original____________________________________________
     //find objects on original
     noriginal = 100;
-    xs = (gdouble *)g_malloc(noriginal*sizeof(gdouble));
-    ys = (gdouble *)g_malloc(noriginal*sizeof(gdouble));
+    xs = g_new(gdouble, noriginal);
+    ys = g_new(gdouble, noriginal);
     get_object_list(original, detail, 0.8, xs, ys, &noriginal, GWY_CORRELATION_NORMAL);
     printf("%d object locations in original\n", noriginal);
     /*for (i=0; i<noriginal; i++)
@@ -924,7 +926,7 @@ stage_do(StageArgs *args)
      printf("_____________________\n");*/
 
     //create matrix of NxN object positions for original image, skip left edge positions; determine xshift
-    
+
     //determine size of array first:
     //find top left object
     tl = 0;
@@ -949,9 +951,9 @@ stage_do(StageArgs *args)
         //find next closest object in x direction
         nextmin = G_MAXDOUBLE;
         for (i=0; i<noriginal; i++) {
-            if (i==present || xs[i]<=xs[present]) continue; 
+            if (i==present || xs[i]<=xs[present]) continue;
             if (nx>0 && fabs(ys[i]-ys[present])>(0.5*fabs(xxshift))) {
-                //printf("too far in y (%d  %g > %g) \n", i, fabs(ys[i]-ys[present]), (0.5*fabs(yshift))); 
+                //printf("too far in y (%d  %g > %g) \n", i, fabs(ys[i]-ys[present]), (0.5*fabs(yshift)));
                 continue;
             }
             if (((xs[i]-xs[present]) + (ys[i]-ys[present])*(ys[i]-ys[present]))<nextmin) {
@@ -972,9 +974,9 @@ stage_do(StageArgs *args)
 
     } while (nextmin!=G_MAXDOUBLE);
     printf("Original: found %d objects in x direction, average shift is %g %g\n", nx+1, avxshift/nx, avyshift/nx);
-   
+
     present = tl;
-    //determine number of objects in x direction and xshift, 
+    //determine number of objects in x direction and xshift,
     ny = 0;
     yyshift = 0;
     yxshift = 0;
@@ -982,9 +984,9 @@ stage_do(StageArgs *args)
         //find next closest object in y direction
         nextmin = G_MAXDOUBLE;
         for (i=0; i<noriginal; i++) {
-            if (i==present || ys[i]<=ys[present]) continue; 
+            if (i==present || ys[i]<=ys[present]) continue;
             if (ny>0 && fabs(xs[i]-xs[present])>(0.5*fabs(yyshift))) {
-                //printf("too far in y (%d  %g > %g) \n", i, fabs(ys[i]-ys[present]), (0.5*fabs(yshift))); 
+                //printf("too far in y (%d  %g > %g) \n", i, fabs(ys[i]-ys[present]), (0.5*fabs(yshift)));
                 continue;
             }
             if (((ys[i]-ys[present]) + (xs[i]-xs[present])*(xs[i]-xs[present]))<nextmin) {
@@ -1008,7 +1010,7 @@ stage_do(StageArgs *args)
     if (nn>(nx+1) || nn>(ny+1)) nn-=2;
 
     printf("I will use matrix of %d x %d calibration points\n", nn, nn);
- 
+
     //allocate matrices
     x_orig = gwy_data_field_new(nn, nn, nn, nn, TRUE);
     y_orig = gwy_data_field_new_alike(x_orig, TRUE);
@@ -1046,7 +1048,7 @@ stage_do(StageArgs *args)
     }
 //    printf("top left object is %g %g\n", xs[tl], ys[tl]);
     fill_matrix(xs, ys, nshifted, tl, xxshift, xyshift, yxshift, yyshift, x_shifted, y_shifted, nn);
- 
+
 
     //______________________________________________________________rotated____________________________________________
     //rotate rotated back
@@ -1060,7 +1062,7 @@ stage_do(StageArgs *args)
         printf("%d %g %g\n", i, xs[i], ys[i]);
     }
     printf("_____________________\n");*/
-    
+
     //create matrix of NxN objects on rotated image, assign data as if the center of original and rotated match
     //find top left object again
     tl = 0;
@@ -1114,32 +1116,32 @@ stage_do(StageArgs *args)
             printf("(%g,%g)  ", gwy_data_field_get_val(x_orig, i, j), gwy_data_field_get_val(y_orig, i, j));
         }
         printf("\n");
-    } 
+    }
     printf("Shifted matrix:\n");
     for (j = 0; j < yres; j++) {
         for (i = 0; i < xres; i++) {
             printf("(%g,%g)  ", gwy_data_field_get_val(x_shifted, i, j), gwy_data_field_get_val(y_shifted, i, j));
         }
         printf("\n");
-    } 
+    }
     //printf("Unotated matrix:\n");
     //for (j = 0; j < yres; j++) {
     //    for (i = 0; i < xres; i++) {
     //        printf("(%g,%g)  ", gwy_data_field_get_val(x_unrotated, i, j), gwy_data_field_get_val(y_unrotated, i, j));
     //    }
     //    printf("\n");
-    //} 
+    //}
     printf("Rotated matrix:\n");
     for (j = 0; j < yres; j++) {
         for (i = 0; i < xres; i++) {
             printf("(%g,%g)  ", gwy_data_field_get_val(x_rotated, i, j), gwy_data_field_get_val(y_rotated, i, j));
         }
         printf("\n");
-    } 
+    }
 
      /*  - create v0x, v0y field from original image matrix*/
     period = sqrt(xxshift*xxshift + xyshift*xyshift); //FIXME this must be known experimentally
-    stage_calibration(x_orig, y_orig, x_shifted, y_shifted, x_rotated, y_rotated, period); 
+    stage_calibration(x_orig, y_orig, x_shifted, y_shifted, x_rotated, y_rotated, period);
 
     /*
     newid = gwy_app_data_browser_add_data_field(score, data, TRUE);

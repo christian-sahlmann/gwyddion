@@ -948,10 +948,10 @@ volfit_do(VolfitControls *controls)
     if (allfixed)
         return;
 
-    result = (GwyDataField **)g_malloc(nfree*sizeof(GwyDataField *));
+    result = g_new(GwyDataField *, nfree);
     for (i=0; i<nfree; i++) result[i] = gwy_data_field_new_alike(args->dfield, TRUE);
 
-    eresult = (GwyDataField **)g_malloc(nfree*sizeof(GwyDataField *));
+    eresult = g_new(GwyDataField *, nfree);
     for (i=0; i<nfree; i++) eresult[i] = gwy_data_field_new_alike(args->dfield, TRUE);
 
     cresult = gwy_data_field_new_alike(args->dfield, TRUE);

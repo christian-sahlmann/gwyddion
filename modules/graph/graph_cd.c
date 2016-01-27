@@ -1095,10 +1095,10 @@ draw_circle_changed(FitControls *controls)
     g_return_if_fail(n == gwy_data_line_get_res(args->ydata));
     xd = gwy_data_line_get_data(args->xdata);
     yd = gwy_data_line_get_data(args->ydata);
-    xd_long = (gdouble *) g_malloc(2*n*sizeof(gdouble));
-    yd_long = (gdouble *) g_malloc(2*n*sizeof(gdouble));*/
-    xd = (gdouble *) g_malloc(2*res*sizeof(gdouble));
-    yd = (gdouble *) g_malloc(2*res*sizeof(gdouble));
+    xd_long = g_new(gdouble, 2*n);
+    yd_long = g_new(gdouble, 2*n);*/
+    xd = g_new(gdouble, 2*res);
+    yd = g_new(gdouble, 2*res);
 
     for (i = 0; i < res; i++)
          xd[2*res-1-i] = xd[i] = param[1]-param[0]+2*param[0]*i/(res-1);

@@ -598,8 +598,8 @@ simple_data_cb(GwyDataChooser *chooser,
     else {
         args->noriginal = 10000;
         if (!args->xs || !args->ys) {
-            args->xs = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
-            args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
+            args->xs = g_new(gdouble, args->noriginal);
+            args->ys = g_new(gdouble, args->noriginal);
         }
 
         get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal),
@@ -666,11 +666,12 @@ get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdo
     gwy_data_field_threshold(retfield, threshold, 0.0, 1.0);
 
 
-    grains = (gint *)g_malloc(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)*sizeof(gint));
+    grains = g_new(gint,
+                   gwy_data_field_get_xres(retfield) * gwy_data_field_get_yres(retfield));
     ngrains = gwy_data_field_number_grains(retfield, grains);
 
-    maxpos = (gint *) g_malloc(ngrains*sizeof(gint));
-    maxval = (gdouble *) g_malloc(ngrains*sizeof(gdouble));
+    maxpos = g_new(gint, ngrains);
+    maxval = g_new(gdouble, ngrains);
     sdata = gwy_data_field_get_data(score);
 
 
@@ -782,11 +783,11 @@ simple_do(SimpleArgs *args)
     noriginal = args->noriginal;
     xs = args->xs;
     ys = args->ys;
-    pxs = (gdouble *)g_malloc(noriginal*sizeof(gdouble));
-    pys = (gdouble *)g_malloc(noriginal*sizeof(gdouble));
-    is_indexed = (gint *)g_malloc(noriginal*sizeof(gint));
-    index_col = (gint *)g_malloc(noriginal*sizeof(gint));
-    index_row = (gint *)g_malloc(noriginal*sizeof(gint));
+    pxs = g_new(gdouble, noriginal);
+    pys = g_new(gdouble, noriginal);
+    is_indexed = g_new(gint, noriginal);
+    index_col = g_new(gint, noriginal);
+    index_row = g_new(gint, noriginal);
 
     for (i=0; i<noriginal; i++)
     {

@@ -1806,13 +1806,13 @@ p3d_set_axes(ExtractControls *controls)
     gint max;
 
     if (controls->px==NULL || controls->nps<21)
-       controls->px = (gdouble *)g_malloc(21*sizeof(gdouble));
+       controls->px = g_new(gdouble, 21);
     if (controls->py==NULL || controls->nps<21)
-       controls->py = (gdouble *)g_malloc(21*sizeof(gdouble));
+       controls->py = g_new(gdouble, 21);
     if (controls->pz==NULL || controls->nps<21)
-       controls->pz = (gdouble *)g_malloc(21*sizeof(gdouble));
+       controls->pz = g_new(gdouble, 21);
     if (controls->ps==NULL || controls->nps<21)
-       controls->ps = (gdouble *)g_malloc(21*sizeof(gdouble));
+       controls->ps = g_new(gdouble, 21);
 
     controls->bwidth = controls->bheight = controls->bdepth = 1;
 
@@ -1864,10 +1864,10 @@ gint simplify(gdouble *px, gdouble *py, gdouble *pz, gdouble *ps, gint nps)
     gint newn;
 
 
-    nx = g_malloc(nps*sizeof(gdouble));
-    ny = g_malloc(nps*sizeof(gdouble));
-    nz = g_malloc(nps*sizeof(gdouble));
-    ns = g_malloc(nps*sizeof(gdouble));
+    nx = g_new(gdouble, nps);
+    ny = g_new(gdouble, nps);
+    nz = g_new(gdouble, nps);
+    ns = g_new(gdouble, nps);
 
 
     for (i=0; i<6; i++) {
@@ -2134,9 +2134,9 @@ p3d_add_wireframe(ExtractControls *controls)
     if (controls->wpy) g_free(controls->wpy);
     if (controls->wpz) g_free(controls->wpz);
 
-    controls->wpx = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
-    controls->wpy = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
-    controls->wpz = (gdouble *) g_malloc(controls->nps*sizeof(gdouble));
+    controls->wpx = g_new(gdouble, controls->nps);
+    controls->wpy = g_new(gdouble, controls->nps);
+    controls->wpz = g_new(gdouble, controls->nps);
 
 //    printf("we have %d segments after simplification\n", controls->nps);
 }

@@ -82,7 +82,7 @@ filter(GwyGraph *graph)
         xdata = gwy_graph_curve_model_get_xdata(cmodel);
         ydata = gwy_graph_curve_model_get_ydata(cmodel);
         ndata = gwy_graph_curve_model_get_ndata(cmodel);
-        newydata = g_malloc(ndata * sizeof(gdouble));
+        newydata = g_new(gdouble, ndata);
         filter_do(ydata, newydata, ndata);
         gwy_graph_curve_model_set_data(cmodelnew, xdata,
                                        newydata, ndata);

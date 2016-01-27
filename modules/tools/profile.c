@@ -1768,7 +1768,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
 
         /*add calibration data to the curve*/
         if (has_calibration) {
-            ccdata = (GwyCurveCalibrationData *)g_malloc(sizeof(GwyCurveCalibrationData));
+            ccdata = g_new(GwyCurveCalibrationData, 1);
 
             ccdata->xerr = g_memdup(gwy_graph_curve_model_get_ydata(gwy_graph_model_get_curve(tool->gmodel, i+1)),
                                             gwy_graph_curve_model_get_ndata(gcmodel)*sizeof(gdouble));

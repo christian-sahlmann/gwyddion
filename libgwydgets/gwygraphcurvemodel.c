@@ -538,7 +538,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
         if (nxerr == nxdata && nyerr == nxdata && nzerr == nxdata
             && nxunc == nxdata && nyunc == nxdata && nzunc == nxdata)
         {
-            gcmodel->calibration = (GwyCurveCalibrationData *) g_malloc(sizeof(GwyCurveCalibrationData));
+            gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
             gcmodel->calibration->xerr = xerr;
             gcmodel->calibration->yerr = yerr;
             gcmodel->calibration->zerr = zerr;

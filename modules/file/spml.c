@@ -163,7 +163,7 @@ get_list_of_datachannels(const gchar *filename)
                            and it must be freed only when returned list is going to
                            be disposed because GList does not create
                            copy of data_channel_group. */
-                        data_channel_group = g_malloc(sizeof(dataChannelGroup));
+                        data_channel_group = g_new(dataChannelGroup, 1);
                         data_channel_group->name =
                             xmlTextReaderGetAttribute(reader, "name");
                         data_channel_group->datachannels = NULL;
@@ -473,8 +473,7 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
                             }
                             /* one dimension array */
                             if (data_dimension > 0) {
-                                *dimensions =
-                                    g_malloc(sizeof(int) * data_dimension);
+                                *dimensions = g_new(int, data_dimension);
                                 for (i = 0; i < data_dimension; i++) {
                                     axis = g_array_index(axes, GArray *, i);
                                     (*dimensions)[i] = axis[0].len;
@@ -531,7 +530,7 @@ get_data(gboolean read_data_only, char *filename, char *datachannel_name,
 
                 }
                 else if (read_data_only == TRUE) {
-                    *dimensions = g_malloc(sizeof(int));
+                    *dimensions = g_new(int, 1);
                     (*dimensions)[0] = out_len;
                     data_dimension = 1;
                 }
@@ -832,8 +831,7 @@ get_axis(char *filename, char *datachannel_name, GArray ** axes,
                         else {
                             g_warning
                                 ("SPML: get_axis(): unknown unit for axis.");
-                            tmp_ch = g_malloc(4);
-                            sprintf(tmp_ch, "N/A");
+                            tmp_ch = g_strdup("N/A");
                             g_array_append_val(*units, tmp_ch);
                         }
                         /* get axis values */
