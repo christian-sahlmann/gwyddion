@@ -597,18 +597,21 @@ simple_data_cb(GwyDataChooser *chooser,
     }
     else {
         args->noriginal = 10000;
-        if (args->xs==NULL || args->ys==NULL)
-        {
-           args->xs = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
-           args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
+        if (!args->xs || !args->ys) {
+            args->xs = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
+            args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
         }
 
         get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal),
                         &(args->objects_found));
-        if (args->objects_found)
-          g_snprintf(message, sizeof(message), _("%d objects found"), args->noriginal);
+        if (args->objects_found) {
+            g_snprintf(message, sizeof(message),
+                       ngettext("one object found", "%d objects found",
+                                args->noriginal),
+                       args->noriginal);
+        }
         else
-          g_snprintf(message, sizeof(message), _("Search cancelled"));
+            g_snprintf(message, sizeof(message), _("Search canceled"));
         gtk_label_set_text(GTK_LABEL(controls->suggestion), message);
         gtk_widget_set_sensitive(controls->button_ok, TRUE);
 

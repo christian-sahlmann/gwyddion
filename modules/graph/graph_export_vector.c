@@ -32,7 +32,7 @@ static void     export         (GwyGraph *graph);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Export graph in postscript"),
+    N_("Exports graphs to PostScript"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -49,7 +49,7 @@ module_register(void)
                             N_("/Export _PostScript"),
                             NULL,
                             GWY_MENU_FLAG_GRAPH,
-                            N_("Export graph to a vector image"));
+                            N_("Export graph to PostScript"));
 
     return TRUE;
 }
@@ -62,7 +62,7 @@ export(GwyGraph *graph)
     GString *str;
     FILE *fw;
 
-    dialog = gtk_file_chooser_dialog_new(_("Export to Postscript"),
+    dialog = gtk_file_chooser_dialog_new(_("Export to PostScript"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,

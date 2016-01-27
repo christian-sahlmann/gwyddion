@@ -122,7 +122,7 @@ module_register(void)
                               NULL,
                               BASICOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Null horizontall offsets, moving the origin "
+                              N_("Null horizontal offsets, moving the origin "
                                  "to the upper left corner"));
 
     return TRUE;

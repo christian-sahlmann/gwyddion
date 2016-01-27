@@ -257,7 +257,7 @@ oldmda_load(const gchar *filename,
     if ((size2 != params.arraysize * params.datacellmemsize)
      || (params.arraysize != mdafile.xres * mdafile.yres * mdafile.zres)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Data file too small."));
+                    _("Data file is too short."));
         g_clear_error(&err);
         goto fail2;
     }

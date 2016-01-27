@@ -167,7 +167,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Layer allowing selection of several points, displayed as crosses "
-       "or inivisible."),
+       "or invisible."),
     "Yeti <yeti@gwyddion.net>",
     "3.2",
     "David Nečas (Yeti) & Petr Klapetek",

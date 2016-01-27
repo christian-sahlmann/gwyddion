@@ -456,26 +456,26 @@ cc_view_dialog(CCViewArgs *args,
     args->xplane = args->yplane = args->zplane = 0;
     controls.xplane = gtk_adjustment_new(args->xplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, _("X pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("X position:"), "%",
                                        controls.xplane, 0);
     g_signal_connect_swapped(controls.xplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
     controls.yplane = gtk_adjustment_new(args->yplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, _("Y pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("Y position:"), "%",
                                        controls.yplane, 0);
     g_signal_connect_swapped(controls.yplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
     controls.zplane = gtk_adjustment_new(args->zplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, _("Z pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("Z position:"), "%",
                                        controls.zplane, 0);
     g_signal_connect_swapped(controls.zplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
-    label = gtk_label_new_with_mnemonic(_("Interpolation:"));
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 

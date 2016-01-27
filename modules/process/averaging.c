@@ -64,7 +64,7 @@ module_register(void)
 {
     gwy_process_func_register("averaging",
                               (GwyProcessFunc)&averaging,
-                              N_("/_Correct Data/_Correlation averaging..."),
+                              N_("/_Correct Data/_Correlation Averaging..."),
                               NULL,
                               AVERAGING_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
