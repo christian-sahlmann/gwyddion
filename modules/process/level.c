@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -35,11 +36,6 @@
 
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-typedef enum {
-    LEVEL_SUBTRACT,
-    LEVEL_ROTATE,
-} LevelMethod;
-
 typedef struct {
     GwyMaskingType masking;
 } LevelArgs;
@@ -50,25 +46,20 @@ typedef struct {
 } LevelControls;
 
 static gboolean module_register(void);
-static void     level          (GwyContainer *data,
-                                GwyRunType run);
-static void     level_rotate   (GwyContainer *data,
-                                GwyRunType run);
-static void     do_level       (GwyContainer *data,
+static void     level_func     (GwyContainer *data,
                                 GwyRunType run,
-                                LevelMethod level_type,
-                                const gchar *dialog_title);
+                                const gchar *funcname);
 static void     fix_zero       (GwyContainer *data,
-                                GwyRunType run);
-static void     zero_mean      (GwyContainer *data,
                                 GwyRunType run);
 static gboolean level_dialog   (LevelArgs *args,
                                 const gchar *title);
 static void     masking_changed(GtkToggleButton *button,
                                 LevelControls *controls);
 static void     load_args      (GwyContainer *container,
+                                const gchar *funcname,
                                 LevelArgs *args);
 static void     save_args      (GwyContainer *container,
+                                const gchar *funcname,
                                 LevelArgs *args);
 
 static const LevelArgs level_defaults = {
@@ -81,7 +72,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -92,14 +83,14 @@ static gboolean
 module_register(void)
 {
     gwy_process_func_register("level",
-                              (GwyProcessFunc)&level,
+                              &level_func,
                               N_("/_Level/Plane _Level"),
                               GWY_STOCK_LEVEL,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Level data by mean plane subtraction"));
     gwy_process_func_register("level_rotate",
-                              (GwyProcessFunc)&level_rotate,
+                              &level_func,
                               N_("/_Level/Level _Rotate"),
                               NULL,
                               LEVEL_RUN_MODES,
@@ -113,7 +104,7 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Shift minimum data value to zero"));
     gwy_process_func_register("zero_mean",
-                              (GwyProcessFunc)&zero_mean,
+                              &level_func,
                               N_("/_Level/Zero _Mean Value"),
                               NULL,
                               LEVEL_RUN_MODES,
@@ -124,27 +115,15 @@ module_register(void)
 }
 
 static void
-level(GwyContainer *data, GwyRunType run)
-{
-    do_level(data, run, LEVEL_SUBTRACT, _("Plane Level"));
-}
-
-static void
-level_rotate(GwyContainer *data, GwyRunType run)
-{
-    do_level(data, run, LEVEL_ROTATE, _("Level Rotate"));
-}
-
-static void
-do_level(GwyContainer *data,
-         GwyRunType run,
-         LevelMethod level_type,
-         const gchar *dialog_title)
+level_func(GwyContainer *data,
+           GwyRunType run,
+           const gchar *funcname)
 {
     GwyDataField *dfield;
     GwyDataField *mfield;
     LevelArgs args;
     gdouble c, bx, by;
+    gint xres, yres;
     GQuark quark;
     gint id;
 
@@ -156,58 +135,79 @@ do_level(GwyContainer *data,
                                      0);
     g_return_if_fail(dfield && quark);
 
-    load_args(gwy_app_settings_get(), &args);
+    load_args(gwy_app_settings_get(), funcname, &args);
     if (run != GWY_RUN_IMMEDIATE && mfield) {
-        gboolean ok = level_dialog(&args, dialog_title);
-        save_args(gwy_app_settings_get(), &args);
+        const gchar *dialog_title = NULL;
+        gboolean ok;
+
+        if (gwy_strequal(funcname, "level"))
+            dialog_title = _("Plane Level");
+        else if (gwy_strequal(funcname, "level_rotate"))
+            dialog_title = _("Level Rotate");
+        else if (gwy_strequal(funcname, "zero_mean"))
+            dialog_title = _("Zero Mean Value");
+        else {
+            g_assert_not_reached();
+        }
+        ok = level_dialog(&args, dialog_title);
+        save_args(gwy_app_settings_get(), funcname, &args);
         if (!ok)
             return;
     }
     if (args.masking == GWY_MASK_IGNORE)
         mfield = NULL;
 
-    if (mfield) {
-        if (args.masking == GWY_MASK_EXCLUDE) {
-            mfield = gwy_data_field_duplicate(mfield);
-            gwy_data_field_grains_invert(mfield);
-        }
-        else
-            g_object_ref(mfield);
-    }
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
 
     gwy_app_undo_qcheckpoint(data, quark, NULL);
-    if (mfield)
-        gwy_data_field_area_fit_plane(dfield, mfield, 0, 0,
-                                      gwy_data_field_get_xres(dfield),
-                                      gwy_data_field_get_yres(dfield),
-                                      &c, &bx, &by);
-    else
-        gwy_data_field_fit_plane(dfield, &c, &bx, &by);
 
-    switch (level_type) {
-        case LEVEL_SUBTRACT:
-        c = -0.5*(bx*gwy_data_field_get_xres(dfield)
-                  + by*gwy_data_field_get_yres(dfield));
-        gwy_data_field_plane_level(dfield, c, bx, by);
-        break;
+    if (gwy_stramong(funcname, "level", "level_rotate", NULL)) {
+        if (mfield) {
+            if (args.masking == GWY_MASK_EXCLUDE) {
+                mfield = gwy_data_field_duplicate(mfield);
+                gwy_data_field_grains_invert(mfield);
+            }
+            else
+                g_object_ref(mfield);
+        }
 
-        case LEVEL_ROTATE:
-        bx = gwy_data_field_rtoj(dfield, bx);
-        by = gwy_data_field_rtoi(dfield, by);
-        gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
-                                    GWY_INTERPOLATION_LINEAR);
-        gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
-                  bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
-        break;
+        if (mfield)
+            gwy_data_field_area_fit_plane(dfield, mfield, 0, 0, xres, yres,
+                                          &c, &bx, &by);
+        else
+            gwy_data_field_fit_plane(dfield, &c, &bx, &by);
 
-        default:
+        if (gwy_strequal(funcname, "level_rotate")) {
+            bx = gwy_data_field_rtoj(dfield, bx);
+            by = gwy_data_field_rtoi(dfield, by);
+            gwy_data_field_plane_rotate(dfield, atan2(bx, 1), atan2(by, 1),
+                                        GWY_INTERPOLATION_LINEAR);
+            gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
+                      bx, 180/G_PI*atan2(bx, 1), by, 180/G_PI*atan2(by, 1));
+        }
+        else {
+            c = -0.5*(bx*gwy_data_field_get_xres(dfield)
+                      + by*gwy_data_field_get_yres(dfield));
+            gwy_data_field_plane_level(dfield, c, bx, by);
+        }
+        gwy_object_unref(mfield);
+    }
+    else if (gwy_strequal(funcname, "zero_mean")) {
+        if (mfield) {
+            c = gwy_data_field_area_get_avg_mask(dfield, mfield, args.masking,
+                                                 0, 0, xres, yres);
+        }
+        else
+            c = gwy_data_field_get_avg(dfield);
+        gwy_data_field_add(dfield, -c);
+    }
+    else {
         g_assert_not_reached();
-        break;
     }
 
     gwy_app_channel_log_add_proc(data, id, id);
     gwy_data_field_data_changed(dfield);
-    gwy_object_unref(mfield);
 }
 
 static void
@@ -229,26 +229,7 @@ fix_zero(GwyContainer *data, GwyRunType run)
     gwy_data_field_data_changed(dfield);
 }
 
-static void
-zero_mean(GwyContainer *data, GwyRunType run)
-{
-    GwyDataField *dfield;
-    GQuark quark;
-    gint id;
-
-    g_return_if_fail(run & LEVEL_RUN_MODES);
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
-                                     GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
-    g_return_if_fail(dfield && quark);
-    gwy_app_undo_qcheckpoint(data, quark, NULL);
-    gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
-    gwy_app_channel_log_add_proc(data, id, id);
-    gwy_data_field_data_changed(dfield);
-}
-
-/* XXX: Duplicate with level.c. Merge modules? */
+/* XXX: Duplicate with facet-level.c. Merge modules? */
 static gboolean
 level_dialog(LevelArgs *args,
              const gchar *title)
@@ -326,7 +307,7 @@ masking_changed(GtkToggleButton *button, LevelControls *controls)
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
 }
 
-static const gchar masking_key[] = "/module/level/mode";
+static const gchar masking_key[] = "/module/%s/mode";
 
 static void
 sanitize_args(LevelArgs *args)
@@ -336,18 +317,24 @@ sanitize_args(LevelArgs *args)
 }
 
 static void
-load_args(GwyContainer *container, LevelArgs *args)
+load_args(GwyContainer *container, const gchar *funcname, LevelArgs *args)
 {
+    gchar key[32];
+
     *args = level_defaults;
 
-    gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
+    g_snprintf(key, sizeof(key), masking_key, funcname);
+    gwy_container_gis_enum_by_name(container, key, &args->masking);
     sanitize_args(args);
 }
 
 static void
-save_args(GwyContainer *container, LevelArgs *args)
+save_args(GwyContainer *container, const gchar *funcname, LevelArgs *args)
 {
-    gwy_container_set_enum_by_name(container, masking_key, args->masking);
+    gchar key[32];
+
+    g_snprintf(key, sizeof(key), masking_key, funcname);
+    gwy_container_set_enum_by_name(container, key, args->masking);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
