@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2016-01-18 20:22+0100\n"
-"PO-Revision-Date: 2016-01-26 23:07+0100\n"
+"PO-Revision-Date: 2016-01-27 13:43+0100\n"
 "Last-Translator: David Nečas <yeti@gwyddion.net>\n"
 "Language-Team: \n"
 "Language: en_GB\n"
@@ -5772,6 +5772,9 @@ msgid ""
 "Merged as too close: %u\n"
 "Added on the boundaries: %u"
 msgstr ""
+"Points read from file: %u\n"
+"Merged as too close: %u\n"
+"Added on the boundaries: %u"
 
 #: modules/file/rawxyz.c:1095
 #, c-format
@@ -5779,6 +5782,8 @@ msgid ""
 "Points read from file: %u\n"
 "Points form a regular grid: %u×%u"
 msgstr ""
+"Points read from file: %u\n"
+"Points form a regular grid: %u×%u"
 
 #: modules/file/rawxyz.c:1126
 msgid "Physical dimensions are invalid."
@@ -5817,574 +5822,578 @@ msgstr ""
 
 #: modules/file/renishaw.c:368
 msgid "Imports Renishaw WiRE data files (WDF)."
-msgstr ""
+msgstr "Imports Renishaw WiRE data files (WDF)."
 
 #: modules/file/renishaw.c:381
 msgid "Renishaw WiRE data files (.wdf)"
-msgstr ""
+msgstr "Renishaw WiRE data files (.wdf)"
 
 #: modules/file/renishaw.c:557
 msgid "MapArea block is truncated"
-msgstr ""
+msgstr "MapArea block is truncated"
 
 #: modules/file/renishaw.c:788
 msgid "Random points order unsupported"
-msgstr ""
+msgstr "Random points order is unsupported"
 
 #: modules/file/renishaw.c:1397
 msgid "Block header is truncated"
-msgstr ""
+msgstr "Block header is truncated"
 
 #: modules/file/renishaw.c:1412
 msgid "Data block is truncated"
-msgstr ""
+msgstr "Data block is truncated"
 
 #: modules/file/rhk-sm3.c:236
 msgid "Imports RHK Technology SM3 data files."
-msgstr ""
+msgstr "Imports RHK Technology SM3 data files."
 
 #: modules/file/rhk-sm3.c:256
 msgid "RHK SM3 files (.sm3)"
-msgstr ""
+msgstr "RHK SM3 files (.sm3)"
 
 #: modules/file/rhk-sm3.c:336 modules/file/rhk-sm3.c:349
 msgid "End of file reached in page header."
-msgstr ""
+msgstr "End of file reached in page header."
 
 #: modules/file/rhk-sm3.c:340
 msgid "magic page header"
-msgstr ""
+msgstr "magic page header"
 
 #: modules/file/rhk-sm3.c:421
 #, c-format
 msgid "End of file reached in string #%u."
-msgstr ""
+msgstr "End of file reached in string #%u."
 
 #: modules/file/rhk-sm3.c:442
 msgid "End of file reached in color data header."
-msgstr ""
+msgstr "End of file reached in colour data header."
 
 #: modules/file/rhk-sm3.c:451
 msgid "End of file reached in color data."
-msgstr ""
+msgstr "End of file reached in colour data."
 
 #: modules/file/rhk-sm3.c:720
 #, c-format
 msgid "Unknown line %d"
-msgstr ""
+msgstr "Unknown line %d"
 
 #: modules/file/rhk-sm4.c:397
 msgid "Imports RHK Technology SM4 data files."
-msgstr ""
+msgstr "Imports RHK Technology SM4 data files."
 
 #: modules/file/rhk-sm4.c:417
 msgid "RHK SM4 files (.sm4)"
-msgstr ""
+msgstr "RHK SM4 files (.sm4)"
 
 #: modules/file/rhk-sm4.c:653
 #, c-format
 msgid "Object %s is truncated."
-msgstr ""
+msgstr "Object %s is truncated."
 
 #: modules/file/rhk-sm4.c:946
 #, c-format
 msgid "Object list in %s is truncated."
-msgstr ""
+msgstr "Object list in %s is truncated."
 
 #: modules/file/rhk-sm4.c:963
 #, c-format
 msgid "Object of type %s is truncated."
-msgstr ""
+msgstr "Object of type %s is truncated."
 
 #: modules/file/rhk-sm4.c:988
 #, c-format
 msgid "Cannot find object %s in %s."
-msgstr ""
+msgstr "Cannot find object %s in %s."
 
 #: modules/file/rhk-spm32.c:176
 msgid "Imports RHK Technology SPM32 data files."
-msgstr ""
+msgstr "Imports RHK Technology SPM32 data files."
 
 #: modules/file/rhk-spm32.c:196
 msgid "RHK SPM32 files (.sm2)"
-msgstr ""
+msgstr "RHK SPM32 files (.sm2)"
 
 #: modules/file/rhk-spm32.c:379
 msgid "Invalid file header."
-msgstr ""
+msgstr "Invalid file header."
 
 #: modules/file/rhk-spm32.c:392
 msgid "Only image and line files are supported."
-msgstr ""
+msgstr "Only image and line files are supported."
 
 #: modules/file/rhk-spm32.c:398
 #, c-format
 msgid "Invalid data type %d for image data."
-msgstr ""
+msgstr "Invalid data type %d for image data."
 
 #: modules/file/rhk-spm32.c:406
 #, c-format
 msgid "Invalid data type %d for line data."
-msgstr ""
+msgstr "Invalid data type %d for line data."
 
 #: modules/file/rhk-spm32.c:425
 msgid "data ranges"
-msgstr ""
+msgstr "data ranges"
 
 #: modules/file/rhk-spm32.c:492
 msgid "data offset"
-msgstr ""
+msgstr "data offset"
 
 #: modules/file/robotics.c:81
 msgid "Imports Automation & Robotics Dual Lensmapper data files"
-msgstr ""
+msgstr "Imports Automation & Robotics Dual Lensmapper data files"
 
 #: modules/file/robotics.c:94
 msgid "Dual Lensmapper files"
-msgstr ""
+msgstr "Dual Lensmapper files"
 
 #: modules/file/s94file.c:96
 msgid "Imports S94 STM data files."
-msgstr ""
+msgstr "Imports S94 STM data files."
 
 #: modules/file/s94file.c:109
 msgid "S94 STM files (.s94)"
-msgstr ""
+msgstr "S94 STM files (.s94)"
 
 #: modules/file/sdfile.c:155
 msgid "Imports Surfstand group SDF (Surface Data File) files."
-msgstr ""
+msgstr "Imports Surfstand group SDF (Surface Data File) files."
 
 #: modules/file/sdfile.c:170
 msgid "Surfstand SDF files, binary (.sdf)"
-msgstr ""
+msgstr "Surfstand SDF files, binary (.sdf)"
 
 #: modules/file/sdfile.c:176
 msgid "Surfstand SDF files, text (.sdf)"
-msgstr ""
+msgstr "Surfstand SDF files, text (.sdf)"
 
 #: modules/file/sdfile.c:182
 msgid "Micromap SDF files (.sdfa)"
-msgstr ""
+msgstr "Micromap SDF files (.sdfa)"
 
 #: modules/file/sdfile.c:620
 #, c-format
 msgid "Invalid `%s' value: %d."
-msgstr ""
+msgstr "Invalid ‘%s’ value: %d."
 
 #: modules/file/sdfile.c:629
 #, c-format
 msgid "Invalid `%s' value: %g."
-msgstr ""
+msgstr "Invalid ‘%s’ value: %g."
 
 #: modules/file/sdfile.c:687
 msgid "Missing data start marker (*)."
-msgstr ""
+msgstr "Missing data start marker (*)."
 
 #: modules/file/sdfile.c:711
 #, c-format
 msgid "End of file reached when looking for `%s' field."
-msgstr ""
+msgstr "End of file reached when looking for ‘%s’ field."
 
 #: modules/file/sdfile.c:719
 #, c-format
 msgid "Invalid line found when looking for `%s' field."
-msgstr ""
+msgstr "Invalid line found when looking for ‘%s’ field."
 
 #: modules/file/seiko.c:118
 msgid "Imports Seiko XQB, XQD, XQT and XQP files."
-msgstr ""
+msgstr "Imports Seiko XQB, XQD, XQT and XQP files."
 
 #: modules/file/seiko.c:131
 msgid "Seiko files (.xqb, .xqd, .xqt, .xqp)"
-msgstr ""
+msgstr "Seiko files (.xqb, .xqd, .xqt, .xqp)"
 
 #: modules/file/seiko.c:322
 msgid ""
 "Cannot determine scan dimensions; it seems non-square with an unknown side "
 "ratio."
 msgstr ""
+"Cannot determine scan dimensions; it seems non-square with an unknown side "
+"ratio."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
-msgstr ""
+msgstr "Imports Sensofar PLu file format, version 2000 or newer."
 
 #: modules/file/sensofar.c:214
 msgid "Sensofar PLu files (.plu)"
-msgstr ""
+msgstr "Sensofar PLu files (.plu)"
 
 #: modules/file/sensofar.c:489 modules/file/sensofar.c:503
 msgid "Profile"
-msgstr ""
+msgstr "Profile"
 
 #: modules/file/sensofarx.c:90
 msgid "Reads Sensofar PLUx files."
-msgstr ""
+msgstr "Reads Sensofar PLUx files."
 
 #: modules/file/sensofarx.c:103
 msgid "Sensofar PLUx files (.plux)"
-msgstr ""
+msgstr "Sensofar PLUx files (.plux)"
 
 #: modules/file/sensolytics.c:111
 msgid "Imports Sensolytics text files."
-msgstr ""
+msgstr "Imports Sensolytics text files."
 
 #: modules/file/sensolytics.c:124
 msgid "Sensolytics text files (.dat)"
-msgstr ""
+msgstr "Sensolytics text files (.dat)"
 
 #: modules/file/shimadzu.c:133
 msgid "Imports Shimadzu SPM data files."
-msgstr ""
+msgstr "Imports Shimadzu SPM data files."
 
 #: modules/file/shimadzu.c:146
 msgid "Shimadzu files"
-msgstr ""
+msgstr "Shimadzu files"
 
 #: modules/file/shimadzu.c:372
 #, c-format
 msgid "Cannot parse data values after %d of %d."
-msgstr ""
+msgstr "Cannot parse data values after %d of %d."
 
 #: modules/file/sicmfile.c:195
 msgid "Imports IonScope SICM data files."
-msgstr ""
+msgstr "Imports IonScope SICM data files."
 
 #: modules/file/sicmfile.c:209
 msgid "IonScope SICM files (.img)"
-msgstr ""
+msgstr "IonScope SICM files (.img)"
 
 #: modules/file/sis.c:461
 msgid "Imports SIS (Surface Imaging Systems) data files."
-msgstr ""
+msgstr "Imports SIS (Surface Imaging Systems) data files."
 
 #: modules/file/sis.c:474
 msgid "SIS files (.sis)"
-msgstr ""
+msgstr "SIS files (.sis)"
 
 #: modules/file/sis.c:811
 msgid "Block not a document block."
-msgstr ""
+msgstr "Block not a document block."
 
 #: modules/file/sis.c:820
 msgid "Too short document info."
-msgstr ""
+msgstr "Too short document info."
 
 #: modules/file/sis.c:841
 msgid "Too short parameter info."
-msgstr ""
+msgstr "Too short parameter info."
 
 #: modules/file/sis.c:948
 msgid "Unexpected image block."
-msgstr ""
+msgstr "Unexpected image block."
 
 #: modules/file/sis.c:981 modules/file/sis.c:1012
 msgid "End of file reached in image block."
-msgstr ""
+msgstr "End of file reached in image block."
 
 #: modules/file/sis.c:1026
 msgid "End of file reached in channel block."
-msgstr ""
+msgstr "End of file reached in channel block."
 
 #: modules/file/sis.c:1050
 msgid "End of file reached when another channel was expected."
-msgstr ""
+msgstr "End of file reached when another channel was expected."
 
 #: modules/file/spip-asc.c:82
 msgid "Imports SPIP ASC files."
-msgstr ""
+msgstr "Imports SPIP ASC files."
 
 #: modules/file/spip-asc.c:95
 msgid "SPIP ASCII files (.asc)"
-msgstr ""
+msgstr "SPIP ASCII files (.asc)"
 
 #: modules/file/spmlab.c:131
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
-msgstr ""
+msgstr "Imports Thermicroscopes SpmLab R3 to R7 data files."
 
 #: modules/file/spmlab.c:144
 msgid "Thermicroscopes SpmLab files"
-msgstr ""
+msgstr "Thermicroscopes SpmLab files"
 
 #: modules/file/spmlab.c:231
 #, c-format
 msgid "Unknown format version %c."
-msgstr ""
+msgstr "Unknown format version %c."
 
 #: modules/file/spmlabf.c:79
 msgid "Imports SPMLab floating-point files."
-msgstr ""
+msgstr "Imports SPMLab floating-point files."
 
 #: modules/file/spmlabf.c:92
 msgid "SPMLab floating-point files (.flt)"
-msgstr ""
+msgstr "SPMLab floating-point files (.flt)"
 
 #: modules/file/spmlabf.c:153
 msgid "Missing data start marker [Data]."
-msgstr ""
+msgstr "Missing data start marker [Data]."
 
 #: modules/file/spml.c:108
 msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr ""
+msgstr "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
 
 #: modules/file/spml.c:122
 msgid "SPML files (.xml)"
-msgstr ""
+msgstr "SPML files (.xml)"
 
 #: modules/file/spmxfile.c:91
 msgid "Reads ATC SPMxFormat files."
-msgstr ""
+msgstr "Reads ATC SPMxFormat files."
 
 #: modules/file/spmxfile.c:104
 msgid "ATC SPMxFormat data (.spm)"
-msgstr ""
+msgstr "ATC SPMxFormat data (.spm)"
 
 #: modules/file/stmprg.c:232
 msgid "Imports Omicron STMPRG data files (tp ta)."
-msgstr ""
+msgstr "Imports Omicron STMPRG data files (tp ta)."
 
 #: modules/file/stmprg.c:245
 msgid "Omicron STMPRG files (tp ta)"
-msgstr ""
+msgstr "Omicron STMPRG files (tp ta)"
 
 #: modules/file/stmprg.c:284
 msgid "Parameter file is too short."
-msgstr ""
+msgstr "Parameter file is too short."
 
 #: modules/file/stmprg.c:539
 msgid "First channel is switched off."
-msgstr ""
+msgstr "First channel is switched off."
 
 #: modules/file/stpfile.c:117
 msgid "Topography"
-msgstr ""
+msgstr "Topography"
 
 #: modules/file/stpfile.c:118
 msgid "Current or Deflection or Amplitude"
-msgstr ""
+msgstr "Current or Deflection or Amplitude"
 
 #: modules/file/stpfile.c:119
 msgid "Electrochemical Voltage (Vec)"
-msgstr ""
+msgstr "Electrochemical Voltage (Vec)"
 
 #: modules/file/stpfile.c:120
 msgid "Topography and SPS"
-msgstr ""
+msgstr "Topography and SPS"
 
 #: modules/file/stpfile.c:121
 msgid "Topography and SPS (scripted)"
-msgstr ""
+msgstr "Topography and SPS (scripted)"
 
 #: modules/file/stpfile.c:122
 msgid "Electrochemical Current (Iec)"
-msgstr ""
+msgstr "Electrochemical Current (Iec)"
 
 #: modules/file/stpfile.c:123
 msgid "Friction or Phase"
-msgstr ""
+msgstr "Friction or Phase"
 
 #: modules/file/stpfile.c:124
 msgid "AUX in BNC"
-msgstr ""
+msgstr "AUX in BNC"
 
 #: modules/file/stpfile.c:125
 msgid "AUX in 3 (Sum)"
-msgstr ""
+msgstr "AUX in 3 (Sum)"
 
 #: modules/file/stpfile.c:126
 msgid "AUX in 4 (Raw Deflection)"
-msgstr ""
+msgstr "AUX in 4 (Raw Deflection)"
 
 #: modules/file/stpfile.c:127
 msgid "AUX in 5 (PicoPlus Aux BNC)"
-msgstr ""
+msgstr "AUX in 5 (PicoPlus Aux BNC)"
 
 #: modules/file/stpfile.c:128
 msgid "AUX in 6 (Surface Potential)"
-msgstr ""
+msgstr "AUX in 6 (Surface Potential)"
 
 #: modules/file/stpfile.c:129
 msgid "AUX in 7"
-msgstr ""
+msgstr "AUX in 7"
 
 #: modules/file/stpfile.c:130
 msgid "AUX in 8"
-msgstr ""
+msgstr "AUX in 8"
 
 #: modules/file/stpfile.c:131
 msgid "AUX in 9"
-msgstr ""
+msgstr "AUX in 9"
 
 #: modules/file/stpfile.c:132
 msgid "AUX in 10"
-msgstr ""
+msgstr "AUX in 10"
 
 #: modules/file/stpfile.c:133
 msgid "Topography and Flexgrid"
-msgstr ""
+msgstr "Topography and Flexgrid"
 
 #: modules/file/stpfile.c:134
 msgid "External"
-msgstr ""
+msgstr "External"
 
 #: modules/file/stpfile.c:140
 msgid "Imports Molecular Imaging STP data files."
-msgstr ""
+msgstr "Imports Molecular Imaging STP data files."
 
 #: modules/file/stpfile.c:153
 msgid "STP files (.stp)"
-msgstr ""
+msgstr "STP files (.stp)"
 
 #: modules/file/surffile.c:292
 msgid "Imports Surf data files."
-msgstr ""
+msgstr "Imports Surf data files."
 
 #: modules/file/surffile.c:305
 msgid "Surf files (.sur)"
-msgstr ""
+msgstr "Surf files (.sur)"
 
 #: modules/file/tescan.c:94
 msgid "Imports Tescan SEM images."
-msgstr ""
+msgstr "Imports Tescan SEM images."
 
 #: modules/file/tescan.c:107
 msgid "Tescan MIRA SEM image (.tif)"
-msgstr ""
+msgstr "Tescan MIRA SEM image (.tif)"
 
 #: modules/file/tiaser.c:179
 msgid "Imports FEI Tecnai imaging and analysis (former Emispec) files."
-msgstr ""
+msgstr "Imports FEI Tecnai imaging and analysis (former Emispec) files."
 
 #: modules/file/tiaser.c:192
 msgid "FEI TIA (Emispec) data"
-msgstr ""
+msgstr "FEI TIA (Emispec) data"
 
 #: modules/file/unisoku.c:145
 msgid "Imports Unisoku data files (two-part .hdr + .dat)."
-msgstr ""
+msgstr "Imports Unisoku data files (two-part .hdr + .dat)."
 
 #: modules/file/unisoku.c:160
 msgid "Unisoku files (.hdr + .dat)"
-msgstr ""
+msgstr "Unisoku files (.hdr + .dat)"
 
 #: modules/file/unisoku.c:316
 msgid "format flags"
-msgstr ""
+msgstr "format flags"
 
 #: modules/file/unisoku.c:323
 msgid "resolution"
-msgstr ""
+msgstr "resolution"
 
 #: modules/file/unisoku.c:334
 msgid ""
 "Missing or invalid some integers heaven knows what they mean but that should "
 "be here."
 msgstr ""
+"Missing or invalid some integers heaven knows what they mean but that should "
+"be here."
 
 #: modules/file/unisoku.c:348
 msgid "x scale parameters"
-msgstr ""
+msgstr "x-scale parameters"
 
 #: modules/file/unisoku.c:359
 msgid "y scale parameters"
-msgstr ""
+msgstr "y-scale parameters"
 
 #: modules/file/unisoku.c:383
 msgid "z scale parameters"
-msgstr ""
+msgstr "z-scale parameters"
 
 #: modules/file/unisoku.c:391
 msgid "data type parameters"
-msgstr ""
+msgstr "data type parameters"
 
 #: modules/file/vtkfile.c:54
 msgid "Exports data as VTK structured grids."
-msgstr ""
+msgstr "Exports data as VTK structured grids."
 
 #: modules/file/vtkfile.c:67
 msgid "VTK structured grid (.vtk)"
-msgstr ""
+msgstr "VTK structured grid (.vtk)"
 
 #: modules/file/win_stm.c:81
 msgid "Imports WinSTM (.stm) files."
-msgstr ""
+msgstr "Imports WinSTM (.stm) files."
 
 #: modules/file/win_stm.c:94
 msgid "WinSTM files (.stm)"
-msgstr ""
+msgstr "WinSTM files (.stm)"
 
 #: modules/file/wipfile.c:272
 msgid "Imports WItec Project data files."
-msgstr ""
+msgstr "Imports WItec Project data files."
 
 #: modules/file/wipfile.c:285
 msgid "WItec Project files (.wip)"
-msgstr ""
+msgstr "WItec Project files (.wip)"
 
 #: modules/file/witec-asc.c:74
 msgid "Imports WITec ASCII export files."
-msgstr ""
+msgstr "Imports WITec ASCII export files."
 
 #: modules/file/witec-asc.c:87
 msgid "WITec ASCII files (.dat)"
-msgstr ""
+msgstr "WITec ASCII files (.dat)"
 
 #: modules/file/witfile.c:211
 msgid "Imports WITec WIT data files."
-msgstr ""
+msgstr "Imports WITec WIT data files."
 
 #: modules/file/witfile.c:224
 msgid "WITec files (.wit)"
-msgstr ""
+msgstr "WITec files (.wit)"
 
 #: modules/file/wsffile.c:84
 msgid "Imports WSF ASCII files."
-msgstr ""
+msgstr "Imports WSF ASCII files."
 
 #: modules/file/wsffile.c:97
 msgid "WSF ASCII files (.wsf)"
-msgstr ""
+msgstr "WSF ASCII files (.wsf)"
 
 #: modules/file/wsffile.c:154
 msgid "File header does not end with an empty line."
-msgstr ""
+msgstr "File header does not end with an empty line."
 
 #: modules/file/wsxmfile.c:99
 msgid "Imports Nanotec WSxM data files."
-msgstr ""
+msgstr "Imports Nanotec WSxM data files."
 
 #: modules/file/wsxmfile.c:112
 msgid "WSxM files (.tom, .stp)"
-msgstr ""
+msgstr "WSxM files (.tom, .stp)"
 
 #: modules/file/wsxmfile.c:248
 msgid "number of columns"
-msgstr ""
+msgstr "number of columns"
 
 #: modules/file/wsxmfile.c:255
 msgid "number of rows"
-msgstr ""
+msgstr "number of rows"
 
 #: modules/file/wsxmfile.c:266
 #, c-format
 msgid "Unknown data type `%s'."
-msgstr ""
+msgstr "Unknown data type ‘%s’."
 
 #: modules/file/xyzexport.c:74
 msgid "Exports data as simple XYZ text file."
-msgstr ""
+msgstr "Exports data as simple XYZ text file."
 
 #: modules/file/xyzexport.c:87
 msgid "XYZ text data (.xyz)"
-msgstr ""
+msgstr "XYZ text data (.xyz)"
 
 #: modules/file/xyzexport.c:194
 msgid "Lateral units:"
-msgstr ""
+msgstr "Lateral units:"
 
 #: modules/file/xyzexport.c:279
 msgid "Export XYZ"
-msgstr ""
+msgstr "Export XYZ"
 
 #: modules/file/xyzexport.c:319 modules/process/curvature.c:709
 #: modules/process/entropy.c:216 modules/process/facet-level.c:207
@@ -6394,41 +6403,41 @@ msgstr ""
 #: modules/tools/profile.c:595 modules/tools/sfunctions.c:497
 #: modules/tools/stats.c:390
 msgid "Masking Mode"
-msgstr ""
+msgstr "Masking Mode"
 
 #: modules/file/zeiss.c:61
 msgid "Imports Carl Zeiss SEM images."
-msgstr ""
+msgstr "Imports Carl Zeiss SEM images."
 
 #: modules/file/zeiss.c:74
 msgid "Carl Zeiss SEM scans (.tif)"
-msgstr ""
+msgstr "Carl Zeiss SEM scans (.tif)"
 
 #: modules/file/zemax.c:72
 msgid "Imports Zemax grid sag data files."
-msgstr ""
+msgstr "Imports Zemax grid sag data files."
 
 #: modules/file/zemax.c:85
 msgid "Zemax grid sag data (.dat)"
-msgstr ""
+msgstr "Zemax grid sag data (.dat)"
 
 #: modules/file/zemax.c:178
 #, c-format
 msgid "Data line %u does not contain four items."
-msgstr ""
+msgstr "Data line %u does not contain four items."
 
 #: modules/file/zemax.c:327
 #, c-format
 msgid "Unit code %d is invalid or unsupported."
-msgstr ""
+msgstr "Unit code %d is invalid or unsupported."
 
 #: modules/file/zemax.c:351
 msgid "The first line contains too many items."
-msgstr ""
+msgstr "The first line contains too many items."
 
 #: modules/graph/graph_align.c:56
 msgid "Aligns graph curves."
-msgstr ""
+msgstr "Aligns graph curves."
 
 #: modules/graph/graph_align.c:70
 msgid "/_Align"
@@ -6436,85 +6445,85 @@ msgstr "/_Align"
 
 #: modules/graph/graph_align.c:73
 msgid "Align curves"
-msgstr ""
+msgstr "Align curves"
 
 #: modules/graph/graph_cd.c:140
 msgid "Critical dimension measurements"
-msgstr ""
+msgstr "Critical dimension measurements"
 
 #: modules/graph/graph_cd.c:154
 msgid "/_Critical Dimension..."
-msgstr ""
+msgstr "/_Critical Dimension..."
 
 #: modules/graph/graph_cd.c:157
 msgid "Fit critical dimension"
-msgstr ""
+msgstr "Fit critical dimension"
 
 #: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:271
 msgid "Fit Graph"
-msgstr ""
+msgstr "Fit Graph"
 
 #: modules/graph/graph_cd.c:216 modules/graph/graph_fdfit.c:255
 #: modules/graph/graph_fit.c:274 modules/process/fit_2d.c:249
 #: modules/volume/volume_fdfit.c:300
 msgid "verb|_Fit"
-msgstr ""
+msgstr "_Fit"
 
 #: modules/graph/graph_cd.c:263 modules/graph/graph_cut.c:163
 #: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:326
 msgid "_Graph curve:"
-msgstr ""
+msgstr "_Graph curve:"
 
 #: modules/graph/graph_cd.c:277 modules/graph/graph_fdfit.c:321
 #: modules/graph/graph_fit.c:340 modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
-msgstr ""
+msgstr "F_unction:"
 
 #: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
 #: modules/graph/graph_fit.c:376 modules/process/curvature.c:750
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
-msgstr ""
+msgstr "Parameter"
 
 #: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
 #: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:339
 #: modules/volume/volume_fdfit.c:449
 msgid "Error"
-msgstr ""
+msgstr "Error"
 
 #: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
 #: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
 #: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:389
 msgid "Range:"
-msgstr ""
+msgstr "Range:"
 
 #: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
 #: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
 #: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:400
 msgid "range|to"
-msgstr ""
+msgstr "to"
 
 #: modules/graph/graph_cd.c:348
 msgid "_Draw whole circle"
-msgstr ""
+msgstr "_Draw whole circle"
 
 #: modules/graph/graph_cd.c:383 modules/graph/graph_fdfit.c:492
 #: modules/graph/graph_fit.c:532 modules/process/fit_2d.c:985
 #: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
-msgstr ""
+msgstr "Save Fit Report"
 
 #: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1137
 #: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
-msgstr ""
+msgstr "Fit"
 
 #: modules/graph/graph_cd.c:556 modules/graph/graph_fdfit.c:750
 #: modules/graph/graph_fit.c:804 modules/volume/volume_fdfit.c:979
 #: modules/volume/volume_fdfit.c:1086
 msgid "It is necessary to select more data points than free fit parameters"
-msgstr ""
+msgstr "It is necessary to select more data points than free fit parameters"
 
 #: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
 #: modules/graph/graph_fit.c:853 modules/process/entropy.c:556
@@ -6530,150 +6539,150 @@ msgstr ""
 #: modules/graph/graph_cd.c:1023 modules/graph/graph_fdfit.c:1388
 #: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
-msgstr ""
+msgstr "===== Fit Results ====="
 
 #: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
 #: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
-msgstr ""
+msgstr "Data:             %s\n"
 
 #: modules/graph/graph_cd.c:1030 modules/graph/graph_fdfit.c:1395
 #: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
-msgstr ""
+msgstr "Number of points: %d of %d\n"
 
 #: modules/graph/graph_cd.c:1034 modules/graph/graph_fdfit.c:1399
 #: modules/graph/graph_fit.c:1536 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
-msgstr ""
+msgstr "X-range:          %.*f to %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
 #: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
-msgstr ""
+msgstr "Fitted function:  %s\n"
 
 #: modules/graph/graph_cd.c:1043 modules/graph/graph_fdfit.c:1408
 #: modules/graph/graph_fit.c:1545 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
-msgstr ""
+msgstr "Results\n"
 
 #: modules/graph/graph_cut.c:87
 msgid "Cut graph"
-msgstr ""
+msgstr "Cut graph"
 
 #: modules/graph/graph_cut.c:101
 msgid "/_Cut Graph..."
-msgstr ""
+msgstr "/_Cut Graph..."
 
 #: modules/graph/graph_cut.c:104
 msgid "Extract part of graph into new one"
-msgstr ""
+msgstr "Extract part of graph into new one"
 
 #: modules/graph/graph_cut.c:143
 msgid "Cut Graph"
-msgstr ""
+msgstr "Cut Graph"
 
 #: modules/graph/graph_cut.c:176
 msgid "Cut _all curves"
-msgstr ""
+msgstr "Cut _all curves"
 
 #: modules/graph/graph_dos_spectrum.c:42
 msgid "DOS Spectrum"
-msgstr ""
+msgstr "DOS Spectrum"
 
 #: modules/graph/graph_dos_spectrum.c:56
 msgid "/_DOS Spectrum"
-msgstr ""
+msgstr "/_DOS Spectrum"
 
 #: modules/graph/graph_dos_spectrum.c:59
 msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
-msgstr ""
+msgstr "Calculate DOS spectrum from I-V tunnelling spectroscopy"
 
 #: modules/graph/graph_dos_spectrum.c:95
 #, c-format
 msgid "%s: Graph should be I-V spectroscopy."
-msgstr ""
+msgstr "%s: Graph should be I-V spectroscopy."
 
 #: modules/graph/graph_dos_spectrum.c:115
 #, c-format
 msgid "DOS Spectrum for \"%s\""
-msgstr ""
+msgstr "DOS Spectrum for \"%s\""
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
-msgstr ""
+msgstr "Plain text"
 
 #: modules/graph/graph_export_ascii.c:53
 msgid "Gnuplot friendly"
-msgstr ""
+msgstr "Gnuplot-friendly"
 
 #: modules/graph/graph_export_ascii.c:54
 msgid "Comma separated values"
-msgstr ""
+msgstr "Comma separated values"
 
 #: modules/graph/graph_export_ascii.c:55
 msgid "Origin friendly"
-msgstr ""
+msgstr "Origin-friendly"
 
 #: modules/graph/graph_export_ascii.c:56
 msgid "Igor Pro text wave"
-msgstr ""
+msgstr "Igor Pro text wave"
 
 #: modules/graph/graph_export_ascii.c:70
 msgid "Exports graph data to text files."
-msgstr ""
+msgstr "Exports graph data to text files."
 
 #: modules/graph/graph_export_ascii.c:84
 msgid "/Export _Text..."
-msgstr ""
+msgstr "/Export _Text..."
 
 #: modules/graph/graph_export_ascii.c:87
 msgid "Export graph data to a text file"
-msgstr ""
+msgstr "Export graph data to a text file"
 
 #: modules/graph/graph_export_ascii.c:127
 msgid "POSIX _number format"
-msgstr ""
+msgstr "POSIX _number format"
 
 #: modules/graph/graph_export_ascii.c:133
 msgid "Export _labels"
-msgstr ""
+msgstr "Export _labels"
 
 #: modules/graph/graph_export_ascii.c:139
 msgid "Export _units"
-msgstr ""
+msgstr "Export _units"
 
 #: modules/graph/graph_export_ascii.c:145
 msgid "Export _metadata"
-msgstr ""
+msgstr "Export _metadata"
 
 #: modules/graph/graph_export_bitmap.c:35
 msgid "Export graph into bitmap"
-msgstr ""
+msgstr "Export graph into bitmap"
 
 #: modules/graph/graph_export_bitmap.c:49
 msgid "/Export _Bitmap"
-msgstr ""
+msgstr "/Export _Bitmap"
 
 #: modules/graph/graph_export_bitmap.c:52
 msgid "Export graph to a raster image"
-msgstr ""
+msgstr "Export graph to a raster image"
 
 #: modules/graph/graph_export_bitmap.c:64
 msgid "Export to PNG"
-msgstr ""
+msgstr "Export to PNG"
 
 #: modules/graph/graph_export_vector.c:35
 msgid "Export graph in postscript"
-msgstr ""
+msgstr "Export graph to postscript"
 
 #: modules/graph/graph_export_vector.c:49
 msgid "/Export _PostScript"
-msgstr ""
+msgstr "/Export _PostScript"
 
 #: modules/graph/graph_export_vector.c:52
 msgid "Export graph to a vector image"
@@ -6681,159 +6690,161 @@ msgstr ""
 
 #: modules/graph/graph_export_vector.c:65
 msgid "Export to Postscript"
-msgstr ""
+msgstr "Export to Postscript"
 
 #: modules/graph/graph_fdfit.c:172
 msgid "Fit force-distance data"
-msgstr ""
+msgstr "Fit force-distance data"
 
 #: modules/graph/graph_fdfit.c:186
 msgid "/_Fit FD Curve..."
-msgstr ""
+msgstr "/_Fit FD Curve..."
 
 #: modules/graph/graph_fdfit.c:189
 msgid "Fit a force-distance curve"
-msgstr ""
+msgstr "Fit a force-distance curve"
 
 #: modules/graph/graph_fdfit.c:252 modules/volume/volume_fdfit.c:297
 msgid "Fit FD Curve"
-msgstr ""
+msgstr "Fit FD Curve"
 
 #: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
 #: modules/process/fit_2d.c:251 modules/process/measure_lattice.c:266
 #: modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
-msgstr ""
+msgstr "_Estimate"
 
 #: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:280
 #: modules/process/fit_2d.c:253 modules/volume/volume_fdfit.c:306
 msgid "_Plot Inits"
-msgstr ""
+msgstr "_Plot Inits"
 
 #: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:374
 #: modules/process/fit_2d.c:347 modules/volume/volume_fdfit.c:445
 msgid "Fix"
-msgstr ""
+msgstr "Fix"
 
 #: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:380
 #: modules/process/fit_2d.c:330 modules/volume/volume_fdfit.c:451
 msgid "Initial"
-msgstr ""
+msgstr "Initial"
 
 #: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:395
 #: modules/process/fit_2d.c:433 modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
-msgstr ""
+msgstr "χ<sup>2</sup> result:"
 
 #: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:411
 #: modules/process/fit_2d.c:416 modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
-msgstr ""
+msgstr "Correlation Matrix"
 
 #: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:486
 #: modules/process/wpour_mark.c:419 modules/volume/volume_fdfit.c:533
 msgid "Instant:"
-msgstr ""
+msgstr "Instant:"
 
 #: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
 #: modules/volume/volume_fdfit.c:536
 msgid "e_stimate"
-msgstr ""
+msgstr "e_stimate"
 
 #: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
 #: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
-msgstr ""
+msgstr "p_lot"
 
 #: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
 #: modules/volume/volume_fdfit.c:907
 msgid "Estimate"
-msgstr ""
+msgstr "Estimate"
 
 #: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
-msgstr ""
+msgstr "Residual sum:   %g\n"
 
 #: modules/graph/graph_fdfit.c:1437 modules/graph/graph_fit.c:1574
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
-msgstr ""
+msgstr "Correlation matrix\n"
 
 #: modules/graph/graph_filter.c:39
 msgid "Remove graph noise by filtering."
-msgstr ""
+msgstr "Remove graph noise by filtering."
 
 #: modules/graph/graph_filter.c:53
 msgid "/_Filter"
-msgstr ""
+msgstr "/_Filter"
 
 #: modules/graph/graph_filter.c:56
 msgid "Remove noise from graph curves"
-msgstr ""
+msgstr "Remove noise from graph curves"
 
 #: modules/graph/graph_fit.c:185
 msgid "Fit graph with function"
-msgstr ""
+msgstr "Fit graph with function"
 
 #: modules/graph/graph_fit.c:199
 msgid "/_Fit Function..."
-msgstr ""
+msgstr "/_Fit Function..."
 
 #: modules/graph/graph_fit.c:202
 msgid "Fit a function on graph data"
-msgstr ""
+msgstr "Fit a function on graph data"
 
 #: modules/graph/graph_fit.c:387
 msgid "Copy all fitted values to estimates"
-msgstr ""
+msgstr "Copy all fitted values to estimates"
 
 #: modules/graph/graph_fit.c:461
 msgid "Plot full range"
-msgstr ""
+msgstr "Plot full range"
 
 #: modules/graph/graph_fit.c:471
 msgid "Create a difference graph"
-msgstr ""
+msgstr "Create a difference graph"
 
 #: modules/graph/graph_level.c:38
 msgid "Level graph by line."
-msgstr ""
+msgstr "Level graph by line."
 
 #: modules/graph/graph_level.c:52
 msgid "/_Level"
-msgstr ""
+msgstr "/_Level"
 
 #: modules/graph/graph_level.c:55
 msgid "Level graph curves"
-msgstr ""
+msgstr "Level graph curves"
 
 #: modules/layer/axis.c:143
 msgid "Layer allowing selection of horizontal or vertical lines."
-msgstr ""
+msgstr "Layer allowing selection of horizontal or vertical lines."
 
 #: modules/layer/ellipse.c:143
 msgid "Layer allowing selection of elliptic areas."
-msgstr ""
+msgstr "Layer allowing selection of elliptic areas."
 
 #: modules/layer/lattice.c:126
 msgid "Layer allowing selection of a two-dimensional lattice."
-msgstr ""
+msgstr "Layer allowing selection of a two-dimensional lattice."
 
 #: modules/layer/line.c:177
 msgid "Layer allowing selection of arbitrary straight lines."
-msgstr ""
+msgstr "Layer allowing selection of arbitrary straight lines."
 
 #: modules/layer/point.c:169
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "inivisible."
 msgstr ""
+"Layer allowing selection of several points, displayed as crosses or "
+"invisible."
 
 #: modules/layer/rectangle.c:147
 msgid "Layer allowing selection of rectangular areas."
-msgstr ""
+msgstr "Layer allowing selection of rectangular areas."
 
 #: modules/plugin-proxy.c:145
 msgid ""
@@ -6841,34 +6852,37 @@ msgid ""
 "external programs (plug-ins) on data pretending they are data processing or "
 "file loading/saving modules."
 msgstr ""
+"Plug-in proxy is a module capable of querying, registering, and running "
+"external programs (plug-ins) on data pretending they are data processing or "
+"file loading/saving modules."
 
 #: modules/plugin-proxy.c:463
 msgid "/_Plug-Ins"
-msgstr ""
+msgstr "/_Plug-Ins"
 
 #: modules/plugin-proxy.c:464
 #, c-format
 msgid "Run plug-in %s"
-msgstr ""
+msgstr "Run plug-in %s"
 
 #: modules/plugin-proxy.c:737 modules/plugin-proxy.c:838
 msgid "Plugin-proxy must be run as interactive."
-msgstr ""
+msgstr "Plugin-proxy must be run as interactive."
 
 #: modules/plugin-proxy.c:743
 #, c-format
 msgid "Plug-in `%s' does not implement file loading."
-msgstr ""
+msgstr "Plug-in ‘%s’ does not implement file loading."
 
 #: modules/plugin-proxy.c:761
 #, c-format
 msgid "Cannot read temporary file: %s."
-msgstr ""
+msgstr "Cannot read temporary file: %s."
 
 #: modules/plugin-proxy.c:768 modules/plugin-proxy.c:863
 #, c-format
 msgid "Cannot execute plug-in `%s': %s."
-msgstr ""
+msgstr "Cannot execute plug-in ‘%s’: %s."
 
 #: modules/plugin-proxy.c:777 modules/plugin-proxy.c:872
 #, c-format
@@ -6888,167 +6902,171 @@ msgstr ""
 #: modules/plugin-proxy.c:1204 modules/plugin-proxy.c:1213
 #, c-format
 msgid "Cannot create a temporary file: %s."
-msgstr ""
+msgstr "Cannot create a temporary file: %s."
 
 #: modules/plugin-proxy.c:1221
 #, c-format
 msgid "Cannot fdopen() already open file: %s."
-msgstr ""
+msgstr "Cannot fdopen() already open file: %s."
 
 #: modules/process/acf2d.c:37
 msgid "Calculates two-dimensional autocorrelation function."
-msgstr ""
+msgstr "Calculates two-dimensional autocorrelation function."
 
 #: modules/process/acf2d.c:51
 msgid "/_Statistics/2D Auto_correlation"
-msgstr ""
+msgstr "/_Statistics/2D Auto_correlation"
 
 #: modules/process/acf2d.c:55
 msgid "Calculate 2D autocorrelation function"
-msgstr ""
+msgstr "Calculate 2D autocorrelation function"
 
 #: modules/process/acf2d.c:76
 msgid "2D ACF"
-msgstr ""
+msgstr "2D ACF"
 
 #: modules/process/angle_dist.c:100
 msgid ""
 "Calculates two-dimensional distribution of angles, that is projections of "
 "slopes to all directions."
 msgstr ""
+"Calculates two-dimensional distribution of angles, that is projections of "
+"slopes to all directions."
 
 #: modules/process/angle_dist.c:115
 msgid "/_Statistics/An_gle Distribution..."
-msgstr ""
+msgstr "/_Statistics/An_gle Distribution..."
 
 #: modules/process/angle_dist.c:119
 msgid "Calculate two-dimensional angle distribution"
-msgstr ""
+msgstr "Calculate two-dimensional angle distribution"
 
 #: modules/process/angle_dist.c:147
 msgid "Computing angle distribution..."
-msgstr ""
+msgstr "Computing angle distribution..."
 
 #: modules/process/angle_dist.c:158
 msgid "Angle distribution"
-msgstr ""
+msgstr "Angle distribution"
 
 #: modules/process/angle_dist.c:171
 msgid "Angle Distribution"
-msgstr ""
+msgstr "Angle Distribution"
 
 #: modules/process/angle_dist.c:188 modules/process/slope_dist.c:375
 msgid "Output _size:"
-msgstr ""
+msgstr "Output _size:"
 
 #: modules/process/angle_dist.c:193 modules/process/grain_wshed.c:214
 msgid "_Number of steps:"
-msgstr ""
+msgstr "_Number of steps:"
 
 #: modules/process/angle_dist.c:198 modules/process/slope_dist.c:382
 msgid "_Logarithmic value scale"
-msgstr ""
+msgstr "_Logarithmic value scale"
 
 #: modules/process/angle_dist.c:204 modules/process/entropy.c:233
 #: modules/process/slope_dist.c:392
 msgid "Use local plane _fitting"
-msgstr ""
+msgstr "Use local plane _fitting"
 
 #: modules/process/angle_dist.c:213 modules/process/entropy.c:244
 #: modules/process/slope_dist.c:403
 msgid "_Plane size:"
-msgstr ""
+msgstr "_Plane size:"
 
 #: modules/process/arithmetic.c:142
 msgid "Simple arithmetic operations with data fields."
-msgstr ""
+msgstr "Simple arithmetic operations with data fields."
 
 #: modules/process/arithmetic.c:162
 msgid "/M_ultidata/_Arithmetic..."
-msgstr ""
+msgstr "/M_ultidata/_Arithmetic..."
 
 #: modules/process/arithmetic.c:166
 msgid "Arithmetic operations on data"
-msgstr ""
+msgstr "Arithmetic operations on data"
 
 #: modules/process/arithmetic.c:204 modules/process/superresolution.c:349
 msgid "Calculated"
-msgstr ""
+msgstr "Calculated"
 
 #: modules/process/arithmetic.c:233
 msgid "Arithmetic"
-msgstr ""
+msgstr "Arithmetic"
 
 #: modules/process/arithmetic.c:272
 msgid "_Expression:"
-msgstr ""
+msgstr "_Expression:"
 
 #: modules/process/arithmetic.c:297
 msgid "Operands"
-msgstr ""
+msgstr "Operands"
 
 #: modules/process/arithmetic.c:302 modules/process/dimensions.h:483
 msgid "Units"
-msgstr ""
+msgstr "Units"
 
 #: modules/process/arithmetic.c:337
 #, c-format
 msgid "Take result units from data d%d"
-msgstr ""
+msgstr "Take result units from data d%d"
 
 #: modules/process/arithmetic.c:355
 msgid "Specify un_its:"
-msgstr ""
+msgstr "Specify un_its:"
 
 #: modules/process/arithmetic.c:374
 msgid "Specify result units explicitly"
-msgstr ""
+msgstr "Specify result units explicitly"
 
 #: modules/process/arithmetic.c:457
 msgid "Expression contains unknown identifiers"
-msgstr ""
+msgstr "Expression contains unknown identifiers"
 
 #: modules/process/arithmetic.c:571 modules/process/superresolution.c:300
 msgid "Pixel dimensions differ"
-msgstr ""
+msgstr "Pixel dimensions differ"
 
 #: modules/process/arithmetic.c:573 modules/process/superresolution.c:302
 msgid "Lateral dimensions are different physical quantities"
-msgstr ""
+msgstr "Lateral dimensions are different physical quantities"
 
 #: modules/process/arithmetic.c:576 modules/process/superresolution.c:305
 msgid "Physical dimensions differ"
-msgstr ""
+msgstr "Physical dimensions differ"
 
 #: modules/process/averaging.c:57
 msgid "Similar structures averaging using autocorrelation"
-msgstr ""
+msgstr "Similar-structures averaging using autocorrelation"
 
 #: modules/process/averaging.c:71
 msgid "/_Correct Data/_Correlation averaging..."
-msgstr ""
+msgstr "/_Correct Data/_Correlation averaging..."
 
 #: modules/process/averaging.c:75
 msgid "Averaging of similar structures"
-msgstr ""
+msgstr "Averaging of similar structures"
 
 #: modules/process/averaging.c:109
 msgid "Averaged"
-msgstr ""
+msgstr "Averaged"
 
 #: modules/process/averaging.c:127
 msgid "Averaging of Similar Structures"
-msgstr ""
+msgstr "Averaging of Similar Structures"
 
 #: modules/process/averaging.c:145
 msgid "Select the sample area below"
-msgstr ""
+msgstr "Select the sample area below"
 
 #: modules/process/basicops.c:56
 msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
 msgstr ""
+"Basic operations like flipping, value inversion, and rotation by multiples "
+"of 90 degrees."
 
 #: modules/process/basicops.c:71
 msgid "/_Basic Operations/_Invert Value"
@@ -7056,7 +7074,7 @@ msgstr "/_Basic Operations/_Invert Value"
 
 #: modules/process/basicops.c:75
 msgid "Invert values about mean"
-msgstr ""
+msgstr "Invert values about mean"
 
 #: modules/process/basicops.c:78
 msgid "/_Basic Operations/Flip _Horizontally"
@@ -7064,7 +7082,7 @@ msgstr "/_Basic Operations/Flip _Horizontally"
 
 #: modules/process/basicops.c:82
 msgid "Flip data horizontally"
-msgstr ""
+msgstr "Flip data horizontally"
 
 #: modules/process/basicops.c:85
 msgid "/_Basic Operations/Flip _Vertically"
@@ -7072,7 +7090,7 @@ msgstr "/_Basic Operations/Flip _Vertically"
 
 #: modules/process/basicops.c:89
 msgid "Flip data vertically"
-msgstr ""
+msgstr "Flip data vertically"
 
 #: modules/process/basicops.c:92
 msgid "/_Basic Operations/Flip _Both"
@@ -7080,7 +7098,7 @@ msgstr "/_Basic Operations/Flip _Both"
 
 #: modules/process/basicops.c:96
 msgid "Flip data both horizontally and vertically"
-msgstr ""
+msgstr "Flip data both horizontally and vertically"
 
 #: modules/process/basicops.c:99
 msgid "/_Basic Operations/Rotate C_lockwise"
@@ -7100,11 +7118,11 @@ msgstr "Rotate data 90 degrees anti-clockwise"
 
 #: modules/process/basicops.c:113
 msgid "/_Basic Operations/S_quare Samples"
-msgstr ""
+msgstr "/_Basic Operations/S_quare Samples"
 
 #: modules/process/basicops.c:117
 msgid "Resample data with non-1:1 aspect ratio to square samples"
-msgstr ""
+msgstr "Resample data with non-1:1 aspect ratio to square samples"
 
 #: modules/process/basicops.c:121
 msgid "/_Basic Operations/_Null Offsets"
@@ -7112,19 +7130,19 @@ msgstr "/_Basic Operations/_Null Offsets"
 
 #: modules/process/basicops.c:125
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
-msgstr ""
+msgstr "Null horizontal offsets, moving the origin to the upper left corner"
 
 #: modules/process/bdep_synth.c:158
 msgid "Generates surfaces by ballistic deposition."
-msgstr ""
+msgstr "Generates surfaces by ballistic deposition."
 
 #: modules/process/bdep_synth.c:172
 msgid "/S_ynthetic/_Ballistic..."
-msgstr ""
+msgstr "/S_ynthetic/_Ballistic..."
 
 #: modules/process/bdep_synth.c:176
 msgid "Generate surface by ballistic deposition"
-msgstr ""
+msgstr "Generate surface by ballistic deposition"
 
 #: modules/process/bdep_synth.c:283 modules/process/col_synth.c:318
 #: modules/process/deposit_synth.c:314 modules/process/deposit_synth.c:326
@@ -7136,21 +7154,21 @@ msgstr ""
 #: modules/process/obj_synth.c:412 modules/process/pat_synth.c:365
 #: modules/process/wave_synth.c:331
 msgid "Generated"
-msgstr ""
+msgstr "Generated"
 
 #: modules/process/bdep_synth.c:307 modules/process/col_synth.c:342
 #: modules/process/diff_synth.c:374
 msgid "Mean deposited thickness"
-msgstr ""
+msgstr "Mean deposited thickness"
 
 #: modules/process/bdep_synth.c:347
 msgid "Ballistic Deposition"
-msgstr ""
+msgstr "Ballistic Deposition"
 
 #: modules/process/bdep_synth.c:391 modules/process/col_synth.c:425
 #: modules/process/diff_synth.c:461 modules/process/domain_synth.c:414
 msgid "Progressive preview"
-msgstr ""
+msgstr "Progressive preview"
 
 #: modules/process/bdep_synth.c:414 modules/process/col_synth.c:448
 #: modules/process/deposit_synth.c:420 modules/process/diff_synth.c:484
@@ -7160,7 +7178,7 @@ msgstr ""
 #: modules/process/obj_synth.c:503 modules/process/pat_synth.c:450
 #: modules/process/wave_synth.c:414
 msgid "Dimensions"
-msgstr ""
+msgstr "Dimensions"
 
 #: modules/process/bdep_synth.c:423 modules/process/col_synth.c:457
 #: modules/process/deposit_synth.c:430 modules/process/diff_synth.c:493
@@ -7169,13 +7187,13 @@ msgstr ""
 #: modules/process/noise_synth.c:413 modules/process/obj_synth.c:514
 #: modules/process/pat_synth.c:462 modules/process/wave_synth.c:425
 msgid "Generator"
-msgstr ""
+msgstr "Generator"
 
 #: modules/process/bdep_synth.c:429 modules/process/col_synth.c:463
 #: modules/process/diff_synth.c:499 modules/process/lno_synth.c:1049
 #: modules/process/obj_synth.c:525
 msgid "Co_verage:"
-msgstr ""
+msgstr "Co_verage:"
 
 #: modules/process/bdep_synth.c:441 modules/process/diff_synth.c:519
 #: modules/process/domain_synth.c:521 modules/process/fbm_synth.c:420
@@ -7183,290 +7201,290 @@ msgstr ""
 #: modules/process/lno_synth.c:545 modules/process/noise_synth.c:445
 #: modules/process/obj_synth.c:584 modules/process/wave_synth.c:460
 msgid "_Like Current Channel"
-msgstr ""
+msgstr "_Like Current Channel"
 
 #: modules/process/bdep_synth.c:460 modules/process/col_synth.c:521
 #: modules/process/diff_synth.c:569
 msgid "Evolution"
-msgstr ""
+msgstr "Evolution"
 
 #: modules/process/bdep_synth.c:463 modules/process/col_synth.c:524
 #: modules/process/diff_synth.c:572
 msgid "Plot graphs:"
-msgstr ""
+msgstr "Plot graphs:"
 
 #: modules/process/bdep_synth.c:661 modules/process/col_synth.c:761
 #: modules/process/diff_synth.c:789
 msgid "Depositing particles..."
-msgstr ""
+msgstr "Depositing particles..."
 
 #: modules/process/calcoefs_load.c:80
 msgid "Load calibration data from text file"
-msgstr ""
+msgstr "Load calibration data from text file"
 
 #: modules/process/calcoefs_load.c:94
 msgid "/Cali_bration/_Load From Text File..."
-msgstr ""
+msgstr "/Cali_bration/_Load From Text File..."
 
 #: modules/process/calcoefs_load.c:98
 msgid "Load calibration data from text file."
-msgstr ""
+msgstr "Load calibration data from text file."
 
 #: modules/process/calcoefs_load.c:147
 #, c-format
 msgid "Error loading file: %s\n"
-msgstr ""
+msgstr "Error loading file: %s\n"
 
 #: modules/process/calcoefs_load.c:175 modules/process/calcoefs_new.c:309
 #, c-format
 msgid "Cannot save preset: %s"
-msgstr ""
+msgstr "Cannot save preset: %s"
 
 #: modules/process/calcoefs_load.c:210
 msgid "Load Calibration Data"
-msgstr ""
+msgstr "Load Calibration Data"
 
 #: modules/process/calcoefs_load.c:230 modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:475
 msgid "Calibration name:"
-msgstr ""
+msgstr "Calibration name:"
 
 #: modules/process/calcoefs_load.c:242 modules/volume/volume_extract.c:433
 #: modules/volume/volume_extract.c:514
 msgid "No data loaded"
-msgstr ""
+msgstr "No data loaded"
 
 #: modules/process/calcoefs_load.c:269 modules/process/calcoefs_new.c:635
 #: modules/process/calcoefs_simple.c:539
 #, c-format
 msgid "Calibration '%s' already exists"
-msgstr ""
+msgstr "Calibration ‘%s’ already exists"
 
 #: modules/process/calcoefs_load.c:271 modules/process/calcoefs_new.c:637
 #: modules/process/calcoefs_simple.c:541
 msgid "Overwrite"
-msgstr ""
+msgstr "Overwrite"
 
 #: modules/process/calcoefs_load.c:272 modules/process/calcoefs_new.c:638
 #: modules/process/calcoefs_simple.c:542
 msgid "Append"
-msgstr ""
+msgstr "Append"
 
 #: modules/process/calcoefs_load.c:318
 msgid "Load calibration data"
-msgstr ""
+msgstr "Load calibration data"
 
 #: modules/process/calcoefs_load.c:333 modules/volume/volume_extract.c:1073
 #, c-format
 msgid "Error loading file '%s'"
-msgstr ""
+msgstr "Error loading file ‘%s’"
 
 #: modules/process/calcoefs_load.c:392
 msgid "Error: not enough points."
-msgstr ""
+msgstr "Error: not enough points."
 
 #: modules/process/calcoefs_load.c:419
 #, c-format
 msgid "Loaded %d data points"
-msgstr ""
+msgstr "Loaded %d data points"
 
 #: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
-msgstr ""
+msgstr "Create simple calibration data"
 
 #: modules/process/calcoefs_new.c:179
 msgid "/Cali_bration/_Create..."
-msgstr ""
+msgstr "/Cali_bration/_Create..."
 
 #: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
-msgstr ""
+msgstr "Specify simple calibration data."
 
 #: modules/process/calcoefs_new.c:346
 msgid "Simple Calibration Data"
-msgstr ""
+msgstr "Simple Calibration Data"
 
 #: modules/process/calcoefs_new.c:364
 msgid "_X from:"
-msgstr ""
+msgstr "_X from:"
 
 #: modules/process/calcoefs_new.c:391
 msgid "_X to:"
-msgstr ""
+msgstr "_X to:"
 
 #: modules/process/calcoefs_new.c:404
 msgid "_Y from:"
-msgstr ""
+msgstr "_Y from:"
 
 #: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
-msgstr ""
+msgstr "_Y to:"
 
 #: modules/process/calcoefs_new.c:431
 msgid "_Z from:"
-msgstr ""
+msgstr "_Z from:"
 
 #: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
-msgstr ""
+msgstr "_Z to:"
 
 #: modules/process/calcoefs_new.c:471
 msgid "_X uncertainty:"
-msgstr ""
+msgstr "_X uncertainty:"
 
 #: modules/process/calcoefs_new.c:492
 msgid "_Y uncertainty:"
-msgstr ""
+msgstr "_Y uncertainty:"
 
 #: modules/process/calcoefs_new.c:507
 msgid "_Z uncertainty:"
-msgstr ""
+msgstr "_Z uncertainty:"
 
 #: modules/process/calcoefs_new.c:529
 msgid "_X correction factor:"
-msgstr ""
+msgstr "_X correction factor:"
 
 #: modules/process/calcoefs_new.c:541
 msgid "_Y correction factor:"
-msgstr ""
+msgstr "_Y correction factor:"
 
 #: modules/process/calcoefs_new.c:553
 msgid "_Z correction factor:"
-msgstr ""
+msgstr "_Z correction factor:"
 
 #: modules/process/calcoefs_simple.c:169
 msgid "Simple error map based on grating measurements"
-msgstr ""
+msgstr "Simple error map based on grating measurements"
 
 #: modules/process/calcoefs_simple.c:183
 msgid "/Cali_bration/_Get Simple Errop Map..."
-msgstr ""
+msgstr "/Cali_bration/_Get Simple Errop Map..."
 
 #: modules/process/calcoefs_simple.c:187
 msgid "Simple error mapping"
-msgstr ""
+msgstr "Simple error mapping"
 
 #: modules/process/calcoefs_simple.c:326
 msgid "Simple Error Map"
-msgstr ""
+msgstr "Simple Error Map"
 
 #: modules/process/calcoefs_simple.c:343 modules/process/calcoefs_stage.c:146
 #: modules/process/superresolution.c:156
 msgid "Operands:"
-msgstr ""
+msgstr "Operands:"
 
 #: modules/process/calcoefs_simple.c:349
 msgid "Grating image"
-msgstr ""
+msgstr "Grating image"
 
 #: modules/process/calcoefs_simple.c:350 modules/tools/crop.c:390
 msgid "Detail"
-msgstr ""
+msgstr "Detail"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:497
 #: modules/process/calibrate.c:496 modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
-msgstr ""
+msgstr "_X offset:"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:523
 #: modules/process/calibrate.c:509 modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
-msgstr ""
+msgstr "_Y offset:"
 
 #: modules/process/calcoefs_simple.c:411
 msgid "X _period:"
-msgstr ""
+msgstr "X _period:"
 
 #: modules/process/calcoefs_simple.c:424
 msgid "Y p_eriod:"
-msgstr ""
+msgstr "Y p_eriod:"
 
 #: modules/process/calcoefs_simple.c:438 modules/process/calcoefs_view.c:535
 #: modules/volume/volume_calibrate.c:505
 msgid "_Z offset:"
-msgstr ""
+msgstr "_Z offset:"
 
 #: modules/process/calcoefs_simple.c:466
 msgid "_Threshold"
-msgstr ""
+msgstr "_Threshold"
 
 #: modules/process/calcoefs_simple.c:487
 msgid "No suggestion\n"
-msgstr ""
+msgstr "No suggestion\n"
 
 #: modules/process/calcoefs_simple.c:589
 msgid "Data same as detail?"
-msgstr ""
+msgstr "Data same as detail?"
 
 #: modules/process/calcoefs_simple.c:595
 msgid "Data larger than detail?"
-msgstr ""
+msgstr "Data larger than detail?"
 
 #: modules/process/calcoefs_simple.c:609
 #, c-format
 msgid "%d objects found"
-msgstr ""
+msgstr "%d objects found"
 
 #: modules/process/calcoefs_simple.c:611
 msgid "Search cancelled"
-msgstr ""
+msgstr "Search cancelled"
 
 #: modules/process/calcoefs_simple.c:635 modules/process/maskcor.c:333
 #: modules/process/mcrop.c:323 modules/process/merge.c:1080
 msgid "Correlating..."
-msgstr ""
+msgstr "Correlating..."
 
 #: modules/process/calcoefs_stage.c:76
 msgid "Digital AFM data recalibration"
-msgstr ""
+msgstr "Digital AFM data recalibration"
 
 #: modules/process/calcoefs_stage.c:90
 msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
-msgstr ""
+msgstr "/Cali_bration/_3D Calibration/_Get From Stage map..."
 
 #: modules/process/calcoefs_stage.c:94
 msgid "Stage error mapping"
-msgstr ""
+msgstr "Stage error mapping"
 
 #: modules/process/calcoefs_stage.c:131
 msgid "Stage Error Map"
-msgstr ""
+msgstr "Stage Error Map"
 
 #: modules/process/calcoefs_view.c:243
 msgid "3D calibration/uncertainty"
-msgstr ""
+msgstr "3D calibration/uncertainty"
 
 #: modules/process/calcoefs_view.c:257
 msgid "/Cali_bration/_Apply to Data..."
-msgstr ""
+msgstr "/Cali_bration/_Apply to Data..."
 
 #: modules/process/calcoefs_view.c:261
 msgid "3D calibration and uncertainty"
-msgstr ""
+msgstr "3D calibration and uncertainty"
 
 #: modules/process/calcoefs_view.c:325
 msgid "3D Calibration"
-msgstr ""
+msgstr "3D Calibration"
 
 #: modules/process/calcoefs_view.c:383
 msgid "No data used."
-msgstr ""
+msgstr "No data used."
 
 #: modules/process/calcoefs_view.c:403
 msgid "Used calibration data:"
-msgstr ""
+msgstr "Used calibration data:"
 
 #: modules/process/calcoefs_view.c:420
 msgid "Shown planes:"
-msgstr ""
+msgstr "Shown planes:"
 
 #: modules/process/calcoefs_view.c:426
 msgid "View:"
-msgstr ""
+msgstr "View:"
 
 #: modules/process/calcoefs_view.c:441
 msgid "Plane:"
-msgstr ""
+msgstr "Plane:"
 
 #: modules/process/calcoefs_view.c:460
 msgid "X pos:"
@@ -7486,7 +7504,7 @@ msgstr ""
 
 #: modules/process/calcoefs_view.c:563
 msgid "Crop to actual data"
-msgstr ""
+msgstr "Crop to actual data"
 
 #: modules/process/calcoefs_view.c:573 modules/process/deposit_synth.c:649
 #: modules/process/edge.c:714 modules/process/fft_filter_1d.c:310
@@ -7497,92 +7515,92 @@ msgstr ""
 #: modules/volume/volume_extract.c:424 modules/volume/volume_extract.c:505
 #: modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
-msgstr ""
+msgstr "I_nstant updates"
 
 #: modules/process/calcoefs_view.c:688
 msgid "Shown part has zero range."
-msgstr ""
+msgstr "Shown part has zero range."
 
 #: modules/process/calcoefs_view.c:695
 #, c-format
 msgid "Shown range (%.*f - %.*f) %s"
-msgstr ""
+msgstr "Shown range (%.*f - %.*f) %s"
 
 #: modules/process/calcoefs_view.c:744
 #, c-format
 msgid "%d calibration data"
-msgstr ""
+msgstr "%d calibration data"
 
 #: modules/process/calcoefs_view.c:748
 #, c-format
 msgid "X span: (%.*f - %.*f) %s"
-msgstr ""
+msgstr "X span: (%.*f - %.*f) %s"
 
 #: modules/process/calcoefs_view.c:754
 #, c-format
 msgid "Y span: (%.*f - %.*f) %s"
-msgstr ""
+msgstr "Y span: (%.*f - %.*f) %s"
 
 #: modules/process/calcoefs_view.c:760
 #, c-format
 msgid "Z span: (%.*f - %.*f) %s"
-msgstr ""
+msgstr "Z span: (%.*f - %.*f) %s"
 
 #: modules/process/calcoefs_view.c:784
 msgid "Error: out of range."
-msgstr ""
+msgstr "Error: out of range."
 
 #: modules/process/calcoefs_view.c:793
 msgid "Building mesh..."
-msgstr ""
+msgstr "Building mesh..."
 
 #: modules/process/calcoefs_view.c:1126 modules/tools/profile.c:1822
 msgid "X correction"
-msgstr ""
+msgstr "X correction"
 
 #: modules/process/calcoefs_view.c:1127 modules/tools/profile.c:1823
 msgid "Y correction"
-msgstr ""
+msgstr "Y correction"
 
 #: modules/process/calcoefs_view.c:1128 modules/tools/profile.c:1824
 msgid "Z correction"
-msgstr ""
+msgstr "Z correction"
 
 #: modules/process/calcoefs_view.c:1129 modules/tools/profile.c:1825
 msgid "X uncertainty"
-msgstr ""
+msgstr "X uncertainty"
 
 #: modules/process/calcoefs_view.c:1130 modules/tools/profile.c:1826
 msgid "Y uncertainty"
-msgstr ""
+msgstr "Y uncertainty"
 
 #: modules/process/calcoefs_view.c:1131 modules/tools/profile.c:1827
 msgid "Z uncertainty"
-msgstr ""
+msgstr "Z uncertainty"
 
 #: modules/process/calcoefs_view.c:1143
 msgid "Constant X"
-msgstr ""
+msgstr "Constant X"
 
 #: modules/process/calcoefs_view.c:1144
 msgid "Constant Y"
-msgstr ""
+msgstr "Constant Y"
 
 #: modules/process/calcoefs_view.c:1145
 msgid "Constant Z"
-msgstr ""
+msgstr "Constant Z"
 
 #: modules/process/calcoefs_view.c:1156
 msgid "NNA 3D"
-msgstr ""
+msgstr "NNA 3D"
 
 #: modules/process/calcoefs_view.c:1157
 msgid "Snap to planes"
-msgstr ""
+msgstr "Snap to planes"
 
 #: modules/process/calcoefs_view.c:1158
 msgid "Delaunay"
-msgstr ""
+msgstr "Delaunay"
 
 #: modules/process/calibrate.c:179
 msgid "Recalibrates scan lateral dimensions or value range."
