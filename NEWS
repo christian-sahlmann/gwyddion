@@ -28,6 +28,8 @@ Libraries:
 - libgwyapp: gwy_app_sync_data_items() only replicates non-empty selections
   now.
 - libgwydgets: The gradient can be unset using data window colour axis menu.
+  The colour gradient and GL material can be unset in the 3D window as well.
+- libgwydgets: Positions of graph labels are remembered and restored.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
@@ -41,6 +43,9 @@ Modules:
 - Spectro tool: Always disabled ‘Apply’ button (broken in 2.44) works again.
 - Points, Lines layers: Numbering works with more than 999 objects.
 - 1D FFT filter: GUI was reorganised and the previews enlarged.
+- Image export: Support for path selection drawing was added.
+- Level: Zero mean value supports masking.  Individual module functions have
+  separate settings now.
 
 
 2.44 (2016-01-11)
