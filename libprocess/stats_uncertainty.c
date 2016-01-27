@@ -3461,10 +3461,9 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
                      && row + height <= yres);
 
 
-    nn = (gdouble **)g_malloc(width*sizeof(gdouble *));
-    for (i = 0; i <  width; i++) {
-        nn[i] = (gdouble *)g_malloc0(height*sizeof(gdouble));
-    }
+    nn = g_new(gdouble *, width);
+    for (i = 0; i <  width; i++)
+        nn[i] = g_new(gdouble, height);
 
     // table of x, y derivatives and normal vector sizes
     for (i = col; i < col + width; i++) {

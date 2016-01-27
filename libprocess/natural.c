@@ -1259,7 +1259,7 @@ static simplex *newSimplex(GwyDelaunayMesh *m)
 
   if (!s)
   {
-    s = g_malloc(sizeof(simplex));
+    s = g_new(simplex, 1);
   }
   s->s[0] = 0;
   s->s[1] = 0;
@@ -2190,7 +2190,7 @@ static neighbourUpdate *initNeighbourUpdates()
 GwyDelaunayMesh *_gwy_delaunay_mesh_new()
 {
   // Create the struct to hold all of the data strucutres.
-  GwyDelaunayMesh *m             = g_malloc(sizeof(GwyDelaunayMesh));
+  GwyDelaunayMesh *m = g_new(GwyDelaunayMesh, 1);
   // Pointer to the super simplex.
   m->super            = NULL;
   // A linked list of simplicies: We can actually remove this without losing
@@ -2403,7 +2403,7 @@ static void getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min, GwyD
 GwyDelaunayVertex *_gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
                    gdouble *u, gdouble *v, gdouble *w, gint n)
 {
-  GwyDelaunayVertex* ps = g_malloc(sizeof(GwyDelaunayVertex) *n);
+  GwyDelaunayVertex* ps = g_new(GwyDelaunayVertex, n);
 
   gint i;
 
@@ -2488,7 +2488,7 @@ void _gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  
   lastNaturalNeighbours(&p, m, neighbours, neighbourSimplicies);
 
   // Calculate the volumes of the Voronoi Cells of the natural neighbours.
-  neighbourVolumes = g_malloc(arrayListSize(neighbours) * sizeof(gdouble));
+  neighbourVolumes = g_new(gdouble, arrayListSize(neighbours));
 
   // Calculate the 'before' volumes of each voronoi cell.
   for (i=0; i<arrayListSize(neighbours); i++)
