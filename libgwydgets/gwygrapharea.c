@@ -802,6 +802,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         curve = gwy_graph_area_find_curve(area, dx, dy);
         if (curve >= 0) {
             gwy_graph_area_edit_curve(area, curve);
+            return TRUE;
         }
     }
 
