@@ -673,8 +673,8 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
 
         gcmodel->n = n;
     }
-    if (gcmodel->calibration)
-    {
+
+    if (gcmodel->calibration) {
         g_free(gcmodel->calibration->xerr);
         g_free(gcmodel->calibration->yerr);
         g_free(gcmodel->calibration->zerr);
@@ -1118,15 +1118,15 @@ void
 gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
                                            const GwyCurveCalibrationData *calibration)
 {
-    if (gcmodel->calibration)
-    {
+    if (gcmodel->calibration) {
         g_free(gcmodel->calibration->xerr);
         g_free(gcmodel->calibration->yerr);
         g_free(gcmodel->calibration->zerr);
         g_free(gcmodel->calibration->xunc);
         g_free(gcmodel->calibration->yunc);
         g_free(gcmodel->calibration->zunc);
-    } else
+    }
+    else
         gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
 
     gcmodel->calibration->n = calibration->n;
@@ -1143,8 +1143,6 @@ gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
     gcmodel->calibration->zunc = g_memdup(calibration->zunc,
                                           calibration->n*sizeof(gdouble));
 }
-
-
 
 /************************** Documentation ****************************/
 
