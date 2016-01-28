@@ -91,7 +91,9 @@ G_GNUC_INTERNAL
 gboolean _gwy_app_3d_view_init_setup          (GwyContainer *container,
                                                const gchar *setup_prefix);
 G_GNUC_INTERNAL
-void     _gwy_app_graph_window_setup          (GwyGraphWindow *graph_window);
+void     _gwy_app_graph_window_setup          (GwyGraphWindow *graph_window,
+                                               GwyContainer *container,
+                                               GQuark prefix);
 G_GNUC_INTERNAL
 void     _gwy_app_brick_window_setup          (GwyDataWindow *data_window);
 

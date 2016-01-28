@@ -594,7 +594,7 @@ gwy_app_data_proxy_add_object(GwyAppDataList *list,
  * one, unsetting them on the old object.
  **/
 static void
-gwy_app_data_proxy_switch_object_data(G_GNUC_UNUSED GwyAppDataProxy *proxy,
+gwy_app_data_proxy_switch_object_data(GwyAppDataProxy *proxy,
                                       GObject *old,
                                       GObject *object)
 {
@@ -3635,7 +3635,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                              graph);
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
-    _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window));
+    _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window),
+                                proxy->container, g_quark_from_string(key));
     gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
 
     /* Graph DnD */

@@ -62,6 +62,7 @@ static gboolean   gwy_app_main_window_save_position   (void);
 static void       gwy_app_main_window_restore_position(void);
 static gboolean   gwy_app_confirm_quit                (void);
 static gboolean   gwy_app_confirm_quit_dialog         (GSList *unsaved);
+static gboolean   gwy_app_data_window_configured      (GwyDataWindow *window);
 static GtkWidget* gwy_app_menu_data_popup_create      (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_data_corner_create     (GtkAccelGroup *accel_group);
 static void       gwy_app_data_window_change_square   (GtkWidget *item,
@@ -74,6 +75,7 @@ static gboolean   gwy_app_data_popup_menu_popup_mouse (GtkWidget *menu,
                                                        GwyDataView *data_view);
 static void       gwy_app_data_popup_menu_popup_key   (GtkWidget *menu,
                                                        GtkWidget *data_window);
+static gboolean   gwy_app_graph_window_configured     (GwyGraphWindow *window);
 static gboolean   gwy_app_graph_popup_menu_popup_mouse(GtkWidget *menu,
                                                        GdkEventButton *event,
                                                        GwyGraph *graph);
@@ -81,6 +83,7 @@ static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
                                                        GtkWidget *graph);
 static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
 static void       gwy_app_3d_window_set_defaults      (Gwy3DWindow *window);
+static gboolean   gwy_app_brick_window_configured     (GwyDataWindow *window);
 static void       change_brick_preview                (GwyDataWindow *data_window);
 static GtkWidget* gwy_app_menu_brick_popup_create     (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_brick_popup_menu_popup_mouse(GtkWidget *menu,
@@ -91,6 +94,7 @@ static void       gwy_app_brick_popup_menu_popup_key  (GtkWidget *menu,
 static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
+static gboolean   gwy_app_3d_window_configured        (Gwy3DWindow *window);
 static void       gwy_app_3d_window_add_overlay_menu  (Gwy3DWindow *gwy3dwindow);
 static void       gwy_app_3d_window_update_chooser    (Gwy3DWindow *gwy3dwindow);
 static void       gwy_app_3d_window_set_data2         (Gwy3DWindow *gwy3dwindow,
@@ -104,6 +108,9 @@ static void       gwy_app_volume_window_reset_zoom    (void);
 static void       metadata_browser                    (gpointer pwhat);
 static void       log_browser                         (gpointer pwhat);
 static void       gwy_app_change_mask_color           (void);
+static void       save_window_screen_relative_size    (GtkWindow *window,
+                                                       GwyContainer *container,
+                                                       const gchar *prefix);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -360,6 +367,8 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     g_signal_connect_swapped(ebox, "button-press-event",
                              G_CALLBACK(gwy_app_data_corner_menu_popup_mouse),
                              corner_menu);
+    g_signal_connect(data_window, "configure-event",
+                     G_CALLBACK(gwy_app_data_window_configured), NULL);
 
     settings = gwy_app_settings_get();
     if (gwy_container_gis_enum_by_name(settings, "/app/default-range-type",
@@ -369,6 +378,27 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
         layer = gwy_data_view_get_base_layer(data_view);
         g_object_set(layer, "default-range-type", range_type, NULL);
     }
+}
+
+static gboolean
+gwy_app_data_window_configured(GwyDataWindow *window)
+{
+    GwyDataView *view = gwy_data_window_get_data_view(window);
+    GwyContainer *container = gwy_data_view_get_data(view);
+    const gchar *prefix = gwy_data_view_get_data_prefix(view);
+    gchar *key;
+
+    g_return_val_if_fail(container, FALSE);
+    g_return_val_if_fail(prefix, FALSE);
+
+    key = g_strconcat(prefix, "/view/scale", NULL);
+    gwy_container_set_double_by_name(container,
+                                     key, gwy_data_view_get_real_zoom(view));
+    g_free(key);
+
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+
+    return FALSE;
 }
 
 static GtkWidget*
@@ -669,7 +699,8 @@ gwy_app_data_window_change_square(GtkWidget *item,
  *****************************************************************************/
 
 void
-_gwy_app_graph_window_setup(GwyGraphWindow *graph_window)
+_gwy_app_graph_window_setup(GwyGraphWindow *graph_window,
+                            GwyContainer *container, GQuark prefix)
 {
     static GtkWidget *popup_menu = NULL;
 
@@ -709,6 +740,41 @@ _gwy_app_graph_window_setup(GwyGraphWindow *graph_window)
     g_signal_connect_swapped(graph, "popup-menu",
                              G_CALLBACK(gwy_app_graph_popup_menu_popup_key),
                              popup_menu);
+
+    g_object_set_data(G_OBJECT(graph_window), "gwy-app-container", container);
+    g_object_set_data(G_OBJECT(graph_window), "gwy-app-prefix-quark",
+                      GUINT_TO_POINTER(prefix));
+    g_signal_connect(graph_window, "configure-event",
+                     G_CALLBACK(gwy_app_graph_window_configured), NULL);
+}
+
+static gboolean
+gwy_app_graph_window_configured(GwyGraphWindow *window)
+{
+    GwyContainer *container;
+    const gchar *prefix;
+    GQuark qprefix;
+    gint w, h;
+    gchar *key;
+
+    container = g_object_get_data(G_OBJECT(window), "gwy-app-container");
+    qprefix = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(window),
+                                                 "gwy-app-prefix-quark"));
+    g_return_val_if_fail(GWY_IS_CONTAINER(container) && qprefix, FALSE);
+    prefix = g_quark_to_string(qprefix);
+    gtk_window_get_size(GTK_WINDOW(window), &w, &h);
+
+    key = g_strconcat(prefix, "/view/width", NULL);
+    gwy_container_set_int32_by_name(container, key, w);
+    g_free(key);
+
+    key = g_strconcat(prefix, "/view/height", NULL);
+    gwy_container_set_int32_by_name(container, key, h);
+    g_free(key);
+
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+
+    return FALSE;
 }
 
 static gboolean
@@ -734,10 +800,10 @@ gwy_app_graph_popup_menu_popup_mouse(GtkWidget *menu,
 
 static void
 gwy_app_graph_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
-                                 gint *x,
-                                 gint *y,
-                                 gboolean *push_in,
-                                 GtkWidget *widget)
+                                  gint *x,
+                                  gint *y,
+                                  gboolean *push_in,
+                                  GtkWidget *widget)
 {
     gdk_window_get_origin(widget->window, x, y);
     *push_in = TRUE;
@@ -790,9 +856,40 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                              window3d);
 
     gwy_app_3d_window_add_overlay_menu(GWY_3D_WINDOW(window3d));
+    g_signal_connect(window3d, "configure-event",
+                     G_CALLBACK(gwy_app_3d_window_configured), NULL);
 
     gwy_help_add_to_window(GTK_WINDOW(window3d), "opengl-3d-view", NULL,
                            GWY_HELP_DEFAULT);
+}
+
+static gboolean
+gwy_app_3d_window_configured(Gwy3DWindow *window)
+{
+    GwyContainer *container;
+    const gchar *prefix;
+    Gwy3DView *view;
+    gchar *key;
+    gint w, h;
+
+    view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window));
+    container = gwy_3d_view_get_data(view);
+    prefix = gwy_3d_view_get_setup_prefix(view);
+    g_return_val_if_fail(GWY_IS_CONTAINER(container) && prefix, FALSE);
+
+    gtk_window_get_size(GTK_WINDOW(window), &w, &h);
+
+    key = g_strconcat(prefix, "/view/width", NULL);
+    gwy_container_set_int32_by_name(container, key, w);
+    g_free(key);
+
+    key = g_strconcat(prefix, "/view/height", NULL);
+    gwy_container_set_int32_by_name(container, key, h);
+    g_free(key);
+
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+
+    return FALSE;
 }
 
 /* a widget for the 3dwindow as overlay chooser */
@@ -1375,6 +1472,31 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     g_object_set_data(G_OBJECT(data_window), "gwy-brick-info", label);
+
+    g_signal_connect(data_window, "configure-event",
+                     G_CALLBACK(gwy_app_brick_window_configured), NULL);
+}
+
+static gboolean
+gwy_app_brick_window_configured(GwyDataWindow *window)
+{
+    GwyDataView *view = gwy_data_window_get_data_view(window);
+    GwyContainer *container = gwy_data_view_get_data(view);
+    const gchar *prefix = gwy_data_view_get_data_prefix(view);
+    gchar *key;
+
+    g_return_val_if_fail(container, FALSE);
+    g_return_val_if_fail(prefix, FALSE);
+
+    /* This leads to some odd keys containing .../preview/view/... */
+    key = g_strconcat(prefix, "/view/scale", NULL);
+    gwy_container_set_double_by_name(container,
+                                     key, gwy_data_view_get_real_zoom(view));
+    g_free(key);
+
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+
+    return FALSE;
 }
 
 static gboolean
@@ -2041,6 +2163,28 @@ gwy_app_restore_window_position(GtkWindow *window,
         }
         gtk_window_set_default_size(window, w, h);
     }
+}
+
+static void
+save_window_screen_relative_size(GtkWindow *window,
+                                 GwyContainer *container, const gchar *prefix)
+{
+    GdkScreen *screen;
+    gdouble scw, sch, relsize;
+    gint w, h;
+    gchar *key;
+
+    if (!window || !GTK_IS_WINDOW(window))
+       return;
+
+    screen = gtk_window_get_screen(window);
+    scw = gdk_screen_get_width(screen);
+    sch = gdk_screen_get_height(screen);
+    gtk_window_get_size(window, &w, &h);
+    relsize = MAX(w/scw, h/sch);
+    key = g_strconcat(prefix, "/view/relative-size", NULL);
+    gwy_container_set_double_by_name(container, key, relsize);
+    g_free(key);
 }
 
 gint
