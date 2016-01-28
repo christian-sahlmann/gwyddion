@@ -7,6 +7,7 @@ Application:
   --no-log-to-console permit controlling independently where the messages go
   (and where they do not).
 - Program messages can be displayed in the GUI using Info → Program Messages.
+- The current file can be closed using Ctrl-W (or File → Close in the menu).
 
 Libraries:
 - libgwyprocess: GwySpline is a new helper data structure for sampling along

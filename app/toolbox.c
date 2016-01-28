@@ -803,6 +803,14 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_SAVE_AS
         },
         {
+            N_("/_Close..."),
+            "<control>W",
+            gwy_app_file_close,
+            0,
+            "<StockItem>",
+            GTK_STOCK_CLOSE
+        },
+        {
             N_("/Remo_ve All Logs"),
             NULL,
             remove_all_logs,
@@ -843,6 +851,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
                     "<file>/Save",            GWY_MENU_FLAG_FILE,
                     "<file>/Save As...",      GWY_MENU_FLAG_FILE,
                     "<file>/Merge...",        GWY_MENU_FLAG_FILE,
+                    "<file>/Close...",        GWY_MENU_FLAG_FILE,
                     "<file>/Remove All Logs", GWY_MENU_FLAG_FILE,
                     NULL);
 

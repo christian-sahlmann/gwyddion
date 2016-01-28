@@ -41,6 +41,7 @@ gboolean      gwy_app_file_write           (GwyContainer *data,
                                             const gchar *name);
 void          gwy_app_file_save            (void);
 void          gwy_app_file_save_as         (void);
+void          gwy_app_file_close           (void);
 gboolean      gwy_app_file_confirm_overwrite (GtkWidget *chooser);
 
 G_END_DECLS

@@ -631,6 +631,25 @@ gwy_app_file_save_as(void)
 }
 
 /**
+ * gwy_app_file_close:
+ *
+ * Closes the current file file (very high-level app function).
+ *
+ * Since: 2.45
+ **/
+void
+gwy_app_file_close(void)
+{
+    GwyContainer *current_data;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER,
+                                     &current_data,
+                                     NULL);
+    g_return_if_fail(current_data);
+    gwy_app_data_browser_remove(current_data);
+}
+
+/**
  * gwy_app_file_confirm_overwrite:
  * @chooser: A file chooser for save action.
  *
