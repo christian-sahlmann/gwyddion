@@ -486,7 +486,7 @@ fit_dialog(FitArgs *args, GwyContainer *container)
     label = gtk_label_new(_("Instant:"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
-    controls.auto_estimate = gtk_check_button_new_with_mnemonic(_("e_stimate"));
+    controls.auto_estimate = gtk_check_button_new_with_mnemonic(_("esti_mate"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
                                  args->auto_estimate);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_estimate, FALSE, FALSE, 0);
