@@ -74,6 +74,7 @@ typedef struct {
     gdouble height;
     gdouble height_noise;
     RelaxationType relaxation;
+    gdouble melting;
     gboolean graph_flags[GRAPH_NFLAGS];
 } ColSynthArgs;
 
@@ -97,6 +98,7 @@ struct _ColSynthControls {
     GtkWidget *height_units;
     GtkObject *height_noise;
     GtkWidget *relaxation;
+    GtkObject *melting;
     GtkWidget *graph_flags[GRAPH_NFLAGS];
     GwyContainer *mydata;
     GwyDataField *surface;
@@ -176,7 +178,7 @@ static const ColSynthArgs col_synth_defaults = {
     0.0, 1.0,
     0.0, 1.0,
     1.0, 0.0,
-    RELAX_WEAK,
+    RELAX_WEAK, 1.0,
     { FALSE, FALSE, FALSE, },
 };
 
@@ -187,7 +189,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates columnar surfaces by a simple growth algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -444,7 +446,7 @@ col_synth_dialog(ColSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    table = gtk_table_new(19 + (dfield_template ? 1 : 0), 4, FALSE);
+    table = gtk_table_new(20 + (dfield_template ? 1 : 0), 4, FALSE);
     /* This is used only for synt.h helpers. */
     controls.table = GTK_TABLE(table);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -507,6 +509,16 @@ col_synth_dialog(ColSynthArgs *args,
     controls.relaxation = relaxation_selector_new(&controls);
     gwy_table_attach_hscale(table, row, _("Relaxation type:"), NULL,
                             GTK_OBJECT(controls.relaxation), GWY_HSCALE_WIDGET);
+    row++;
+
+    controls.melting = gtk_adjustment_new(args->melting,
+                                          0.0, 1.0, 0.0001, 0.01, 0);
+    g_object_set_data(G_OBJECT(controls.melting), "target", &args->melting);
+    gwy_table_attach_hscale(table, row, _("_Melting:"), NULL,
+                            controls.melting, GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.melting, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), &controls);
+    row++;
 
     table = gtk_table_new(1 + GRAPH_NFLAGS, 4, FALSE);
     /* This is used only for synt.h helpers. */
@@ -714,6 +726,61 @@ preview(ColSynthControls *controls)
     gwy_data_field_data_changed(dfield);
 }
 
+static void
+convolve_periodic_fast3(GwyDataField *data_field,
+                        gdouble k1)
+{
+    gint xres = data_field->xres;
+    gint yres = data_field->yres;
+    gdouble *d, *row0, *rowprev;
+    gint i, j;
+    gdouble zprev, z0, z, k0;
+
+    k0 = 1.0 - 2.0*k1;
+    g_assert(k0 > 0.5);
+
+    /* Horizontal pass. */
+    d = data_field->data;
+    for (i = 0; i < yres; i++) {
+        z0 = *d;
+        zprev = d[xres-1];
+        for (j = 0; j < xres-1; j++) {
+            z = *d;
+            *d *= k0;
+            *d += k1*(zprev + d[1]);
+            zprev = z;
+            d++;
+        }
+        *d *= k0;
+        *d += k1*(zprev + z0);
+    }
+
+    /* Vertical pass. */
+    d = data_field->data;
+    row0 = g_memdup(d, xres*sizeof(gdouble));
+    rowprev = g_memdup(d + xres*(yres - 1), xres*sizeof(gdouble));
+    for (i = 0; i < yres-1; i++) {
+        for (j = 0; j < xres; j++) {
+            z = *d;
+            *d *= k0;
+            *d += k1*(rowprev[j] + d[xres]);
+            rowprev[j] = z;
+            d++;
+        }
+    }
+    for (j = 0; j < xres; j++) {
+        *d *= k0;
+        *d += k1*(rowprev[j] + row0[j]);
+        d++;
+    }
+
+    g_free(rowprev);
+    g_free(row0);
+
+    gwy_data_field_invalidate(data_field);
+}
+
+
 static gboolean
 col_synth_do(const ColSynthArgs *args,
              GwyDataField *dfield,
@@ -725,7 +792,7 @@ col_synth_do(const ColSynthArgs *args,
     gint xres, yres;
     guint i;
     guint64 npart, ip;
-    gdouble zmax, zsum, nextgraphx;
+    gdouble zmax, zsum, nextgraphx, nextconvolve, melting;
     gdouble lasttime = 0.0, lastpreviewtime = 0.0, currtime;
     GTimer *timer;
     GwyRandGenSet *rngset;
@@ -750,9 +817,11 @@ col_synth_do(const ColSynthArgs *args,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     relaxation = args->relaxation;
+    melting = args->melting;
 
     gwy_data_field_add(dfield, -gwy_data_field_get_max(dfield));
     zmax = zsum = nextgraphx = 0.0;
+    nextconvolve = melting ? 0.0 : G_MAXDOUBLE;
 
     npart = args->coverage * (guint64)(xres*yres);
     gwy_app_wait_set_message(_("Depositing particles..."));
@@ -811,6 +880,10 @@ col_synth_do(const ColSynthArgs *args,
         }
 
         zsum += height;
+        if (zsum/(xres*yres) >= nextconvolve) {
+            convolve_periodic_fast3(dfield, 0.003*melting);
+            nextconvolve += 0.0001/melting * args->height;
+        }
         if (any_graphs && ip >= nextgraphx) {
             gwy_data_field_invalidate(dfield);
             height = zsum/(xres*yres) * zscale;
@@ -962,6 +1035,7 @@ static const gchar seed_key[]         = "/module/col_synth/seed";
 static const gchar animated_key[]     = "/module/col_synth/animated";
 static const gchar height_key[]       = "/module/col_synth/height";
 static const gchar height_noise_key[] = "/module/col_synth/height_noise";
+static const gchar melting_key[]      = "/module/col_synth/melting";
 static const gchar theta_key[]        = "/module/col_synth/theta";
 static const gchar theta_spread_key[] = "/module/col_synth/theta_spread";
 static const gchar phi_key[]          = "/module/col_synth/phi";
@@ -985,6 +1059,7 @@ col_synth_sanitize_args(ColSynthArgs *args)
     args->phi = CLAMP(args->phi, -G_PI, G_PI);
     args->phi_spread = CLAMP(args->phi_spread, 0.0, 1.0);
     args->relaxation = MIN(args->relaxation, RELAX_STRONG);
+    args->melting = CLAMP(args->melting, 0.0, 1.0);
 }
 
 static void
@@ -1015,6 +1090,7 @@ col_synth_load_args(GwyContainer *container,
                                      &args->phi_spread);
     gwy_container_gis_double_by_name(container, coverage_key, &args->coverage);
     gwy_container_gis_enum_by_name(container, relaxation_key, &args->relaxation);
+    gwy_container_gis_double_by_name(container, melting_key, &args->melting);
     gwy_container_gis_int32_by_name(container, graph_flags_key, &gflags);
     for (i = 0; i < GRAPH_NFLAGS; i++)
         args->graph_flags[i] = !!(gflags & (1 << i));
@@ -1055,6 +1131,7 @@ col_synth_save_args(GwyContainer *container,
                                      args->phi_spread);
     gwy_container_set_double_by_name(container, coverage_key, args->coverage);
     gwy_container_set_enum_by_name(container, relaxation_key, args->relaxation);
+    gwy_container_set_double_by_name(container, melting_key, args->melting);
     gwy_container_set_int32_by_name(container, graph_flags_key, gflags);
 
     gwy_dimensions_save_args(dimsargs, container, prefix);
