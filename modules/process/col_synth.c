@@ -178,7 +178,7 @@ static const ColSynthArgs col_synth_defaults = {
     0.0, 1.0,
     0.0, 1.0,
     1.0, 0.0,
-    RELAX_WEAK, 1.0,
+    RELAX_WEAK, 0.0,
     { FALSE, FALSE, FALSE, },
 };
 
