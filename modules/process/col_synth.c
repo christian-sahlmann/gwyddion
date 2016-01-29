@@ -881,7 +881,7 @@ col_synth_do(const ColSynthArgs *args,
 
         zsum += height;
         if (zsum/(xres*yres) >= nextconvolve) {
-            convolve_periodic_fast3(dfield, 0.003*melting);
+            convolve_periodic_fast3(dfield, 0.003*sqrt(melting));
             nextconvolve += 0.0001/melting * args->height;
         }
         if (any_graphs && ip >= nextgraphx) {
