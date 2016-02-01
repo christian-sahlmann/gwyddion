@@ -111,7 +111,7 @@ static const EntropyArgs slope_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Visualises entropy calculation for value and slope distribution."),
+    N_("Visualizes entropy calculation for value and slope distribution."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
