@@ -92,6 +92,7 @@ anything meaningful to do after a fatal error, you have to catch
 the error.
 
 =cut
+
 sub read {
     my $fh = new IO::File;
     my $line_re = "^([^=]+)=(.*)\n";
@@ -158,6 +159,7 @@ anything meaningful to do after a fatal error, you have to catch
 the error.
 
 =cut
+
 sub write {
     my $fh = new IO::File;
     my $data = $_[0];
