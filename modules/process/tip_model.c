@@ -28,6 +28,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
@@ -122,7 +123,7 @@ module_register(void)
     gwy_process_func_register("tip_model",
                               (GwyProcessFunc)&tip_model,
                               N_("/_Tip and Indentation/_Model Tip..."),
-                              NULL,
+                              GWY_STOCK_TIP_MODEL,
                               TIP_MODEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Model AFM tip"));

@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/tip.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -78,21 +79,21 @@ module_register(void)
     gwy_process_func_register("tip_dilation",
                               &tipops,
                               N_("/_Tip and Indentation/_Dilation..."),
-                              NULL,
+                              GWY_STOCK_TIP_DILATION,
                               TIP_OPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Surface dilation by defined tip"));
     gwy_process_func_register("tip_reconstruction",
                               &tipops,
                               N_("/_Tip and Indentation/_Surface Reconstruction..."),
-                              NULL,
+                              GWY_STOCK_TIP_EROSION,
                               TIP_OPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Surface reconstruction by defined tip"));
     gwy_process_func_register("tip_map",
                               &tipops,
                               N_("/_Tip and Indentation/_Certainty Map..."),
-                              NULL,
+                              GWY_STOCK_TIP_MAP,
                               TIP_OPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Tip certainty map"));

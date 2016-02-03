@@ -28,6 +28,7 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
 #include "dimensions.h"
 #include "preview.h"
@@ -194,7 +195,7 @@ module_register(void)
     gwy_process_func_register("fft_synth",
                               (GwyProcessFunc)&fft_synth,
                               N_("/S_ynthetic/_Spectral..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_SPECTRAL,
                               FFT_SYNTH_RUN_MODES,
                               0,
                               N_("Generate surface using spectral synthesis"));

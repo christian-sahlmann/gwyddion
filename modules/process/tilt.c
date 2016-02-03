@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -86,7 +87,7 @@ module_register(void)
     gwy_process_func_register("tilt",
                               (GwyProcessFunc)&tilt,
                               N_("/_Basic Operations/_Tilt..."),
-                              NULL,
+                              GWY_STOCK_TILT,
                               TILT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Tilt by specified amount"));

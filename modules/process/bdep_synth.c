@@ -166,7 +166,7 @@ module_register(void)
     gwy_process_func_register("bdep_synth",
                               (GwyProcessFunc)&bdep_synth,
                               N_("/S_ynthetic/_Ballistic..."),
-                              GWY_STOCK_SYNTHETIC_DIFFUSION,
+                              GWY_STOCK_SYNTHETIC_BALLISTIC_DEPOSITION,
                               BDEP_SYNTH_RUN_MODES,
                               0,
                               N_("Generate surface by ballistic deposition"));

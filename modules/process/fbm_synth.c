@@ -178,7 +178,7 @@ module_register(void)
     gwy_process_func_register("fbm_synth",
                               (GwyProcessFunc)&fbm_synth,
                               N_("/S_ynthetic/_Brownian..."),
-                              NULL,
+                              GWY_STOCK_SYNTHETIC_BROWNIAN_MOTION,
                               FBM_SYNTH_RUN_MODES,
                               0,
                               N_("Generate fractional Brownian motion-like "
