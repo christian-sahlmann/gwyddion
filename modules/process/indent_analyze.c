@@ -482,7 +482,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
    siu = g_string_new(siformat->units);
 
    controls->w_min_xy = gtk_label_new("");
-   gwy_table_attach_row(table, row++, _("Indent centre at"), siu->str,
+   gwy_table_attach_row(table, row++, _("Indent center at"), siu->str,
          controls->w_min_xy);
    controls->w_max_xy = gtk_label_new("");
    gwy_table_attach_row(table, row++, _("Maximum at"), siu->str,
@@ -1624,7 +1624,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                                      G_N_ELEMENTS(indentor_enum))));
         gwy_fprintf(out, _("Length units: %s\n"), vf->units);
 
-        gwy_fprintf(out, _("Indentation centre at [%d, %d] px:      %lf\n"),
+        gwy_fprintf(out, _("Indentation center at [%d, %d] px:      %lf\n"),
                 args->minx, args->miny, args->min_val/mag);
         gwy_fprintf(out, _("Maximum at [%d, %d] is:                 %lf\n"),
                 args->maxx, args->maxy, args->max_val/mag);
