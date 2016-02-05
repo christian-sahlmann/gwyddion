@@ -674,10 +674,10 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
- * GWY_STOCK_GRAPH_EXPORT_BITMAP:
+ * GWY_STOCK_GRAPH_EXPORT_PNG:
  *
- * The "Graph-Export-Bitmap" stock icon.
- * <inlinegraphic fileref="gwy_graph_export_bitmap-24.png" format="PNG"/>
+ * The "Graph-Export-PNG" stock icon.
+ * <inlinegraphic fileref="gwy_graph_export_png-24.png" format="PNG"/>
  *
  * Since: 2.45
  **/
@@ -687,6 +687,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Export-Vector" stock icon.
  * <inlinegraphic fileref="gwy_graph_export_vector-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_GRAPH_FD:
+ *
+ * The "Graph-FD" stock icon.
+ * <inlinegraphic fileref="gwy_graph_fd-24.png" format="PNG"/>
  *
  * Since: 2.45
  **/
@@ -877,7 +886,7 @@ file_to_icon_source(const gchar *path,
  * GWY_STOCK_LOAD_DEBUG:
  *
  * The "Load-Debug" stock icon.
- * <inlinegraphic fileref="gwy_load_debug-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_load_debug-20.png" format="PNG"/>
  *
  * Since: 2.45
  **/
@@ -886,7 +895,7 @@ file_to_icon_source(const gchar *path,
  * GWY_STOCK_LOAD_INFO:
  *
  * The "Load-Info" stock icon.
- * <inlinegraphic fileref="gwy_load_info-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_load_info-20.png" format="PNG"/>
  *
  * Since: 2.45
  **/
@@ -895,7 +904,7 @@ file_to_icon_source(const gchar *path,
  * GWY_STOCK_LOAD_WARNING:
  *
  * The "Load-Warning" stock icon.
- * <inlinegraphic fileref="gwy_load_warning-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_load_warning-20.png" format="PNG"/>
  *
  * Since: 2.45
  **/
