@@ -29,6 +29,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
@@ -99,7 +100,7 @@ module_register(void)
     gwy_graph_func_register("graph_cut",
                             (GwyGraphFunc)&cut,
                             N_("/_Cut Graph..."),
-                            GWY_STOCK_GRAPH_FUNCTION,
+                            GWY_STOCK_GRAPH_CUT,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Extract part of graph into new one"));
 

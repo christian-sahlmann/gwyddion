@@ -29,6 +29,7 @@
 #include <libprocess/linestats.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -126,7 +127,7 @@ module_register(void)
     gwy_process_func_register("entropy",
                               (GwyProcessFunc)&entropy,
                               N_("/_Statistics/_Entropy..."),
-                              NULL,
+                              GWY_STOCK_ENTROPY,
                               ENTROPY_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Calculate entropy of value and "

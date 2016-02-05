@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
@@ -68,7 +69,7 @@ module_register(void)
     gwy_graph_func_register("graph_align",
                             (GwyGraphFunc)&graph_align,
                             N_("/_Align"),
-                            NULL,
+                            GWY_STOCK_GRAPH_ALIGN,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Align curves"));
 

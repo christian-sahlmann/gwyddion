@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-graph.h>
+#include <libgwymodule/gwystock.h>
 #include <app/gwyapp.h>
 
 static gboolean module_register(void);
@@ -51,7 +52,7 @@ module_register(void)
     gwy_graph_func_register("graph_filter",
                             (GwyGraphFunc)&filter,
                             N_("/_Filter"),
-                            NULL,
+                            GWY_STOCK_GRAPH_FILTER,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Remove noise from graph curves"));
 

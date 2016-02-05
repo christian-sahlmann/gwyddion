@@ -54,7 +54,7 @@ module_register(void)
     gwy_graph_func_register("dos_spectrum",
                             (GwyGraphFunc)&dos_spectrum,
                             N_("/_DOS Spectrum"),
-                            GWY_STOCK_GRAPH_FUNCTION,
+                            GWY_STOCK_GRAPH_DOS,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Calculate DOS spectrum from I-V tunneling spectroscopy"));
 

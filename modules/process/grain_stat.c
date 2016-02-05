@@ -74,7 +74,7 @@ module_register(void)
     gwy_process_func_register("grain_inscribe_discs",
                               (GwyProcessFunc)&grain_inscribe_discs,
                               N_("/_Grains/Select _Inscribed Discs"),
-                              NULL,
+                              GWY_STOCK_GRAIN_EXSCRIBED_CIRCLE,
                               INSCRIBE_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Create a selection visualising discs "
@@ -82,7 +82,7 @@ module_register(void)
     gwy_process_func_register("grain_exscribe_circles",
                               (GwyProcessFunc)&grain_exscribe_circles,
                               N_("/_Grains/Select _Excscribed Circles"),
-                              NULL,
+                              GWY_STOCK_GRAIN_INSCRIBED_CIRCLE,
                               INSCRIBE_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Create a selection visualising grain "

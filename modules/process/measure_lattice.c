@@ -192,7 +192,7 @@ module_register(void)
     gwy_process_func_register("measure_lattice",
                               (GwyProcessFunc)&measure_lattice,
                               N_("/_Statistics/Measure _Lattice..."),
-                              NULL,
+                              GWY_STOCK_MEASURE_LATTICE,
                               LATMEAS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Measure lattice"));

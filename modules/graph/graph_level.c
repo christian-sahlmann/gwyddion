@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-graph.h>
+#include <libgwymodule/gwystock.h>
 #include <app/gwyapp.h>
 
 static gboolean module_register(void);
@@ -50,7 +51,7 @@ module_register(void)
     gwy_graph_func_register("graph_level",
                             (GwyGraphFunc)&level,
                             N_("/_Level"),
-                            NULL,
+                            GWY_STOCK_GRAPH_LEVEL,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Level graph curves"));
 

@@ -31,6 +31,7 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -154,7 +155,7 @@ module_register(void)
     gwy_process_func_register("convolution_filter",
                               (GwyProcessFunc)&convolution_filter,
                               N_("/_Integral Transforms/Con_volution Filter..."),
-                              NULL,
+                              GWY_STOCK_CONVOLUTION,
                               CONVOLUTION_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("General convolution filter"));

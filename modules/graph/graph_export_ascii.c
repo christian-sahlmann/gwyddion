@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
@@ -82,7 +83,7 @@ module_register(void)
     gwy_graph_func_register("graph_export_ascii",
                             (GwyGraphFunc)&export,
                             N_("/Export _Text..."),
-                            NULL,
+                            GWY_STOCK_GRAPH_EXPORT_ASCII,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Export graph data to a text file"));
 

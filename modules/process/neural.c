@@ -231,7 +231,7 @@ module_register(void)
     gwy_process_func_register("neural_train",
                               (GwyProcessFunc)&neural_train,
                               N_("/M_ultidata/Neural Network _Training..."),
-                              NULL,
+                              GWY_STOCK_NEURAL_TRAIN,
                               NEURAL_TRAIN_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Train a neural network for image "
@@ -239,7 +239,7 @@ module_register(void)
     gwy_process_func_register("neural_apply",
                               (GwyProcessFunc)&neural_apply,
                               N_("/M_ultidata/Apply _Neural Network..."),
-                              NULL,
+                              GWY_STOCK_NEURAL_APPLY,
                               NEURAL_APPLY_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Process data using a trained "

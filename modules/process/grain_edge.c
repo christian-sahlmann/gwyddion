@@ -117,7 +117,7 @@ module_register(void)
     gwy_process_func_register("grain_edge",
                               (GwyProcessFunc)&grain_edge,
                               N_("/_Grains/Mark by _Edge Detection..."),
-                              GWY_STOCK_GRAINS,
+                              GWY_STOCK_GRAINS_EDGE,
                               GEDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Mark grains with edge detection mechanism"));
