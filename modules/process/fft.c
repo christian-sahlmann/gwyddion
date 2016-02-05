@@ -231,7 +231,7 @@ fft(GwyContainer *data, GwyRunType run)
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG)
         fft_create_output(data, id, gwy_data_field_duplicate(ipout),
-                          _("FFT Imag"), is_inv);
+                          _("FFT Imaginary"), is_inv);
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
         tmp = gwy_data_field_new_alike(raout, FALSE);
