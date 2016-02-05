@@ -1,22 +1,18 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR "David Necas (Yeti) & Petr Klapetek"
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# @(#) $Id: cs.po 18059 2016-01-11 13:29:30Z yeti-dn $
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2016-02-01 02:14+0100\n"
-"PO-Revision-Date: 2016-02-02 00:03+0100\n"
-"Last-Translator: David Nečas <yeti@gwyddion.net>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2016-02-05 21:12+0100\n"
+"Last-Translator: Yeti <yeti@gwyddion.net>\n"
+"Language-Team: None, I suppose\n"
 "Language: en_GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.5\n"
+"X-Generator: Poedit 1.8.6\n"
 
 #: libgwyddion/gwyexpr.c:765
 msgid "Invalid token"
@@ -8766,586 +8762,595 @@ msgid ""
 "Automatic facet-orientation based leveling. Levels data to make facets point "
 "up."
 msgstr ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
 
 #: modules/process/facet-level.c:79
 msgid "/_Level/_Facet Level"
-msgstr ""
+msgstr "/_Level/_Facet-Level"
 
 #: modules/process/facet-level.c:83
 msgid "Level data to make facets point upward"
-msgstr ""
+msgstr "Level data to make facets point upward"
 
 #: modules/process/facet-level.c:119 modules/process/facet-level.c:130
 msgid "Facet Level"
-msgstr ""
+msgstr "Facet-Level"
 
 #: modules/process/facet-level.c:143 modules/process/flatten_base.c:250
 msgid "Facet-leveling..."
-msgstr ""
+msgstr "Facet-levelling..."
 
 #: modules/process/facet_analysis.c:164
 msgid "Visualizes, marks and measures facet orientation."
-msgstr ""
+msgstr "Visualises, marks and measures facet orientation."
 
 #: modules/process/facet_analysis.c:178
 msgid "/_Statistics/Facet _Analysis..."
-msgstr ""
+msgstr "/_Statistics/Facet _Analysis..."
 
 #: modules/process/facet_analysis.c:182
 msgid "Mark areas by 2D slope"
-msgstr ""
+msgstr "Mark areas by 2D slope"
 
 #: modules/process/facet_analysis.c:270
 msgid "Mark Facets"
-msgstr ""
+msgstr "Mark Facets"
 
 #: modules/process/facet_analysis.c:273
 msgid "verb|_Mark"
-msgstr ""
+msgstr "_Mark"
 
 #. TRANSLATORS: The direction or line orthogonal to something.
 #: modules/process/facet_analysis.c:329
 msgid "Normal"
-msgstr ""
+msgstr "Normal"
 
 #: modules/process/facet_analysis.c:337
 msgid "_Find Maximum"
-msgstr ""
+msgstr "_Find Maximum"
 
 #: modules/process/facet_analysis.c:345
 msgid "Mean Normal"
-msgstr ""
+msgstr "Mean Normal"
 
 #: modules/process/facet_analysis.c:354
 msgid "Facet plane size:"
-msgstr ""
+msgstr "Facet plane size:"
 
 #: modules/process/facet_analysis.c:379
 msgid "_Tolerance:"
-msgstr ""
+msgstr "_Tolerance:"
 
 #: modules/process/facet_analysis.c:388 modules/process/grain_edge.c:267
 #: modules/process/grain_mark.c:349 modules/process/mark_disconn.c:290
 msgid "Com_bine with existing mask"
-msgstr ""
+msgstr "Com_bine with existing mask"
 
 #: modules/process/facet_analysis.c:402 modules/process/grain_edge.c:281
 #: modules/process/grain_mark.c:363 modules/process/mark_disconn.c:305
 #: modules/process/mark_with.c:234 modules/process/mask_morph.c:209
 msgid "Operation:"
-msgstr ""
+msgstr "Operation:"
 
 #: modules/process/facet_analysis.c:419
 msgid ""
 "Warning: Lateral and value units differ. Angles are not physically "
 "meaningful."
 msgstr ""
+"Warning: Lateral and value units differ. Angles are not physically "
+"meaningful."
 
 #: modules/process/fbm_synth.c:166
 msgid "Generates random surfaces similar to fractional Brownian motion."
-msgstr ""
+msgstr "Generates random surfaces similar to fractional Brownian motion."
 
 #: modules/process/fbm_synth.c:180
 msgid "/S_ynthetic/_Brownian..."
-msgstr ""
+msgstr "/S_ynthetic/_Brownian..."
 
 #: modules/process/fbm_synth.c:184
 msgid "Generate fractional Brownian motion-like surface"
-msgstr ""
+msgstr "Generate fractional Brownian motion-like surface"
 
 #: modules/process/fbm_synth.c:305
 msgid "Fractional Brownian Motion"
-msgstr ""
+msgstr "Fractional Brownian Motion"
 
 #: modules/process/fbm_synth.c:379
 msgid "_Hurst exponent:"
-msgstr ""
+msgstr "_Hurst exponent:"
 
 #: modules/process/fbm_synth.c:387
 msgid "_Stationarity scale:"
-msgstr ""
+msgstr "_Stationarity scale:"
 
 #: modules/process/fbm_synth.c:394 modules/process/lno_synth.c:513
 #: modules/process/noise_synth.c:413
 msgid "_Distribution:"
-msgstr ""
+msgstr "_Distribution:"
 
 #: modules/process/fbm_synth.c:400 modules/process/fft_synth.c:529
 msgid "Po_wer:"
-msgstr ""
+msgstr "Po_wer:"
 
 #: modules/process/fbm_synth.c:412 modules/process/fft_synth.c:417
 #: modules/process/lno_synth.c:537 modules/process/noise_synth.c:437
 msgid "_RMS:"
-msgstr ""
+msgstr "_RMS:"
 
 #: modules/process/fbm_synth.c:479 modules/process/lno_synth.c:260
 #: modules/process/noise_synth.c:187
 msgid "distribution|Uniform"
-msgstr ""
+msgstr "Uniform"
 
 #: modules/process/fbm_synth.c:480 modules/process/lno_synth.c:250
 #: modules/process/noise_synth.c:177
 msgid "distribution|Gaussian"
-msgstr ""
+msgstr "Gaussian"
 
 #: modules/process/fbm_synth.c:481 modules/process/lno_synth.c:255
 #: modules/process/noise_synth.c:182
 msgid "distribution|Exponential"
-msgstr ""
+msgstr "Exponential"
 
 #: modules/process/fbm_synth.c:482
 msgid "distribution|Power"
-msgstr ""
+msgstr "Power"
 
 #: modules/process/fft.c:124
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
-msgstr ""
+msgstr "Two-dimensional FFT (Fast Fourier Transform)."
 
 #: modules/process/fft.c:138
 msgid "/_Integral Transforms/2D _FFT..."
-msgstr ""
+msgstr "/_Integral Transforms/2D _FFT..."
 
 #: modules/process/fft.c:142
 msgid "Compute Fast Fourier Transform"
-msgstr ""
+msgstr "Compute Fast Fourier Transform"
 
 #: modules/process/fft.c:230
 msgid "FFT Real"
-msgstr ""
+msgstr "FFT Real"
 
 #: modules/process/fft.c:234
 msgid "FFT Imag"
-msgstr ""
+msgstr "FFT Imag"
 
 #: modules/process/fft.c:239
 msgid "FFT Modulus"
-msgstr ""
+msgstr "FFT Modulus"
 
 #: modules/process/fft.c:245
 msgid "FFT Phase"
-msgstr ""
+msgstr "FFT Phase"
 
 #: modules/process/fft.c:322
 msgid "Real + Imaginary"
-msgstr ""
+msgstr "Real + Imaginary"
 
 #: modules/process/fft.c:323
 msgid "Modulus + Phase"
-msgstr ""
+msgstr "Modulus + Phase"
 
 #: modules/process/fft.c:324
 msgid "Real"
-msgstr ""
+msgstr "Real"
 
 #: modules/process/fft.c:325
 msgid "Imaginary"
-msgstr ""
+msgstr "Imaginary"
 
 #: modules/process/fft.c:326
 msgid "Modulus"
-msgstr ""
+msgstr "Modulus"
 
 #: modules/process/fft.c:327 modules/process/wave_synth.c:587
 msgid "Phase"
-msgstr ""
+msgstr "Phase"
 
 #: modules/process/fft.c:335
 msgid "2D FFT"
-msgstr ""
+msgstr "2D FFT"
 
 #: modules/process/fft.c:352
 msgid "Ra_w transform"
-msgstr ""
+msgstr "Ra_w transform"
 
 #: modules/process/fft.c:366
 msgid "I_maginary part:"
-msgstr ""
+msgstr "I_maginary part:"
 
 #: modules/process/fft.c:382
 msgid "_Inverse transform"
-msgstr ""
+msgstr "_Inverse transform"
 
 #: modules/process/fft.c:405 modules/process/psdf_logphi.c:268
 msgid "_Windowing type:"
-msgstr ""
+msgstr "_Windowing type:"
 
 #: modules/process/fft.c:411
 msgid "Subtract mean _value beforehand"
-msgstr ""
+msgstr "Subtract mean _value beforehand"
 
 #: modules/process/fft.c:422
 msgid "_Preserve RMS"
-msgstr ""
+msgstr "_Preserve RMS"
 
 #: modules/process/fft_filter_1d.c:122
 msgid "FFT filtering"
-msgstr ""
+msgstr "FFT filtering"
 
 #: modules/process/fft_filter_1d.c:136
 msgid "/_Correct Data/1D _FFT Filtering..."
-msgstr ""
+msgstr "/_Correct Data/1D _FFT Filtering..."
 
 #: modules/process/fft_filter_1d.c:140
 msgid "1D FFT Filtering"
-msgstr ""
+msgstr "1D FFT Filtering"
 
 #: modules/process/fft_filter_1d.c:170 modules/process/wpour_mark.c:396
 msgid "Marked"
-msgstr ""
+msgstr "Marked"
 
 #: modules/process/fft_filter_1d.c:171
 msgid "Unmarked"
-msgstr ""
+msgstr "Unmarked"
 
 #: modules/process/fft_filter_1d.c:174
 msgid "Null"
-msgstr ""
+msgstr "Null"
 
 #: modules/process/fft_filter_1d.c:175
 msgid "Suppress"
-msgstr ""
+msgstr "Suppress"
 
 #: modules/process/fft_filter_1d.c:185
 msgid "1D FFT filter"
-msgstr ""
+msgstr "1D FFT filter"
 
 #: modules/process/fft_filter_1d.c:274 modules/process/linematch.c:859
 msgid "_Direction:"
-msgstr ""
+msgstr "_Direction:"
 
 #: modules/process/fft_filter_1d.c:282
 msgid "_Suppress type:"
-msgstr ""
+msgstr "_Suppress type:"
 
 #: modules/process/fft_filter_1d.c:290
 msgid "_Filter type:"
-msgstr ""
+msgstr "_Filter type:"
 
 #: modules/process/fft_filter_1d.c:518
 msgid "1D FFT Filtered Data"
-msgstr ""
+msgstr "1D FFT Filtered Data"
 
 #: modules/process/fft_filter_2d.c:162 modules/process/fft_filter_2d.c:420
 msgid "2D FFT Filtering"
-msgstr ""
+msgstr "2D FFT Filtering"
 
 #: modules/process/fft_filter_2d.c:176
 msgid "/_Correct Data/_2D FFT Filtering..."
-msgstr ""
+msgstr "/_Correct Data/_2D FFT Filtering..."
 
 #: modules/process/fft_filter_2d.c:180
 msgid "Two-dimensional FFT filtering"
-msgstr ""
+msgstr "Two-dimensional FFT filtering"
 
 #: modules/process/fft_filter_2d.c:294
 msgid "Filtered Data"
-msgstr ""
+msgstr "Filtered Data"
 
 #: modules/process/fft_filter_2d.c:309 modules/process/fit_2d.c:733
 #: modules/process/neural.c:563
 msgid "Difference"
-msgstr ""
+msgstr "Difference"
 
 #: modules/process/fft_filter_2d.c:322
 msgid "Filtered FFT"
-msgstr ""
+msgstr "Filtered FFT"
 
 #: modules/process/fft_filter_2d.c:346
 msgid "Add an ellipse to the FFT mask"
-msgstr ""
+msgstr "Add an ellipse to the FFT mask"
 
 #: modules/process/fft_filter_2d.c:351
 msgid "Add a rectangle to the FFT mask"
-msgstr ""
+msgstr "Add a rectangle to the FFT mask"
 
 #: modules/process/fft_filter_2d.c:356
 msgid "Subtract an ellipse from the FFT mask"
-msgstr ""
+msgstr "Subtract an ellipse from the FFT mask"
 
 #: modules/process/fft_filter_2d.c:361
 msgid "Subtract a rectange from the FFT mask"
-msgstr ""
+msgstr "Subtract a rectangle from the FFT mask"
 
 #: modules/process/fft_filter_2d.c:372
 msgid "_FFT mask editor"
-msgstr ""
+msgstr "_FFT mask editor"
 
 #: modules/process/fft_filter_2d.c:380
 msgid "Fi_ltered image"
-msgstr ""
+msgstr "Fi_ltered image"
 
 #: modules/process/fft_filter_2d.c:384
 msgid "Image _difference"
-msgstr ""
+msgstr "Image _difference"
 
 #: modules/process/fft_filter_2d.c:395
 msgid "Filtered i_mage"
-msgstr ""
+msgstr "Filtered i_mage"
 
 #: modules/process/fft_filter_2d.c:399
 msgid "Ima_ge difference"
-msgstr ""
+msgstr "Ima_ge difference"
 
 #: modules/process/fft_filter_2d.c:403
 msgid "Filtered FFT mo_dulus"
-msgstr ""
+msgstr "Filtered FFT mo_dulus"
 
 #: modules/process/fft_filter_2d.c:459
 msgid "Filter Mask"
-msgstr ""
+msgstr "Filter Mask"
 
 #: modules/process/fft_filter_2d.c:494
 msgid "_Undo"
-msgstr ""
+msgstr "_Undo"
 
 #: modules/process/fft_filter_2d.c:503 modules/tools/maskedit.c:548
 #: modules/volume/volume_zcal.c:172
 msgid "_Remove"
-msgstr ""
+msgstr "_Remove"
 
 #: modules/process/fft_filter_2d.c:511 modules/tools/maskedit.c:556
 msgid "_Fill"
-msgstr ""
+msgstr "_Fill"
 
 #: modules/process/fft_filter_2d.c:521
 msgid "_Snap to origin"
-msgstr ""
+msgstr "_Snap to origin"
 
 #: modules/process/fft_filter_2d.c:569 modules/process/measure_lattice.c:345
 msgid "Zoom:"
-msgstr ""
+msgstr "Zoom:"
 
 #: modules/process/fft_filter_2d.c:1245
 msgid "Draw ellipses on the mask"
-msgstr ""
+msgstr "Draw ellipses on the mask"
 
 #: modules/process/fft_filter_2d.c:1247
 msgid "Draw rectangles on the mask"
-msgstr ""
+msgstr "Draw rectangles on the mask"
 
 #: modules/process/fft_filter_2d.c:1249
 msgid "Undraw ellipses on the mask"
-msgstr ""
+msgstr "Undraw ellipses on the mask"
 
 #: modules/process/fft_filter_2d.c:1251
 msgid "Undraw rectangles on the mask"
-msgstr ""
+msgstr "Undraw rectangles on the mask"
 
 #: modules/process/fft_filter_2d.c:1253
 msgid "Undo the last change to the filter mask"
-msgstr ""
+msgstr "Undo the last change to the filter mask"
 
 #: modules/process/fft_filter_2d.c:1255
 msgid "Clear the entire filter mask"
-msgstr ""
+msgstr "Clear the entire filter mask"
 
 #: modules/process/fft_filter_2d.c:1257
 msgid "Fill the entire filter mask"
-msgstr ""
+msgstr "Fill the entire filter mask"
 
 #: modules/process/fft_filter_2d.c:1259
 msgid "Force shapes to center around the origin"
-msgstr ""
+msgstr "Force shapes to centre around the origin"
 
 #: modules/process/fft_profile.c:129
 msgid ""
 "Reads radial sections of two-dimensional power spectrum density function."
 msgstr ""
+"Reads radial sections of two-dimensional power spectrum density function."
 
 #: modules/process/fft_profile.c:144
 msgid "/_Statistics/_PSDF Section..."
-msgstr ""
+msgstr "/_Statistics/_PSDF Section..."
 
 #: modules/process/fft_profile.c:148
 msgid "Read radial PSDF sections"
-msgstr ""
+msgstr "Read radial PSDF sections"
 
 #: modules/process/fft_profile.c:194
 msgid "Radial PSDF Section"
-msgstr ""
+msgstr "Radial PSDF Section"
 
 #: modules/process/fft_profile.c:241
 msgid "PSDF Section"
-msgstr ""
+msgstr "PSDF Section"
 
 #: modules/process/fft_profile.c:270 modules/process/grain_dist.c:336
 #: modules/tools/linestats.c:388 modules/tools/profile.c:521
 #: modules/tools/sfunctions.c:424
 msgid "_Fix res.:"
-msgstr ""
+msgstr "_Fix res.:"
 
 #: modules/process/fft_profile.c:283
 msgid "_Separate curves"
-msgstr ""
+msgstr "_Separate curves"
 
 #: modules/process/fft_profile.c:500
 #, c-format
 msgid "PSDF %.0f°"
-msgstr ""
+msgstr "PSDF %.0f°"
 
 #: modules/process/fft_synth.c:182
 msgid "Generates random surfaces using spectral synthesis."
-msgstr ""
+msgstr "Generates random surfaces using spectral synthesis."
 
 #: modules/process/fft_synth.c:196
 msgid "/S_ynthetic/_Spectral..."
-msgstr ""
+msgstr "/S_ynthetic/_Spectral..."
 
 #: modules/process/fft_synth.c:200
 msgid "Generate surface using spectral synthesis"
-msgstr ""
+msgstr "Generate surface using spectral synthesis"
 
 #: modules/process/fft_synth.c:342
 msgid "Spectral Synthesis"
-msgstr ""
+msgstr "Spectral Synthesis"
 
 #: modules/process/fft_synth.c:432
 msgid "M_inimum frequency:"
-msgstr ""
+msgstr "M_inimum frequency:"
 
 #: modules/process/fft_synth.c:452
 msgid "Ma_ximum frequency:"
-msgstr ""
+msgstr "Ma_ximum frequency:"
 
 #: modules/process/fft_synth.c:472
 msgid "Enable _Gaussian multiplier"
-msgstr ""
+msgstr "Enable _Gaussian multiplier"
 
 #: modules/process/fft_synth.c:485 modules/process/fft_synth.c:508
 msgid "_Autocorrelation length:"
-msgstr ""
+msgstr "_Autocorrelation length:"
 
 #: modules/process/fft_synth.c:495
 msgid "Enable _Lorentz multiplier"
-msgstr ""
+msgstr "Enable _Lorentz multiplier"
 
 #: modules/process/fft_synth.c:518
 msgid "Enable _power multiplier"
-msgstr ""
+msgstr "Enable _power multiplier"
 
 #: modules/process/fit_2d.c:171
 msgid "2D fitting"
-msgstr ""
+msgstr "2D fitting"
 
 #: modules/process/fit_2d.c:185
 msgid "/_Level/_Fit Sphere..."
-msgstr ""
+msgstr "/_Level/_Fit Sphere..."
 
 #: modules/process/fit_2d.c:189
 msgid "Fit by sphere"
-msgstr ""
+msgstr "Fit by sphere"
 
 #: modules/process/fit_2d.c:248
 msgid "Fit Sphere"
-msgstr ""
+msgstr "Fit Sphere"
 
 #: modules/process/fit_2d.c:289
 msgid "Fitting Parameters"
-msgstr ""
+msgstr "Fitting Parameters"
 
 #: modules/process/fit_2d.c:294
 msgid "Function type:"
-msgstr ""
+msgstr "Function type:"
 
 #: modules/process/fit_2d.c:334 modules/process/fractal.c:312
 #: modules/process/mark_with.c:394 modules/process/neural.c:562
 msgid "Result"
-msgstr ""
+msgstr "Result"
 
 #: modules/process/fit_2d.c:343
 msgid "Unit"
-msgstr ""
+msgstr "Unit"
 
 #: modules/process/fit_2d.c:537 modules/process/fit_2d.c:1059
 #: modules/process/fit_2d.c:1146
 msgid "Radius"
-msgstr ""
+msgstr "Radius"
 
 #: modules/process/fit_2d.c:538 modules/process/fit_2d.c:1061
 #: modules/process/fit_2d.c:1148
 msgid "X center"
-msgstr ""
+msgstr "X centre"
 
 #: modules/process/fit_2d.c:539 modules/process/fit_2d.c:1063
 #: modules/process/fit_2d.c:1150
 msgid "Y center"
-msgstr ""
+msgstr "Y centre"
 
 #: modules/process/fit_2d.c:540 modules/process/fit_2d.c:1065
 #: modules/process/fit_2d.c:1152
 msgid "Z center"
-msgstr ""
+msgstr "Z centre"
 
 #: modules/process/fit_2d.c:643
 #, c-format
 msgid "%s: Radius cannot be null or negative."
-msgstr ""
+msgstr "%s: Radius cannot be null or negative."
 
 #: modules/process/fit_2d.c:722
 msgid "Fitted sphere"
-msgstr ""
+msgstr "Fitted sphere"
 
 #: modules/process/fit_2d.c:732
 msgid "Fit result"
-msgstr ""
+msgstr "Fit result"
 
 #: modules/process/fit_2d.c:745
 msgid "Sphere (up)"
-msgstr ""
+msgstr "Sphere (up)"
 
 #: modules/process/fit_2d.c:746
 msgid "Sphere (down)"
-msgstr ""
+msgstr "Sphere (down)"
 
 #: modules/process/fit_2d.c:1021
 msgid "Fit results"
-msgstr ""
+msgstr "Fit results"
 
 #: modules/process/fit_2d.c:1033
 msgid "<b>Data:</b>"
-msgstr ""
+msgstr "<b>Data:</b>"
 
 #: modules/process/fit_2d.c:1041
 msgid "<b>Function:</b>"
-msgstr ""
+msgstr "<b>Function:</b>"
 
 #: modules/process/fit_2d.c:1048
 msgid "<b>Results</b>"
-msgstr ""
+msgstr "<b>Results</b>"
 
 #: modules/process/fit_2d.c:1087
 msgid "Residual sum:"
-msgstr ""
+msgstr "Residual sum:"
 
 #: modules/process/fit_2d.c:1095
 msgid "<b>Correlation Matrix</b>"
-msgstr ""
+msgstr "<b>Correlation Matrix</b>"
 
 #: modules/process/fit_2d.c:1130
 msgid ""
 "\n"
 "===== Fit Results =====\n"
 msgstr ""
+"\n"
+"===== Fit Results =====\n"
 
 #: modules/process/fit_2d.c:1134
 #, c-format
 msgid "Data: %s\n"
-msgstr ""
+msgstr "Data: %s\n"
 
 #: modules/process/fit_2d.c:1137
 msgid "Fitted function: sphere (orientation up)\n"
-msgstr ""
+msgstr "Fitted function: sphere (orientation up)\n"
 
 #: modules/process/fit_2d.c:1139
 msgid "Fitted function: sphere (orientation down)\n"
-msgstr ""
+msgstr "Fitted function: sphere (orientation down)\n"
 
 #: modules/process/fit_2d.c:1141
 msgid ""
 "\n"
 "Results\n"
 msgstr ""
+"\n"
+"Results\n"
 
 #: modules/process/fit_2d.c:1164
 #, c-format
@@ -9353,942 +9358,956 @@ msgid ""
 "\n"
 "Residual sum:   %g\n"
 msgstr ""
+"\n"
+"Residual sum:   %g\n"
 
 #: modules/process/fit_2d.c:1166
 msgid ""
 "\n"
 "Correlation matrix\n"
 msgstr ""
+"\n"
+"Correlation matrix\n"
 
 #: modules/process/flatten_base.c:43
 msgid "Levels the flat base of a surface with positive features."
-msgstr ""
+msgstr "Levels the flat base of a surface with positive features."
 
 #: modules/process/flatten_base.c:57
 msgid "/_Level/Flatten _Base"
-msgstr ""
+msgstr "/_Level/Flatten _Base"
 
 #: modules/process/flatten_base.c:61
 msgid "Flatten base of surface with positive features"
-msgstr ""
+msgstr "Flatten base of surface with positive features"
 
 #: modules/process/flatten_base.c:275
 msgid "Polynomial leveling..."
-msgstr ""
+msgstr "Polynomial levelling..."
 
 #: modules/process/fraccor.c:38
 msgid "Removes data under mask using fractal interpolation."
-msgstr ""
+msgstr "Removes data under mask using fractal interpolation."
 
 #: modules/process/fraccor.c:52
 msgid "/_Correct Data/_Fractal Correction"
-msgstr ""
+msgstr "/_Correct Data/_Fractal Correction"
 
 #: modules/process/fraccor.c:56
 msgid "Interpolate data under mask with fractal interpolation"
-msgstr ""
+msgstr "Interpolate data under mask with fractal interpolation"
 
 #: modules/process/fractal.c:133
 msgid "Partitioning"
-msgstr ""
+msgstr "Partitioning"
 
 #: modules/process/fractal.c:134
 msgid "Cube counting"
-msgstr ""
+msgstr "Cube counting"
 
 #: modules/process/fractal.c:135
 msgid "Triangulation"
-msgstr ""
+msgstr "Triangulation"
 
 #: modules/process/fractal.c:136
 msgid "Power spectrum"
-msgstr ""
+msgstr "Power spectrum"
 
 #: modules/process/fractal.c:172
 msgid ""
 "Calculates fractal dimension using several methods (partitioning, box "
 "counting, triangulation, power spectrum)."
 msgstr ""
+"Calculates fractal dimension using several methods (partitioning, box "
+"counting, triangulation, power spectrum)."
 
 #: modules/process/fractal.c:187
 msgid "/_Statistics/_Fractal Dimension..."
-msgstr ""
+msgstr "/_Statistics/_Fractal Dimension..."
 
 #: modules/process/fractal.c:191
 msgid "Calculate fractal dimension"
-msgstr ""
+msgstr "Calculate fractal dimension"
 
 #: modules/process/fractal.c:231
 msgid "Fractal Dimension"
-msgstr ""
+msgstr "Fractal Dimension"
 
 #: modules/process/fractal.c:232
 msgid "Reco_mpute"
-msgstr ""
+msgstr "Reco_mpute"
 
 #: modules/process/fractal.c:273
 msgid "_Method:"
-msgstr ""
+msgstr "_Method:"
 
 #: modules/process/fractal.c:294
 msgid "Fit Area"
-msgstr ""
+msgstr "Fit Area"
 
 #: modules/process/fractal.c:299
 msgid "From:"
-msgstr ""
+msgstr "From:"
 
 #: modules/process/fractal.c:299 modules/process/fractal.c:593
 #: modules/process/fractal.c:617
 msgid "minimum"
-msgstr ""
+msgstr "minimum"
 
 #: modules/process/fractal.c:302
 msgid "To:"
-msgstr ""
+msgstr "To:"
 
 #: modules/process/fractal.c:302 modules/process/fractal.c:594
 #: modules/process/fractal.c:618
 msgid "maximum"
-msgstr ""
+msgstr "maximum"
 
 #: modules/process/fractal.c:554
 msgid "Linear fit"
-msgstr ""
+msgstr "Linear fit"
 
 #: modules/process/gradient.c:43
 msgid "Creates presentations with various gradients (Sobel, Prewitt)."
-msgstr ""
+msgstr "Creates presentations with various gradients (Sobel, Prewitt)."
 
 #: modules/process/gradient.c:58
 msgid "/_Presentation/_Gradient/_Sobel (horizontal)"
-msgstr ""
+msgstr "/_Presentation/_Gradient/_Sobel (horizontal)"
 
 #: modules/process/gradient.c:62
 msgid "Horizontal Sobel gradient presentation"
-msgstr ""
+msgstr "Horizontal Sobel gradient presentation"
 
 #: modules/process/gradient.c:65
 msgid "/_Presentation/_Gradient/_Sobel (vertical)"
-msgstr ""
+msgstr "/_Presentation/_Gradient/_Sobel (vertical)"
 
 #: modules/process/gradient.c:69
 msgid "Vertical Sobel gradient presentation"
-msgstr ""
+msgstr "Vertical Sobel gradient presentation"
 
 #: modules/process/gradient.c:72
 msgid "/_Presentation/_Gradient/_Prewitt (horizontal)"
-msgstr ""
+msgstr "/_Presentation/_Gradient/_Prewitt (horizontal)"
 
 #: modules/process/gradient.c:76
 msgid "Horizontal Prewitt gradient presentation"
-msgstr ""
+msgstr "Horizontal Prewitt gradient presentation"
 
 #: modules/process/gradient.c:79
 msgid "/_Presentation/_Gradient/_Prewitt (vertical)"
-msgstr ""
+msgstr "/_Presentation/_Gradient/_Prewitt (vertical)"
 
 #: modules/process/gradient.c:83
 msgid "Vertical Prewitt gradient presentation"
-msgstr ""
+msgstr "Vertical Prewitt gradient presentation"
 
 #: modules/process/gradient.c:86
 msgid "/_Presentation/_Gradient/_Azimuth"
-msgstr ""
+msgstr "/_Presentation/_Gradient/_Azimuth"
 
 #: modules/process/gradient.c:90
 msgid "Local slope azimuth presentation"
-msgstr ""
+msgstr "Local slope azimuth presentation"
 
 #: modules/process/grain_cross.c:101
 msgid "Plots one grain quantity as a function of another."
-msgstr ""
+msgstr "Plots one grain quantity as a function of another."
 
 #: modules/process/grain_cross.c:115
 msgid "/_Grains/_Correlate..."
-msgstr ""
+msgstr "/_Grains/_Correlate..."
 
 #: modules/process/grain_cross.c:119
 msgid "Correlate grain characteristics"
-msgstr ""
+msgstr "Correlate grain characteristics"
 
 #: modules/process/grain_cross.c:193
 msgid ""
 "Grain correlation: Lateral dimensions and value must be the same physical "
 "quantity for the selected grain properties."
 msgstr ""
+"Grain correlation: Lateral dimensions and value must be the same physical "
+"quantity for the selected grain properties."
 
 #: modules/process/grain_cross.c:217
 msgid "Grain Correlations"
-msgstr ""
+msgstr "Grain Correlations"
 
 #: modules/process/grain_cross.c:240
 msgid "_Abscissa"
-msgstr ""
+msgstr "_Abscissa"
 
 #: modules/process/grain_cross.c:244
 msgid "O_rdinate"
-msgstr ""
+msgstr "O_rdinate"
 
 #: modules/process/grain_dist.c:153
 msgid "Evaluates distribution of grains (continuous parts of mask)."
-msgstr ""
+msgstr "Evaluates distribution of grains (continuous parts of mask)."
 
 #: modules/process/grain_dist.c:175
 msgid "/_Grains/_Distributions..."
-msgstr ""
+msgstr "/_Grains/_Distributions..."
 
 #: modules/process/grain_dist.c:179
 msgid "Distributions of various grain characteristics"
-msgstr ""
+msgstr "Distributions of various grain characteristics"
 
 #: modules/process/grain_dist.c:223
 msgid "_Export raw data"
-msgstr ""
+msgstr "_Export raw data"
 
 #: modules/process/grain_dist.c:224
 msgid "Plot _graphs"
-msgstr ""
+msgstr "Plot _graphs"
 
 #: modules/process/grain_dist.c:241
 msgid "Grain Distributions"
-msgstr ""
+msgstr "Grain Distributions"
 
 #: modules/process/grain_dist.c:553
 msgid "count"
-msgstr ""
+msgstr "count"
 
 #: modules/process/grain_dist.c:617
 msgid "Export Raw Grain Values"
-msgstr ""
+msgstr "Export Raw Grain Values"
 
 #: modules/process/grain_edge.c:105
 msgid "Marks grains by edge detection method."
-msgstr ""
+msgstr "Marks grains by edge detection method."
 
 #: modules/process/grain_edge.c:119
 msgid "/_Grains/Mark by _Edge Detection..."
-msgstr ""
+msgstr "/_Grains/Mark by _Edge Detection..."
 
 #: modules/process/grain_edge.c:123
 msgid "Mark grains with edge detection mechanism"
-msgstr ""
+msgstr "Mark grains with edge detection mechanism"
 
 #: modules/process/grain_edge.c:212
 msgid "Mark Grains by Edge Detection"
-msgstr ""
+msgstr "Mark Grains by Edge Detection"
 
 #: modules/process/grain_edge.c:250
 msgid "Threshold"
-msgstr ""
+msgstr "Threshold"
 
 #: modules/process/grain_edge.c:254
 msgid "_Laplacian:"
-msgstr ""
+msgstr "_Laplacian:"
 
 #: modules/process/grain_filter.c:199
 msgid ""
 "Filters grains by their properties, using logical expressions and thresholds."
 msgstr ""
+"Filters grains by their properties, using logical expressions and thresholds."
 
 #: modules/process/grain_filter.c:214
 msgid "/_Grains/_Filter..."
-msgstr ""
+msgstr "/_Grains/_Filter..."
 
 #: modules/process/grain_filter.c:218
 msgid "Filter grains by their properties"
-msgstr ""
+msgstr "Filter grains by their properties"
 
 #: modules/process/grain_filter.c:258
 msgid "There are no grains to filter."
-msgstr ""
+msgstr "There are no grains to filter."
 
 #: modules/process/grain_filter.c:314
 msgid "Filter Grains"
-msgstr ""
+msgstr "Filter Grains"
 
 #: modules/process/grain_filter.c:409
 msgid "Set selected as:"
-msgstr ""
+msgstr "Set selected as:"
 
 #: modules/process/grain_filter.c:424
 msgid "Keep grains satisfying:"
-msgstr ""
+msgstr "Keep grains satisfying:"
 
 #: modules/process/grain_filter.c:438 modules/process/lat_synth.c:697
 msgid "Lower threshold:"
-msgstr ""
+msgstr "Lower threshold:"
 
 #: modules/process/grain_filter.c:473 modules/process/lat_synth.c:704
 msgid "Upper threshold:"
-msgstr ""
+msgstr "Upper threshold:"
 
 #. TRANSLATORS: %c is replaced with quantity label A, B or C.
 #: modules/process/grain_filter.c:649
 #, c-format
 msgid "Condition %c: %s"
-msgstr ""
+msgstr "Condition %c: %s"
 
 #: modules/process/grain_mark.c:144
 msgid "Marks grains by thresholding (height, slope, curvature)."
-msgstr ""
+msgstr "Marks grains by thresholding (height, slope, curvature)."
 
 #: modules/process/grain_mark.c:158
 msgid "/_Grains/_Mark by Threshold..."
-msgstr ""
+msgstr "/_Grains/_Mark by Threshold..."
 
 #: modules/process/grain_mark.c:162
 msgid "Mark grains by threshold"
-msgstr ""
+msgstr "Mark grains by threshold"
 
 #: modules/process/grain_mark.c:246
 msgid "Mark Grains by Threshold"
-msgstr ""
+msgstr "Mark Grains by Threshold"
 
 #: modules/process/grain_mark.c:286
 msgid "Threshold by"
-msgstr ""
+msgstr "Threshold by"
 
 #: modules/process/grain_mark.c:316
 msgid "_Slope:"
-msgstr ""
+msgstr "_Slope:"
 
 #: modules/process/grain_mark.c:320
 msgid "_Curvature:"
-msgstr ""
+msgstr "_Curvature:"
 
 #: modules/process/grain_mark.c:329
 msgid "Criteria combination:"
-msgstr ""
+msgstr "Criteria combination:"
 
 #: modules/process/grain_mark.c:333 modules/process/grain_wshed.c:260
 #: modules/process/wpour_mark.c:363
 msgid "_Invert height"
-msgstr ""
+msgstr "_Invert height"
 
 #: modules/process/grain_stat.c:54
 msgid "Displays overall grain statistics."
-msgstr ""
+msgstr "Displays overall grain statistics."
 
 #: modules/process/grain_stat.c:69
 msgid "/_Grains/S_tatistics..."
-msgstr ""
+msgstr "/_Grains/S_tatistics..."
 
 #: modules/process/grain_stat.c:73
 msgid "Simple grain statistics"
-msgstr ""
+msgstr "Simple grain statistics"
 
 #: modules/process/grain_stat.c:76
 msgid "/_Grains/Select _Inscribed Discs"
-msgstr ""
+msgstr "/_Grains/Select _Inscribed Discs"
 
 #: modules/process/grain_stat.c:80
 msgid "Create a selection visualising discs incribed into grains"
-msgstr ""
+msgstr "Create a selection visualising discs incribed into grains"
 
 #: modules/process/grain_stat.c:84
 msgid "/_Grains/Select _Excscribed Circles"
-msgstr ""
+msgstr "/_Grains/Select _Excscribed Circles"
 
 #: modules/process/grain_stat.c:88
 msgid "Create a selection visualising grain circumcircles"
-msgstr ""
+msgstr "Create a selection visualising grain circumcircles"
 
 #: modules/process/grain_stat.c:141
 msgid "Save Grain Statistics"
-msgstr ""
+msgstr "Save Grain Statistics"
 
 #: modules/process/grain_stat.c:192
 msgid "Data channel:"
-msgstr ""
+msgstr "Data channel:"
 
 #: modules/process/grain_stat.c:223 modules/process/grain_stat.c:324
 msgid "Grain Statistics"
-msgstr ""
+msgstr "Grain Statistics"
 
 #: modules/process/grain_stat.c:236
 msgid "Number of grains:"
-msgstr ""
+msgstr "Number of grains:"
 
 #: modules/process/grain_stat.c:248
 msgid "Total projected area (abs.):"
-msgstr ""
+msgstr "Total projected area (abs.):"
 
 #: modules/process/grain_stat.c:252
 msgid "Total projected area (rel.):"
-msgstr ""
+msgstr "Total projected area (rel.):"
 
 #: modules/process/grain_stat.c:261
 msgid "Mean grain area:"
-msgstr ""
+msgstr "Average grain area:"
 
 #: modules/process/grain_stat.c:270
 msgid "Mean grain size:"
-msgstr ""
+msgstr "Average grain size:"
 
 #: modules/process/grain_stat.c:282
 msgid "Total grain volume (zero):"
-msgstr ""
+msgstr "Total grain volume (zero):"
 
 #: modules/process/grain_stat.c:291
 msgid "Total grain volume (minimum):"
-msgstr ""
+msgstr "Total grain volume (minimum):"
 
 #: modules/process/grain_stat.c:300
 msgid "Total grain volume (laplacian):"
-msgstr ""
+msgstr "Total grain volume (laplacian):"
 
 #: modules/process/grain_stat.c:309
 msgid "Total projected boundary length:"
-msgstr ""
+msgstr "Total projected boundary length:"
 
 #: modules/process/grain_wshed.c:101
 msgid "Marks grains by watershed algorithm."
-msgstr ""
+msgstr "Marks grains by watershed algorithm."
 
 #: modules/process/grain_wshed.c:115
 msgid "/_Grains/Mark by _Watershed..."
-msgstr ""
+msgstr "/_Grains/Mark by _Watershed..."
 
 #: modules/process/grain_wshed.c:119
 msgid "Mark grains by watershed"
-msgstr ""
+msgstr "Mark grains by watershed"
 
 #: modules/process/grain_wshed.c:165
 msgid "Mark Grains by Watershed"
-msgstr ""
+msgstr "Mark Grains by Watershed"
 
 #: modules/process/grain_wshed.c:203
 msgid "Grain Location"
-msgstr ""
+msgstr "Grain Location"
 
 #: modules/process/grain_wshed.c:218
 msgid "_Drop size:"
-msgstr ""
+msgstr "_Drop size:"
 
 #: modules/process/grain_wshed.c:234
 msgid "Segmentation"
-msgstr ""
+msgstr "Segmentation"
 
 #: modules/process/grain_wshed.c:240
 msgid "Num_ber of steps:"
-msgstr ""
+msgstr "Num_ber of steps:"
 
 #: modules/process/grain_wshed.c:248
 msgid "Dr_op size:"
-msgstr ""
+msgstr "Dr_op size:"
 
 #: modules/process/grain_wshed.c:439
 msgid "Finding minima..."
-msgstr ""
+msgstr "Finding minima..."
 
 #: modules/process/grain_wshed.c:441
 msgid "Locating..."
-msgstr ""
+msgstr "Locating..."
 
 #: modules/process/grain_wshed.c:443
 msgid "Simulating watershed..."
-msgstr ""
+msgstr "Simulating watershed..."
 
 #: modules/process/grain_wshed.c:445
 msgid "Marking boundaries..."
-msgstr ""
+msgstr "Marking boundaries..."
 
 #: modules/process/hough.c:73
 msgid "Hough transform."
-msgstr ""
+msgstr "Hough transform."
 
 #: modules/process/hough.c:87
 msgid "/_Integral Transforms/_Hough..."
-msgstr ""
+msgstr "/_Integral Transforms/_Hough..."
 
 #: modules/process/hough.c:91
 msgid "Compute Hough transform"
-msgstr ""
+msgstr "Compute Hough transform"
 
 #: modules/process/hough.c:178
 msgid "Hough Transform"
-msgstr ""
+msgstr "Hough Transform"
 
 #: modules/process/hough.c:201
 msgid "_Transform type:"
-msgstr ""
+msgstr "_Transform type:"
 
 #: modules/process/hough.c:212
 msgid "_Circle size:"
-msgstr ""
+msgstr "_Circle size:"
 
 #: modules/process/immerse.c:167
 msgid "Immerse high resolution detail into overall image."
-msgstr ""
+msgstr "Immerse high-resolution detail into overall image."
 
 #: modules/process/immerse.c:181
 msgid "/M_ultidata/_Immerse Detail..."
-msgstr ""
+msgstr "/M_ultidata/_Immerse Detail..."
 
 #: modules/process/immerse.c:185
 msgid "Immerse a detail into image"
-msgstr ""
+msgstr "Immerse a detail into image"
 
 #: modules/process/immerse.c:227
 msgid "Immerse Detail"
-msgstr ""
+msgstr "Immerse Detail"
 
 #: modules/process/immerse.c:231
 msgid "_Locate"
-msgstr ""
+msgstr "_Locate"
 
 #: modules/process/immerse.c:233
 msgid "Locate detail by full image correlation search"
-msgstr ""
+msgstr "Locate detail by full-image correlation search"
 
 #: modules/process/immerse.c:236
 msgid "_Improve"
-msgstr ""
+msgstr "_Improve"
 
 #: modules/process/immerse.c:238
 msgid "Improve detail position by correlation search in neighborhood"
-msgstr ""
+msgstr "Improve detail position by correlation search in neighborhood"
 
 #: modules/process/immerse.c:297
 msgid "_Detail image:"
-msgstr ""
+msgstr "_Detail image:"
 
 #: modules/process/immerse.c:302
 msgid "Position:"
-msgstr ""
+msgstr "Position:"
 
 #: modules/process/immerse.c:315
 msgid "Result Sampling"
-msgstr ""
+msgstr "Result Sampling"
 
 #: modules/process/immerse.c:325
 msgid "_Upsample large image"
-msgstr ""
+msgstr "_Upsample large image"
 
 #: modules/process/immerse.c:327
 msgid "_Downsample detail"
-msgstr ""
+msgstr "_Downsample detail"
 
 #: modules/process/immerse.c:336
 msgid "Detail Leveling"
-msgstr ""
+msgstr "Detail Levelling"
 
 #: modules/process/immerse.c:346
 msgid "levelling|_None"
-msgstr ""
+msgstr "_None"
 
 #: modules/process/immerse.c:348
 msgid "_Mean value"
-msgstr ""
+msgstr "A_verage value"
 
 #: modules/process/immerse.c:356
 msgid "Show _frame"
-msgstr ""
+msgstr "Show _frame"
 
 #: modules/process/immerse.c:794
 msgid "Immersed detail"
-msgstr ""
+msgstr "Immersed detail"
 
 #: modules/process/indent_analyze.c:261
 msgid "Do nothing"
-msgstr ""
+msgstr "Do nothing"
 
 #: modules/process/indent_analyze.c:262
 msgid "Plane level"
-msgstr ""
+msgstr "Plane level"
 
 #: modules/process/indent_analyze.c:263
 msgid "Plane rotate"
-msgstr ""
+msgstr "Plane rotate"
 
 #: modules/process/indent_analyze.c:267
 msgid "New"
-msgstr ""
+msgstr "New"
 
 #: modules/process/indent_analyze.c:268
 msgid "AND"
-msgstr ""
+msgstr "AND"
 
 #: modules/process/indent_analyze.c:269
 msgid "OR"
-msgstr ""
+msgstr "OR"
 
 #: modules/process/indent_analyze.c:270
 msgid "NOT"
-msgstr ""
+msgstr "NOT"
 
 #: modules/process/indent_analyze.c:271
 msgid "XOR"
-msgstr ""
+msgstr "XOR"
 
 #: modules/process/indent_analyze.c:275
 msgid "Nothing"
-msgstr ""
+msgstr "Nothing"
 
 #: modules/process/indent_analyze.c:276
 msgid "Above"
-msgstr ""
+msgstr "Above"
 
 #: modules/process/indent_analyze.c:277
 msgid "Below"
-msgstr ""
+msgstr "Below"
 
 #: modules/process/indent_analyze.c:278
 msgid "Plane"
-msgstr ""
+msgstr "Plane"
 
 #: modules/process/indent_analyze.c:279
 msgid "Impression"
-msgstr ""
+msgstr "Impression"
 
 #: modules/process/indent_analyze.c:280
 msgid "Inner Pile-up"
-msgstr ""
+msgstr "Inner Pile-up"
 
 #: modules/process/indent_analyze.c:281
 msgid "Outer Pile-up"
-msgstr ""
+msgstr "Outer Pile-up"
 
 #: modules/process/indent_analyze.c:282
 msgid "Special points"
-msgstr ""
+msgstr "Special points"
 
 #: modules/process/indent_analyze.c:283
 msgid "Faces border"
-msgstr ""
+msgstr "Faces border"
 
 #: modules/process/indent_analyze.c:287
 msgid "Vickers"
-msgstr ""
+msgstr "Vickers"
 
 #: modules/process/indent_analyze.c:288
 msgid "Berkovich"
-msgstr ""
+msgstr "Berkovich"
 
 #: modules/process/indent_analyze.c:289
 msgid "Berkovich (modified)"
-msgstr ""
+msgstr "Berkovich (modified)"
 
 #: modules/process/indent_analyze.c:290
 msgid "Knoop"
-msgstr ""
+msgstr "Knoop"
 
 #: modules/process/indent_analyze.c:291
 msgid "Brinell"
-msgstr ""
+msgstr "Brinell"
 
 #: modules/process/indent_analyze.c:292
 msgid "Cube corner"
-msgstr ""
+msgstr "Cube corner"
 
 #: modules/process/indent_analyze.c:293
 msgid "Rockwell"
-msgstr ""
+msgstr "Rockwell"
 
 #: modules/process/indent_analyze.c:303
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)."
-msgstr ""
+msgstr "Analyses nano-indentation structure (volumes, surfaces, ...)."
 
 #: modules/process/indent_analyze.c:320
 msgid "/_Tip and Indentation/_Analyze Imprint..."
-msgstr ""
+msgstr "/_Tip and Indentation/_Analyse Imprint..."
 
 #: modules/process/indent_analyze.c:439
 msgid "Marked _areas:"
-msgstr ""
+msgstr "Marked _areas:"
 
 #: modules/process/indent_analyze.c:445
 msgid "_Indentor type:"
-msgstr ""
+msgstr "_Indentor type:"
 
 #: modules/process/indent_analyze.c:451
 msgid "_Mask creation type:"
-msgstr ""
+msgstr "_Mask creation type:"
 
 #: modules/process/indent_analyze.c:456
 msgid "Ref. plane _tolerance:"
-msgstr ""
+msgstr "Ref. plane _tolerance:"
 
 #: modules/process/indent_analyze.c:460
 msgid "Angle _1 tolerance:"
-msgstr ""
+msgstr "Angle _1 tolerance:"
 
 #: modules/process/indent_analyze.c:485
 msgid "Indent centre at"
-msgstr ""
+msgstr "Indent centre at"
 
 #: modules/process/indent_analyze.c:488
 msgid "Maximum at"
-msgstr ""
+msgstr "Maximum at"
 
 #: modules/process/indent_analyze.c:491
 msgid "Max-min difference"
-msgstr ""
+msgstr "Max-min difference"
 
 #: modules/process/indent_analyze.c:497
 msgid "Expected A<sub>d</sub>:"
-msgstr ""
+msgstr "Expected A<sub>d</sub>:"
 
 #: modules/process/indent_analyze.c:505
 msgid "Expected A<sub>p</sub>:"
-msgstr ""
+msgstr "Expected A<sub>p</sub>:"
 
 #: modules/process/indent_analyze.c:549
 msgid "Volume above-below"
-msgstr ""
+msgstr "Volume above-below"
 
 #: modules/process/indent_analyze.c:558
 msgid "Indent. volume"
-msgstr ""
+msgstr "Indent. volume"
 
 #: modules/process/indent_analyze.c:564
 msgid "Indent. A<sub>d</sub>"
-msgstr ""
+msgstr "Indent. A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:573
 msgid "Indent. A<sub>p</sub>"
-msgstr ""
+msgstr "Indent. A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:587
 msgid "Inner Pile-Up A<sub>d</sub>"
-msgstr ""
+msgstr "Inner Pile-Up A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:596
 msgid "Inner Pile-Up A<sub>p</sub>"
-msgstr ""
+msgstr "Inner Pile-Up A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:605
 msgid "Outer Pile-Up A<sub>d</sub>"
-msgstr ""
+msgstr "Outer Pile-Up A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:614
 msgid "Outer Pile-Up A<sub>p</sub>"
-msgstr ""
+msgstr "Outer Pile-Up A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:648
 msgid "Indentation statistics"
-msgstr ""
+msgstr "Indentation statistics"
 
 #: modules/process/indent_analyze.c:649
 msgid "_Compute & mark"
-msgstr ""
+msgstr "_Compute & mark"
 
 #: modules/process/indent_analyze.c:650
 msgid "_Save statistics"
-msgstr ""
+msgstr "_Save statistics"
 
 #: modules/process/indent_analyze.c:1575
 msgid "No statistics has been computed yet."
-msgstr ""
+msgstr "No statistics has been computed yet."
 
 #: modules/process/indent_analyze.c:1583
 msgid "Save Indentation Statistics"
-msgstr ""
+msgstr "Save Indentation Statistics"
 
 #: modules/process/indent_analyze.c:1621
 #, c-format
 msgid "Indentor:  %s\n"
-msgstr ""
+msgstr "Indentor:  %s\n"
 
 #: modules/process/indent_analyze.c:1625
 #, c-format
 msgid "Length units: %s\n"
-msgstr ""
+msgstr "Length units: %s\n"
 
 #: modules/process/indent_analyze.c:1627
 #, c-format
 msgid "Indentation centre at [%d, %d] px:      %lf\n"
-msgstr ""
+msgstr "Indentation centre at [%d, %d] px:      %lf\n"
 
 #: modules/process/indent_analyze.c:1629
 #, c-format
 msgid "Maximum at [%d, %d] is:                 %lf\n"
-msgstr ""
+msgstr "Maximum at [%d, %d] is:                 %lf\n"
 
 #: modules/process/indent_analyze.c:1631
 #, c-format
 msgid "Difference max-min:                     %lf\n"
-msgstr ""
+msgstr "Difference max-min:                     %lf\n"
 
 #: modules/process/indent_analyze.c:1636
 #, c-format
 msgid "Area (projected) above plane:             %g (%.1lf %%)\n"
-msgstr ""
+msgstr "Area (projected) above plane:             %g (%.1lf %%)\n"
 
 #: modules/process/indent_analyze.c:1640
 #, c-format
 msgid "Area (projected) below plane:             %g (%.1lf %%)\n"
-msgstr ""
+msgstr "Area (projected) below plane:             %g (%.1lf %%)\n"
 
 #: modules/process/indent_analyze.c:1644
 #, c-format
 msgid "Area (projected) of    plane:             %g (%.1lf %%)\n"
-msgstr ""
+msgstr "Area (projected) of    plane:             %g (%.1lf %%)\n"
 
 #: modules/process/indent_analyze.c:1649
 #, c-format
 msgid "Area (developed) above %g (+%.1f %%)\n"
-msgstr ""
+msgstr "Area (developed) above %g (+%.1f %%)\n"
 
 #: modules/process/indent_analyze.c:1652
 #, c-format
 msgid "Area (developed) below %g (+%.1lf %%)\n"
-msgstr ""
+msgstr "Area (developed) below %g (+%.1lf %%)\n"
 
 #: modules/process/indent_analyze.c:1656
 #, c-format
 msgid "Volume above:     %g\n"
-msgstr ""
+msgstr "Volume above:     %g\n"
 
 #: modules/process/indent_analyze.c:1658
 #, c-format
 msgid "Volume below:     %g\n"
-msgstr ""
+msgstr "Volume below:     %g\n"
 
 #: modules/process/indent_analyze.c:1660
 #, c-format
 msgid "Volume difference %g\n"
-msgstr ""
+msgstr "Volume difference %g\n"
 
 #: modules/process/indent_analyze.c:1664
 msgid ""
 "\n"
 "Indentation\n"
 msgstr ""
+"\n"
+"Indentation\n"
 
 #: modules/process/indent_analyze.c:1665
 #, c-format
 msgid "Volume      %g\n"
-msgstr ""
+msgstr "Volume      %g\n"
 
 #: modules/process/indent_analyze.c:1670
 msgid ""
 "\n"
 "Indentation - Inner Pile-Up\n"
 msgstr ""
+"\n"
+"Indentation - Inner Pile-Up\n"
 
 #: modules/process/indent_analyze.c:1676
 msgid "Indentation - Outer Pile-Up\n"
-msgstr ""
+msgstr "Indentation - Outer Pile-Up\n"
 
 #: modules/process/laplace.c:41
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
 msgstr ""
+"Removes data under mask, interpolating them with Laplace equation solution."
 
 #: modules/process/laplace.c:56
 msgid "/_Correct Data/_Remove Data Under Mask"
-msgstr ""
+msgstr "/_Correct Data/_Remove Data Under Mask"
 
 #: modules/process/laplace.c:60
 msgid "Interpolate data under mask by solution of Laplace equation"
-msgstr ""
+msgstr "Interpolate data under mask by solution of Laplace equation"
 
 #: modules/process/laplace.c:86 modules/process/level_grains.c:178
 msgid "Laplace interpolation..."
-msgstr ""
+msgstr "Laplace interpolation..."
 
 #: modules/process/lat_synth.c:343
 msgid "Random constant"
-msgstr ""
+msgstr "Random constant"
 
 #: modules/process/lat_synth.c:344
 msgid "Random linear"
-msgstr ""
+msgstr "Random linear"
 
 #: modules/process/lat_synth.c:345
 msgid "Random bumpy"
-msgstr ""
+msgstr "Random bumpy"
 
 #: modules/process/lat_synth.c:346
 msgid "Radial distance"
-msgstr ""
+msgstr "Radial distance"
 
 #: modules/process/lat_synth.c:347
 msgid "Segmented distance"
-msgstr ""
+msgstr "Segmented distance"
 
 #: modules/process/lat_synth.c:348
 msgid "Segmented random"
-msgstr ""
+msgstr "Segmented random"
 
 #: modules/process/lat_synth.c:349
 msgid "Border distance"
-msgstr ""
+msgstr "Border distance"
 
 #: modules/process/lat_synth.c:350
 msgid "Border random"
-msgstr ""
+msgstr "Border random"
 
 #: modules/process/lat_synth.c:351
 msgid "Second nearest distance"
-msgstr ""
+msgstr "Second nearest distance"
 
 #: modules/process/lat_synth.c:375
 msgid "Generates surfaces based on regular or random lattices."
-msgstr ""
+msgstr "Generates surfaces based on regular or random lattices."
 
 #: modules/process/lat_synth.c:389
 msgid "/S_ynthetic/_Lattice..."
-msgstr ""
+msgstr "/S_ynthetic/_Lattice..."
 
 #: modules/process/lat_synth.c:393
 msgid "Generate lattice based surface"
-msgstr ""
+msgstr "Generate lattice-based surface"
 
 #: modules/process/lat_synth.c:512
 msgid "lattice|Random"
-msgstr ""
+msgstr "Random"
 
 #: modules/process/lat_synth.c:513
 msgid "lattice|Square"
-msgstr ""
+msgstr "Square"
 
 #: modules/process/lat_synth.c:514
 msgid "lattice|Hexagonal"
-msgstr ""
+msgstr "Hexagonal"
 
 #: modules/process/lat_synth.c:515
 msgid "lattice|Triangular"
-msgstr ""
+msgstr "Triangular"
 
 #: modules/process/lat_synth.c:608
 msgid "_Lattice:"
-msgstr ""
+msgstr "_Lattice:"
 
 #: modules/process/lat_synth.c:615 modules/process/obj_synth.c:545
 #: modules/process/pat_synth.c:1461
 msgid "_Size:"
-msgstr ""
+msgstr "_Size:"
 
 #: modules/process/lat_synth.c:626
 msgid "Lattice rela_xation:"
-msgstr ""
+msgstr "Lattice rela_xation:"
 
 #: modules/process/lat_synth.c:638
 msgid "_Height relaxation:"
-msgstr ""
+msgstr "_Height relaxation:"
 
 #: modules/process/lat_synth.c:669
 msgid "Surface"
-msgstr ""
+msgstr "Surface"
 
 #: modules/process/lat_synth.c:690 modules/process/local_contrast.c:154
 msgid "_Weight:"
-msgstr ""
+msgstr "_Weight:"
 
 #: modules/process/lat_synth.c:1131
 msgid "Constructing lattice..."
-msgstr ""
+msgstr "Constructing lattice..."
 
 #: modules/process/lat_synth.c:1158
 msgid "Relaxing lattice..."
-msgstr ""
+msgstr "Relaxing lattice..."
 
 #: modules/process/lat_synth.c:1173
 msgid "Relaxing heights..."
-msgstr ""
+msgstr "Relaxing heights..."
 
 #: modules/process/latsim.c:75
 msgid "Lateral force simulator"
