@@ -358,7 +358,7 @@ run_dialog(ControlsType *controls)
         {
             FFT_RECT_SUB,
             GWY_STOCK_MASK_RECT_EXCLUSIVE,
-            N_("Subtract a rectange from the FFT mask"),
+            N_("Subtract a rectangle from the FFT mask"),
         },
     };
 
