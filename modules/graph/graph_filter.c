@@ -24,8 +24,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-graph.h>
-#include <libgwymodule/gwystock.h>
 #include <app/gwyapp.h>
 
 static gboolean module_register(void);
