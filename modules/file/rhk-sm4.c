@@ -396,7 +396,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -1131,6 +1131,7 @@ rhk_sm4_page_to_graph_model(const RHKPage *page)
                         + page->z_offset);
         }
         gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
+        gwy_graph_curve_model_enforce_order(gcmodel);
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(i),

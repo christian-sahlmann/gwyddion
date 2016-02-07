@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek, mod by Niv Levy",
     "2007",
 };
@@ -427,8 +427,6 @@ rhkspm32_read_header(RHKPage *rhkpage,
     }
 
     /* Use negated positive conditions to catch NaNs */
-    // niv - modifying this - otherwise it messes with the spectra
-    // (but i don;t really understand it)
     if (!((fabs(rhkpage->x.scale)) > 0)) {
         g_warning("Real x scale is 0.0, fixing to 1.0");
         rhkpage->x.scale = 1.0;
@@ -453,8 +451,8 @@ rhkspm32_read_header(RHKPage *rhkpage,
     pos = (end - buffer) + 2;
     /* Don't check failure, it seems the value is optional */
     rhkpage->alpha = g_ascii_strtod(buffer + pos, &end);
-    // not failing, but setting an existance flag, this happens for spectra,
-    // but otherwise i want to add this to the metadata
+    /* not failing, but setting an existance flag, this happens for spectra,
+     * but otherwise i want to add this to the metadata. */
     if (end == buffer + pos)
         rhkpage->e_alpha = FALSE;
     else
@@ -516,9 +514,6 @@ rhkspm32_read_range(const gchar *buffer,
         return FALSE;
     pos = strlen(name) + 1;
 
-    // this is a bad idea - for spectra it's perfectly reasonable to have
-    // negative scales (e.g. progress from positive to negative bias)
-    //range->scale = fabs(g_ascii_strtod(buffer + pos, &end));
     range->scale = g_ascii_strtod(buffer + pos, &end);
     if (end == buffer + pos || pos > 0x20)
         return FALSE;
@@ -604,8 +599,8 @@ rhkspm32_read_data(RHKPage *rhkpage)
     p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
     xres = rhkpage->xres;
     yres = rhkpage->yres;
-    // the scales are no longer gurunteed to be positive,
-    // so they must be "fixed" here (to enable spectra)
+    /* the scales are no longer gurunteed to be positive,
+     * so they must be "fixed" here (to enable spectra) */
     dfield = gwy_data_field_new(xres, yres,
                                 xres*fabs(rhkpage->x.scale),
                                 yres*fabs(rhkpage->y.scale),
@@ -744,7 +739,7 @@ spectra_to_graph(GwySpectra *spectra)
     x_offset = gwy_data_line_get_offset(dline);
     x_realsize = gwy_data_line_get_real(dline);
     for (j = 0; j < n_points; j++)
-        xdata[j] = x_offset+j*x_realsize;
+        xdata[j] = x_offset + j*x_realsize;
     gmodel = gwy_graph_model_new();
     g_object_set(gmodel, "si-unit-x", x_si_unit, "si-unit-y", y_si_unit, NULL);
     graph_title = gwy_spectra_get_title(spectra);
@@ -766,6 +761,7 @@ spectra_to_graph(GwySpectra *spectra)
                      "color", gwy_graph_get_preset_color(k),
                      NULL);
         gwy_graph_curve_model_set_data(cmodel, xdata, ydata, n_points);
+        gwy_graph_curve_model_enforce_order(cmodel);
     }
     g_free(ydata);
     g_free(xdata);
