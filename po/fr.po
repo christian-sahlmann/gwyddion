@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-01-28 02:14+0100\n"
-"PO-Revision-Date: 2016-01-28 23:59+0100\n"
+"POT-Creation-Date: 2016-02-05 02:14+0100\n"
+"PO-Revision-Date: 2016-02-06 16:11+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -811,7 +811,7 @@ msgstr "Labels"
 
 #: libgwydgets/gwy3dwindow.c:768 modules/process/facet_analysis.c:335
 #: modules/process/facet_analysis.c:351 modules/process/shade.c:246
-#: modules/process/tilt.c:222
+#: modules/process/tilt.c:223
 msgid "φ:"
 msgstr "φ :"
 
@@ -819,15 +819,15 @@ msgstr "φ :"
 #: libgwydgets/gwy3dwindow.c:972 libgwydgets/gwy3dwindow.c:980
 #: modules/process/facet_analysis.c:379 modules/process/indent_analyze.c:460
 #: modules/process/rotate.c:279 modules/process/shade.c:238
-#: modules/process/shade.c:246 modules/process/tilt.c:210
-#: modules/process/tilt.c:222 modules/process/tip_model.c:233
-#: modules/process/tip_model.c:239 modules/process/unrotate.c:335
+#: modules/process/shade.c:246 modules/process/tilt.c:211
+#: modules/process/tilt.c:223 modules/process/tip_model.c:234
+#: modules/process/tip_model.c:240 modules/process/unrotate.c:335
 msgid "deg"
 msgstr "deg"
 
 #: libgwydgets/gwy3dwindow.c:774 modules/process/facet_analysis.c:334
 #: modules/process/facet_analysis.c:350 modules/process/shade.c:238
-#: modules/process/tilt.c:210
+#: modules/process/tilt.c:211
 msgid "θ:"
 msgstr "θ :"
 
@@ -904,7 +904,7 @@ msgstr "Angle lum_ière θ :"
 #: modules/file/pixmap.c:789 modules/file/rawfile.c:424
 #: modules/process/angle_dist.c:172 modules/process/bdep_synth.c:345
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:391
-#: modules/process/col_synth.c:379 modules/process/correct_affine.c:302
+#: modules/process/col_synth.c:381 modules/process/correct_affine.c:302
 #: modules/process/curvature.c:616 modules/process/cwt.c:135
 #: modules/process/deposit_synth.c:355 modules/process/diff_synth.c:415
 #: modules/process/domain_synth.c:358 modules/process/drift.c:250
@@ -912,7 +912,7 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/edge.c:643 modules/process/extend.c:192
 #: modules/process/facet-level.c:193 modules/process/facet_analysis.c:275
 #: modules/process/fbm_synth.c:307 modules/process/fft.c:336
-#: modules/process/fft_filter_2d.c:421 modules/process/fft_synth.c:344
+#: modules/process/fft_filter_2d.c:421 modules/process/fft_synth.c:345
 #: modules/process/fractal.c:235 modules/process/grain_edge.c:218
 #: modules/process/grain_mark.c:252 modules/process/grain_wshed.c:171
 #: modules/process/hough.c:179 modules/process/lat_synth.c:531
@@ -928,8 +928,8 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/scale.c:196 modules/process/scars.c:453
 #: modules/process/semsim.c:211 modules/process/shade.c:209
 #: modules/process/slope_dist.c:277 modules/process/sphere-revolve.c:218
-#: modules/process/straighten_path.c:254 modules/process/tilt.c:160
-#: modules/process/tip_model.c:168 modules/process/unrotate.c:221
+#: modules/process/straighten_path.c:254 modules/process/tilt.c:161
+#: modules/process/tip_model.c:169 modules/process/unrotate.c:221
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:353
 #: modules/process/wpour_mark.c:283 modules/volume/volume_calibrate.c:370
 #: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
@@ -1577,7 +1577,7 @@ msgstr "Moyenne"
 msgid "Minimum"
 msgstr "Minimum"
 
-#: app/app.c:1610 modules/process/col_synth.c:167 modules/tools/filter.c:241
+#: app/app.c:1610 modules/process/col_synth.c:169 modules/tools/filter.c:241
 #: modules/tools/icolorange.c:435 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
@@ -1592,7 +1592,7 @@ msgid "Max. position"
 msgstr "Position max"
 
 #: app/app.c:1613 modules/process/bdep_synth.c:138
-#: modules/process/col_synth.c:168 modules/process/scars.c:501
+#: modules/process/col_synth.c:170 modules/process/scars.c:501
 #: modules/process/scars.c:508 modules/process/threshold.c:339
 msgid "RMS"
 msgstr "RMS"
@@ -1728,19 +1728,19 @@ msgstr "L'enregistrement de `%s' a échoué"
 msgid "Saved using: %s."
 msgstr "Sauvegardé en utilisant : %s."
 
-#: app/file.c:669
+#: app/file.c:688
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Le fichier `%s' existe déjà.  Remplacer ?"
 
-#: app/file.c:673
+#: app/file.c:692
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr ""
 "Ce fichier existe déjà dans `%s'.  Le remplacement écrasera son contenu."
 
-#: app/file.c:676
+#: app/file.c:695
 msgid "Replace File?"
 msgstr "Remplacer le fichier ?"
 
@@ -2809,58 +2809,62 @@ msgid "/Save _As..."
 msgstr "/Enregistrer sous..."
 
 #: app/toolbox.c:806
+msgid "/_Close..."
+msgstr "/Fermer..."
+
+#: app/toolbox.c:814
 msgid "/Remo_ve All Logs"
 msgstr "/Supprimer toutes les entrées du journal"
 
-#: app/toolbox.c:822
+#: app/toolbox.c:830
 msgid "/_Quit"
 msgstr "/_Quitter"
 
-#: app/toolbox.c:861
+#: app/toolbox.c:870
 msgid "/_Undo"
 msgstr "/Ann_uler"
 
-#: app/toolbox.c:869
+#: app/toolbox.c:878
 msgid "/_Redo"
 msgstr "/_Rétablir"
 
-#: app/toolbox.c:885
+#: app/toolbox.c:894
 msgid "/Default Mask _Color..."
 msgstr "/_Couleur de masque par défaut..."
 
-#: app/toolbox.c:893
+#: app/toolbox.c:902
 msgid "/Color _Gradients..."
 msgstr "/_Gradient de couleur..."
 
-#: app/toolbox.c:901
+#: app/toolbox.c:910
 msgid "/G_L Materials..."
 msgstr "/Materiaux G_L..."
 
-#: app/toolbox.c:909
+#: app/toolbox.c:918
 msgid "/_Keyboard Shortcuts"
 msgstr "/Raccourcis clavier"
 
-#: app/toolbox.c:917
+#: app/toolbox.c:926
 msgid "/_Logging Enabled"
 msgstr "/Journa_l activé"
 
-#: app/toolbox.c:1058
+#: app/toolbox.c:1067
 msgid "Program Messages"
 msgstr "Messages de chargement"
 
-#: app/toolbox.c:1287
+#: app/toolbox.c:1296
 msgid "Change Default Mask Color"
 msgstr "Changer la couleur de masque par défaut"
 
-#: app/toolbox.c:1315
+#: app/toolbox.c:1324
 msgid "OpenGL 3D graphics not available"
 msgstr "Les graphismes OpenGL 3D ne sont pas disponibles"
 
-#: app/toolbox.c:1320
+#: app/toolbox.c:1329
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL a été désactivé par une option de ligne de commande."
 
-#: app/toolbox.c:1328
+#: app/toolbox.c:1337
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -2869,7 +2873,7 @@ msgstr ""
 "et les messages d'erreur affichés dans la console lors du démarrage de "
 "Gwyddion."
 
-#: app/toolbox.c:1335
+#: app/toolbox.c:1344
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Cette version de Gwyddion a été compilée sans le support OpenGL."
 
@@ -3104,12 +3108,12 @@ msgstr "Exporter au format texte"
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3922
 #: modules/file/rawfile.c:758 modules/file/rawxyz.c:730
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
-#: modules/process/col_synth.c:503 modules/process/correct_affine.c:471
+#: modules/process/col_synth.c:505 modules/process/correct_affine.c:471
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:266
 #: modules/process/grain_dist.c:306 modules/process/grain_edge.c:260
 #: modules/process/grain_mark.c:343 modules/process/grain_wshed.c:256
 #: modules/process/linematch.c:850 modules/process/mark_disconn.c:283
-#: modules/process/slope_dist.c:368 modules/process/tip_blind.c:360
+#: modules/process/slope_dist.c:368 modules/process/tip_blind.c:361
 #: modules/process/wpour_mark.c:359 modules/tools/spotremove.c:322
 #: modules/tools/stats.c:403
 msgid "Options"
@@ -3833,7 +3837,7 @@ msgstr "Dimensions physiques"
 #: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2808
 #: modules/file/pixmap.c:872 modules/file/rawfile.c:658
 #: modules/process/crosscor.c:221 modules/process/dimensions.h:473
-#: modules/process/tip_blind.c:336
+#: modules/process/tip_blind.c:337
 msgid "_Width:"
 msgstr "Largeur :"
 
@@ -4023,7 +4027,7 @@ msgstr "Maillage"
 
 #: modules/file/imgexport.c:467
 msgid "Path"
-msgstr ""
+msgstr "Chemin"
 
 #: modules/file/imgexport.c:473 modules/file/imgexport.c:479
 msgid "ruler|_None"
@@ -4076,11 +4080,11 @@ msgid "_Zoom:"
 msgstr "_Zoom :"
 
 #: modules/file/imgexport.c:2815 modules/process/bdep_synth.c:434
-#: modules/process/col_synth.c:473 modules/process/diff_synth.c:512
+#: modules/process/col_synth.c:475 modules/process/diff_synth.c:512
 #: modules/process/domain_synth.c:514 modules/process/grain_mark.c:290
 #: modules/process/lat_synth.c:717 modules/process/obj_synth.c:576
 #: modules/process/pat_synth.c:856 modules/process/pat_synth.c:1158
-#: modules/process/pat_synth.c:1493 modules/process/tip_blind.c:343
+#: modules/process/pat_synth.c:1493 modules/process/tip_blind.c:344
 msgid "_Height:"
 msgstr "_Hauteur :"
 
@@ -5581,7 +5585,7 @@ msgstr "Format de données"
 #: modules/process/mark_with.c:199 modules/process/polydistort.c:209
 #: modules/process/scars.c:450 modules/process/slope_dist.c:274
 #: modules/process/straighten_path.c:203 modules/process/synth.h:509
-#: modules/process/tip_model.c:165 modules/process/wpour_mark.c:278
+#: modules/process/tip_model.c:166 modules/process/wpour_mark.c:278
 #: modules/tools/linestats.c:454 modules/tools/sfunctions.c:515
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
 #: modules/volume/volume_linestat.c:287
@@ -5922,7 +5926,7 @@ msgstr "Les dimensions physiques sont invalides."
 
 #: modules/file/rawxyz.c:1173 modules/process/bdep_synth.c:243
 #: modules/process/bdep_synth.c:600 modules/process/calcoefs_simple.c:636
-#: modules/process/col_synth.c:276 modules/process/col_synth.c:709
+#: modules/process/col_synth.c:278 modules/process/col_synth.c:721
 #: modules/process/crosscor.c:599 modules/process/crosscor.c:624
 #: modules/process/deposit_synth.c:274 modules/process/deposit_synth.c:865
 #: modules/process/diff_synth.c:308 modules/process/diff_synth.c:709
@@ -5933,7 +5937,7 @@ msgstr "Les dimensions physiques sont invalides."
 #: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
 #: modules/process/neural.c:1286 modules/process/pid.c:338
 #: modules/process/superresolution.c:416 modules/process/superresolution.c:505
-#: modules/process/tip_blind.c:784 modules/process/tipops.c:319
+#: modules/process/tip_blind.c:785 modules/process/tipops.c:320
 #: modules/process/xydenoise.c:217 modules/volume/volume_kmeans.c:364
 #: modules/volume/volume_kmedians.c:365
 msgid "Initializing..."
@@ -6877,8 +6881,7 @@ msgid "Instant:"
 msgstr "Affichage immédiat :"
 
 #: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
-#: modules/volume/volume_fdfit.c:536
-msgid "e_stimate"
+msgid "esti_mate"
 msgstr "e_stimer"
 
 #: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
@@ -6972,7 +6975,6 @@ msgid "Layer allowing selection of a single long curve."
 msgstr "Couche permettant de sélectionner une courbe unique."
 
 #: modules/layer/point.c:169
-#, fuzzy
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "invisible."
@@ -7179,7 +7181,6 @@ msgid "Similar structures averaging using autocorrelation"
 msgstr "Moyennage de structure similaires par auto-corrélation"
 
 #: modules/process/averaging.c:67
-#, fuzzy
 msgid "/_Correct Data/_Correlation Averaging..."
 msgstr "/_Correction des données/Moyennage par _corrélation..."
 
@@ -7270,7 +7271,6 @@ msgid "/_Basic Operations/_Null Offsets"
 msgstr "/Opérations _basiques/Supprimer l'offset"
 
 #: modules/process/basicops.c:125
-#, fuzzy
 msgid "Null horizontal offsets, moving the origin to the upper left corner"
 msgstr ""
 "Annule les décalages horizontaux en déplaçant l'origine dans le coin en haut "
@@ -7288,19 +7288,19 @@ msgstr "/S_ynthèse/Dépôt _balistique..."
 msgid "Generate surface by ballistic deposition"
 msgstr "Générer une surface par dépôt balistique"
 
-#: modules/process/bdep_synth.c:279 modules/process/col_synth.c:314
+#: modules/process/bdep_synth.c:279 modules/process/col_synth.c:316
 #: modules/process/deposit_synth.c:312 modules/process/deposit_synth.c:324
 #: modules/process/deposit_synth.c:537 modules/process/deposit_synth.c:550
 #: modules/process/diff_synth.c:346 modules/process/domain_synth.c:323
 #: modules/process/domain_synth.c:331 modules/process/fbm_synth.c:282
-#: modules/process/fft_synth.c:317 modules/process/lat_synth.c:499
+#: modules/process/fft_synth.c:318 modules/process/lat_synth.c:499
 #: modules/process/lno_synth.c:411 modules/process/noise_synth.c:315
 #: modules/process/obj_synth.c:408 modules/process/pat_synth.c:361
 #: modules/process/wave_synth.c:327
 msgid "Generated"
 msgstr "Généré"
 
-#: modules/process/bdep_synth.c:303 modules/process/col_synth.c:338
+#: modules/process/bdep_synth.c:303 modules/process/col_synth.c:340
 #: modules/process/diff_synth.c:370
 msgid "Mean deposited thickness"
 msgstr "Épaisseur moyenne déposée"
@@ -7309,31 +7309,31 @@ msgstr "Épaisseur moyenne déposée"
 msgid "Ballistic Deposition"
 msgstr "Dépôt balistique"
 
-#: modules/process/bdep_synth.c:388 modules/process/col_synth.c:422
+#: modules/process/bdep_synth.c:388 modules/process/col_synth.c:424
 #: modules/process/diff_synth.c:458 modules/process/domain_synth.c:411
 msgid "Progressive preview"
 msgstr "Aperçu progressif"
 
-#: modules/process/bdep_synth.c:411 modules/process/col_synth.c:445
+#: modules/process/bdep_synth.c:411 modules/process/col_synth.c:447
 #: modules/process/deposit_synth.c:418 modules/process/diff_synth.c:481
 #: modules/process/domain_synth.c:434 modules/process/fbm_synth.c:364
-#: modules/process/fft_synth.c:401 modules/process/lat_synth.c:590
+#: modules/process/fft_synth.c:402 modules/process/lat_synth.c:590
 #: modules/process/lno_synth.c:494 modules/process/noise_synth.c:398
 #: modules/process/obj_synth.c:499 modules/process/pat_synth.c:446
 #: modules/process/wave_synth.c:411
 msgid "Dimensions"
 msgstr "Dimensions"
 
-#: modules/process/bdep_synth.c:420 modules/process/col_synth.c:454
+#: modules/process/bdep_synth.c:420 modules/process/col_synth.c:456
 #: modules/process/deposit_synth.c:428 modules/process/diff_synth.c:490
 #: modules/process/domain_synth.c:442 modules/process/fbm_synth.c:375
-#: modules/process/fft_synth.c:412 modules/process/lno_synth.c:505
+#: modules/process/fft_synth.c:413 modules/process/lno_synth.c:505
 #: modules/process/noise_synth.c:409 modules/process/obj_synth.c:510
 #: modules/process/pat_synth.c:458 modules/process/wave_synth.c:422
 msgid "Generator"
 msgstr "Générateur"
 
-#: modules/process/bdep_synth.c:426 modules/process/col_synth.c:460
+#: modules/process/bdep_synth.c:426 modules/process/col_synth.c:462
 #: modules/process/diff_synth.c:496 modules/process/lno_synth.c:1045
 #: modules/process/obj_synth.c:521
 msgid "Co_verage:"
@@ -7341,23 +7341,23 @@ msgstr "Cou_verture :"
 
 #: modules/process/bdep_synth.c:438 modules/process/diff_synth.c:516
 #: modules/process/domain_synth.c:518 modules/process/fbm_synth.c:416
-#: modules/process/fft_synth.c:421 modules/process/lat_synth.c:722
+#: modules/process/fft_synth.c:422 modules/process/lat_synth.c:722
 #: modules/process/lno_synth.c:541 modules/process/noise_synth.c:441
 #: modules/process/obj_synth.c:580 modules/process/wave_synth.c:457
 msgid "_Like Current Channel"
 msgstr "Identique au canal courant"
 
-#: modules/process/bdep_synth.c:457 modules/process/col_synth.c:518
+#: modules/process/bdep_synth.c:457 modules/process/col_synth.c:530
 #: modules/process/diff_synth.c:566
 msgid "Evolution"
 msgstr "Évolution"
 
-#: modules/process/bdep_synth.c:460 modules/process/col_synth.c:521
+#: modules/process/bdep_synth.c:460 modules/process/col_synth.c:533
 #: modules/process/diff_synth.c:569
 msgid "Plot graphs:"
 msgstr "Afficher les graphes :"
 
-#: modules/process/bdep_synth.c:658 modules/process/col_synth.c:758
+#: modules/process/bdep_synth.c:658 modules/process/col_synth.c:827
 #: modules/process/diff_synth.c:786
 msgid "Depositing particles..."
 msgstr "Dépôt des particules en cours..."
@@ -7818,53 +7818,57 @@ msgstr "Facteur de calibration _Z :"
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
 
-#: modules/process/col_synth.c:169
+#: modules/process/col_synth.c:171
 msgid "Number of maxima"
 msgstr "Nombre de maxima :"
 
-#: modules/process/col_synth.c:188
+#: modules/process/col_synth.c:190
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr ""
 "Génère des surfaces colonnaires à l'aide d'un algorithme de croissance "
 "simple."
 
-#: modules/process/col_synth.c:202
+#: modules/process/col_synth.c:204
 msgid "/S_ynthetic/_Columnar..."
 msgstr "/S_ynthèse/_Croissance colonnaire..."
 
-#: modules/process/col_synth.c:206
+#: modules/process/col_synth.c:208
 msgid "Generate columnar surface"
 msgstr "Générer une surface colonnaire"
 
-#: modules/process/col_synth.c:377
+#: modules/process/col_synth.c:379
 msgid "Grow Columnar Surface"
 msgstr "Surface à croissance colonnaire"
 
-#: modules/process/col_synth.c:467
+#: modules/process/col_synth.c:469
 msgid "Particle Size"
 msgstr "Taille de particule"
 
-#: modules/process/col_synth.c:485
+#: modules/process/col_synth.c:487
 msgid "Incidence"
 msgstr "Incidence"
 
-#: modules/process/col_synth.c:490
+#: modules/process/col_synth.c:492
 msgid "Inclination"
 msgstr "Inclinaison"
 
-#: modules/process/col_synth.c:496 modules/process/crosscor.c:713
+#: modules/process/col_synth.c:498 modules/process/crosscor.c:713
 msgid "Direction"
 msgstr "Direction"
 
-#: modules/process/col_synth.c:508
+#: modules/process/col_synth.c:510
 msgid "Relaxation type:"
 msgstr "Type de relaxation :"
 
-#: modules/process/col_synth.c:589
+#: modules/process/col_synth.c:517
+msgid "_Melting:"
+msgstr "Fusion :"
+
+#: modules/process/col_synth.c:601
 msgid "Weak"
 msgstr "Faible"
 
-#: modules/process/col_synth.c:590
+#: modules/process/col_synth.c:602
 msgid "Strong"
 msgstr "Forte"
 
@@ -8765,8 +8769,10 @@ msgid "Detected st_ep"
 msgstr "Saut dét_ecté"
 
 #: modules/process/entropy.c:114
-msgid "Visualises entropy calculation for value and slope distribution."
-msgstr "Calculer l'entropie d'une distribution des valeurs ou des pentes."
+msgid "Visualizes entropy calculation for value and slope distribution."
+msgstr ""
+"Permet de visualiser les calculs d'entropie d'une distribution des valeurs "
+"ou des pentes."
 
 #: modules/process/entropy.c:128
 msgid "/_Statistics/_Entropy..."
@@ -8973,11 +8979,11 @@ msgstr "Échelle de _stationnarité :"
 msgid "_Distribution:"
 msgstr "_Distribution : "
 
-#: modules/process/fbm_synth.c:400 modules/process/fft_synth.c:529
+#: modules/process/fbm_synth.c:400 modules/process/fft_synth.c:530
 msgid "Po_wer:"
 msgstr "Puissance :"
 
-#: modules/process/fbm_synth.c:412 modules/process/fft_synth.c:417
+#: modules/process/fbm_synth.c:412 modules/process/fft_synth.c:418
 #: modules/process/lno_synth.c:537 modules/process/noise_synth.c:437
 msgid "_RMS:"
 msgstr "_RMS :"
@@ -9289,43 +9295,43 @@ msgstr "Courbes _séparées"
 msgid "PSDF %.0f°"
 msgstr "PSD %.0f°"
 
-#: modules/process/fft_synth.c:182
+#: modules/process/fft_synth.c:183
 msgid "Generates random surfaces using spectral synthesis."
 msgstr "Générer des surfaces aléatoires en utilisant la synthèse spectrale"
 
-#: modules/process/fft_synth.c:196
+#: modules/process/fft_synth.c:197
 msgid "/S_ynthetic/_Spectral..."
 msgstr "/S_ynthèse/_Spectre..."
 
-#: modules/process/fft_synth.c:200
+#: modules/process/fft_synth.c:201
 msgid "Generate surface using spectral synthesis"
 msgstr "Générer une surface en utilisant la synthèse spectrale"
 
-#: modules/process/fft_synth.c:342
+#: modules/process/fft_synth.c:343
 msgid "Spectral Synthesis"
 msgstr "Synthèse spectrale"
 
-#: modules/process/fft_synth.c:432
+#: modules/process/fft_synth.c:433
 msgid "M_inimum frequency:"
 msgstr "Fréquence m_inimum :"
 
-#: modules/process/fft_synth.c:452
+#: modules/process/fft_synth.c:453
 msgid "Ma_ximum frequency:"
 msgstr "Fréquence ma_ximum :"
 
-#: modules/process/fft_synth.c:472
+#: modules/process/fft_synth.c:473
 msgid "Enable _Gaussian multiplier"
 msgstr "Activer le multiplicateur _Gaussien"
 
-#: modules/process/fft_synth.c:485 modules/process/fft_synth.c:508
+#: modules/process/fft_synth.c:486 modules/process/fft_synth.c:509
 msgid "_Autocorrelation length:"
 msgstr "Longueur d'_autocorrélation :"
 
-#: modules/process/fft_synth.c:495
+#: modules/process/fft_synth.c:496
 msgid "Enable _Lorentz multiplier"
 msgstr "Activer le multiplicateur _lorentzien"
 
-#: modules/process/fft_synth.c:518
+#: modules/process/fft_synth.c:519
 msgid "Enable _power multiplier"
 msgstr "Activer le multiplicateur _puissance"
 
@@ -12103,7 +12109,7 @@ msgstr "Distribution des pentes"
 msgid "Angular Slope Distribution"
 msgstr "Distribution angulaires des pentes"
 
-#: modules/process/slope_dist.c:764 modules/process/tilt.c:178
+#: modules/process/slope_dist.c:764 modules/process/tilt.c:179
 msgid "Slopes"
 msgstr "Pentes"
 
@@ -12145,24 +12151,20 @@ msgid "Revolve Arc"
 msgstr "Arc de révolution"
 
 #: modules/process/straighten_path.c:131
-#, fuzzy
 msgid "Extracts a straightened part of image along a curve."
-msgstr "Extrait une partie durcie de l'image le long d'un chemin."
+msgstr "Extrait une partie redressée de l'image le long d'un chemin."
 
 #: modules/process/straighten_path.c:145
-#, fuzzy
 msgid "/_Correct Data/Straighten _Path..."
-msgstr "/_Correction des données/Durcir le chemin..."
+msgstr "/_Correction des données/Redresser un chemin..."
 
 #: modules/process/straighten_path.c:149
-#, fuzzy
 msgid "Straighten along a path"
-msgstr "Durcir le long d'un chemin"
+msgstr "Redresser le long d'un chemin"
 
 #: modules/process/straighten_path.c:199
-#, fuzzy
 msgid "Straighten Path"
-msgstr "Durcir le chemin"
+msgstr "Redresser un chemin"
 
 #: modules/process/straighten_path.c:259
 #, fuzzy
@@ -12171,7 +12173,7 @@ msgstr "Modèle rés_ultant : "
 
 #: modules/process/straighten_path.c:264
 msgid "Re_verse"
-msgstr ""
+msgstr "in_verser"
 
 #: modules/process/straighten_path.c:282 modules/tools/pathlevel.c:256
 #: modules/tools/profile.c:511 modules/tools/roughness.c:858
@@ -12187,9 +12189,8 @@ msgid "C_losed curve"
 msgstr "Courbe fermée"
 
 #: modules/process/straighten_path.c:380
-#, fuzzy
 msgid "Straightened"
-msgstr "Renforcé"
+msgstr "Redressé"
 
 #: modules/process/superresolution.c:83
 msgid ""
@@ -12304,163 +12305,163 @@ msgstr "%.*f à %.*f"
 msgid "F_arther than:"
 msgstr "Au-delà de :"
 
-#: modules/process/tilt.c:74
+#: modules/process/tilt.c:75
 msgid "Tilts image by specified amount."
 msgstr "Incline l'image."
 
-#: modules/process/tilt.c:88
+#: modules/process/tilt.c:89
 msgid "/_Basic Operations/_Tilt..."
 msgstr "/Opérations _basiques/Inclinaison..."
 
-#: modules/process/tilt.c:92
+#: modules/process/tilt.c:93
 msgid "Tilt by specified amount"
 msgstr "Tilter l'image"
 
-#: modules/process/tilt.c:159
+#: modules/process/tilt.c:160
 msgid "Tilt"
 msgstr "Angle"
 
-#: modules/process/tilt.c:184 modules/volume/volume_slice.c:443
+#: modules/process/tilt.c:185 modules/volume/volume_slice.c:443
 msgid "_X:"
 msgstr "_X :"
 
-#: modules/process/tilt.c:193 modules/volume/volume_slice.c:462
+#: modules/process/tilt.c:194 modules/volume/volume_slice.c:462
 msgid "_Y:"
 msgstr "_Y :"
 
-#: modules/process/tilt.c:203
+#: modules/process/tilt.c:204
 msgid "Angles"
 msgstr "Angles"
 
-#: modules/process/tip_blind.c:176
+#: modules/process/tip_blind.c:177
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
 msgstr ""
 "Estimation à l'aveugle d'une sonde SPM avec l'algorithme de Villarubia."
 
-#: modules/process/tip_blind.c:190
+#: modules/process/tip_blind.c:191
 msgid "/_Tip and Indentation/_Blind Estimation..."
 msgstr "/Sonde et indentation/Estimation à l'aveugle..."
 
-#: modules/process/tip_blind.c:194
+#: modules/process/tip_blind.c:195
 msgid "Blind tip estimation"
 msgstr "Estimation à l'aveugle de la sonde"
 
-#: modules/process/tip_blind.c:234
+#: modules/process/tip_blind.c:235
 msgid "Blind Tip Estimation"
 msgstr "Estimation à l'aveugle de la sonde"
 
-#: modules/process/tip_blind.c:235
+#: modules/process/tip_blind.c:236
 msgid "Run _Partial"
 msgstr "Estimation _partielle"
 
-#: modules/process/tip_blind.c:236
+#: modules/process/tip_blind.c:237
 msgid "Run _Full"
 msgstr "Estimation complète"
 
-#: modules/process/tip_blind.c:237
+#: modules/process/tip_blind.c:238
 msgid "_Reset Tip"
 msgstr "Initialise_r la sonde"
 
-#: modules/process/tip_blind.c:324
+#: modules/process/tip_blind.c:325
 msgid "Related _data:"
 msgstr "_Données reliées :"
 
-#: modules/process/tip_blind.c:329
+#: modules/process/tip_blind.c:330
 msgid "Estimated Tip Size"
 msgstr "Taille estimée de la sonde"
 
-#: modules/process/tip_blind.c:350
+#: modules/process/tip_blind.c:351
 msgid "_Same resolution"
 msgstr "Même ré_solution"
 
-#: modules/process/tip_blind.c:369
+#: modules/process/tip_blind.c:370
 msgid "Noise suppression t_hreshold:"
 msgstr "Seuil de suppression du bruit : "
 
-#: modules/process/tip_blind.c:389
+#: modules/process/tip_blind.c:390
 msgid "Use _boundaries"
 msgstr "Utiliser les bords"
 
-#: modules/process/tip_blind.c:399
+#: modules/process/tip_blind.c:400
 msgid "Stripes"
 msgstr "Bandes"
 
-#: modules/process/tip_blind.c:405
+#: modules/process/tip_blind.c:406
 msgid "_Split to stripes:"
 msgstr "_Séparer en bandes :"
 
-#: modules/process/tip_blind.c:419
+#: modules/process/tip_blind.c:420
 msgid "_Preview stripe:"
 msgstr "Bande d'aperçu :"
 
-#: modules/process/tip_blind.c:426
+#: modules/process/tip_blind.c:427
 msgid "Plot size _graph"
 msgstr "Afficher le graphe de la taille"
 
-#: modules/process/tip_blind.c:436
+#: modules/process/tip_blind.c:437
 msgid "Create tip i_mages"
 msgstr "Créer des i_mages de la sonde"
 
 #. TRANSLATORS: Prefix for the progressbar message.
-#: modules/process/tip_blind.c:813
+#: modules/process/tip_blind.c:814
 #, c-format
 msgid "Stripe %u: "
 msgstr "Bande %u :"
 
-#: modules/process/tip_blind.c:920 modules/process/tip_blind.c:944
+#: modules/process/tip_blind.c:921 modules/process/tip_blind.c:945
 msgid "Estimated tip"
 msgstr "Sonde estimée"
 
-#: modules/process/tip_blind.c:1210 modules/process/tip_blind.c:1219
+#: modules/process/tip_blind.c:1211 modules/process/tip_blind.c:1220
 msgid "Tip radius evolution"
 msgstr "Évolution du rayon de la sonde"
 
-#: modules/process/tip_model.c:109
+#: modules/process/tip_model.c:110
 msgid "Models SPM tip."
 msgstr "Modélise la sonde SPM."
 
-#: modules/process/tip_model.c:124
+#: modules/process/tip_model.c:125
 msgid "/_Tip and Indentation/_Model Tip..."
 msgstr "/Sonde et indentation/Modéliser la sonde..."
 
-#: modules/process/tip_model.c:128
+#: modules/process/tip_model.c:129
 msgid "Model AFM tip"
 msgstr "Modéliser une sonde AFM"
 
-#: modules/process/tip_model.c:163
+#: modules/process/tip_model.c:164
 msgid "Model Tip"
 msgstr "Modélise une sonde"
 
-#: modules/process/tip_model.c:223
+#: modules/process/tip_model.c:224
 msgid "Tip _type:"
 msgstr "_Type de sonde :"
 
-#: modules/process/tip_model.c:228
+#: modules/process/tip_model.c:229
 msgid "_Number of sides:"
 msgstr "_Nombre de côtés"
 
-#: modules/process/tip_model.c:233
+#: modules/process/tip_model.c:234
 msgid "Tip _slope:"
 msgstr "Pente de la _sonde :"
 
-#: modules/process/tip_model.c:239
+#: modules/process/tip_model.c:240
 msgid "Tip _rotation:"
 msgstr "_Rotation de la sonde :"
 
-#: modules/process/tip_model.c:249
+#: modules/process/tip_model.c:250
 msgid "Tip _apex radius:"
 msgstr "Rayon de l'_apex de la sonde :"
 
-#: modules/process/tip_model.c:457
+#: modules/process/tip_model.c:458
 msgid "Modeled tip"
 msgstr "Sonde modélisée"
 
-#: modules/process/tip_model.c:505
+#: modules/process/tip_model.c:506
 #, c-format
 msgid "Tip resolution: %d × %d pixels"
 msgstr "Résolution de la sonde : %d × %d pixels."
 
-#: modules/process/tipops.c:65
+#: modules/process/tipops.c:66
 msgid ""
 "Tip operations: dilation (convolution), erosion (reconstruction) and "
 "certainty map."
@@ -12468,47 +12469,47 @@ msgstr ""
 "Opérations liées à la sonde : dilatation (convolution), érosion "
 "(reconstruction) et carte d'incertitude."
 
-#: modules/process/tipops.c:80
+#: modules/process/tipops.c:81
 msgid "/_Tip and Indentation/_Dilation..."
 msgstr "/Sonde et indentation/_Dilatation..."
 
-#: modules/process/tipops.c:84
+#: modules/process/tipops.c:85
 msgid "Surface dilation by defined tip"
 msgstr "Dilatation d'une surface avec une sonde donnée"
 
-#: modules/process/tipops.c:87
+#: modules/process/tipops.c:88
 msgid "/_Tip and Indentation/_Surface Reconstruction..."
 msgstr "/Sonde et indentation/Reconstruction de _surface..."
 
-#: modules/process/tipops.c:91
+#: modules/process/tipops.c:92
 msgid "Surface reconstruction by defined tip"
 msgstr "Reconstruction d'une surface avec une sonde donnée"
 
-#: modules/process/tipops.c:94
+#: modules/process/tipops.c:95
 msgid "/_Tip and Indentation/_Certainty Map..."
 msgstr "/Sonde et indentation/_Carte d'incertitude..."
 
-#: modules/process/tipops.c:98
+#: modules/process/tipops.c:99
 msgid "Tip certainty map"
 msgstr "Carte d'incertitude"
 
-#: modules/process/tipops.c:139
+#: modules/process/tipops.c:140
 msgid "Tip Dilation"
 msgstr "Dilatation"
 
-#: modules/process/tipops.c:140
+#: modules/process/tipops.c:141
 msgid "Surface Reconstruction"
 msgstr "Surface reconstruction"
 
-#: modules/process/tipops.c:141
+#: modules/process/tipops.c:142
 msgid "Certainty Map Analysis"
 msgstr "Analyse de la carte d'incertitude"
 
-#: modules/process/tipops.c:162
+#: modules/process/tipops.c:163
 msgid "_Tip morphology:"
 msgstr "Morphologie de la sonde :"
 
-#: modules/process/tipops.c:256
+#: modules/process/tipops.c:257
 #, c-format
 msgid ""
 "Tip measure does not match data.\n"
@@ -12517,11 +12518,11 @@ msgstr ""
 "La mesure de la sonde ne correspond pas aux données.\n"
 "Elle va être ré-échantillonée de %d×%d à %d×%d."
 
-#: modules/process/tipops.c:296
+#: modules/process/tipops.c:297
 msgid "Dilated data"
 msgstr "Données dilatées"
 
-#: modules/process/tipops.c:297
+#: modules/process/tipops.c:298
 msgid "Surface reconstruction"
 msgstr "Reconstruction de surface"
 
@@ -13574,9 +13575,8 @@ msgid "Display and copy selections"
 msgstr "Afficher et copier les sélections"
 
 #: modules/tools/selectionmanager.c:264
-#, fuzzy
 msgid "Spline path"
-msgstr "BSpline"
+msgstr "Spline"
 
 #: modules/tools/selectionmanager.c:362
 msgid "_Distribute"
@@ -14028,6 +14028,10 @@ msgstr "Position _X de la courbe :"
 #: modules/volume/volume_fdfit.c:387
 msgid "Curve _Y position:"
 msgstr "Position _Y de la courbe :"
+
+#: modules/volume/volume_fdfit.c:536
+msgid "e_stimate"
+msgstr "e_stimer"
 
 #: modules/volume/volume_invert.c:51
 msgid "Inverts value in volume data"
