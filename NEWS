@@ -31,6 +31,8 @@ Libraries:
 - libgwydgets: The gradient can be unset using data window colour axis menu.
   The colour gradient and GL material can be unset in the 3D window as well.
 - libgwydgets: Positions of graph labels are remembered and restored.
+- libgwydgets: GwyGraphCurveModel has a method for ensuring data points are
+  ordered by abscissa.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
@@ -47,6 +49,10 @@ Modules:
 - Image export: Support for path selection drawing was added.
 - Level: Zero mean value supports masking.  Individual module functions have
   separate settings now.
+- Columnar synthesis: New option to continuously ‘melt’ the film during the
+  growth.
+- RHK SPM32 and SM4: Imported graph curves are sorted by abscissa, fixing
+  some graph functionality being broken.
 
 
 2.44 (2016-01-11)
