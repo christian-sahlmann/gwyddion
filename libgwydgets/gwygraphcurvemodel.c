@@ -824,18 +824,19 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 /**
  * gwy_graph_curve_model_set_data_from_dataline:
  * @gcmodel: A graph curve model.
- * @dline: A #GwyDataLine
- * @from_index: index where to start
- * @to_index: where to stop
+ * @dline: A data line.
+ * @from_index: Data line index where to start.
+ * @to_index: Data line index where to stop.
  *
- * Sets the curve data from #GwyDataLine. The range of import can be
- * modified using parameters @from_index and @to_index that are
- * interpreted directly as data indices within the #GwyDataLine.
- * In the case that @from_index == @to_index, the full #GwyDataLine is used.
+ * Sets graph curve model data from a data line.
+ *
+ * The range of import can be modified using parameters @from_index and
+ * @to_index that are interpreted directly as data indices within the
+ * #GwyDataLine.  In the case that @from_index == @to_index, the full
+ * #GwyDataLine is used.
  *
  * If there were calibration data in the former @gcmodel, they are removed.
  **/
-/* XXX: Malformed documentation. */
 void
 gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                              GwyDataLine *dline,
@@ -866,9 +867,19 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     offset = gwy_data_line_get_offset(dline);
 
     ldata = gwy_data_line_get_data_const(dline);
-    for (i = 0; i < res; i++) {
-        xdata[i] = realmin + i*(realmax - realmin)/res + offset;
-        ydata[i] = ldata[i + from_index];
+    if (realmin > realmax) {
+        /* XXX: Data lines with negative step should not actually exist.  But
+         * file modules are still prone to producing them for spectroscopy... */
+        for (i = 0; i < res; i++) {
+            xdata[res-1 - i] = realmin + i*(realmax - realmin)/res + offset;
+            ydata[res-1 - i] = ldata[i + from_index];
+        }
+    }
+    else {
+        for (i = 0; i < res; i++) {
+            xdata[i] = realmin + i*(realmax - realmin)/res + offset;
+            ydata[i] = ldata[i + from_index];
+        }
     }
 
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
