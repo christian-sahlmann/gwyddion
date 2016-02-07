@@ -36,6 +36,7 @@ process_LTLIBRARIES = \
 	edge.la \
 	entropy.la \
 	extend.la \
+	extract_path.la \
 	facet-level.la \
 	facet_analysis.la \
 	fbm_synth.la \
@@ -158,6 +159,7 @@ dwtanisotropy_la_SOURCES       = dwtanisotropy.c
 edge_la_SOURCES                = edge.c preview.h
 entropy_la_SOURCES             = entropy.c
 extend_la_SOURCES              = extend.c
+exract_path_la_SOURCES         = extract_path.c
 facet_analysis_la_SOURCES      = facet_analysis.c preview.h
 facet_level_la_SOURCES         = facet-level.c
 fbm_synth_la_SOURCES           = fbm_synth.c dimensions.h synth.h preview.h
