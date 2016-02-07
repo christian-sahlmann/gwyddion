@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymath.h>
 #include <libdraw/gwyrgba.h>
@@ -653,7 +654,9 @@ gwy_graph_curve_model_clone_real(GObject *source,
  * <warning>The points should be ordered in ascending abscissa order, meaning
  * @xdata values ordered from smallest to largest.  It is not enforced and you
  * can create graphs of data the do not satisfy this condition.  However,
- * various graph functionality may be unavailable or degraded then.</warning>
+ * various graph functionality may be unavailable or degraded then.  You also
+ * can use gwy_graph_curve_model_enforce_order() afterwards to ensure the
+ * recommended data point order.</warning>
  **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
@@ -688,6 +691,88 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
         g_free(gcmodel->calibration->zunc);
         gcmodel->calibration = NULL;
     }
+    gwy_graph_curve_model_data_changed(gcmodel);
+}
+
+static int
+compare_double(gconstpointer a, gconstpointer b)
+{
+    const double da = *(const double*)a;
+    const double db = *(const double*)b;
+
+    if (da < db)
+        return -1;
+    if (da > db)
+        return 1;
+    return 0;
+}
+
+/**
+ * gwy_graph_curve_model_enforce_order:
+ * @gcmodel: A graph curve model.
+ *
+ * Ensures curve model data points are sorted by abscissa in ascending order.
+ *
+ * The function sorts the data points currently present in the model.  It does
+ * not prevent functions such as gwy_graph_curve_model_set_data() from
+ * disrupting the order again.  See its documentation for further remarks.
+ *
+ * The "data-changed" signal is emitted if the data order actually changes.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_graph_curve_model_enforce_order(GwyGraphCurveModel *gcmodel)
+{
+    gdouble *bothdata, *xdata, *ydata;
+    gboolean is_sorted = TRUE, is_revsorted = TRUE;
+    gint n, i;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    /* Check if data are either sorted or sorted in the reverse order (which
+     * is by far the most common unwanted order because we get it for things
+     * like retract curves). */
+    n = gcmodel->n;
+    xdata = gcmodel->xdata;
+    for (i = 1; i < n; i++) {
+        if (is_sorted && xdata[i-1] > xdata[i]) {
+            is_sorted = FALSE;
+            if (!is_revsorted)
+                break;
+        }
+        if (is_revsorted && xdata[i-1] < xdata[i]) {
+            is_revsorted = FALSE;
+            if (!is_sorted)
+                break;
+        }
+    }
+
+    if (is_sorted)
+        return;
+
+    ydata = gcmodel->ydata;
+    if (is_revsorted) {
+        for (i = 0; i < n/2; i++) {
+            GWY_SWAP(gdouble, xdata[i], xdata[n-1 - i]);
+            GWY_SWAP(gdouble, ydata[i], ydata[n-1 - i]);
+        }
+        gwy_graph_curve_model_data_changed(gcmodel);
+        return;
+    }
+
+    /* The general case. */
+    bothdata = g_new(gdouble, 2*n);
+    for (i = 0; i < n; i++) {
+        bothdata[2*i + 0] = xdata[i];
+        bothdata[2*i + 1] = ydata[i];
+    }
+    qsort(bothdata, n, 2*sizeof(gdouble), compare_double);
+    for (i = 0; i < n; i++) {
+        xdata[i] = bothdata[2*i + 0];
+        ydata[i] = bothdata[2*i + 1];
+    }
+    g_free(bothdata);
     gwy_graph_curve_model_data_changed(gcmodel);
 }
 

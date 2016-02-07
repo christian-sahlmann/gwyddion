@@ -100,6 +100,7 @@ void     gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmode
                                                       GwyDataLine *dline,
                                                       gint from_index,
                                                       gint to_index);
+void     gwy_graph_curve_model_enforce_order         (GwyGraphCurveModel *gcmodel);
 const gdouble* gwy_graph_curve_model_get_xdata  (GwyGraphCurveModel *gcmodel);
 const gdouble* gwy_graph_curve_model_get_ydata  (GwyGraphCurveModel *gcmodel);
 gint           gwy_graph_curve_model_get_ndata  (GwyGraphCurveModel *gcmodel);
