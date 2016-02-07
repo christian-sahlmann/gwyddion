@@ -649,6 +649,11 @@ gwy_graph_curve_model_clone_real(GObject *source,
  * Sets curve model data.
  *
  * If there were calibration data in the former @gcmodel, they are removed.
+ *
+ * <warning>The points should be ordered in ascending abscissa order, meaning
+ * @xdata values ordered from smallest to largest.  It is not enforced and you
+ * can create graphs of data the do not satisfy this condition.  However,
+ * various graph functionality may be unavailable or degraded then.</warning>
  **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
