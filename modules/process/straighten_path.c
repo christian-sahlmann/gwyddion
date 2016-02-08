@@ -670,6 +670,44 @@ closed_changed(StraightenControls *controls, GtkToggleButton *toggle)
         g_object_set(controls->selection, "closed", args->closed, NULL);
 }
 
+/* XXX: This replicates straighten_path.c */
+static PointXY*
+rescale_points(GwySelection *selection, GwyDataField *dfield,
+               gboolean realsquare,
+               gdouble *pdx, gdouble *pdy, gdouble *pqx, gdouble *pqy)
+{
+    gdouble dx, dy, qx, qy, h;
+    PointXY *points;
+    guint n, i;
+
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    h = MIN(dx, dy);
+    if (realsquare) {
+        qx = h/dx;
+        qy = h/dy;
+        dx = dy = h;
+    }
+    else
+        qx = qy = 1.0;
+
+    n = gwy_selection_get_data(selection, NULL);
+    points = g_new(PointXY, n);
+    for (i = 0; i < n; i++) {
+        gdouble xy[2];
+
+        gwy_selection_get_object(selection, i, xy);
+        points[i].x = xy[0]/dx;
+        points[i].y = xy[1]/dy;
+    }
+
+    *pdx = dx;
+    *pdy = dy;
+    *pqx = qx;
+    *pqy = qy;
+    return points;
+}
+
 static GwyDataField*
 straighten_do(GwyDataField *dfield, GwyDataField *result,
               GwySelection *selection,
@@ -688,25 +726,8 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     if (n < 2)
         return NULL;
 
-    dx = gwy_data_field_get_xmeasure(dfield);
-    dy = gwy_data_field_get_ymeasure(dfield);
+    points = rescale_points(selection, dfield, realsquare, &dx, &dy, &qx, &qy);
     h = MIN(dx, dy);
-    if (realsquare) {
-        qx = h/dx;
-        qy = h/dy;
-        dx = dy = h;
-    }
-    else
-        qx = qy = 1.0;
-
-    points = g_new(PointXY, n);
-    for (i = 0; i < n; i++) {
-        gdouble xy[2];
-
-        gwy_selection_get_object(selection, i, xy);
-        points[i].x = xy[0]/dx;
-        points[i].y = xy[1]/dy;
-    }
     spline = gwy_spline_new_from_points(points, n);
     /* Assume args and selection agree on the parameters... */
     gwy_spline_set_closed(spline, args->closed);

@@ -144,12 +144,14 @@ extr_path_dialogue(ExtrPathArgs *args, GwySelection *selection)
     GtkTable *table;
     GtkWidget *check, *label;
     ExtrPathControls controls;
-    gint response, row;
+    gint response, row, npts = 0;
     gchar buf[16];
 
     gwy_clear(&controls, 1);
     controls.args = args;
     controls.selection = selection;
+    if (selection)
+        npts = gwy_selection_get_data(selection, NULL);
 
     dialogue = GTK_DIALOG(gtk_dialog_new_with_buttons(_("Extract "
                                                         "Path Selection"),
@@ -170,8 +172,7 @@ extr_path_dialogue(ExtrPathArgs *args, GwySelection *selection)
     if (selection) {
         label = gtk_label_new(_("Number of path points:"));
         gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-        g_snprintf(buf, sizeof(buf), "%d",
-                   gwy_selection_get_data(selection, NULL));
+        g_snprintf(buf, sizeof(buf), "%d", npts);
         label = gtk_label_new(buf);
         gtk_table_attach(table, label, 1, 3, row, row+1, GTK_FILL, 0, 0, 0);
     }
@@ -198,7 +199,7 @@ extr_path_dialogue(ExtrPathArgs *args, GwySelection *selection)
     gtk_table_attach(table, check, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    gtk_dialog_set_response_sensitive(dialogue, GTK_RESPONSE_OK, !!selection);
+    gtk_dialog_set_response_sensitive(dialogue, GTK_RESPONSE_OK, npts > 1);
     gtk_widget_show_all(GTK_WIDGET(dialogue));
 
     do {
@@ -286,29 +287,16 @@ create_graph_model(const PointXY *points,
     return gmodel;
 }
 
-static void
-extract_path_do(GwyContainer *data,
-                GwyDataField *dfield, gboolean realsquare,
-                GwySelection *selection,
-                const ExtrPathArgs *args)
+/* XXX: This replicates straighten_path.c */
+static PointXY*
+rescale_points(GwySelection *selection, GwyDataField *dfield,
+               gboolean realsquare,
+               gdouble *pdx, gdouble *pdy, gdouble *pqx, gdouble *pqy)
 {
-    GwyGraphModel *gmodel;
-    GwySpline *spline;
-    PointXY *points, *tangents;
-    gdouble dx, dy, qx, qy, h, length, slackness;
-    gdouble *xdata, *ydata;
+    gdouble dx, dy, qx, qy, h;
+    PointXY *points;
     guint n, i;
-    gboolean closed;
 
-    if (!selection)
-        return;
-
-    n = gwy_selection_get_data(selection, NULL);
-    /* TODO: Handle somewhat more gracefully? */
-    if (n < 2)
-        return NULL;
-
-    /* XXX: This replicates straighten_path.c */
     dx = gwy_data_field_get_xmeasure(dfield);
     dy = gwy_data_field_get_ymeasure(dfield);
     h = MIN(dx, dy);
@@ -320,6 +308,7 @@ extract_path_do(GwyContainer *data,
     else
         qx = qy = 1.0;
 
+    n = gwy_selection_get_data(selection, NULL);
     points = g_new(PointXY, n);
     for (i = 0; i < n; i++) {
         gdouble xy[2];
@@ -328,6 +317,36 @@ extract_path_do(GwyContainer *data,
         points[i].x = xy[0]/dx;
         points[i].y = xy[1]/dy;
     }
+
+    *pdx = dx;
+    *pdy = dy;
+    *pqx = qx;
+    *pqy = qy;
+    return points;
+}
+
+static void
+extract_path_do(GwyContainer *data,
+                GwyDataField *dfield, gboolean realsquare,
+                GwySelection *selection,
+                const ExtrPathArgs *args)
+{
+    GwyGraphModel *gmodel;
+    GwySpline *spline;
+    PointXY *points, *tangents;
+    GwySIUnit *xyunit;
+    gdouble dx, dy, qx, qy, h, l, length, slackness;
+    gdouble *xdata, *ydata;
+    guint n, i;
+    gboolean closed;
+
+    /* This can only be satisfied in non-interactive use.  Doing nothing is
+     * the best option in this case. */
+    if (!selection || (n = gwy_selection_get_data(selection, NULL)) < 2)
+        return;
+
+    points = rescale_points(selection, dfield, realsquare, &dx, &dy, &qx, &qy);
+    h = MIN(dx, dy);
     spline = gwy_spline_new_from_points(points, n);
     g_object_get(selection,
                  "slackness", &slackness,
@@ -341,32 +360,35 @@ extract_path_do(GwyContainer *data,
 
     /* This would give natural sampling for a straight line along some axis. */
     n = GWY_ROUND(length + 1.0);
-
     points = g_new(PointXY, n);
     tangents = g_new(PointXY, n);
     xdata = g_new(gdouble, n);
     ydata = g_new(gdouble, n);
     gwy_spline_sample_uniformly(spline, points, tangents, n);
+    qx *= dx;
+    qy *= dy;
     for (i = 0; i < n; i++) {
-        gdouble xc = qx*points[i].x, yc = qy*points[i].y;
-        gdouble vx = qx*tangents[i].y, vy = -qy*tangents[i].x;
-
-        points[i].x = dx*xc;
-        points[i].y = dy*yc;
-        tangents[i].x = dx*vx;
-        tangents[i].y = dy*vy;
-        h = sqrt(tangents[i].x*tangents[i].x + tangents[i].y*tangents[i].y);
+        points[i].x *= qx;
+        points[i].y *= qy;
+        GWY_SWAP(gdouble, tangents[i].x, tangents[i].y);
+        tangents[i].x *= qx;
+        tangents[i].y *= -qy;
+        l = sqrt(tangents[i].x*tangents[i].x + tangents[i].y*tangents[i].y);
         if (h > 0.0) {
-            tangents[i].x /= h;
-            tangents[i].y /= h;
+            tangents[i].x /= l;
+            tangents[i].y /= l;
         }
-        xdata[i] = i/(n - 1.0)*length;
+        xdata[i] = i/(n - 1.0)*length*h;
     }
 
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
     if ((gmodel = create_graph_model(points, xdata, ydata, n,
                                      args->x, args->y))) {
         g_object_set(gmodel,
+                     "axis-label-left", _("Position"),
                      "axis-label-bottom", _("Distance"),
+                     "si-unit-x", xyunit,
+                     "si-unit-y", xyunit,
                      NULL);
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
@@ -375,7 +397,9 @@ extract_path_do(GwyContainer *data,
     if ((gmodel = create_graph_model(tangents, xdata, ydata, n,
                                      args->vx, args->vy))) {
         g_object_set(gmodel,
+                     "axis-label-left", _("Tangent"),
                      "axis-label-bottom", _("Distance"),
+                     "si-unit-x", xyunit,
                      NULL);
         gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
