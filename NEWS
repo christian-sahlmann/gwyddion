@@ -2,6 +2,7 @@
 Application:
 - New translation: British English (accompanied with unification of the default
   language to US English).
+- Translations updated: French, Russian.
 - Program messages are written to the log file by default on all platforms,
   on Unix in addition to the console.  New options --log-to-console and
   --no-log-to-console permit controlling independently where the messages go
@@ -38,6 +39,8 @@ Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
   direction perpendicular to the curve.
 - Path layer (new): A single spline curve with arbitrary number of points.
+- Extract path selection (new): Extracts positions and tangents of sampled 
+  path selections as graph curves.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
