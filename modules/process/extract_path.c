@@ -114,7 +114,8 @@ extract_path(GwyContainer *data, GwyRunType run)
     ExtrPathArgs args;
     GwySelection *selection = NULL;
     GwyDataField *dfield;
-    gchar selkey[40];
+    gboolean realsquare;
+    gchar key[48];
     gint id;
     gboolean ok;
 
@@ -126,15 +127,18 @@ extract_path(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    g_snprintf(selkey, sizeof(selkey), "/%d/select/path", id);
-    gwy_container_gis_object_by_name(data, selkey, &selection);
+    g_snprintf(key, sizeof(key), "/%d/select/path", id);
+    gwy_container_gis_object_by_name(data, key, &selection);
 
     ok = extr_path_dialogue(&args, selection);
     extr_path_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return;
 
-    extract_path_do(data, dfield, FALSE, selection, &args);
+    realsquare = FALSE;
+    g_snprintf(key, sizeof(key), "/%d/data/realsquare", id);
+    gwy_container_gis_boolean_by_name(data, key, &realsquare);
+    extract_path_do(data, dfield, realsquare, selection, &args);
 }
 
 static gint
