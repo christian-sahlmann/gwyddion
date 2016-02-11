@@ -58,6 +58,7 @@ Modules:
   some graph functionality being broken.
 - WSxM: Files starting ‘WSxM file copyright WSxM solutions’ are also
   recognised now.
+- GWYXYZF: Byte order handling was corrected to follow the specification.
 
 
 2.44 (2016-01-11)

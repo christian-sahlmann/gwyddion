@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Gwyddion XYZ field files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -131,6 +131,20 @@ gxyzf_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     return 100;
+}
+
+static inline void
+append_double(gdouble *target, const gdouble v)
+{
+    union { guchar pp[8]; double d; } u;
+    u.d = v;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    GWY_SWAP(guchar, u.pp[0], u.pp[7]);
+    GWY_SWAP(guchar, u.pp[1], u.pp[6]);
+    GWY_SWAP(guchar, u.pp[2], u.pp[5]);
+    GWY_SWAP(guchar, u.pp[3], u.pp[4]);
+#endif
+    *target = u.d;
 }
 
 static GwyContainer*
@@ -215,12 +229,10 @@ gxyzf_load(const gchar *filename,
     }
 
     points = (gdouble*)datap;
-    if (nchan > 1) {
-        xyzpoints = g_new(PointXYZ, npoints);
-        for (i = 0; i < npoints; i++) {
-            xyzpoints[i].x = points[i*pointlen];
-            xyzpoints[i].y = points[i*pointlen+1];
-        }
+    xyzpoints = g_new(PointXYZ, npoints);
+    for (i = 0; i < npoints; i++) {
+        append_double(&xyzpoints[i].x, points[i*pointlen]);
+        append_double(&xyzpoints[i].y, points[i*pointlen + 1]);
     }
 
     estimate_dimensions(hash, points, pointlen, npoints, &ginfo);
@@ -231,10 +243,8 @@ gxyzf_load(const gchar *filename,
         GwySIUnit *unit;
         gchar buf[32];
 
-        if (nchan > 1) {
-            for (i = 0; i < npoints; i++)
-                xyzpoints[i].z = points[i*pointlen + id+2];
-        }
+        for (i = 0; i < npoints; i++)
+            append_double(&xyzpoints[i].z, points[i*pointlen + 2+id]);
 
         dfield = gwy_data_field_new(ginfo.xres, ginfo.yres,
                                     ginfo.xreal, ginfo.yreal,
@@ -242,11 +252,7 @@ gxyzf_load(const gchar *filename,
         gwy_data_field_set_xoffset(dfield, ginfo.xoff);
         gwy_data_field_set_yoffset(dfield, ginfo.yoff);
 
-        if (nchan > 1)
-            gwy_data_field_average_xyz(dfield, NULL, xyzpoints, npoints);
-        else
-            gwy_data_field_average_xyz(dfield, NULL, (PointXYZ*)datap, npoints);
-
+        gwy_data_field_average_xyz(dfield, NULL, xyzpoints, npoints);
         unit = gwy_data_field_get_si_unit_z(dfield);
         if (zunit)
             gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(unit));
@@ -281,20 +287,6 @@ fail:
     }
 
     return container;
-}
-
-static inline void
-append_double(gdouble *target, const gdouble v)
-{
-    union { guchar pp[8]; double d; } u;
-    u.d = v;
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    GWY_SWAP(guchar, u.pp[0], u.pp[7]);
-    GWY_SWAP(guchar, u.pp[1], u.pp[6]);
-    GWY_SWAP(guchar, u.pp[2], u.pp[5]);
-    GWY_SWAP(guchar, u.pp[3], u.pp[4]);
-#endif
-    *target = u.d;
 }
 
 /* NB: We only export the current channel even though the format can, in
