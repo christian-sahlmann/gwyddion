@@ -744,9 +744,6 @@ spectra_to_graph(GwySpectra *spectra)
     g_object_set(gmodel, "si-unit-x", x_si_unit, "si-unit-y", y_si_unit, NULL);
     graph_title = gwy_spectra_get_title(spectra);
     g_object_set(gmodel, "title", graph_title, NULL);
-    // tends to obstruct the curves - if there are more than a few - not
-    // good - makes it hard to grab curves?
-    //g_object_set(gmodel, "label-visible", FALSE, NULL);
     for (k = 1; k <= n_spectra; k++) {
         dline = gwy_spectra_get_spectrum(spectra, k-1);
         data = gwy_data_line_get_data(dline);
