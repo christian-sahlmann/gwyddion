@@ -25,6 +25,7 @@
  *   <comment>WSxM SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="WSxM file copyright Nanotec Electronica\r\nSxM Image file\r\n"/>
+ *     <match type="string" offset="0" value="WSxM file copyright WSxM solutions\r\nSxM Image file\r\n"/>
  *   </magic>
  *   <glob pattern="*.tom"/>
  *   <glob pattern="*.TOM"/>
@@ -35,6 +36,7 @@
  * [FILE-MAGIC-FILEMAGIC]
  * # WsXM
  * 0 string WSxM\ file\ copyright\ Nanotec\ Electronica\x0d\x0aSxM\ Image\ file\x0d\x0a Nanotec WSxM SPM data
+ * 0 string WSxM\ file\ copyright\ WSxM\ solutions\x0d\x0aSxM\ Image\ file\x0d\x0a Nanotec WSxM SPM data
  **/
 
 /**
@@ -62,11 +64,13 @@
 
 #include "err.h"
 
-#define MAGIC1 "WSxM file copyright Nanotec Electronica"
+#define MAGIC1a "WSxM file copyright Nanotec Electronica"
+#define MAGIC1b "WSxM file copyright WSxM solutions"
 #define MAGIC2 "SxM Image file"
-#define MAGIC1_SIZE (sizeof(MAGIC1) - 1)
+#define MAGIC1a_SIZE (sizeof(MAGIC1a) - 1)
+#define MAGIC1b_SIZE (sizeof(MAGIC1b) - 1)
 #define MAGIC2_SIZE (sizeof(MAGIC2) - 1)
-#define MAGIC_SIZE (MAGIC1_SIZE + MAGIC2_SIZE)
+#define MAGIC_SIZE (MAGIC1a_SIZE + MAGIC2_SIZE)
 
 #define SIZE_HEADER "Image header size:"
 #define HEADER_END "[Header end]\r\n"
@@ -98,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -134,11 +138,16 @@ read_newline(const char *str)
 static const char*
 wsxmfile_check_magic(const char *head)
 {
-    const char *rest;
+    const char *rest = NULL;
 
-    if (!memcmp(head, MAGIC1, MAGIC1_SIZE)
-        && (rest = read_newline(&head[MAGIC1_SIZE]))
-        && !memcmp(rest, MAGIC2, MAGIC2_SIZE)
+    if (!memcmp(head, MAGIC1a, MAGIC1a_SIZE))
+        rest = read_newline(&head[MAGIC1a_SIZE]);
+    else if (!memcmp(head, MAGIC1b, MAGIC1b_SIZE))
+        rest = read_newline(&head[MAGIC1b_SIZE]);
+    else
+        return NULL;
+
+    if (!memcmp(rest, MAGIC2, MAGIC2_SIZE)
         && (rest = read_newline(&rest[MAGIC2_SIZE])))
         return rest;
 
