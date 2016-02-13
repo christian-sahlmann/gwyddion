@@ -398,6 +398,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
 
         if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_GRAPH_VISIBLE;
+        else if (gwy_strequal(s + i, "/view/relative-size"))
+            *type = KEY_IS_GRAPH_VIEW_SCALE;
         else if (!s[i])
             *type = KEY_IS_GRAPH;
         else
@@ -565,6 +567,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         *type = KEY_IS_3D_LABEL;
         n += strlen("3d/");
     }
+    else if (gwy_strequal(s, "3d/view/relative-size"))
+        *type = KEY_IS_3D_VIEW_SCALE;
     else
         i = -1;
 
