@@ -402,7 +402,7 @@ _gwy_app_analyse_data_key(const gchar *strkey,
             *type = KEY_IS_GRAPH_VIEW_SCALE;
         else if (gwy_strequal(s + i, "/view/width")
                  || gwy_strequal(s + i, "/view/height"))
-            *type = KEY_IS_3D_VIEW_SIZE;
+            *type = KEY_IS_GRAPH_VIEW_SIZE;
         else if (!s[i])
             *type = KEY_IS_GRAPH;
         else
