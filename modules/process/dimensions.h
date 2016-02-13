@@ -87,7 +87,7 @@ gwy_dimensions_make_res(GtkTable *table,
     gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-    obj = gtk_adjustment_new(value, 2, 16384, 1, 100, 0);
+    obj = gtk_adjustment_new(value, 2, 32768, 1, 100, 0);
     adj = GTK_ADJUSTMENT(obj);
     spin = gtk_spin_button_new(adj, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
