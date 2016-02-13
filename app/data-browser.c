@@ -379,7 +379,7 @@ _gwy_app_analyse_data_key(const gchar *strkey,
                           guint *len)
 {
     const gchar *s;
-    gint i;
+    gint i, ii;
     guint n;
 
     *type = KEY_IS_NONE;
@@ -400,6 +400,9 @@ _gwy_app_analyse_data_key(const gchar *strkey,
             *type = KEY_IS_GRAPH_VISIBLE;
         else if (gwy_strequal(s + i, "/view/relative-size"))
             *type = KEY_IS_GRAPH_VIEW_SCALE;
+        else if (gwy_strequal(s + i, "/view/width")
+                 || gwy_strequal(s + i, "/view/height"))
+            *type = KEY_IS_3D_VIEW_SIZE;
         else if (!s[i])
             *type = KEY_IS_GRAPH;
         else
@@ -445,8 +448,7 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_BRICK_VISIBLE;
         else if (g_str_has_prefix(s + i, "/preview")) {
-            gint ii = i + strlen("/preview");
-
+            ii = i + strlen("/preview");
             if (gwy_strequal(s + ii, "/palette"))
                 *type = KEY_IS_BRICK_PREVIEW_PALETTE;
             else if (gwy_strequal(s + ii, "/view/scale")
@@ -554,21 +556,29 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         *type = KEY_IS_REAL_SQUARE;
     else if (gwy_strequal(s, "sps-id"))
         *type = KEY_IS_SPS_REF;
-    else if (gwy_strequal(s, "3d/setup"))
-        *type = KEY_IS_3D_SETUP;
-    else if (gwy_strequal(s, "3d/palette"))
-        *type = KEY_IS_3D_PALETTE;
-    else if (gwy_strequal(s, "3d/material"))
-        *type = KEY_IS_3D_MATERIAL;
-    else if (gwy_strequal(s, "3d/x")
-             || gwy_strequal(s, "3d/y")
-             || gwy_strequal(s, "3d/min")
-             || gwy_strequal(s, "3d/max")) {
-        *type = KEY_IS_3D_LABEL;
-        n += strlen("3d/");
+    else if (g_str_has_prefix(s, "3d/")) {
+        ii = strlen("3d/");
+        if (gwy_strequal(s + ii, "setup"))
+            *type = KEY_IS_3D_SETUP;
+        else if (gwy_strequal(s + ii, "palette"))
+            *type = KEY_IS_3D_PALETTE;
+        else if (gwy_strequal(s + ii, "material"))
+            *type = KEY_IS_3D_MATERIAL;
+        else if (gwy_strequal(s + ii, "x")
+                 || gwy_strequal(s + ii, "y")
+                 || gwy_strequal(s + ii, "min")
+                 || gwy_strequal(s + ii, "max")) {
+            *type = KEY_IS_3D_LABEL;
+            n += strlen("3d/");
+        }
+        else if (gwy_strequal(s + ii, "view/relative-size"))
+            *type = KEY_IS_3D_VIEW_SCALE;
+        else if (gwy_strequal(s + ii, "view/width")
+                 || gwy_strequal(s + ii, "view/height"))
+            *type = KEY_IS_3D_VIEW_SIZE;
+        else
+            i = -1;
     }
-    else if (gwy_strequal(s, "3d/view/relative-size"))
-        *type = KEY_IS_3D_VIEW_SCALE;
     else
         i = -1;
 

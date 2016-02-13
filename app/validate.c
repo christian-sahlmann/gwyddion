@@ -275,6 +275,8 @@ validate_item_pass1(gpointer hash_key,
 
         case KEY_IS_RANGE_TYPE:
         case KEY_IS_SPS_REF:
+        case KEY_IS_3D_VIEW_SIZE:
+        case KEY_IS_GRAPH_VIEW_SIZE:
         check_type(gvalue, G_TYPE_INT, key, errors);
         break;
 
@@ -363,6 +365,7 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_3D_SETUP:
         case KEY_IS_3D_LABEL:
         case KEY_IS_3D_VIEW_SCALE:
+        case KEY_IS_3D_VIEW_SIZE:
         case KEY_IS_DATA_VIEW_SCALE:
         if (!in_array(info->channels, id))
             *errors = g_slist_prepend(*errors,
@@ -374,6 +377,7 @@ validate_item_pass2(gpointer hash_key,
 
         case KEY_IS_GRAPH_VISIBLE:
         case KEY_IS_GRAPH_VIEW_SCALE:
+        case KEY_IS_GRAPH_VIEW_SIZE:
         if (!in_array(info->graphs, id))
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
