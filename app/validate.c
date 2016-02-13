@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007-2013 David Necas (Yeti).
+ *  Copyright (C) 2007-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -280,6 +280,8 @@ validate_item_pass1(gpointer hash_key,
 
         case KEY_IS_RANGE:
         case KEY_IS_MASK_COLOR:
+        case KEY_IS_DATA_VIEW_SCALE:
+        case KEY_IS_BRICK_VIEW_SCALE:
         check_type(gvalue, G_TYPE_DOUBLE, key, errors);
         break;
 
@@ -358,6 +360,7 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_DATA_VISIBLE:
         case KEY_IS_3D_SETUP:
         case KEY_IS_3D_LABEL:
+        case KEY_IS_DATA_VIEW_SCALE:
         if (!in_array(info->channels, id))
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
@@ -390,6 +393,7 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_BRICK_PREVIEW_PALETTE:
         case KEY_IS_BRICK_META:
         case KEY_IS_BRICK_LOG:
+        case KEY_IS_BRICK_VIEW_SCALE:
         if (!in_array(info->volumes, id))
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,

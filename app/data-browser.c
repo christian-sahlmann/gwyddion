@@ -442,10 +442,20 @@ _gwy_app_analyse_data_key(const gchar *strkey,
 
         if (gwy_strequal(s + i, "/visible"))
             *type = KEY_IS_BRICK_VISIBLE;
-        else if (gwy_strequal(s + i, "/preview"))
-            *type = KEY_IS_BRICK_PREVIEW;
-        else if (gwy_strequal(s + i, "/preview/palette"))
-            *type = KEY_IS_BRICK_PREVIEW_PALETTE;
+        else if (g_str_has_prefix(s + i, "/preview")) {
+            gint ii = i + strlen("/preview");
+
+            if (gwy_strequal(s + ii, "/palette"))
+                *type = KEY_IS_BRICK_PREVIEW_PALETTE;
+            else if (gwy_strequal(s + ii, "/view/scale")
+                     || gwy_strequal(s + ii, "/view/relative-size")) {
+                *type = KEY_IS_BRICK_VIEW_SCALE;
+            }
+            else if (!s[ii])
+                *type = KEY_IS_BRICK_PREVIEW;
+            else
+                return -1;
+        }
         else if (gwy_strequal(s + i, "/title"))
             *type = KEY_IS_BRICK_TITLE;
         else if (gwy_strequal(s + i, "/meta"))
@@ -515,6 +525,10 @@ _gwy_app_analyse_data_key(const gchar *strkey,
              || gwy_strequal(s, "base/max")) {
         *type = KEY_IS_RANGE;
         n += strlen("base/");
+    }
+    else if (gwy_strequal(s, "data/view/scale")
+             || gwy_strequal(s, "data/view/relative-size")) {
+        *type = KEY_IS_DATA_VIEW_SCALE;
     }
     else if (gwy_strequal(s, "mask/red")
              || gwy_strequal(s, "mask/blue")
