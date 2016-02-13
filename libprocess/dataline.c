@@ -455,7 +455,8 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     g_return_if_fail(from >= 0 && to <= a->res);
     a->real *= (to - from)/((double)a->res);
     a->res = to - from;
-    memmove(a->data, a->data + from, a->res*sizeof(gdouble));
+    if (from > 0)
+        memmove(a->data, a->data + from, a->res*sizeof(gdouble));
     a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
 }
 
