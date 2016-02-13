@@ -2300,7 +2300,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                      || orientation == GWY_ORIENTATION_VERTICAL);
 
     if (nstats < 1)
-        nstats = size/2;
+        nstats = size/2 - 1;
     gwy_data_line_resample(target_line, size/2, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
     gwy_data_line_set_offset(target_line, 0.0);
@@ -2350,6 +2350,9 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         break;
     }
 
+    gwy_data_line_set_offset(target_line,
+                             target_line->real/target_line->res);
+    gwy_data_line_resize(target_line, 1, target_line->res);
     gwy_data_line_resample(target_line, nstats, interpolation);
 
     g_object_unref(re_field);
@@ -6226,7 +6229,6 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 gwy_data_line_clear(target_line);
                 buf = gwy_data_line_new(width, 1.0, FALSE);
                 mean = 0;
-                if (lev == 1) mean = gwy_data_field_get_avg(data_field);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
                     if (lev == 2) {
@@ -6234,6 +6236,8 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                         gwy_data_line_line_level(buf, av, bv);
                         mean = gwy_data_line_get_avg(buf);
                     }
+                    else if (lev == 1)
+                        mean = gwy_data_line_get_avg(buf);
                     for (j = 0; j < width; j++)
                         ldata[i] += (buf->data[j] - mean)*(buf->data[j] - mean);
                 }
