@@ -99,7 +99,7 @@ module_register(void)
 {
     gwy_process_func_register("extract_path",
                               (GwyProcessFunc)&extract_path,
-                              N_("/_Correct Data/Extract _Path Selection..."),
+                              N_("/_Distortion/Extract _Path Selection..."),
                               NULL,
                               EXTR_PATH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

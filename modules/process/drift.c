@@ -186,7 +186,7 @@ module_register(void)
 {
     gwy_process_func_register("drift",
                               (GwyProcessFunc)&compensate_drift,
-                              N_("/_Correct Data/Compensate _Drift..."),
+                              N_("/_Distortion/Compensate _Drift..."),
                               GWY_STOCK_DRIFT,
                               DRIFT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

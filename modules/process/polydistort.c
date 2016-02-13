@@ -149,7 +149,7 @@ module_register(void)
 {
     gwy_process_func_register("polydistort",
                               (GwyProcessFunc)&polydistort,
-                              N_("/_Correct Data/Pol_ynomial Distortion..."),
+                              N_("/_Distortion/Pol_ynomial..."),
                               NULL,
                               DISTORT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

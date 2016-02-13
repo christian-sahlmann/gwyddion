@@ -142,7 +142,7 @@ module_register(void)
 {
     gwy_process_func_register("straighten_path",
                               (GwyProcessFunc)&straighten_path,
-                              N_("/_Correct Data/Straighten _Path..."),
+                              N_("/_Distortion/Straighten _Path..."),
                               NULL,
                               STRAIGHTEN_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

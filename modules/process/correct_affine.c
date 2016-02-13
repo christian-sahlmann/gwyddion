@@ -244,7 +244,7 @@ module_register(void)
 {
     gwy_process_func_register("correct_affine",
                               (GwyProcessFunc)&correct_affine,
-                              N_("/_Correct Data/_Affine Distortion..."),
+                              N_("/_Distortion/_Affine..."),
                               GWY_STOCK_CORRECT_AFFINE,
                               AFFINE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
