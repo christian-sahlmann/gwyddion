@@ -210,7 +210,8 @@ scale_dialog(ScaleArgs *args)
     adjmin = GWY_ROUND(2.0/MIN(args->org_xres, args->org_yres)/step)*step;
     controls.ratio = gtk_adjustment_new(args->ratio,
                                         adjmin,
-                                        8192.0/MAX(args->org_xres, args->org_yres),
+                                        16384.0/MAX(args->org_xres,
+                                                    args->org_yres),
                                         step, 0.1, 0);
     spin = gwy_table_attach_hscale(table, 0, _("Scale by _ratio:"), NULL,
                                    controls.ratio, GWY_HSCALE_LOG);
@@ -230,7 +231,7 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(proportional_changed_cb), args);
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
-                                       2, 8192, 1, 10, 0);
+                                       2, 16384, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, 1, _("New _width:"), "px",
                                    controls.xres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
@@ -238,7 +239,7 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(width_changed_cb), args);
 
     controls.yres = gtk_adjustment_new(args->ratio*args->yres,
-                                       2, 8192, 1, 10, 0);
+                                       2, 16384, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, 2, _("New _height:"), "px",
                                    controls.yres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
