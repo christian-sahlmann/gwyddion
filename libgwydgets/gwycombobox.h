@@ -25,6 +25,7 @@
 #include <gtk/gtkcombobox.h>
 #include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwysiunit.h>
+#include <libgwydgets/gwygraphmodel.h>
 
 G_BEGIN_DECLS
 
@@ -48,6 +49,10 @@ void       gwy_combo_box_metric_unit_set_unit(GtkComboBox *combo,
                                               gint from,
                                               gint to,
                                               GwySIUnit *unit);
+GtkWidget* gwy_combo_box_graph_curve_new     (GCallback callback,
+                                              gpointer cbdata,
+                                              GwyGraphModel *gmodel,
+                                              gint current);
 void       gwy_enum_combo_box_set_active     (GtkComboBox *combo,
                                               gint active);
 gint       gwy_enum_combo_box_get_active     (GtkComboBox *combo);

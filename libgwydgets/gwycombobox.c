@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,10 @@
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
-#include <gtk/gtkcelllayout.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <math.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwycombobox.h>
 
@@ -309,7 +310,9 @@ gwy_enum_combo_box_set_model(GtkComboBox *combo,
 
 /**
  * gwy_combo_box_metric_unit_new:
- * @callback: A callback called when a menu item is activated (or %NULL for
+ * @callback: A callback called when a new choice is selected (may be %NULL).
+ *            If you want to just update an integer, you can use
+ *            gwy_enum_combo_box_update_int() here.
  * @cbdata: User data passed to the callback.
  * @from: The exponent of 10 the menu should start at (a multiple of 3, will
  *        be rounded downward if isn't).
@@ -410,6 +413,118 @@ gwy_combo_box_metric_unit_make_enum(gint from,
         *nentries = n;
 
     return entries;
+}
+
+static void
+free_curve_combo_box_data(GObject *object)
+{
+    gwy_enum_freev(g_object_get_data(object, "gwy-combo-graph-enum"));
+    g_object_unref(g_object_get_data(object, "gwy-combo-graph-model"));
+    g_object_unref(g_object_get_data(object, "gwy-combo-graph-pixbuf"));
+}
+
+static void
+render_curve_colour(G_GNUC_UNUSED GtkCellLayout *layout,
+                    GtkCellRenderer *renderer,
+                    GtkTreeModel *model,
+                    GtkTreeIter *iter,
+                    G_GNUC_UNUSED gpointer data)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GObject *object;
+    GdkPixbuf *pixbuf;
+    GwyRGBA *color;
+    GwyEnum *item;
+    guint32 pixel;
+
+    object = G_OBJECT(renderer);
+    pixbuf = g_object_get_data(object, "gwy-combo-graph-pixbuf");
+    g_return_if_fail(pixbuf);
+    gmodel = g_object_get_data(object, "gwy-combo-graph-model");
+    g_return_if_fail(gmodel);
+
+    gtk_tree_model_get(model, iter, 0, &item, -1);
+    gcmodel = gwy_graph_model_get_curve(gmodel, item->value);
+    g_return_if_fail(gcmodel);
+
+    g_object_get(gcmodel, "color", &color, NULL);
+    pixel = 0xff
+        | ((guint32)(guchar)floor(255.99999*color->b) << 8)
+        | ((guint32)(guchar)floor(255.99999*color->g) << 16)
+        | ((guint32)(guchar)floor(255.99999*color->r) << 24);
+    gwy_rgba_free(color);
+    gdk_pixbuf_fill(pixbuf, pixel);
+}
+
+/**
+ * gwy_combo_box_graph_curve_new:
+ * @callback: A callback called when a new choice is selected (may be %NULL).
+ *            If you want to just update an integer, you can use
+ *            gwy_enum_combo_box_update_int() here.
+ * @cbdata: User data passed to the callback.
+ * @gmodel: A graph model.
+ * @current: Index of currently selected curve.
+ *
+ * Creates an enum combo box with curves from a graph model.
+ *
+ * This function is intended for selection of curves from static graphs in
+ * graph modules.  The graph model is not permitted to change.
+ *
+ * Returns: The newly created combo box as #GtkWidget.
+ *
+ * Since: 2.45
+ **/
+GtkWidget*
+gwy_combo_box_graph_curve_new(GCallback callback, gpointer cbdata,
+                              GwyGraphModel *gmodel, gint current)
+{
+    GtkCellRenderer *renderer;
+    GwyGraphCurveModel *curve;
+    GObject *object;
+    GtkWidget *combo;
+    GwyEnum *curves;
+    GdkPixbuf *pixbuf;
+    gint ncurves, i, width, height;
+
+    g_object_ref(gmodel);
+    ncurves = gwy_graph_model_get_n_curves(gmodel);
+
+    curves = g_new(GwyEnum, ncurves + 1);
+    for (i = 0; i < ncurves; i++) {
+        curve = gwy_graph_model_get_curve(gmodel, i);
+        g_object_get(curve, "description", &curves[i].name, NULL);
+        curves[i].value = i;
+    }
+    curves[ncurves].name = NULL;
+    combo = gwy_enum_combo_box_new(curves, ncurves, callback, cbdata, current,
+                                   FALSE);
+
+    /* Color */
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width |= 1;
+    height |= 1;
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                            GWY_ROUND(1.618*height), height);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    /* XXX: We set the object data on the renderer because the thing passed
+     * as the first argument to render_curve_colour() is some internal
+     * GtkCellView, not the combo itself. */
+    object = G_OBJECT(renderer);
+    g_object_set_data(object, "gwy-combo-graph-model", gmodel);
+    g_object_set_data(object, "gwy-combo-graph-enum", curves);
+    g_object_set_data(object, "gwy-combo-graph-pixbuf", pixbuf);
+    g_signal_connect(object, "destroy",
+                     G_CALLBACK(free_curve_combo_box_data), NULL);
+
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
+    gtk_cell_layout_reorder(GTK_CELL_LAYOUT(combo), renderer, 0);
+    gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(combo), renderer,
+                                       render_curve_colour, NULL, NULL);
+
+    return combo;
 }
 
 /************************** Documentation ****************************/
