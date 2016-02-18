@@ -129,7 +129,7 @@ graph_align(GwyGraph *graph)
     }
 }
 
-static int
+static gint
 compare_double(gconstpointer a, gconstpointer b)
 {
     const double da = *(const double*)a;

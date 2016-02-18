@@ -13,7 +13,8 @@ graph_LTLIBRARIES = \
 	graph_fdfit.la \
 	graph_filter.la \
 	graph_fit.la \
-	graph_level.la
+	graph_level.la \
+	graph_peaks.la
 
 if OS_MSWIN
 no_undefined = -no-undefined
@@ -45,6 +46,7 @@ graph_fdfit_la_SOURCES         = graph_fdfit.c
 graph_filter_la_SOURCES        = graph_filter.c
 graph_fit_la_SOURCES           = graph_fit.c
 graph_level_la_SOURCES         = graph_level.c
+graph_peaks_la_SOURCES         = graph_peaks.c
 
 clean-local:
 	rm -f core.* *~
