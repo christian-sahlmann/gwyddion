@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,10 +74,6 @@ static void        do_cut                    (CutArgs *args);
 static void        graph_selected            (GwySelection* selection,
                                               gint i,
                                               CutControls *controls);
-static GtkWidget*  curve_selector_new        (GwyGraphModel *gmodel,
-                                              GCallback callback,
-                                              CutControls *controls,
-                                              gint current);
 static void        all_changed               (GtkToggleButton *check,
                                               CutControls *controls);
 
@@ -87,7 +83,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Cut graph"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -99,7 +95,7 @@ module_register(void)
 {
     gwy_graph_func_register("graph_cut",
                             (GwyGraphFunc)&cut,
-                            N_("/_Cut Graph..."),
+                            N_("/_Cut..."),
                             GWY_STOCK_GRAPH_CUT,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Extract part of graph into new one"));
@@ -166,9 +162,9 @@ cut_dialog(CutArgs *args)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
-    controls.curve = curve_selector_new(gmodel,
-                                        G_CALLBACK(curve_changed), &controls,
-                                        args->curve);
+    controls.curve
+        = gwy_combo_box_graph_curve_new(G_CALLBACK(curve_changed), &controls,
+                                        gmodel, args->curve);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
     gtk_table_attach(GTK_TABLE(table), controls.curve,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -471,36 +467,6 @@ cut_get_full_x_range(CutControls *controls,
     gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
     gcmodel = gwy_graph_model_get_curve(gmodel, 0);
     gwy_graph_curve_model_get_x_range(gcmodel, xmin, xmax);
-}
-
-
-
-static GtkWidget*
-curve_selector_new(GwyGraphModel *gmodel,
-                   GCallback callback,
-                   CutControls *controls,
-                   gint current)
-{
-    GwyGraphCurveModel *curve;
-    GtkWidget *combo;
-    GwyEnum *curves;
-    gint ncurves, i;
-
-    ncurves = gwy_graph_model_get_n_curves(gmodel);
-
-    curves = g_new(GwyEnum, ncurves + 1);
-    for (i = 0; i < ncurves; i++) {
-        curve = gwy_graph_model_get_curve(gmodel, i);
-        g_object_get(curve, "description", &curves[i].name, NULL);
-        curves[i].value = i;
-    }
-    curves[ncurves].name = NULL;
-    combo = gwy_enum_combo_box_new(curves, ncurves, callback, controls, current,
-                                   FALSE);
-    g_signal_connect_swapped(combo, "destroy",
-                             G_CALLBACK(gwy_enum_freev), curves);
-
-    return combo;
 }
 
 static void
