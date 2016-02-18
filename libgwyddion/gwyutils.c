@@ -1704,7 +1704,7 @@ gwy_object_set_or_reset(gpointer object,
     g_object_thaw_notify(object);
 }
 
-#ifdef G_OS_WIN32
+
 /**
 * gwy_fopen:
 * @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
@@ -1727,13 +1727,13 @@ gwy_object_set_or_reset(gpointer object,
 *
 * Since: 2.43
 */
+#ifdef G_OS_WIN32
 FILE *
-gwy_fopen(const gchar *filename,
-    const gchar *mode)
+gwy_fopen(const gchar *filename, const gchar *mode)
 {
     wchar_t *wfilename = g_utf8_to_utf16(filename, -1, NULL, NULL, NULL);
     wchar_t *wmode;
-    FILE *retval;
+    FILE *stream;
     int save_errno;
 
     if (wfilename == NULL)
@@ -1751,14 +1751,13 @@ gwy_fopen(const gchar *filename,
         return NULL;
     }
 
-    retval = _wfopen(wfilename, wmode);
-    save_errno = errno;
+    save_errno = _wfopen_s(&stream, wfilename, wmode);
 
     g_free(wfilename);
     g_free(wmode);
 
     errno = save_errno;
-    return retval;
+    return stream;
 }
 
 /**
