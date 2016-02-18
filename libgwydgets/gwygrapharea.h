@@ -113,7 +113,7 @@ struct _GwyGraphArea {
     gboolean enable_user_input;
     gint selection_limit;
 
-    gboolean bool1;
+    gboolean selection_is_editable;
     gboolean bool2;
     gint int1;
     gint int2;
@@ -178,6 +178,8 @@ GString*           gwy_graph_area_export_vector    (GwyGraphArea *area,
                                                     gint height);
 void               gwy_graph_area_enable_user_input(GwyGraphArea *area,
                                                     gboolean enable);
+void               gwy_graph_area_set_selection_editable(GwyGraphArea *area,
+                                                         gboolean setting);
 void               gwy_graph_area_edit_curve       (GwyGraphArea *area,
                                                     gint id);
 

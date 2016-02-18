@@ -271,6 +271,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->ry0 = 0.0;
 
     area->enable_user_input = TRUE;
+    area->selection_is_editable = TRUE;
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     g_signal_connect_swapped(area->lab, "size-allocate",
@@ -806,6 +807,23 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
     }
 
+    if (area->status == GWY_GRAPH_STATUS_ZOOM) {
+        gwy_selection_clear(area->zoomdata);
+        selection_zoomdata[0] = dx;
+        selection_zoomdata[1] = dy;
+        selection_zoomdata[2] = 0;
+        selection_zoomdata[3] = 0;
+        gwy_selection_set_object(area->zoomdata, -1, selection_zoomdata);
+
+        area->selecting = TRUE;
+
+        return TRUE;
+    }
+
+    /* Everything below are selections. */
+    if (!area->selection_is_editable)
+        return TRUE;
+
     if (area->status == GWY_GRAPH_STATUS_POINTS
         && gwy_selection_get_max_objects(area->pointsdata) == 1)
         gwy_selection_clear(area->pointsdata);
@@ -944,17 +962,6 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             if (i >= 0)
                 gwy_selection_delete_object(area->ylinesdata, i);
         }
-    }
-
-    if (area->status == GWY_GRAPH_STATUS_ZOOM) {
-        gwy_selection_clear(area->zoomdata);
-        selection_zoomdata[0] = dx;
-        selection_zoomdata[1] = dy;
-        selection_zoomdata[2] = 0;
-        selection_zoomdata[3] = 0;
-        gwy_selection_set_object(area->zoomdata, -1, selection_zoomdata);
-
-        area->selecting = TRUE;
     }
 
     return TRUE;
@@ -1786,13 +1793,38 @@ gwy_graph_label_response(GwyGraphLabelDialog *dialog,
  * @area: A graph area.
  * @enable: %TRUE to enable user interaction, %FALSE to disable it.
  *
- * Enables/disables all user input dialogs (invoked by clicking the mouse).
+ * Enables/disables auxiliary graph area dialogs (invoked by clicking the
+ * mouse).
+ *
+ * Note, however, that this setting does not control editability of selections.
+ * Use gwy_graph_area_set_selection_editable() for that.
  **/
 void
 gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
 {
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
     area->enable_user_input = enable;
     gwy_graph_label_enable_user_input(area->lab, enable);
+}
+
+/**
+ * gwy_graph_area_set_selection_editable:
+ * @area: A graph area.
+ * @setting: %TRUE to enable selection editing, %FALSE to disable it.
+ *
+ * Enables/disables selection editing using mouse.
+ *
+ * When selection editing is disabled the graph area status type determines
+ * the selection type that can be drawn on the area.  However, the user cannot
+ * modify it.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_graph_area_set_selection_editable(GwyGraphArea *area, gboolean setting)
+{
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
+    area->selection_is_editable = setting;
 }
 
 /**
@@ -1807,6 +1839,7 @@ void
 gwy_graph_area_get_cursor(GwyGraphArea *area,
                           gdouble *x_cursor, gdouble *y_cursor)
 {
+    g_return_if_fail(GWY_IS_GRAPH_AREA(area));
     if (area->mouse_present) {
         *x_cursor = area->actual_cursor.x;
         *y_cursor = area->actual_cursor.y;
@@ -1840,6 +1873,7 @@ gwy_graph_area_leave_notify(GtkWidget *widget,
 GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
     return GTK_WIDGET(area->lab);
 }
 
@@ -2001,6 +2035,8 @@ GwySelection*
 gwy_graph_area_get_selection(GwyGraphArea *area,
                              GwyGraphStatusType status_type)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
+
     if (status_type == GWY_GRAPH_STATUS_PLAIN)
         status_type = area->status;
 
@@ -2163,6 +2199,8 @@ gwy_graph_area_export_vector(GwyGraphArea *area,
     gint pointsize;
     gint linesize;
     GwyGraphPointType pointtype;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_AREA(area), NULL);
 
     out = g_string_new("%%Area\n");
 
