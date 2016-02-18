@@ -34,6 +34,9 @@ Libraries:
 - libgwydgets: Positions of graph labels are remembered and restored.
 - libgwydgets: GwyGraphCurveModel has a method for ensuring data points are
   ordered by abscissa.
+- libgwyprocess: GwyDataField line statistics caulcates rms using local line
+  means, not the global mean.
+- libgwydgets: Convenience combo box constructor for graph curves was added.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
