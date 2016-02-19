@@ -26,10 +26,18 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
+
+enum {
+    COLUMN_POSITION,
+    COLUMN_HEIGHT,
+    COLUMN_AREA,
+    COLUMN_WIDTH,
+};
 
 typedef enum {
     PEAK_ORDER_ABSCISSA,
@@ -58,25 +66,31 @@ typedef struct {
     GtkWidget *dialogue;
     GtkWidget *graph;
     GtkWidget *curve;
+    GtkWidget *peaklist;
     GtkObject *npeaks;
     GArray *peaks;
 } PeaksControls;
 
-static gboolean module_register     (void);
-static void     graph_peaks         (GwyGraph *graph);
-static void     graph_peaks_dialogue(GwyGraphModel *parent_gmodel,
-                                     PeaksArgs *args);
-static void     curve_changed       (GtkComboBox *combo,
-                                     PeaksControls *controls);
-static void     npeaks_changed      (GtkAdjustment *adj,
-                                     PeaksControls *controls);
-static void     select_peaks        (PeaksControls *controls);
-static void     analyse_peaks       (GwyGraphCurveModel *gcmodel,
-                                     GArray *peaks);
-static void     load_args           (GwyContainer *container,
-                                     PeaksArgs *args);
-static void     save_args           (GwyContainer *container,
-                                     PeaksArgs *args);
+static gboolean   module_register     (void);
+static void       graph_peaks         (GwyGraph *graph);
+static void       graph_peaks_dialogue(GwyGraphModel *parent_gmodel,
+                                       PeaksArgs *args);
+static GtkWidget* create_peak_list    (PeaksControls *controls);
+static void       curve_changed       (GtkComboBox *combo,
+                                       PeaksControls *controls);
+static void       npeaks_changed      (GtkAdjustment *adj,
+                                       PeaksControls *controls);
+static void       select_peaks        (PeaksControls *controls);
+static void       analyse_peaks       (GwyGraphCurveModel *gcmodel,
+                                       GArray *peaks);
+static void       load_args           (GwyContainer *container,
+                                       PeaksArgs *args);
+static void       save_args           (GwyContainer *container,
+                                       PeaksArgs *args);
+
+static const PeaksArgs peaks_defaults = {
+    0, 5, PEAK_ORDER_ABSCISSA,
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -110,7 +124,6 @@ graph_peaks(GwyGraph *graph)
     GwyGraphModel *parent_gmodel;
 
     parent_gmodel = gwy_graph_get_model(graph);
-    gwy_clear(&args, 1);
     load_args(gwy_app_settings_get(), &args);
     graph_peaks_dialogue(parent_gmodel, &args);
     save_args(gwy_app_settings_get(), &args);
@@ -119,7 +132,7 @@ graph_peaks(GwyGraph *graph)
 static void
 graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
 {
-    GtkWidget *dialogue, *hbox, *table, *label;
+    GtkWidget *dialogue, *hbox, *table, *label, *scwin;
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
     PeaksControls controls;
@@ -171,6 +184,16 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
                      G_CALLBACK(npeaks_changed), &controls);
     row++;
 
+    /* The list */
+    controls.peaklist = create_peak_list(&controls);
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_container_add(GTK_CONTAINER(scwin), controls.peaklist);
+    gtk_table_attach(GTK_TABLE(table), scwin,
+                     0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+
     /* Graph */
     controls.graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
@@ -210,12 +233,111 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
 }
 
 static void
+render_peak(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            gpointer user_data)
+{
+    PeaksControls *controls = (PeaksControls*)user_data;
+    gint id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "id"));
+    const Peak *peak;
+    gchar buf[32];
+    guint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    peak = &g_array_index(controls->peaks, Peak, i);
+    if (id == COLUMN_POSITION) {
+        g_snprintf(buf, sizeof(buf), "%g", peak->x);
+    }
+    else if (id == COLUMN_HEIGHT) {
+        g_snprintf(buf, sizeof(buf), "%g", peak->height);
+    }
+    else if (id == COLUMN_AREA) {
+        g_snprintf(buf, sizeof(buf), "%g", peak->area);
+    }
+    else if (id == COLUMN_WIDTH) {
+        g_snprintf(buf, sizeof(buf), "%g", peak->dispersion);
+    }
+
+    g_object_set(renderer, "text", buf, NULL);
+}
+
+static GtkWidget*
+create_peak_list(PeaksControls *controls)
+{
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkTreeView *treeview;
+    GwyNullStore *store;
+    //GwySIUnit *areaunit, *xunit, *yunit;
+
+    store = gwy_null_store_new(0);
+    treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(GTK_TREE_MODEL(store)));
+    g_object_unref(store);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "x");
+    gtk_tree_view_append_column(treeview, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    g_object_set_data(G_OBJECT(renderer), "id",
+                      GUINT_TO_POINTER(COLUMN_POSITION));
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_peak, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "h");
+    gtk_tree_view_append_column(treeview, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    g_object_set_data(G_OBJECT(renderer), "id",
+                      GUINT_TO_POINTER(COLUMN_HEIGHT));
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_peak, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "A");
+    gtk_tree_view_append_column(treeview, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    g_object_set_data(G_OBJECT(renderer), "id", GUINT_TO_POINTER(COLUMN_AREA));
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_peak, controls, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "w");
+    gtk_tree_view_append_column(treeview, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    g_object_set_data(G_OBJECT(renderer), "id", GUINT_TO_POINTER(COLUMN_WIDTH));
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_peak, controls, NULL);
+
+    return GTK_WIDGET(treeview);
+}
+
+static void
 curve_changed(GtkComboBox *combo,
               PeaksControls *controls)
 {
     PeaksArgs *args = controls->args;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
+    GtkTreeView *treeview;
+    GwyNullStore *store;
+
+    treeview = GTK_TREE_VIEW(controls->peaklist);
+    store = GWY_NULL_STORE(gtk_tree_view_get_model(treeview));
+    gwy_null_store_set_n_rows(store, 0);
 
     args->curve = gwy_enum_combo_box_get_active(combo);
     gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
@@ -253,12 +375,19 @@ select_peaks(PeaksControls *controls)
     GArray *peaks = controls->peaks;
     gint npeaks, i;
     gdouble *seldata;
+    GtkTreeView *treeview;
+    GwyNullStore *store;
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
     selection = gwy_graph_area_get_selection(area, GWY_GRAPH_STATUS_XLINES);
     npeaks = MIN((gint)peaks->len, controls->args->npeaks);
     gwy_selection_set_max_objects(selection, MAX(npeaks, 1));
     gwy_selection_clear(selection);
+
+    treeview = GTK_TREE_VIEW(controls->peaklist);
+    store = GWY_NULL_STORE(gtk_tree_view_get_model(treeview));
+    gwy_null_store_set_n_rows(store, npeaks);
+
     if (!npeaks)
         return;
 
@@ -339,7 +468,7 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
     for (k = 0; k < peaks->len; k++) {
         Peak *peak = &g_array_index(peaks, Peak, k);
         gint ileft, iright;
-        gdouble yleft, yright, area, disp2;
+        gdouble yleft, yright, arealeft, arearight, disp2left, disp2right;
 
         for (ileft = peak->i - 1;
              ileft && ydata[ileft] == ydata[ileft+1];
@@ -357,27 +486,29 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
             iright++;
         yright = ydata[iright];
 
-        area = disp2 = 0.0;
+        arealeft = arearight = 0.0;
+        disp2left = disp2right = 0.0;
         peak->x = xdata[peak->i];
         for (i = ileft; i < peak->i; i++) {
             gdouble xl = xdata[i] - peak->x, xr = xdata[i+1] - peak->x,
                     yl = ydata[i] - yleft, yr = ydata[i+1] - yleft;
-            area += (xr - xl)*(yl + yr)/2.0;
-            disp2 += (xr*xr*xr*(3.0*yr + yl)
-                      - xl*xl*xl*(3.0*yl + yr)
-                      - xl*xr*(xl + xr)*(yr - yl))/12.0;
+            arealeft += (xr - xl)*(yl + yr)/2.0;
+            disp2left += (xr*xr*xr*(3.0*yr + yl)
+                          - xl*xl*xl*(3.0*yl + yr)
+                          - xl*xr*(xl + xr)*(yr - yl))/12.0;
         }
         for (i = iright; i > peak->i; i--) {
             gdouble xl = xdata[i-1] - peak->x, xr = xdata[i] - peak->x,
                     yl = ydata[i-1] - yright, yr = ydata[i] - yright;
-            area += (xr - xl)*(yl + yr)/2.0;
-            disp2 += (xr*xr*xr*(3.0*yr + yl)
-                      - xl*xl*xl*(3.0*yl + yr)
-                      - xl*xr*(xl + xr)*(yr - yl))/12.0;
+            arearight += (xr - xl)*(yl + yr)/2.0;
+            disp2right += (xr*xr*xr*(3.0*yr + yl)
+                           - xl*xl*xl*(3.0*yl + yr)
+                           - xl*xr*(xl + xr)*(yr - yl))/12.0;
         }
 
-        peak->area = area;
-        peak->dispersion = sqrt(disp2/area);
+        peak->area = arealeft + arearight;
+        peak->dispersion = sqrt(0.5*(disp2left/arealeft
+                                     + disp2right/arearight));
         i = peak->i;
         peak->height = ydata[i] - 0.5*(yleft + yright);
         if (ydata[i] > ydata[i-1] || ydata[i] > ydata[i+1]) {
@@ -419,6 +550,7 @@ static void
 load_args(GwyContainer *container,
           PeaksArgs *args)
 {
+    *args = peaks_defaults;
     gwy_container_gis_int32_by_name(container, npeaks_key, &args->npeaks);
     gwy_container_gis_enum_by_name(container, order_key, &args->order);
     sanitize_args(args);
