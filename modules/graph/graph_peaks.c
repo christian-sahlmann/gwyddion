@@ -30,6 +30,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-graph.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 enum {
@@ -82,6 +83,9 @@ static void       graph_peaks         (GwyGraph *graph);
 static void       graph_peaks_dialogue(GwyGraphModel *parent_gmodel,
                                        PeaksArgs *args);
 static GtkWidget* create_peak_list    (PeaksControls *controls);
+static GtkWidget* add_aux_button      (GtkWidget *hbox,
+                                       const gchar *stock_id,
+                                       const gchar *tooltip);
 static void       curve_changed       (GtkComboBox *combo,
                                        PeaksControls *controls);
 static void       order_changed       (GtkComboBox *combo,
@@ -94,6 +98,9 @@ static void       sort_peaks          (GArray *peaks,
                                        gint npeaks,
                                        PeaksOrderType order);
 static void       select_peaks        (PeaksControls *controls);
+static void       graph_peaks_save    (PeaksControls *controls);
+static void       graph_peaks_copy    (PeaksControls *controls);
+static gchar*     format_report       (PeaksControls *controls);
 static void       analyse_peaks       (GwyGraphCurveModel *gcmodel,
                                        GArray *peaks);
 static void       load_args           (GwyContainer *container,
@@ -150,7 +157,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
         { N_("Prominence"), PEAK_ORDER_PROMINENCE, },
     };
 
-    GtkWidget *dialogue, *hbox, *table, *label, *scwin;
+    GtkWidget *dialogue, *hbox, *table, *label, *scwin, *hbox2, *button;
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
     PeaksControls controls;
@@ -227,6 +234,20 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
     gtk_table_attach(GTK_TABLE(table), scwin,
                      0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+    row++;
+
+    hbox2 = gtk_hbox_new(FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
+    button = add_aux_button(hbox2, GTK_STOCK_SAVE, _("Save table to a file"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(graph_peaks_save), &controls);
+
+    button = add_aux_button(hbox2, GTK_STOCK_COPY, _("Copy table to clipboard"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(graph_peaks_copy), &controls);
+    row++;
 
     /* Graph */
     controls.graph = gwy_graph_new(gmodel);
@@ -358,6 +379,26 @@ create_peak_list(PeaksControls *controls)
     add_peak_list_column(treeview, controls, COLUMN_WIDTH);
 
     return GTK_WIDGET(treeview);
+}
+
+static GtkWidget*
+add_aux_button(GtkWidget *hbox,
+               const gchar *stock_id,
+               const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+    return button;
 }
 
 static void
@@ -574,6 +615,70 @@ select_peaks(PeaksControls *controls)
     }
     gwy_selection_set_data(selection, npeaks, seldata);
     g_free(seldata);
+}
+
+static void
+graph_peaks_save(PeaksControls *controls)
+{
+    gchar *text = format_report(controls);
+
+    gwy_save_auxiliary_data(_("Save Peak Parameters"),
+                            GTK_WINDOW(controls->dialogue),
+                            -1, text);
+    g_free(text);
+}
+
+static void
+graph_peaks_copy(PeaksControls *controls)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    gchar *text = format_report(controls);
+
+    display = gtk_widget_get_display(controls->dialogue);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
+}
+
+static gchar*
+format_report(PeaksControls *controls)
+{
+    GString *text = g_string_new(NULL);
+    GArray *peaks = controls->peaks_sorted;
+    GwySIValueFormat *vf_x = controls->vf_x;
+    GwySIValueFormat *vf_y = controls->vf_y;
+    GwySIValueFormat *vf_area = controls->vf_area;
+    GwySIValueFormat *vf_w = controls->vf_w;
+    guint i;
+
+    g_string_append_printf(text,
+                           "x [%s]\t"
+                           "h [%s]\t"
+                           "A [%s]\t"
+                           "w [%s]\n",
+                           vf_x->units,
+                           vf_y->units,
+                           vf_area->units,
+                           vf_w->units);
+    for (i = 0; i < peaks->len; i++) {
+        const Peak *peak = &g_array_index(peaks, Peak, i);
+
+        g_string_append_printf(text, "%.*f\t",
+                               vf_x->precision,
+                               peak->x/vf_x->magnitude);
+        g_string_append_printf(text, "%.*f\t",
+                               vf_y->precision,
+                               peak->height/vf_y->magnitude);
+        g_string_append_printf(text, "%.*f\t",
+                               vf_area->precision,
+                               peak->area/vf_area->magnitude);
+        g_string_append_printf(text, "%.*f\n",
+                               vf_w->precision,
+                               peak->dispersion/vf_w->magnitude);
+    }
+
+    return g_string_free(text, FALSE);
 }
 
 static gint
