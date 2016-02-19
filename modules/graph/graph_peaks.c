@@ -69,6 +69,10 @@ typedef struct {
     GtkWidget *peaklist;
     GtkObject *npeaks;
     GArray *peaks;
+    GwySIValueFormat *vf_x;
+    GwySIValueFormat *vf_y;
+    GwySIValueFormat *vf_area;
+    GwySIValueFormat *vf_w;
 } PeaksControls;
 
 static gboolean   module_register     (void);
@@ -78,6 +82,7 @@ static void       graph_peaks_dialogue(GwyGraphModel *parent_gmodel,
 static GtkWidget* create_peak_list    (PeaksControls *controls);
 static void       curve_changed       (GtkComboBox *combo,
                                        PeaksControls *controls);
+static void       update_value_formats(PeaksControls *controls);
 static void       npeaks_changed      (GtkAdjustment *adj,
                                        PeaksControls *controls);
 static void       select_peaks        (PeaksControls *controls);
@@ -138,6 +143,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
     PeaksControls controls;
     gint response, row;
 
+    gwy_clear(&controls, 1);
     controls.args = args;
     controls.parent_gmodel = parent_gmodel;
     controls.peaks = g_array_new(FALSE, FALSE, sizeof(Peak));
@@ -230,6 +236,10 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     g_array_free(controls.peaks, TRUE);
+    gwy_si_unit_value_format_free(controls.vf_x);
+    gwy_si_unit_value_format_free(controls.vf_y);
+    gwy_si_unit_value_format_free(controls.vf_area);
+    gwy_si_unit_value_format_free(controls.vf_w);
 }
 
 static void
@@ -241,86 +251,82 @@ render_peak(G_GNUC_UNUSED GtkTreeViewColumn *column,
 {
     PeaksControls *controls = (PeaksControls*)user_data;
     gint id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "id"));
+    GwySIValueFormat *vf;
     const Peak *peak;
     gchar buf[32];
+    gdouble v;
     guint i;
 
     gtk_tree_model_get(model, iter, 0, &i, -1);
     peak = &g_array_index(controls->peaks, Peak, i);
     if (id == COLUMN_POSITION) {
-        g_snprintf(buf, sizeof(buf), "%g", peak->x);
+        vf = controls->vf_x;
+        v = peak->x;
     }
     else if (id == COLUMN_HEIGHT) {
-        g_snprintf(buf, sizeof(buf), "%g", peak->height);
+        vf = controls->vf_y;
+        v = peak->height;
     }
     else if (id == COLUMN_AREA) {
-        g_snprintf(buf, sizeof(buf), "%g", peak->area);
+        vf = controls->vf_area;
+        v = peak->area;
     }
     else if (id == COLUMN_WIDTH) {
-        g_snprintf(buf, sizeof(buf), "%g", peak->dispersion);
+        vf = controls->vf_w;
+        v = peak->dispersion;
+    }
+    else {
+        g_return_if_reached();
     }
 
+    g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, v/vf->magnitude);
     g_object_set(renderer, "text", buf, NULL);
+}
+
+static void
+add_peak_list_column(GtkTreeView *treeview,
+                     PeaksControls *controls,
+                     gint id)
+{
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkWidget *label;
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_column_set_alignment(column, 0.5);
+
+    label = gtk_label_new(NULL);
+    gtk_tree_view_column_set_widget(column, label);
+    gtk_widget_show(label);
+    gtk_tree_view_append_column(treeview, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    g_object_set_data(G_OBJECT(renderer), "id", GUINT_TO_POINTER(id));
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_peak, controls, NULL);
 }
 
 static GtkWidget*
 create_peak_list(PeaksControls *controls)
 {
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *renderer;
     GtkTreeView *treeview;
+    GtkTreeSelection *selection;
     GwyNullStore *store;
-    //GwySIUnit *areaunit, *xunit, *yunit;
 
     store = gwy_null_store_new(0);
     treeview = GTK_TREE_VIEW(gtk_tree_view_new_with_model(GTK_TREE_MODEL(store)));
     g_object_unref(store);
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "x");
-    gtk_tree_view_append_column(treeview, column);
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
 
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 1.0, NULL);
-    g_object_set_data(G_OBJECT(renderer), "id",
-                      GUINT_TO_POINTER(COLUMN_POSITION));
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_peak, controls, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "h");
-    gtk_tree_view_append_column(treeview, column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 1.0, NULL);
-    g_object_set_data(G_OBJECT(renderer), "id",
-                      GUINT_TO_POINTER(COLUMN_HEIGHT));
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_peak, controls, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "A");
-    gtk_tree_view_append_column(treeview, column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 1.0, NULL);
-    g_object_set_data(G_OBJECT(renderer), "id", GUINT_TO_POINTER(COLUMN_AREA));
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_peak, controls, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "w");
-    gtk_tree_view_append_column(treeview, column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 1.0, NULL);
-    g_object_set_data(G_OBJECT(renderer), "id", GUINT_TO_POINTER(COLUMN_WIDTH));
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(column), renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_peak, controls, NULL);
+    add_peak_list_column(treeview, controls, COLUMN_POSITION);
+    add_peak_list_column(treeview, controls, COLUMN_HEIGHT);
+    add_peak_list_column(treeview, controls, COLUMN_AREA);
+    add_peak_list_column(treeview, controls, COLUMN_WIDTH);
 
     return GTK_WIDGET(treeview);
 }
@@ -345,6 +351,7 @@ curve_changed(GtkComboBox *combo,
     gcmodel = gwy_graph_model_get_curve(controls->parent_gmodel, args->curve);
     gwy_graph_model_add_curve(gmodel, gcmodel);
     analyse_peaks(gcmodel, controls->peaks);
+    update_value_formats(controls);
     select_peaks(controls);
 
     /* The adjustment does not clamp the value and we get a CRITICAL error
@@ -357,6 +364,112 @@ curve_changed(GtkComboBox *combo,
     g_object_set(controls->npeaks,
                  "upper", (gdouble)controls->peaks->len,
                  NULL);
+
+}
+
+static void
+update_value_formats(PeaksControls *controls)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *xunit, *yunit, *areaunit;
+    GtkTreeView *treeview;
+    GtkTreeViewColumn *column;
+    GtkLabel *label;
+    gdouble min, max, xrange, yrange;
+    GArray *peaks = controls->peaks;
+    gchar *title;
+    guint i;
+
+    gmodel = gwy_graph_get_model(GWY_GRAPH(controls->graph));
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
+    g_object_get(gmodel,
+                 "si-unit-x", &xunit,
+                 "si-unit-y", &yunit,
+                 NULL);
+    areaunit = gwy_si_unit_multiply(xunit, yunit, NULL);
+
+    gwy_graph_curve_model_get_x_range(gcmodel, &min, &max);
+    xrange = max - min;
+    controls->vf_x
+        = gwy_si_unit_get_format_with_digits(xunit,
+                                             GWY_SI_UNIT_FORMAT_MARKUP,
+                                             xrange, 4, controls->vf_x);
+
+    max = 0.0;
+    for (i = 0; i < peaks->len; i++) {
+        const Peak *peak = &g_array_index(peaks, Peak, i);
+        if (peak->height > max)
+            max = peak->height;
+    }
+    if (!(max > 0.0)) {
+        gwy_graph_curve_model_get_y_range(gcmodel, &min, &max);
+        max = 0.4*(max - min);
+    }
+    yrange = max;
+
+    controls->vf_y
+        = gwy_si_unit_get_format_with_digits(yunit,
+                                             GWY_SI_UNIT_FORMAT_MARKUP,
+                                             yrange, 4, controls->vf_y);
+
+    max = 0.0;
+    for (i = 0; i < peaks->len; i++) {
+        const Peak *peak = &g_array_index(peaks, Peak, i);
+        if (peak->area > max)
+            max = peak->area;
+    }
+    if (!(max > 0.0))
+        max = 0.1*xrange*yrange;
+
+    controls->vf_area
+        = gwy_si_unit_get_format_with_digits(areaunit,
+                                             GWY_SI_UNIT_FORMAT_MARKUP,
+                                             0.5*max, 4, controls->vf_area);
+
+    max = 0.0;
+    for (i = 0; i < peaks->len; i++) {
+        const Peak *peak = &g_array_index(peaks, Peak, i);
+        if (peak->dispersion > max)
+            max = peak->dispersion;
+    }
+    if (!(max > 0.0))
+        max = 0.05*xrange;
+
+    controls->vf_w
+        = gwy_si_unit_get_format_with_digits(xunit,
+                                             GWY_SI_UNIT_FORMAT_MARKUP,
+                                             max, 3, controls->vf_w);
+
+    g_object_unref(areaunit);
+    g_object_unref(yunit);
+    g_object_unref(xunit);
+
+    treeview = GTK_TREE_VIEW(controls->peaklist);
+
+    column = gtk_tree_view_get_column(treeview, COLUMN_POSITION);
+    title = g_strdup_printf("<b>x</b> [%s]", controls->vf_x->units);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    gtk_label_set_markup(label, title);
+    g_free(title);
+
+    column = gtk_tree_view_get_column(treeview, COLUMN_HEIGHT);
+    title = g_strdup_printf("<b>h</b> [%s]", controls->vf_y->units);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    gtk_label_set_markup(label, title);
+    g_free(title);
+
+    column = gtk_tree_view_get_column(treeview, COLUMN_AREA);
+    title = g_strdup_printf("<b>A</b> [%s]", controls->vf_area->units);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    gtk_label_set_markup(label, title);
+    g_free(title);
+
+    column = gtk_tree_view_get_column(treeview, COLUMN_WIDTH);
+    title = g_strdup_printf("<b>w</b> [%s]", controls->vf_w->units);
+    label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
+    gtk_label_set_markup(label, title);
+    g_free(title);
 }
 
 static void
