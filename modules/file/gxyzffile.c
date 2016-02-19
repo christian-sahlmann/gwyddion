@@ -270,6 +270,7 @@ gxyzf_load(const gchar *filename,
             g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
             gwy_container_set_string_by_name(container, buf, g_strdup(value));
         }
+        gwy_app_channel_check_nonsquare(container, id);
         gwy_file_channel_import_log_add(container, id, NULL, filename);
     }
 
