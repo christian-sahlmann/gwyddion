@@ -31,17 +31,25 @@
 #include <libgwymodule/gwymodule-graph.h>
 #include <app/gwyapp.h>
 
+typedef enum {
+    PEAK_ORDER_ABSCISSA,
+    PEAK_ORDER_PROMINENCE,
+    PEAK_ORDER_NTYPES,
+} PeaksOrderType;
+
 typedef struct {
-    gdouble relevance;
+    gdouble prominence;
     gdouble x;
     gdouble height;
     gdouble area;
+    gdouble dispersion;
     gint i;
 } Peak;
 
 typedef struct {
     gint curve;
     gint npeaks;
+    PeaksOrderType order;
 } PeaksArgs;
 
 typedef struct {
@@ -158,7 +166,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
 
     controls.npeaks = gtk_adjustment_new(args->npeaks, 1, 128, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Number of _peaks:"), NULL,
-                            controls.npeaks, GWY_HSCALE_SQRT);
+                            controls.npeaks, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.npeaks, "value-changed",
                      G_CALLBACK(npeaks_changed), &controls);
     row++;
@@ -216,6 +224,17 @@ curve_changed(GtkComboBox *combo,
     gwy_graph_model_add_curve(gmodel, gcmodel);
     analyse_peaks(gcmodel, controls->peaks);
     select_peaks(controls);
+
+    /* The adjustment does not clamp the value and we get a CRITICAL error
+     * when we do not do this. */
+    if (controls->args->npeaks > controls->peaks->len) {
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->npeaks),
+                                 controls->peaks->len);
+    }
+
+    g_object_set(controls->npeaks,
+                 "upper", (gdouble)controls->peaks->len,
+                 NULL);
 }
 
 static void
@@ -266,29 +285,31 @@ compare_double_descending(gconstpointer a, gconstpointer b)
 static void
 analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
 {
-    gdouble *ydata;
-    const gdouble *xdata;
+    gdouble *ydata_filtered;
+    const gdouble *xdata, *ydata;
     gint n, i, k, flatsize;
 
     g_array_set_size(peaks, 0);
     n = gwy_graph_curve_model_get_ndata(gcmodel);
-    ydata = g_memdup(gwy_graph_curve_model_get_ydata(gcmodel),
-                     n*sizeof(gdouble));
     xdata = gwy_graph_curve_model_get_xdata(gcmodel);
+    ydata = gwy_graph_curve_model_get_ydata(gcmodel);
+    ydata_filtered = g_new(gdouble, n);
 
     /* Perform simple closing first. */
+    ydata_filtered[0] = ydata[0];
     for (i = 1; i+1 < n; i++) {
         gdouble y = ydata[i];
         gdouble yl = 0.5*(ydata[i+1] + ydata[i-1]);
-        ydata[i] = MAX(y, yl);
+        ydata_filtered[i] = MAX(y, yl);
     }
+    ydata_filtered[n-1] = ydata[n-1];
 
     /* Find local maxima. */
     flatsize = 0;
     for (i = 1; i+1 < n; i++) {
-        gdouble y = ydata[i];
-        gdouble yp = ydata[i-1];
-        gdouble yn = ydata[i+1];
+        gdouble y = ydata_filtered[i];
+        gdouble yp = ydata_filtered[i-1];
+        gdouble yn = ydata_filtered[i+1];
 
         /* The normal cases. */
         if (y < yp || y < yn)
@@ -312,41 +333,53 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
         }
     }
 
-    /* Analyse relevance. */
+    g_free(ydata_filtered);
+
+    /* Analyse prominence. */
     for (k = 0; k < peaks->len; k++) {
         Peak *peak = &g_array_index(peaks, Peak, k);
         gint ileft, iright;
-        gdouble yleft, yright, s;
+        gdouble yleft, yright, area, disp2;
 
         for (ileft = peak->i - 1;
              ileft && ydata[ileft] == ydata[ileft+1];
              ileft--)
-        while (ileft && ydata[ileft] < ydata[ileft+1])
+            ;
+        while (ileft && ydata[ileft] > ydata[ileft-1])
             ileft--;
-        while (!(ydata[ileft] < ydata[ileft+1]))
-            ileft++;
         yleft = ydata[ileft];
 
         for (iright = peak->i + 1;
              iright+1 < n && ydata[iright] == ydata[iright-1];
              iright++)
             ;
-        while (iright && ydata[iright] < ydata[iright-1])
+        while (iright+1 < n && ydata[iright] > ydata[iright+1])
             iright++;
-        while (!(ydata[iright] < ydata[iright-1]))
-            iright--;
         yright = ydata[iright];
 
-        s = 0.0;
-        for (i = ileft; i < peak->i; i++)
-            s += (xdata[i+1] - xdata[i])*(ydata[i+1] + ydata[i] - 2.0*yleft);
-        for (i = iright; i > peak->i; i--)
-            s += (xdata[i] - xdata[i-1])*(ydata[i] + ydata[i-1] - 2.0*yright);
+        area = disp2 = 0.0;
+        peak->x = xdata[peak->i];
+        for (i = ileft; i < peak->i; i++) {
+            gdouble xl = xdata[i] - peak->x, xr = xdata[i+1] - peak->x,
+                    yl = ydata[i] - yleft, yr = ydata[i+1] - yleft;
+            area += (xr - xl)*(yl + yr)/2.0;
+            disp2 += (xr*xr*xr*(3.0*yr + yl)
+                      - xl*xl*xl*(3.0*yl + yr)
+                      - xl*xr*(xl + xr)*(yr - yl))/12.0;
+        }
+        for (i = iright; i > peak->i; i--) {
+            gdouble xl = xdata[i-1] - peak->x, xr = xdata[i] - peak->x,
+                    yl = ydata[i-1] - yright, yr = ydata[i] - yright;
+            area += (xr - xl)*(yl + yr)/2.0;
+            disp2 += (xr*xr*xr*(3.0*yr + yl)
+                      - xl*xl*xl*(3.0*yl + yr)
+                      - xl*xr*(xl + xr)*(yr - yl))/12.0;
+        }
 
-        peak->area = 0.5*s;
+        peak->area = area;
+        peak->dispersion = sqrt(disp2/area);
         i = peak->i;
         peak->height = ydata[i] - 0.5*(yleft + yright);
-        peak->x = xdata[i];
         if (ydata[i] > ydata[i-1] || ydata[i] > ydata[i+1]) {
             gdouble epsp = ydata[i] - ydata[i+1];
             gdouble epsm = ydata[i] - ydata[i-1];
@@ -365,26 +398,21 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
                           ? g_array_index(peaks, Peak, k+1).x
                           : xdata[n-1]);
 
-        peak->relevance = log(peak->height * peak->area
-                              * (xright - peak->x) * (peak->x - xleft));
+        peak->prominence = log(peak->height * peak->area
+                               * (xright - peak->x) * (peak->x - xleft));
     }
-
-    g_free(ydata);
 
     g_array_sort(peaks, compare_double_descending);
-    for (k = 0; k < peaks->len; k++) {
-        Peak *peak = &g_array_index(peaks, Peak, k);
-        g_print("[%u] at %g h=%g A=%g w=%g\n",
-                k, peak->x, peak->height, peak->area, peak->relevance);
-    }
 }
 
 static const gchar npeaks_key[] = "/module/graph_peaks/npeaks";
+static const gchar order_key[]  = "/module/graph_peaks/order";
 
 static void
 sanitize_args(PeaksArgs *args)
 {
     args->npeaks = CLAMP(args->npeaks, 1, 128);
+    args->order = MIN(args->order, PEAK_ORDER_NTYPES-1);
 }
 
 static void
@@ -392,6 +420,7 @@ load_args(GwyContainer *container,
           PeaksArgs *args)
 {
     gwy_container_gis_int32_by_name(container, npeaks_key, &args->npeaks);
+    gwy_container_gis_enum_by_name(container, order_key, &args->order);
     sanitize_args(args);
 }
 
@@ -400,6 +429,7 @@ save_args(GwyContainer *container,
           PeaksArgs *args)
 {
     gwy_container_set_int32_by_name(container, npeaks_key, args->npeaks);
+    gwy_container_set_enum_by_name(container, order_key, args->order);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
