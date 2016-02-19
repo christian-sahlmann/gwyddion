@@ -37,6 +37,7 @@ Libraries:
 - libgwyprocess: GwyDataField line statistics caulcates rms using local line
   means, not the global mean.
 - libgwydgets: Convenience combo box constructor for graph curves was added.
+- libgwydgets: Editability of graph area selections can be controlled.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
@@ -44,6 +45,7 @@ Modules:
 - Path layer (new): A single spline curve with arbitrary number of points.
 - Extract path selection (new): Extracts positions and tangents of sampled 
   path selections as graph curves.
+- Find graph peaks (new): Simple location of peaks on graph curves.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
@@ -62,6 +64,7 @@ Modules:
 - WSxM: Files starting ‘WSxM file copyright WSxM solutions’ are also
   recognised now.
 - GWYXYZF: Byte order handling was corrected to follow the specification.
+  Physical pixel aspect ratio is set automatically upon import if appropriate.
 
 
 2.44 (2016-01-11)
