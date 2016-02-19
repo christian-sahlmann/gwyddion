@@ -66,9 +66,11 @@ typedef struct {
     GtkWidget *dialogue;
     GtkWidget *graph;
     GtkWidget *curve;
+    GtkWidget *order;
     GtkWidget *peaklist;
     GtkObject *npeaks;
     GArray *peaks;
+    GArray *peaks_sorted;
     GwySIValueFormat *vf_x;
     GwySIValueFormat *vf_y;
     GwySIValueFormat *vf_area;
@@ -82,9 +84,15 @@ static void       graph_peaks_dialogue(GwyGraphModel *parent_gmodel,
 static GtkWidget* create_peak_list    (PeaksControls *controls);
 static void       curve_changed       (GtkComboBox *combo,
                                        PeaksControls *controls);
+static void       order_changed       (GtkComboBox *combo,
+                                       PeaksControls *controls);
 static void       update_value_formats(PeaksControls *controls);
 static void       npeaks_changed      (GtkAdjustment *adj,
                                        PeaksControls *controls);
+static void       sort_peaks          (GArray *peaks,
+                                       GArray *peaks_sorted,
+                                       gint npeaks,
+                                       PeaksOrderType order);
 static void       select_peaks        (PeaksControls *controls);
 static void       analyse_peaks       (GwyGraphCurveModel *gcmodel,
                                        GArray *peaks);
@@ -137,6 +145,11 @@ graph_peaks(GwyGraph *graph)
 static void
 graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
 {
+    static const GwyEnum order_types[] = {
+        { N_("Position"),   PEAK_ORDER_ABSCISSA,   },
+        { N_("Prominence"), PEAK_ORDER_PROMINENCE, },
+    };
+
     GtkWidget *dialogue, *hbox, *table, *label, *scwin;
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
@@ -147,6 +160,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
     controls.args = args;
     controls.parent_gmodel = parent_gmodel;
     controls.peaks = g_array_new(FALSE, FALSE, sizeof(Peak));
+    controls.peaks_sorted = g_array_new(FALSE, FALSE, sizeof(Peak));
     gmodel = gwy_graph_model_new_alike(parent_gmodel);
 
     dialogue = gtk_dialog_new_with_buttons(_("Graph Peaks"), NULL, 0, NULL);
@@ -163,7 +177,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
                        TRUE, TRUE, 0);
 
     /* Parameters */
-    table = gtk_table_new(2, 4, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
@@ -180,6 +194,20 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
                                         parent_gmodel, args->curve);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
     gtk_table_attach(GTK_TABLE(table), controls.curve,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("Order peaks _by:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.order
+        = gwy_enum_combo_box_new(order_types, G_N_ELEMENTS(order_types),
+                                 G_CALLBACK(order_changed), &controls,
+                                 args->order, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.order);
+    gtk_table_attach(GTK_TABLE(table), controls.order,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -235,6 +263,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
+    g_array_free(controls.peaks_sorted, TRUE);
     g_array_free(controls.peaks, TRUE);
     gwy_si_unit_value_format_free(controls.vf_x);
     gwy_si_unit_value_format_free(controls.vf_y);
@@ -258,7 +287,7 @@ render_peak(G_GNUC_UNUSED GtkTreeViewColumn *column,
     guint i;
 
     gtk_tree_model_get(model, iter, 0, &i, -1);
-    peak = &g_array_index(controls->peaks, Peak, i);
+    peak = &g_array_index(controls->peaks_sorted, Peak, i);
     if (id == COLUMN_POSITION) {
         vf = controls->vf_x;
         v = peak->x;
@@ -473,11 +502,42 @@ update_value_formats(PeaksControls *controls)
 }
 
 static void
+order_changed(GtkComboBox *combo,
+              PeaksControls *controls)
+{
+    controls->args->order = gwy_enum_combo_box_get_active(combo);
+    select_peaks(controls);
+}
+
+static void
 npeaks_changed(GtkAdjustment *adj,
                PeaksControls *controls)
 {
     controls->args->npeaks = gwy_adjustment_get_int(adj);
     select_peaks(controls);
+}
+
+static gint
+compare_peak_abscissa(gconstpointer a, gconstpointer b)
+{
+    const gdouble xa = ((const Peak*)a)->x;
+    const gdouble xb = ((const Peak*)b)->x;
+
+    if (xa < xb)
+        return -1;
+    if (xa > xb)
+        return 1;
+    return 0;
+}
+
+static void
+sort_peaks(GArray *peaks, GArray *peaks_sorted, gint npeaks,
+           PeaksOrderType order)
+{
+    g_array_set_size(peaks_sorted, 0);
+    g_array_append_vals(peaks_sorted, peaks->data, npeaks);
+    if (order == PEAK_ORDER_ABSCISSA)
+        g_array_sort(peaks_sorted, compare_peak_abscissa);
 }
 
 static void
@@ -497,6 +557,9 @@ select_peaks(PeaksControls *controls)
     gwy_selection_set_max_objects(selection, MAX(npeaks, 1));
     gwy_selection_clear(selection);
 
+    sort_peaks(controls->peaks, controls->peaks_sorted, npeaks,
+               controls->args->order);
+
     treeview = GTK_TREE_VIEW(controls->peaklist);
     store = GWY_NULL_STORE(gtk_tree_view_get_model(treeview));
     gwy_null_store_set_n_rows(store, npeaks);
@@ -505,8 +568,10 @@ select_peaks(PeaksControls *controls)
         return;
 
     seldata = g_new(gdouble, npeaks);
-    for (i = 0; i < npeaks; i++)
+    for (i = 0; i < npeaks; i++) {
         seldata[i] = g_array_index(peaks, Peak, i).x;
+        gwy_null_store_row_changed(store, i);
+    }
     gwy_selection_set_data(selection, npeaks, seldata);
     g_free(seldata);
 }
@@ -514,8 +579,8 @@ select_peaks(PeaksControls *controls)
 static gint
 compare_double_descending(gconstpointer a, gconstpointer b)
 {
-    const double da = *(const double*)a;
-    const double db = *(const double*)b;
+    const gdouble da = *(const gdouble*)a;
+    const gdouble db = *(const gdouble*)b;
 
     if (da > db)
         return -1;
