@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-02-08 08:58+0300\n"
-"PO-Revision-Date: 2016-02-08 09:11+0300\n"
+"POT-Creation-Date: 2016-02-21 21:45+0300\n"
+"PO-Revision-Date: 2016-02-21 21:50+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,9 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2124 app/data-browser.c:2906 app/data-browser.c:3768
-#: app/data-browser.c:3927 app/data-browser.c:4213 app/data-browser.c:4620
-#: app/data-browser.c:7155 app/data-browser.c:7237 app/resource-editor.c:366
+#: app/data-browser.c:2152 app/data-browser.c:2934 app/data-browser.c:3796
+#: app/data-browser.c:3955 app/data-browser.c:4241 app/data-browser.c:4648
+#: app/data-browser.c:7183 app/data-browser.c:7265 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:693
 msgid "Untitled"
 msgstr "Безымянный"
@@ -444,7 +444,8 @@ msgstr "Ориентация эквивалентного эллипса"
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:1121 modules/process/wave_synth.c:486
+#: libprocess/gwygrainvalue.c:1121 modules/graph/graph_peaks.c:156
+#: modules/process/extract_path.c:392 modules/process/wave_synth.c:486
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
@@ -459,7 +460,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5183 app/toolbox.c:117
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5211 app/toolbox.c:117
 msgid "Volume"
 msgstr "Объём"
 
@@ -1609,57 +1610,57 @@ msgstr "Канал:"
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:5044
+#: app/data-browser.c:5072
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:5045
+#: app/data-browser.c:5073
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:5046
+#: app/data-browser.c:5074
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5091
+#: app/data-browser.c:5119
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5116
+#: app/data-browser.c:5144
 msgid "Show file messages"
 msgstr "Показать сообщения программы"
 
-#: app/data-browser.c:5128
+#: app/data-browser.c:5156
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5141
+#: app/data-browser.c:5169
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5155 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5183 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:5197
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6436
+#: app/data-browser.c:6464
 #, c-format
 msgid "Messages for %s"
 msgstr "Сообщения для %s"
 
-#: app/data-browser.c:6440
+#: app/data-browser.c:6468
 msgid "Messages for Untitled"
 msgstr "Сообщения для безымянного."
 
-#: app/data-browser.c:7193
+#: app/data-browser.c:7221
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:7279
+#: app/data-browser.c:7307
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2894,60 +2895,60 @@ msgstr "Байт в позиции %d"
 msgid "%s instead of %s"
 msgstr "%s вместо %s"
 
-#: app/validate.c:365
+#: app/validate.c:374
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "отсутствует канал %d для %s"
 
-#: app/validate.c:374
+#: app/validate.c:385
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:383
+#: app/validate.c:394
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:397
+#: app/validate.c:409
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "отсутствует блок %d для %s"
 
-#: app/validate.c:450
+#: app/validate.c:462
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:631
+#: app/validate.c:643
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:632
+#: app/validate.c:644
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:633
+#: app/validate.c:645
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:634
+#: app/validate.c:646
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:635
+#: app/validate.c:647
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:636
+#: app/validate.c:648
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:637
+#: app/validate.c:649
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:638
+#: app/validate.c:650
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -3021,7 +3022,7 @@ msgstr "Значение тега заголовка ‘%s’ не выровн�
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:168 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:182 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
@@ -3678,7 +3679,7 @@ msgstr "Импортирует файлы Gwyddion XYZ-полей."
 msgid "GwyXYZ data files"
 msgstr "Файлы данных GwyXYZ"
 
-#: modules/file/gxyzffile.c:195
+#: modules/file/gxyzffile.c:209
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Размер данных %lu не является кратным размеру точки  %u."
@@ -4192,7 +4193,7 @@ msgstr "Изображение"
 #: modules/process/dwtanisotropy.c:203 modules/process/fft_filter_1d.c:299
 #: modules/process/fft_profile.c:296 modules/process/fractal.c:257
 #: modules/process/nanoindent_adjust.c:229 modules/process/polydistort.c:251
-#: modules/process/rotate.c:288 modules/process/scale.c:252
+#: modules/process/rotate.c:288 modules/process/scale.c:253
 #: modules/process/straighten_path.c:276 modules/process/unrotate.c:278
 #: modules/tools/linestats.c:413 modules/tools/profile.c:559
 #: modules/tools/roughness.c:868 modules/tools/sfunctions.c:449
@@ -4726,7 +4727,7 @@ msgid "Nanonics files (.nan)"
 msgstr "Файлы Nanoniсs (.nan)"
 
 #: modules/file/nanonics.c:177 modules/file/nanonics.c:446
-#: modules/file/wsxmfile.c:222
+#: modules/file/wsxmfile.c:231
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Ожидаемый маркер конца заголовка ‘%s’ не был найден."
@@ -6454,23 +6455,23 @@ msgstr "ASCII файлы WSF (.wsf)"
 msgid "File header does not end with an empty line."
 msgstr "Заголовок файла не заканчивается пустой строкой."
 
-#: modules/file/wsxmfile.c:99
+#: modules/file/wsxmfile.c:103
 msgid "Imports Nanotec WSxM data files."
 msgstr "Импортирует файлы данных Nanotec WSxM."
 
-#: modules/file/wsxmfile.c:112
+#: modules/file/wsxmfile.c:116
 msgid "WSxM files (.tom, .stp)"
 msgstr "Файлы WSxM (.tom, .stp)"
 
-#: modules/file/wsxmfile.c:248
+#: modules/file/wsxmfile.c:257
 msgid "number of columns"
 msgstr "количество столбцов"
 
-#: modules/file/wsxmfile.c:255
+#: modules/file/wsxmfile.c:264
 msgid "number of rows"
 msgstr "количество строк"
 
-#: modules/file/wsxmfile.c:266
+#: modules/file/wsxmfile.c:275
 #, c-format
 msgid "Unknown data type `%s'."
 msgstr "Неизвестный тип данных `%s'."
@@ -6543,88 +6544,89 @@ msgstr "/_Подровнять"
 msgid "Align curves"
 msgstr "Выровнять кривые"
 
-#: modules/graph/graph_cd.c:140
+#: modules/graph/graph_cd.c:136
 msgid "Critical dimension measurements"
 msgstr "Измерения габаритных размеров"
 
-#: modules/graph/graph_cd.c:154
+#: modules/graph/graph_cd.c:150
 msgid "/_Critical Dimension..."
 msgstr "/_Габаритный размер..."
 
-#: modules/graph/graph_cd.c:157
+#: modules/graph/graph_cd.c:153
 msgid "Fit critical dimension"
 msgstr "Измерить габаритный размер"
 
-#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:271
+#: modules/graph/graph_cd.c:209 modules/graph/graph_fit.c:267
 msgid "Fit Graph"
 msgstr "Аппроксимировать график"
 
-#: modules/graph/graph_cd.c:216 modules/graph/graph_fdfit.c:255
-#: modules/graph/graph_fit.c:274 modules/process/fit_2d.c:249
+#: modules/graph/graph_cd.c:212 modules/graph/graph_fdfit.c:251
+#: modules/graph/graph_fit.c:270 modules/process/fit_2d.c:249
 #: modules/volume/volume_fdfit.c:300
 msgid "verb|_Fit"
 msgstr "_Аппрокс."
 
-#: modules/graph/graph_cd.c:263 modules/graph/graph_cut.c:164
-#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:326
+#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:160
+#: modules/graph/graph_fdfit.c:306 modules/graph/graph_fit.c:325
+#: modules/graph/graph_peaks.c:194
 msgid "_Graph curve:"
 msgstr "График:"
 
-#: modules/graph/graph_cd.c:277 modules/graph/graph_fdfit.c:321
-#: modules/graph/graph_fit.c:340 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_cd.c:276 modules/graph/graph_fdfit.c:320
+#: modules/graph/graph_fit.c:339 modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
 msgstr "_Функция:"
 
-#: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:376 modules/process/curvature.c:746
+#: modules/graph/graph_cd.c:305 modules/graph/graph_fdfit.c:361
+#: modules/graph/graph_fit.c:375 modules/process/curvature.c:746
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Параметр"
 
-#: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
-#: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:339
+#: modules/graph/graph_cd.c:307 modules/graph/graph_fdfit.c:363
+#: modules/graph/graph_fit.c:377 modules/process/fit_2d.c:339
 #: modules/volume/volume_fdfit.c:449
 msgid "Error"
 msgstr "Ошибка"
 
-#: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:194
-#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
+#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:190
+#: modules/graph/graph_fdfit.c:415 modules/graph/graph_fit.c:433
 #: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:389
 msgid "Range:"
 msgstr "Диапазон:"
 
-#: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:205
-#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
+#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:201
+#: modules/graph/graph_fdfit.c:426 modules/graph/graph_fit.c:444
 #: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:400
 msgid "range|to"
 msgstr "–"
 
-#: modules/graph/graph_cd.c:348
+#: modules/graph/graph_cd.c:347
 msgid "_Draw whole circle"
 msgstr "_Рисовать полный круг"
 
-#: modules/graph/graph_cd.c:383 modules/graph/graph_fdfit.c:492
-#: modules/graph/graph_fit.c:532 modules/process/fit_2d.c:985
+#: modules/graph/graph_cd.c:382 modules/graph/graph_fdfit.c:491
+#: modules/graph/graph_fit.c:531 modules/process/fit_2d.c:985
 #: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
 msgstr "Сохранить отчёт аппроксимации"
 
-#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1137
-#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
+#: modules/graph/graph_cd.c:529 modules/graph/graph_cd.c:1107
+#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
 msgstr "Аппроксимация"
 
-#: modules/graph/graph_cd.c:556 modules/graph/graph_fdfit.c:750
-#: modules/graph/graph_fit.c:804 modules/volume/volume_fdfit.c:979
+#: modules/graph/graph_cd.c:555 modules/graph/graph_fdfit.c:749
+#: modules/graph/graph_fit.c:803 modules/volume/volume_fdfit.c:979
 #: modules/volume/volume_fdfit.c:1086
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr ""
 "Необходимо выбрать больше точек данных, чем возможных параметров "
 "аппроксимации"
 
-#: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
-#: modules/graph/graph_fit.c:853 modules/process/entropy.c:557
+#: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
+#: modules/graph/graph_fit.c:852 modules/process/entropy.c:557
 #: modules/process/fit_2d.c:396 modules/tools/grainmeasure.c:217
 #: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
@@ -6634,57 +6636,57 @@ msgstr ""
 msgid "N.A."
 msgstr "недоступно"
 
-#: modules/graph/graph_cd.c:1023 modules/graph/graph_fdfit.c:1388
-#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1358
+#: modules/graph/graph_fit.c:1495 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
-#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
-#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1362
+#: modules/graph/graph_fit.c:1499 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
 
-#: modules/graph/graph_cd.c:1030 modules/graph/graph_fdfit.c:1395
-#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1365
+#: modules/graph/graph_fit.c:1502 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Число точек: %d из %d\n"
 
-#: modules/graph/graph_cd.c:1034 modules/graph/graph_fdfit.c:1399
-#: modules/graph/graph_fit.c:1536 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1369
+#: modules/graph/graph_fit.c:1506 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
-#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1375
+#: modules/graph/graph_fit.c:1512 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
 
-#: modules/graph/graph_cd.c:1043 modules/graph/graph_fdfit.c:1408
-#: modules/graph/graph_fit.c:1545 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1378
+#: modules/graph/graph_fit.c:1515 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Результаты\n"
 
-#: modules/graph/graph_cut.c:88
+#: modules/graph/graph_cut.c:84
 msgid "Cut graph"
 msgstr "Обрезает график"
 
-#: modules/graph/graph_cut.c:102
-msgid "/_Cut Graph..."
-msgstr "/_Обрезать график..."
+#: modules/graph/graph_cut.c:98
+msgid "/_Cut..."
+msgstr "/_Обрезать..."
 
-#: modules/graph/graph_cut.c:105
+#: modules/graph/graph_cut.c:101
 msgid "Extract part of graph into new one"
 msgstr "Извлечь часть старого графика в новый"
 
-#: modules/graph/graph_cut.c:144
+#: modules/graph/graph_cut.c:140
 msgid "Cut Graph"
 msgstr "Обрезать график"
 
-#: modules/graph/graph_cut.c:177
+#: modules/graph/graph_cut.c:173
 msgid "Cut _all curves"
 msgstr "Обрезать _все кривые"
 
@@ -6790,79 +6792,79 @@ msgstr "Экспортировать график в PostScript"
 msgid "Export to PostScript"
 msgstr "Экспортировать в PostScript"
 
-#: modules/graph/graph_fdfit.c:172
+#: modules/graph/graph_fdfit.c:168
 msgid "Fit force-distance data"
 msgstr "Аппроксимирует данные сила-расстояние"
 
-#: modules/graph/graph_fdfit.c:186
+#: modules/graph/graph_fdfit.c:182
 msgid "/_Fit FD Curve..."
 msgstr "/Аппроксимировать _кривую сила-расстояние..."
 
-#: modules/graph/graph_fdfit.c:189
+#: modules/graph/graph_fdfit.c:185
 msgid "Fit a force-distance curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
-#: modules/graph/graph_fdfit.c:252 modules/volume/volume_fdfit.c:297
+#: modules/graph/graph_fdfit.c:248 modules/volume/volume_fdfit.c:297
 msgid "Fit FD Curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
-#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
+#: modules/graph/graph_fdfit.c:255 modules/graph/graph_fit.c:274
 #: modules/process/fit_2d.c:251 modules/process/measure_lattice.c:263
 #: modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
 msgstr "О_ценить"
 
-#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:280
+#: modules/graph/graph_fdfit.c:257 modules/graph/graph_fit.c:276
 #: modules/process/fit_2d.c:253 modules/volume/volume_fdfit.c:306
 msgid "_Plot Inits"
 msgstr "_Исходный"
 
-#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:374
+#: modules/graph/graph_fdfit.c:359 modules/graph/graph_fit.c:373
 #: modules/process/fit_2d.c:347 modules/volume/volume_fdfit.c:445
 msgid "Fix"
 msgstr "Править"
 
-#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:380
+#: modules/graph/graph_fdfit.c:365 modules/graph/graph_fit.c:379
 #: modules/process/fit_2d.c:330 modules/volume/volume_fdfit.c:451
 msgid "Initial"
 msgstr "Исходное"
 
-#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:395
+#: modules/graph/graph_fdfit.c:376 modules/graph/graph_fit.c:394
 #: modules/process/fit_2d.c:433 modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
 msgstr "Результирующее χ<sup>2</sup>:"
 
-#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:411
+#: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
 #: modules/process/fit_2d.c:416 modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
 
-#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:486
+#: modules/graph/graph_fdfit.c:447 modules/graph/graph_fit.c:485
 #: modules/process/wpour_mark.c:415 modules/volume/volume_fdfit.c:533
 msgid "Instant:"
 msgstr "Сразу:"
 
-#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
+#: modules/graph/graph_fdfit.c:450 modules/graph/graph_fit.c:488
 msgid "esti_mate"
 msgstr "о_ценить"
 
-#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
+#: modules/graph/graph_fdfit.c:457 modules/graph/graph_fit.c:495
 #: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
 msgstr "ст_роить"
 
-#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
+#: modules/graph/graph_fdfit.c:708 modules/graph/graph_fit.c:762
 #: modules/volume/volume_fdfit.c:907
 msgid "Estimate"
 msgstr "Оценка"
 
-#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
+#: modules/graph/graph_fdfit.c:1404 modules/graph/graph_fit.c:1541
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Остаточная сумма:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1437 modules/graph/graph_fit.c:1574
+#: modules/graph/graph_fdfit.c:1407 modules/graph/graph_fit.c:1544
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Матрица корреляции\n"
@@ -6879,27 +6881,27 @@ msgstr "/_Фильтр"
 msgid "Remove noise from graph curves"
 msgstr "Удалить шум с графиков кривых "
 
-#: modules/graph/graph_fit.c:185
+#: modules/graph/graph_fit.c:181
 msgid "Fit graph with function"
 msgstr "Аппроксимирует график функцией"
 
-#: modules/graph/graph_fit.c:199
+#: modules/graph/graph_fit.c:195
 msgid "/_Fit Function..."
 msgstr "/_Аппроксимировать функцией..."
 
-#: modules/graph/graph_fit.c:202
+#: modules/graph/graph_fit.c:198
 msgid "Fit a function on graph data"
 msgstr "Аппроксимировать данные графика функцией"
 
-#: modules/graph/graph_fit.c:387
+#: modules/graph/graph_fit.c:386
 msgid "Copy all fitted values to estimates"
 msgstr "Копировать все аппроксимирующие значения в оценки"
 
-#: modules/graph/graph_fit.c:461
+#: modules/graph/graph_fit.c:460
 msgid "Plot full range"
 msgstr "Строить весь диапазон"
 
-#: modules/graph/graph_fit.c:471
+#: modules/graph/graph_fit.c:470
 msgid "Create a difference graph"
 msgstr "Создать график разности"
 
@@ -6914,6 +6916,53 @@ msgstr "/_Выравнивание"
 #: modules/graph/graph_level.c:56
 msgid "Level graph curves"
 msgstr "Выравнивает кривые графиков"
+
+#: modules/graph/graph_peaks.c:118
+msgid "Finds peaks on graph curves."
+msgstr "Находит пики на кривых графиков."
+
+#: modules/graph/graph_peaks.c:132
+msgid "/Find _Peaks..."
+msgstr "/Найти _пики..."
+
+#: modules/graph/graph_peaks.c:135
+msgid "Find graph curve peaks"
+msgstr "Найти пики графиков кривых"
+
+#: modules/graph/graph_peaks.c:157
+#, fuzzy
+msgid "Prominence"
+msgstr "Рельефность"
+
+#: modules/graph/graph_peaks.c:173
+msgid "Graph Peaks"
+msgstr "Пики графика"
+
+#: modules/graph/graph_peaks.c:207
+msgid "Order peaks _by:"
+msgstr "Упорядочить пики _по:"
+
+#: modules/graph/graph_peaks.c:222
+msgid "Number of _peaks:"
+msgstr "_Количество пиков:"
+
+#: modules/graph/graph_peaks.c:243 modules/process/curvature.c:774
+#: modules/process/grain_stat.c:345 modules/process/measure_lattice.c:402
+#: modules/process/polylevel.c:608 modules/tools/distance.c:264
+#: modules/tools/roughness.c:822 modules/tools/stats.c:451
+msgid "Save table to a file"
+msgstr "Сохранить таблицу в файл"
+
+#: modules/graph/graph_peaks.c:247 modules/process/curvature.c:779
+#: modules/process/grain_stat.c:350 modules/process/measure_lattice.c:406
+#: modules/process/polylevel.c:618 modules/tools/distance.c:269
+#: modules/tools/roughness.c:827 modules/tools/stats.c:456
+msgid "Copy table to clipboard"
+msgstr "Скопировать таблицу в буфер обмена"
+
+#: modules/graph/graph_peaks.c:625
+msgid "Save Peak Parameters"
+msgstr "Сохранить параметры пиков"
 
 #: modules/layer/axis.c:143
 msgid "Layer allowing selection of horizontal or vertical lines."
@@ -7897,8 +7946,8 @@ msgstr ""
 "изображения с реальной."
 
 #: modules/process/correct_affine.c:247
-msgid "/_Correct Data/_Affine Distortion..."
-msgstr "/Исправить _данные/_Аффинное _искажение..."
+msgid "/_Distortion/_Affine..."
+msgstr "/_Искажение/_Аффинное..."
 
 #: modules/process/correct_affine.c:251
 msgid "Correct affine distortion"
@@ -8169,20 +8218,6 @@ msgstr "Добавить к _графику:"
 msgid "New graph"
 msgstr "Новый график"
 
-#: modules/process/curvature.c:774 modules/process/grain_stat.c:345
-#: modules/process/measure_lattice.c:402 modules/process/polylevel.c:608
-#: modules/tools/distance.c:264 modules/tools/roughness.c:822
-#: modules/tools/stats.c:451
-msgid "Save table to a file"
-msgstr "Сохранить таблицу в файл"
-
-#: modules/process/curvature.c:779 modules/process/grain_stat.c:350
-#: modules/process/measure_lattice.c:406 modules/process/polylevel.c:618
-#: modules/tools/distance.c:269 modules/tools/roughness.c:827
-#: modules/tools/stats.c:456
-msgid "Copy table to clipboard"
-msgstr "Скопировать таблицу в буфер обмена"
-
 #: modules/process/curvature.c:952
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
@@ -8445,8 +8480,8 @@ msgstr ""
 "сканирования."
 
 #: modules/process/drift.c:189
-msgid "/_Correct Data/Compensate _Drift..."
-msgstr "/Исправить _данные/Компенсировать _дрейф..."
+msgid "/_Distortion/Compensate _Drift..."
+msgstr "/_Искажение/Компенсировать _дрейф..."
 
 #: modules/process/drift.c:193
 msgid "Evaluate/correct thermal drift in fast scan axis"
@@ -8833,45 +8868,49 @@ msgid "Extracts coordinates and tangents along a path selection."
 msgstr "Извлекает координаты и производные вдоль выбранного пути."
 
 #: modules/process/extract_path.c:102
-msgid "/_Correct Data/Extract _Path Selection..."
-msgstr "/Исправить _данные/Извлечь выбранный _путь..."
+msgid "/_Distortion/Extract _Path Selection..."
+msgstr "/_Искажение/Извлечь выбранный _путь..."
 
 #: modules/process/extract_path.c:106
 msgid "Extract path selection data"
 msgstr "Извлекает данные выбранного пути"
 
-#: modules/process/extract_path.c:154
+#: modules/process/extract_path.c:160
 msgid "Extract Path Selection"
 msgstr "Извлечь выбранный путь"
 
-#: modules/process/extract_path.c:171
+#: modules/process/extract_path.c:177
 msgid "Number of path points:"
 msgstr "Количество точек пути:"
 
-#: modules/process/extract_path.c:179
+#: modules/process/extract_path.c:184
 msgid "There is no path selection."
 msgstr "Выбранный путь отсутствует."
 
-#: modules/process/extract_path.c:185 modules/volume/volume_extract.c:390
+#: modules/process/extract_path.c:190 modules/volume/volume_extract.c:390
 msgid "X position"
 msgstr "Положение по X"
 
-#: modules/process/extract_path.c:189 modules/volume/volume_extract.c:397
+#: modules/process/extract_path.c:194 modules/volume/volume_extract.c:397
 msgid "Y position"
 msgstr "Положение по Y"
 
-#: modules/process/extract_path.c:193
+#: modules/process/extract_path.c:198
 msgid "X tangent"
 msgstr "Касательная по X"
 
-#: modules/process/extract_path.c:197
+#: modules/process/extract_path.c:202
 msgid "Y tangent"
 msgstr "Касательная по Y"
 
-#: modules/process/extract_path.c:369 modules/process/extract_path.c:378
+#: modules/process/extract_path.c:393 modules/process/extract_path.c:405
 #: modules/process/pat_synth.c:1436 modules/tools/distance.c:146
 msgid "Distance"
 msgstr "Расстояние"
+
+#: modules/process/extract_path.c:404
+msgid "Tangent"
+msgstr "Касательная"
 
 #: modules/process/facet-level.c:64
 msgid ""
@@ -11707,8 +11746,8 @@ msgid "Apllies polynomial distortion in the horizontal plane."
 msgstr "Накладывает полиномиальное искривление в горизонтальной плоскости."
 
 #: modules/process/polydistort.c:152
-msgid "/_Correct Data/Pol_ynomial Distortion..."
-msgstr "/Исправить _данные/Полиномиальное _искривление..."
+msgid "/_Distortion/Pol_ynomial..."
+msgstr "/_Искажение/Полиномиальное _искривление..."
 
 #: modules/process/polydistort.c:156
 msgid "Apllies polynomial distortion in the horizontal plane"
@@ -11944,19 +11983,19 @@ msgstr "Масштабированные данные"
 msgid "verb|Scale"
 msgstr "Масштабировать"
 
-#: modules/process/scale.c:215
+#: modules/process/scale.c:216
 msgid "Scale by _ratio:"
 msgstr "Масштабировать на _коэффициент:"
 
-#: modules/process/scale.c:223
+#: modules/process/scale.c:224
 msgid "_proportional"
 msgstr "_пропорционально"
 
-#: modules/process/scale.c:234
+#: modules/process/scale.c:235
 msgid "New _width:"
 msgstr "Новая _ширина:"
 
-#: modules/process/scale.c:242
+#: modules/process/scale.c:243
 msgid "New _height:"
 msgstr "Новая _высота:"
 
@@ -12149,8 +12188,8 @@ msgid "Extracts a straightened part of image along a curve."
 msgstr "Извлекает выпрямленную часть изображения вдоль кривой"
 
 #: modules/process/straighten_path.c:145
-msgid "/_Correct Data/Straighten _Path..."
-msgstr "/Исправить _данные/Выпрямить _путь..."
+msgid "/_Distortion/Straighten _Path..."
+msgstr "/_Искажение/Выпрямить _путь..."
 
 #: modules/process/straighten_path.c:149
 msgid "Straighten along a path"
@@ -14282,6 +14321,24 @@ msgid ""
 msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
+
+#~ msgid "/_Cut Graph..."
+#~ msgstr "/_Обрезать график..."
+
+#~ msgid "/_Correct Data/_Affine Distortion..."
+#~ msgstr "/Исправить _данные/_Аффинное _искажение..."
+
+#~ msgid "/_Correct Data/Compensate _Drift..."
+#~ msgstr "/Исправить _данные/Компенсировать _дрейф..."
+
+#~ msgid "/_Correct Data/Extract _Path Selection..."
+#~ msgstr "/Исправить _данные/Извлечь выбранный _путь..."
+
+#~ msgid "/_Correct Data/Pol_ynomial Distortion..."
+#~ msgstr "/Исправить _данные/Полиномиальное _искривление..."
+
+#~ msgid "/_Correct Data/Straighten _Path..."
+#~ msgstr "/Исправить _данные/Выпрямить _путь..."
 
 #~ msgid "More..."
 #~ msgstr "Дополнительно..."
