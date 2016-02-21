@@ -138,6 +138,10 @@ static void        gwy_layer_path_get_property         (GObject*object,
 static void        gwy_layer_path_draw                 (GwyVectorLayer *layer,
                                                         GdkDrawable *drawable,
                                                         GwyRenderingTarget target);
+static void        gwy_layer_path_draw_single_point    (GwyVectorLayer *layer,
+                                                        GdkDrawable *drawable,
+                                                        GwyDataView *data_view,
+                                                        GwyRenderingTarget target);
 static gboolean    gwy_layer_path_motion_notify        (GwyVectorLayer *layer,
                                                         GdkEventMotion *event);
 static gboolean    gwy_layer_path_button_pressed       (GwyVectorLayer *layer,
@@ -544,6 +548,7 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GwyLayerPath *layer_path;
     GwySelection *selection = layer->selection;
+    GwySelectionPath *selpath = GWY_SELECTION_PATH(selection);
     GwySpline *spline;
     gdouble xy[OBJECT_SIZE];
     GwyTriangulationPointXY *screenxy;
@@ -563,6 +568,14 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     layer_path = GWY_LAYER_PATH(layer);
     thickness = layer_path->thickness;
     n = selection->n;
+    if (!n)
+        return;
+
+    if (n == 1) {
+        /* If there is just a single point draw it as a cross. */
+        gwy_layer_path_draw_single_point(layer, drawable, data_view, target);
+        return;
+    }
 
     /* Scale coordinates to screen/image pixels. */
     gdk_drawable_get_size(drawable, &width, &height);
@@ -595,8 +608,14 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     spline = layer_path->spline;
     gwy_spline_set_points(spline, screenxy, n);
 
-    gwy_spline_set_closed(spline, GWY_SELECTION_PATH(selection)->closed);
-    gwy_spline_set_slackness(spline, GWY_SELECTION_PATH(selection)->slackness);
+    gwy_spline_set_closed(spline, selpath->closed);
+    gwy_spline_set_slackness(spline, selpath->slackness);
+
+    if (n == 2 && selpath->closed) {
+        /* Do not draw the back line for closed two-point spline because it
+         * undraws the first line. */
+        gwy_spline_set_closed(spline, FALSE);
+    }
 
     segmentxy = gwy_spline_sample_naturally(spline, &nseg);
 
@@ -634,6 +653,55 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     }
 
     g_free(screenxy);
+}
+
+static void
+gwy_layer_path_draw_single_point(GwyVectorLayer *layer,
+                                 GdkDrawable *drawable,
+                                 GwyDataView *data_view,
+                                 GwyRenderingTarget target)
+{
+    gint xc, yc, xmin, xmax, ymin, ymax, size;
+    gint dwidth, dheight, xsize, ysize;
+    gdouble xreal, yreal, xm, ym;
+    gdouble xy[2];
+
+    g_return_if_fail(gwy_selection_get_data(layer->selection, NULL) == 1);
+    gwy_selection_get_object(layer->selection, 0, xy);
+
+    gdk_drawable_get_size(drawable, &dwidth, &dheight);
+    gwy_data_view_get_pixel_data_sizes(data_view, &xsize, &ysize);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xc, &yc);
+        xmin = xc - CROSS_SIZE + 1;
+        xmax = xc + CROSS_SIZE - 1;
+        ymin = yc - CROSS_SIZE + 1;
+        ymax = yc + CROSS_SIZE - 1;
+        gwy_data_view_coords_xy_clamp(data_view, &xmin, &ymin);
+        gwy_data_view_coords_xy_clamp(data_view, &xmax, &ymax);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        xm = (gdouble)dwidth/xsize;
+        ym = (gdouble)dheight/ysize;
+        size = GWY_ROUND(MAX(sqrt(xm*ym)*(CROSS_SIZE - 1), 1.0));
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+        xc = floor(xy[0]*dwidth/xreal);
+        yc = floor(xy[1]*dheight/yreal);
+
+        xmin = xc - size;
+        xmax = xc + size;
+        ymin = yc - size;
+        ymax = yc + size;
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+    gdk_draw_line(drawable, layer->gc, xmin, yc, xmax, yc);
+    gdk_draw_line(drawable, layer->gc, xc, ymin, xc, ymax);
 }
 
 static gboolean
