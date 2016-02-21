@@ -277,6 +277,7 @@ straighten_dialogue(StraightenArgs *args,
                             GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
     row++;
 
+    args->thickness = MIN(args->thickness, maxthickness);
     controls.thickness = gtk_adjustment_new(args->thickness, 3.0, maxthickness,
                                             1.0, 10.0, 0.0);
     gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Thickness:"), "px",
@@ -329,6 +330,7 @@ straighten_dialogue(StraightenArgs *args,
     g_snprintf(selkey, sizeof(selkey), "/%d/select/path", id);
     if (gwy_container_gis_object_by_name(data, selkey, &selection)
         && gwy_selection_get_data(GWY_SELECTION(selection), NULL) > 1) {
+        gwy_debug("init selection from container");
         gwy_serializable_clone(selection, G_OBJECT(controls.selection));
         g_object_get(selection,
                      "slackness", &args->slackness,
@@ -339,8 +341,10 @@ straighten_dialogue(StraightenArgs *args,
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.closed),
                                      args->closed);
     }
-    else
+    else {
+        gwy_debug("init selection afresh");
         init_selection(controls.selection, dfield, args);
+    }
 
     controls.orig_selection = gwy_selection_duplicate(controls.selection);
 
