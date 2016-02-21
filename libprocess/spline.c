@@ -201,6 +201,8 @@ gwy_spline_get_npoints(GwySpline *spline)
  *
  * Gets the coordinates of spline curve points.
  *
+ * If the spline is empty (there are no points) the function returns %NULL.
+ *
  * Returns: Coordinates of the XY points defining the curve.  The returned
  *          array is owned by @spline, must not be modified and is only
  *          guaranteed to exist so long as the spline is not modified nor
@@ -211,6 +213,8 @@ gwy_spline_get_npoints(GwySpline *spline)
 const PointXY*
 gwy_spline_get_points(GwySpline *spline)
 {
+    if (!spline->points->len)
+        return NULL;
     return &point_index(spline->points, 0);
 }
 
@@ -221,6 +225,8 @@ gwy_spline_get_points(GwySpline *spline)
  * Gets tangents to the curve in its defining points.
  *
  * See gwy_spline_sample_uniformly() for discussion.
+ *
+ * If the spline is empty (there are no points) the function returns %NULL.
  *
  * Returns: Tangents to the spline in the XY points defining the curve.  The
  *          returned array is owned by @spline, must not be modified and is
@@ -233,6 +239,8 @@ const PointXY*
 gwy_spline_get_tangents(GwySpline *spline)
 {
     gwy_spline_length(spline);
+    if (!spline->points->len)
+        return NULL;
     return &point_index(spline->tangents, 0);
 }
 
