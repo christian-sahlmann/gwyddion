@@ -75,11 +75,6 @@
 #define SIZE_HEADER "Image header size:"
 #define HEADER_END "[Header end]\r\n"
 
-typedef enum {
-    WSXM_DATA_INT16,
-    WSXM_DATA_DOUBLE
-} WSxMDataType;
-
 static gboolean      module_register       (void);
 static gint          wsxmfile_detect       (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
@@ -93,7 +88,7 @@ static gboolean      wsxmfile_export_double(GwyContainer *data,
 static GwyDataField* read_data_field       (const guchar *buffer,
                                             gint xres,
                                             gint yres,
-                                            WSxMDataType type);
+                                            GwyRawDataType type);
 static void          process_metadata      (GHashTable *wsxmmeta,
                                             GwyContainer *container);
 
@@ -199,7 +194,7 @@ wsxmfile_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     GwyTextHeaderParser parser;
     GHashTable *meta = NULL;
-    WSxMDataType type = WSXM_DATA_INT16;
+    GwyRawDataType type = GWY_RAW_DATA_SINT16;
     guint header_size;
     gchar *p, *header;
     gboolean ok = TRUE;
@@ -268,11 +263,15 @@ wsxmfile_load(const gchar *filename,
     if (ok
         && (p = g_hash_table_lookup(meta, "General Info::Image Data Type"))) {
         if (gwy_strequal(p, "double"))
-            type = WSXM_DATA_DOUBLE;
-        else
+            type = GWY_RAW_DATA_DOUBLE;
+        if (gwy_strequal(p, "float"))
+            type = GWY_RAW_DATA_FLOAT;
+        else {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Unknown data type `%s'."), p);
+            ok = FALSE;
+        }
     }
 
     if (ok)
@@ -394,34 +393,15 @@ static GwyDataField*
 read_data_field(const guchar *buffer,
                 gint xres,
                 gint yres,
-                WSxMDataType type)
+                GwyRawDataType type)
 {
     GwyDataField *dfield;
-    gdouble *data;
-    guint i;
 
     dfield = gwy_data_field_new(xres, yres, 1e-6, 1e-6, FALSE);
-    data = gwy_data_field_get_data(dfield);
-    switch (type) {
-        case WSXM_DATA_INT16: {
-            const gint16 *p = (const gint16*)buffer;
-
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_LE(p[i]);
-        }
-        break;
-
-        case WSXM_DATA_DOUBLE: {
-            for (i = 0; i < xres*yres; i++)
-                data[i] = gwy_get_gdouble_le(&buffer);
-        }
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
+    /* The conversion is probably wrong for the SINT16 type. */
+    gwy_convert_raw_data(buffer, xres*yres, 1,
+                         type, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield), 1.0, 0.0);
     gwy_data_field_invert(dfield, TRUE, TRUE, FALSE);
 
     return dfield;
