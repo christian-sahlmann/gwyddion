@@ -935,46 +935,50 @@ gwy_caldata_inside(GwyCalData *caldata,
     return FALSE;
 }
 
+/**
+ * gwy_caldata_save_data:
+ * @caldata: Calibration data.
+ * @filename: Name of file to save the data to.
+ *
+ * Saves calibration data to Gwyddion's caldata resource directory.
+ *
+ * Since: 2.23
+ **/
 void
 gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
 {
     GByteArray *barray = NULL;
-    gchar *file;
+    gchar *fnm;
 
-    if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
-        g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
+    if (strchr(filename, '/')) {
+        g_warning("Caldata filename %s contains directory components.",
+                  filename);
+        return;
     }
 
-    //printf("saved to %s\n", filename);
-    file = g_build_filename(gwy_get_user_dir(), "caldata", filename, NULL);
+    fnm = g_build_filename(gwy_get_user_dir(), "caldata", NULL);
+    if (!g_file_test(fnm, G_FILE_TEST_IS_DIR)) {
+        g_mkdir(fnm, 0700);
+        if (!g_file_test(fnm, G_FILE_TEST_IS_DIR)) {
+            g_warning("Cannot create directory %s.", fnm);
+            g_free(fnm);
+            return;
+        }
+    }
+    g_free(fnm);
+
     barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
     if (!barray) {
-        g_warning("Cannot serialize caldata\n");
+        g_warning("Cannot serialize caldata");
+        return;
     }
-    else if (!g_file_set_contents(file, barray->data, sizeof(guint8)*barray->len, NULL))
-    {
-        g_warning("Cannot save caldata\n");
-    }
+
+    fnm = g_build_filename(gwy_get_user_dir(), "caldata", filename, NULL);
+    if (!g_file_set_contents(fnm, barray->data, barray->len, NULL))
+        g_warning("Cannot save caldata");
+    g_free(fnm);
+    g_byte_array_free(barray, TRUE);
 }
-
-
-/*
-#include <stdio.h>
-void
-gwy_caldata_debug(GwyCalData *caldata, gchar *message)
-{
-    gint i;
-    printf("%s: %d calibration data entries\n", message, caldata->ndata);
-
-    for (i=0; i<caldata->ndata; i++)
-    {
-         printf("%d   (%g %g %g)  (%g %g %g)  (%g %g %g)\n", i,
-                caldata->x[i], caldata->y[i], caldata->z[i],
-                caldata->xerr[i], caldata->yerr[i], caldata->zerr[i],
-                caldata->xunc[i], caldata->yunc[i], caldata->zunc[i]);
-    }
-}
-*/
 
 /************************** Documentation ****************************/
 
@@ -993,6 +997,5 @@ gwy_caldata_debug(GwyCalData *caldata, gchar *message)
  * for whole system up to complex determination of local  SPM errors and
  * uncertainties.
  **/
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

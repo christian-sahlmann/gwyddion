@@ -113,9 +113,6 @@ gboolean    gwy_caldata_inside             (GwyCalData *caldata,
                                             gdouble x,
                                             gdouble y,
                                             gdouble z);
-//void
-//gwy_caldata_debug(GwyCalData *caldata, gchar *message);
-
 
 G_END_DECLS
 
