@@ -324,13 +324,13 @@ gwy_brick_serialize(GObject *obj,
 
     brick = GWY_BRICK(obj);
     if (!brick->si_unit_x)
-        brick->si_unit_x = gwy_si_unit_new("");
+        brick->si_unit_x = gwy_si_unit_new(NULL);
     if (!brick->si_unit_y)
-        brick->si_unit_y = gwy_si_unit_new("");
+        brick->si_unit_y = gwy_si_unit_new(NULL);
     if (!brick->si_unit_z)
-        brick->si_unit_z = gwy_si_unit_new("");
+        brick->si_unit_z = gwy_si_unit_new(NULL);
     if (!brick->si_unit_w)
-        brick->si_unit_w = gwy_si_unit_new("");
+        brick->si_unit_w = gwy_si_unit_new(NULL);
     pxoff = brick->xoff ? &brick->xoff : NULL;
     pyoff = brick->yoff ? &brick->yoff : NULL;
     pzoff = brick->zoff ? &brick->zoff : NULL;
@@ -391,13 +391,13 @@ gwy_brick_get_size(GObject *obj)
     brick = GWY_BRICK(obj);
 
     if (!brick->si_unit_x)
-        brick->si_unit_x = gwy_si_unit_new("");
+        brick->si_unit_x = gwy_si_unit_new(NULL);
     if (!brick->si_unit_y)
-        brick->si_unit_y = gwy_si_unit_new("");
+        brick->si_unit_y = gwy_si_unit_new(NULL);
     if (!brick->si_unit_z)
-        brick->si_unit_z = gwy_si_unit_new("");
+        brick->si_unit_z = gwy_si_unit_new(NULL);
     if (!brick->si_unit_w)
-        brick->si_unit_w = gwy_si_unit_new("");
+        brick->si_unit_w = gwy_si_unit_new(NULL);
 
     datasize = brick->xres * brick->yres * brick->zres;
     priv = (GwyBrickPrivate *)brick->priv;
@@ -1128,7 +1128,7 @@ gwy_brick_get_si_unit_x(GwyBrick *brick)
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     if (!brick->si_unit_x)
-        brick->si_unit_x = gwy_si_unit_new("");
+        brick->si_unit_x = gwy_si_unit_new(NULL);
 
     return brick->si_unit_x;
 }
@@ -1150,7 +1150,7 @@ gwy_brick_get_si_unit_y(GwyBrick *brick)
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     if (!brick->si_unit_y)
-        brick->si_unit_y = gwy_si_unit_new("");
+        brick->si_unit_y = gwy_si_unit_new(NULL);
 
     return brick->si_unit_y;
 }
@@ -1172,7 +1172,7 @@ gwy_brick_get_si_unit_z(GwyBrick *brick)
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     if (!brick->si_unit_z)
-        brick->si_unit_z = gwy_si_unit_new("");
+        brick->si_unit_z = gwy_si_unit_new(NULL);
 
     return brick->si_unit_z;
 }
@@ -1194,7 +1194,7 @@ gwy_brick_get_si_unit_w(GwyBrick *brick)
     g_return_val_if_fail(GWY_IS_BRICK(brick), NULL);
 
     if (!brick->si_unit_w)
-        brick->si_unit_w = gwy_si_unit_new("");
+        brick->si_unit_w = gwy_si_unit_new(NULL);
 
     return brick->si_unit_w;
 }

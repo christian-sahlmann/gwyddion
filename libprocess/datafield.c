@@ -261,9 +261,9 @@ gwy_data_field_serialize(GObject *obj,
 
     data_field = GWY_DATA_FIELD(obj);
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("");
+        data_field->si_unit_xy = gwy_si_unit_new(NULL);
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("");
+        data_field->si_unit_z = gwy_si_unit_new(NULL);
     datasize = data_field->xres*data_field->yres;
     pxoff = data_field->xoff ? &data_field->xoff : NULL;
     pyoff = data_field->yoff ? &data_field->yoff : NULL;
@@ -296,9 +296,9 @@ gwy_data_field_get_size(GObject *obj)
 
     data_field = GWY_DATA_FIELD(obj);
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("");
+        data_field->si_unit_xy = gwy_si_unit_new(NULL);
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("");
+        data_field->si_unit_z = gwy_si_unit_new(NULL);
     datasize = data_field->xres*data_field->yres;
     {
         GwySerializeSpec spec[] = {
@@ -1067,7 +1067,7 @@ gwy_data_field_get_si_unit_xy(GwyDataField *data_field)
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
 
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("");
+        data_field->si_unit_xy = gwy_si_unit_new(NULL);
 
     return data_field->si_unit_xy;
 }
@@ -1087,7 +1087,7 @@ gwy_data_field_get_si_unit_z(GwyDataField *data_field)
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
 
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("");
+        data_field->si_unit_z = gwy_si_unit_new(NULL);
 
     return data_field->si_unit_z;
 }

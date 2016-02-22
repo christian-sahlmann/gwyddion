@@ -229,9 +229,9 @@ gwy_data_line_serialize(GObject *obj,
 
     data_line = GWY_DATA_LINE(obj);
     if (!data_line->si_unit_x)
-        data_line->si_unit_x = gwy_si_unit_new("");
+        data_line->si_unit_x = gwy_si_unit_new(NULL);
     if (!data_line->si_unit_y)
-        data_line->si_unit_y = gwy_si_unit_new("");
+        data_line->si_unit_y = gwy_si_unit_new(NULL);
     poff = data_line->off ? &data_line->off : NULL;
     {
         GwySerializeSpec spec[] = {
@@ -259,9 +259,9 @@ gwy_data_line_get_size(GObject *obj)
 
     data_line = GWY_DATA_LINE(obj);
     if (!data_line->si_unit_x)
-        data_line->si_unit_x = gwy_si_unit_new("");
+        data_line->si_unit_x = gwy_si_unit_new(NULL);
     if (!data_line->si_unit_y)
-        data_line->si_unit_y = gwy_si_unit_new("");
+        data_line->si_unit_y = gwy_si_unit_new(NULL);
     {
         GwySerializeSpec spec[] = {
             { 'i', "res", &data_line->res, NULL, },
@@ -714,7 +714,7 @@ gwy_data_line_get_si_unit_x(GwyDataLine *data_line)
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
 
     if (!data_line->si_unit_x)
-        data_line->si_unit_x = gwy_si_unit_new("");
+        data_line->si_unit_x = gwy_si_unit_new(NULL);
 
     return data_line->si_unit_x;
 }
@@ -734,7 +734,7 @@ gwy_data_line_get_si_unit_y(GwyDataLine *data_line)
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
 
     if (!data_line->si_unit_y)
-        data_line->si_unit_y = gwy_si_unit_new("");
+        data_line->si_unit_y = gwy_si_unit_new(NULL);
 
     return data_line->si_unit_y;
 }

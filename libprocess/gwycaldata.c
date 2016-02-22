@@ -315,11 +315,11 @@ gwy_caldata_serialize(GObject *obj,
 
     caldata = GWY_CALDATA(obj);
     if (!caldata->si_unit_x)
-        caldata->si_unit_x = gwy_si_unit_new("");
+        caldata->si_unit_x = gwy_si_unit_new(NULL);
     if (!caldata->si_unit_y)
-        caldata->si_unit_y = gwy_si_unit_new("");
+        caldata->si_unit_y = gwy_si_unit_new(NULL);
     if (!caldata->si_unit_z)
-        caldata->si_unit_z = gwy_si_unit_new("");
+        caldata->si_unit_z = gwy_si_unit_new(NULL);
     {
         GwySerializeSpec spec[] = {
             { 'i', "ndata", &caldata->ndata, NULL, },
@@ -359,11 +359,11 @@ gwy_caldata_get_size(GObject *obj)
 
     caldata = GWY_CALDATA(obj);
     if (!caldata->si_unit_x)
-        caldata->si_unit_x = gwy_si_unit_new("");
+        caldata->si_unit_x = gwy_si_unit_new(NULL);
     if (!caldata->si_unit_y)
-        caldata->si_unit_y = gwy_si_unit_new("");
+        caldata->si_unit_y = gwy_si_unit_new(NULL);
     if (!caldata->si_unit_z)
-        caldata->si_unit_z = gwy_si_unit_new("");
+        caldata->si_unit_z = gwy_si_unit_new(NULL);
     {
         GwySerializeSpec spec[] = {
             { 'i', "ndata", &caldata->ndata, NULL, },
@@ -527,7 +527,7 @@ gwy_caldata_get_si_unit_x(GwyCalData *caldata)
     g_return_val_if_fail(GWY_IS_CALDATA(caldata), NULL);
 
     if (!caldata->si_unit_x)
-        caldata->si_unit_x = gwy_si_unit_new("");
+        caldata->si_unit_x = gwy_si_unit_new(NULL);
 
     return caldata->si_unit_x;
 }
@@ -549,7 +549,7 @@ gwy_caldata_get_si_unit_y(GwyCalData *caldata)
     g_return_val_if_fail(GWY_IS_CALDATA(caldata), NULL);
 
     if (!caldata->si_unit_y)
-        caldata->si_unit_y = gwy_si_unit_new("");
+        caldata->si_unit_y = gwy_si_unit_new(NULL);
 
     return caldata->si_unit_y;
 }
@@ -572,7 +572,7 @@ gwy_caldata_get_si_unit_z(GwyCalData *caldata)
     g_return_val_if_fail(GWY_IS_CALDATA(caldata), NULL);
 
     if (!caldata->si_unit_z)
-        caldata->si_unit_z = gwy_si_unit_new("");
+        caldata->si_unit_z = gwy_si_unit_new(NULL);
 
     return caldata->si_unit_z;
 }
