@@ -289,9 +289,22 @@ copy_info(GwySurface *dest,
 {
     Surface *dpriv = dest->priv, *spriv = src->priv;
 
-    // TODO
-    //_gwy_assign_unit(&dpriv->si_unit_xy, spriv->si_unit_xy);
-    //_gwy_assign_unit(&dpriv->si_unit_z, spriv->si_unit_z);
+    /* SI Units can be NULL */
+    if (spriv->si_unit_xy && dpriv->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(spriv->si_unit_xy),
+                               G_OBJECT(dpriv->si_unit_xy));
+    else if (spriv->si_unit_xy && !dpriv->si_unit_xy)
+        dpriv->si_unit_xy = gwy_si_unit_duplicate(spriv->si_unit_xy);
+    else if (!spriv->si_unit_xy && dpriv->si_unit_xy)
+        gwy_object_unref(dpriv->si_unit_xy);
+
+    if (spriv->si_unit_z && dpriv->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(spriv->si_unit_z),
+                               G_OBJECT(dpriv->si_unit_z));
+    else if (spriv->si_unit_z && !dpriv->si_unit_z)
+        dpriv->si_unit_z = gwy_si_unit_duplicate(spriv->si_unit_z);
+    else if (!spriv->si_unit_z && dpriv->si_unit_z)
+        gwy_object_unref(dpriv->si_unit_z);
 
     dpriv->cached_ranges = spriv->cached_ranges;
     dpriv->min = spriv->min;
@@ -469,9 +482,22 @@ copy_field_to_surface(GwyDataField *field,
         }
     }
 
-    // TODO
-    //_gwy_assign_unit(&surface->priv->si_unit_xy, field->priv->xunit);
-    //_gwy_assign_unit(&surface->priv->si_unit_z, field->priv->si_unit_z);
+    /* SI Units can be NULL */
+    if (field->si_unit_xy && priv->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(field->si_unit_xy),
+                               G_OBJECT(priv->si_unit_xy));
+    else if (field->si_unit_xy && !priv->si_unit_xy)
+        priv->si_unit_xy = gwy_si_unit_duplicate(field->si_unit_xy);
+    else if (!field->si_unit_xy && priv->si_unit_xy)
+        gwy_object_unref(priv->si_unit_xy);
+
+    if (field->si_unit_z && priv->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(field->si_unit_z),
+                               G_OBJECT(priv->si_unit_z));
+    else if (field->si_unit_z && !priv->si_unit_z)
+        priv->si_unit_z = gwy_si_unit_duplicate(field->si_unit_z);
+    else if (!field->si_unit_z && priv->si_unit_z)
+        gwy_object_unref(priv->si_unit_z);
 
     gwy_surface_invalidate(surface);
     priv->cached_ranges = TRUE;
@@ -806,8 +832,7 @@ gwy_surface_set(GwySurface *surface,
 /**
  * gwy_surface_get_data_full:
  * @surface: A surface.
- * @n: (out):
- *     Location to store the count of extracted data points.
+ * @n: Location to store the count of extracted data points.
  *
  * Provides the values of an entire surface as a flat array.
  *
@@ -816,8 +841,7 @@ gwy_surface_set(GwySurface *surface,
  *
  * Note that this function returns a pointer directly to @surface's data.
  *
- * Returns: (array length=n) (transfer none):
- *          The array containing the surface points.
+ * Returns: The array containing the surface points.
  *
  * Since: 2.45
  **/
@@ -833,9 +857,8 @@ gwy_surface_get_data_full(GwySurface *surface,
 /**
  * gwy_surface_set_data_full:
  * @surface: A surface.
- * @points: (array length=n):
- *          Data points to copy to the surface.  They replace whatever
- *          points are in @surface now.
+ * @points: Data points to copy to the surface.  They replace whatever points
+ *          are in @surface now.
  * @n: The number of points in @data.
  *
  * Puts back values from a flat array to an entire data surface.
@@ -1043,8 +1066,7 @@ ensure_checksum(GwySurface *surface)
 /**
  * GwySurface:
  * @n: Number of points.
- * @data: (skip):
- *        Surface data.  See the introductory section for details.
+ * @data: Surface data.  See the introductory section for details.
  *
  * Object representing surface data.
  *
