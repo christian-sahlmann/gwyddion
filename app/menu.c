@@ -62,8 +62,6 @@ static GQuark last_name_quark   = 0;
 
 static GtkWidget           *recent_files_menu = NULL;
 static GtkWidget           *process_menu      = NULL;
-static GtkWidget           *graph_menu        = NULL;
-static GtkWidget           *volume_menu       = NULL;
 static GtkTooltips         *app_tooltips      = NULL;
 static GwySensitivityGroup *app_sensgroup     = NULL;
 
@@ -604,8 +602,6 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
                                           accel_group,
                                           G_CALLBACK(gwy_app_run_graph_func),
                                           gwy_graph_func_get_sensitivity_mask);
-    if (!graph_menu)
-        graph_menu = menu;
 
     return menu;
 }
@@ -629,7 +625,7 @@ gwy_app_menu_add_volume_func(const gchar *name,
  * modules, therefore module registration has to be performed first for this
  * function to make sense.
  *
- * Returns: A newly ceated data processing menu (a #GtkMenu).
+ * Returns: A newly ceated volume data processing menu (a #GtkMenu).
  *
  * Since: 2.32
  **/
@@ -649,7 +645,49 @@ gwy_app_build_volume_menu(GtkAccelGroup *accel_group)
                                           accel_group,
                                           G_CALLBACK(gwy_app_run_volume_func),
                                           gwy_volume_func_get_sensitivity_mask);
-    volume_menu = menu;
+
+    return menu;
+}
+
+static void
+gwy_app_menu_add_xyz_func(const gchar *name,
+                          GNode *root)
+{
+    gwy_app_menu_add_node(root, name,
+                          gwy_xyz_func_get_menu_path(name),
+                          gwy_xyz_func_get_stock_id(name));
+}
+
+/**
+ * gwy_app_build_xyz_menu:
+ * @accel_group: Acceleration group to be associated with the menu.
+ *
+ * Constructs the application <guimenu>XYZ Data</guimenu> menu.
+ *
+ * The menu is created from XYZ data processing functions registered by
+ * modules, therefore module registration has to be performed first for this
+ * function to make sense.
+ *
+ * Returns: A newly ceated XYZ data processing menu (a #GtkMenu).
+ *
+ * Since: 2.45
+ **/
+GtkWidget*
+gwy_app_build_xyz_menu(GtkAccelGroup *accel_group)
+{
+    MenuNodeData *data;
+    GtkWidget *menu;
+    GNode *root;
+
+    data = g_new0(MenuNodeData, 1);
+    data->path = g_strdup("");
+    data->item_translated = g_strdup(_("_XYZ Data"));
+    root = g_node_new(data);
+    gwy_xyz_func_foreach((GFunc)&gwy_app_menu_add_xyz_func, root);
+    menu = gwy_app_build_module_func_menu(root, "<xyz>/XYZ Data",
+                                          accel_group,
+                                          G_CALLBACK(gwy_app_run_xyz_func),
+                                          gwy_xyz_func_get_sensitivity_mask);
 
     return menu;
 }
@@ -905,11 +943,64 @@ gwy_app_run_volume_func_in_mode(const gchar *name,
                      || !(gwy_volume_func_get_sensitivity_mask(name)
                           & GWY_MENU_FLAG_DATA));
     gwy_volume_func_run(name, data, run);
-    /*
-    gwy_app_update_last_volume_func(name);
-    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_LAST_PROC,
-                                  GWY_MENU_FLAG_LAST_PROC);
-                                  */
+}
+
+/**
+ * gwy_app_run_xyz_func:
+ * @name: A XYZ data processing function name.
+ *
+ * Runs a XYZ data processing function on the current data.
+ *
+ * From the run modes function @name supports, the most interactive one is
+ * selected.
+ *
+ * Returns: The actually used mode (nonzero), or 0 on failure.
+ *
+ * Since: 2.45
+ **/
+GwyRunType
+gwy_app_run_xyz_func(const gchar *name)
+{
+    GwyRunType run_types[] = { GWY_RUN_INTERACTIVE, GWY_RUN_IMMEDIATE, };
+    GwyRunType available_run_modes;
+    gsize i;
+
+    gwy_debug("`%s'", name);
+    available_run_modes = gwy_xyz_func_get_run_types(name);
+    g_return_val_if_fail(available_run_modes, 0);
+    for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
+        if (run_types[i] & available_run_modes) {
+            gwy_app_run_xyz_func_in_mode(name, run_types[i]);
+            return run_types[i];
+        }
+    }
+    return 0;
+}
+
+/**
+ * gwy_app_run_xyz_func_in_mode:
+ * @name: A XYZ data processing function name.
+ * @run: A run mode.
+ *
+ * Runs a XYZ data processing function on current data in specified mode.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_app_run_xyz_func_in_mode(const gchar *name,
+                                GwyRunType run)
+{
+    GwyContainer *data;
+
+    gwy_debug("`%s'", name);
+    if (!(run & gwy_xyz_func_get_run_types(name)))
+        return;
+
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
+    g_return_if_fail(data
+                     || !(gwy_xyz_func_get_sensitivity_mask(name)
+                          & GWY_MENU_FLAG_DATA));
+    gwy_xyz_func_run(name, data, run);
 }
 
 static void

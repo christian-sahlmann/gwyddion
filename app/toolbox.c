@@ -60,7 +60,8 @@ typedef enum {
     GWY_APP_FUNC_TYPE_PROC,
     GWY_APP_FUNC_TYPE_GRAPH,
     GWY_APP_FUNC_TYPE_TOOL,
-    GWY_APP_FUNC_TYPE_VOLUME
+    GWY_APP_FUNC_TYPE_VOLUME,
+    GWY_APP_FUNC_TYPE_XYZ,
 } GwyAppFuncType;
 
 typedef struct {
@@ -314,6 +315,7 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
         { "proc",    GWY_APP_FUNC_TYPE_PROC,    },
         { "graph",   GWY_APP_FUNC_TYPE_GRAPH,   },
         { "volume",  GWY_APP_FUNC_TYPE_VOLUME,  },
+        { "xyz",     GWY_APP_FUNC_TYPE_XYZ,     },
         { "tool",    GWY_APP_FUNC_TYPE_TOOL,    },
     };
 
@@ -390,7 +392,7 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
         break;
 
         case GWY_APP_FUNC_TYPE_VOLUME:
-        if (!gwy_graph_func_exists(func)) {
+        if (!gwy_volume_func_exists(func)) {
             g_warning("Function volume::%s does not exist", func);
             return;
         }
@@ -398,6 +400,17 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
         action.tooltip = gwy_volume_func_get_tooltip(func);
         action.callback = G_CALLBACK(gwy_app_run_volume_func);
         action.sens = gwy_volume_func_get_sensitivity_mask(func);
+        break;
+
+        case GWY_APP_FUNC_TYPE_XYZ:
+        if (!gwy_xyz_func_exists(func)) {
+            g_warning("Function xyz::%s does not exist", func);
+            return;
+        }
+        action.stock_id = gwy_xyz_func_get_stock_id(func);
+        action.tooltip = gwy_xyz_func_get_tooltip(func);
+        action.callback = G_CALLBACK(gwy_app_run_xyz_func);
+        action.sens = gwy_xyz_func_get_sensitivity_mask(func);
         break;
 
         case GWY_APP_FUNC_TYPE_TOOL:
@@ -642,6 +655,9 @@ gwy_app_toolbox_create(void)
 
     menu = gwy_app_build_volume_menu(accel_group);
     toolbox_add_menubar(container, menu, _("_Volume Data"));
+
+    menu = gwy_app_build_xyz_menu(accel_group);
+    toolbox_add_menubar(container, menu, _("_XYZ Data"));
 
     toolbox_add_menubar(container,
                         gwy_app_menu_create_info_menu(accel_group), _("_Info"));

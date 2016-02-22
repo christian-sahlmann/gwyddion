@@ -42,7 +42,8 @@ typedef enum {
     GWY_MENU_FLAG_3D         = 1 << 8,
     GWY_MENU_FLAG_FILE       = 1 << 9,
     GWY_MENU_FLAG_VOLUME     = 1 << 10,
-    GWY_MENU_FLAG_MASK       = 0x3ff
+    GWY_MENU_FLAG_XYZ        = 1 << 11,
+    GWY_MENU_FLAG_MASK       = 0x7ffu
 } GwyMenuSensFlags;
 
 GtkWidget* gwy_app_build_process_menu       (GtkAccelGroup *accel_group);
@@ -58,6 +59,11 @@ GtkWidget* gwy_app_build_volume_menu        (GtkAccelGroup *accel_group);
 GwyRunType gwy_app_run_volume_func          (const gchar *name);
 void       gwy_app_run_volume_func_in_mode  (const gchar *name,
                                              GwyRunType run);
+
+GtkWidget* gwy_app_build_xyz_menu        (GtkAccelGroup *accel_group);
+GwyRunType gwy_app_run_xyz_func          (const gchar *name);
+void       gwy_app_run_xyz_func_in_mode  (const gchar *name,
+                                          GwyRunType run);
 
 void         gwy_app_menu_recent_files_update(GList *recent_files);
 GtkWidget*   gwy_app_menu_recent_files_get   (void);
