@@ -5934,8 +5934,8 @@ draw_sel_path(const ImgExportArgs *args,
     const GwyRGBA *colour = &args->sel_color;
     const GwyRGBA *outcolour = &args->sel_outline_color;
     gdouble slackness, q, px, py, vx, vy, len, xy[2];
-    GwyTriangulationPointXY *pts;
-    const GwyTriangulationPointXY *natpts, *tangents;
+    GwyXY *pts;
+    const GwyXY *natpts, *tangents;
     GwySpline *spline;
     gboolean closed;
     guint n, nn, i;
@@ -5952,7 +5952,7 @@ draw_sel_path(const ImgExportArgs *args,
      * for good spline sampline and the vector ones are too coarse.   Hence
      * we artificially refine them and cross fingers. */
     q = is_vector ? 8.0 : 1.0;
-    pts = g_new(GwyTriangulationPointXY, n);
+    pts = g_new(GwyXY, n);
     for (i = 0; i < n; i++) {
         gwy_selection_get_object(sel, i, xy);
         pts[i].x = q*qx*xy[0];

@@ -551,8 +551,8 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     GwySelectionPath *selpath = GWY_SELECTION_PATH(selection);
     GwySpline *spline;
     gdouble xy[OBJECT_SIZE];
-    GwyTriangulationPointXY *screenxy;
-    const GwyTriangulationPointXY *segmentxy;
+    GwyXY *screenxy;
+    const GwyXY *segmentxy;
     GdkPoint *ixy;
     gint width, height, xsize, ysize, thickness;
     gdouble xreal, yreal;
@@ -580,11 +580,11 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     /* Scale coordinates to screen/image pixels. */
     gdk_drawable_get_size(drawable, &width, &height);
     gwy_data_view_get_pixel_data_sizes(data_view, &xsize, &ysize);
-    screenxy = g_new(GwyTriangulationPointXY, n);
+    screenxy = g_new(GwyXY, n);
     gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
 
     for (i = 0; i < n; i++) {
-        GwyTriangulationPointXY *pt = screenxy + i;
+        GwyXY *pt = screenxy + i;
 
         gwy_selection_get_object(selection, i, xy);
         switch (target) {
@@ -629,11 +629,11 @@ gwy_layer_path_draw(GwyVectorLayer *layer,
     g_free(ixy);
 
     if (thickness > 1) {
-        const GwyTriangulationPointXY *tangents
+        const GwyXY *tangents
             = gwy_spline_get_tangents(spline);
 
         for (i = 0; i < n; i++) {
-            const GwyTriangulationPointXY *t = tangents + i;
+            const GwyXY *t = tangents + i;
             gint xl0, yl0, xl1, yl1;
             gdouble xd, yd;
 

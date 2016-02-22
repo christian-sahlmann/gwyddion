@@ -61,8 +61,6 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define EXTENSION ".gxyzf"
 
-#define PointXYZ GwyTriangulationPointXYZ
-
 typedef struct {
     gint xres;
     gint yres;
@@ -156,7 +154,7 @@ gxyzf_load(const gchar *filename,
     GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     guchar *p, *value, *buffer = NULL, *header = NULL, *datap;
-    PointXYZ *xyzpoints = NULL;
+    GwyXYZ *xyzpoints = NULL;
     gdouble *points = NULL;
     gsize size;
     GError *err = NULL;
@@ -229,7 +227,7 @@ gxyzf_load(const gchar *filename,
     }
 
     points = (gdouble*)datap;
-    xyzpoints = g_new(PointXYZ, npoints);
+    xyzpoints = g_new(GwyXYZ, npoints);
     for (i = 0; i < npoints; i++) {
         append_double(&xyzpoints[i].x, points[i*pointlen]);
         append_double(&xyzpoints[i].y, points[i*pointlen + 1]);

@@ -61,8 +61,6 @@
 #include "get.h"
 #include "err.h"
 
-#define PointXYZ GwyTriangulationPointXYZ
-
 #define EXTENSION ".dsc"
 #define DASHED_LINE "------------------------------------------"
 
@@ -141,7 +139,7 @@ static gboolean      gather_data_files         (const gchar *filename,
                                                 GArray *dscs,
                                                 GArray *data,
                                                 GError **error);
-static PointXYZ*     create_points_with_xy     (GArray *data,
+static GwyXYZ*     create_points_with_xy     (GArray *data,
                                                 guint nincluded);
 static void          create_data_field         (GwyContainer *container,
                                                 GwyContainer *meta,
@@ -149,10 +147,10 @@ static void          create_data_field         (GwyContainer *container,
                                                 const NMMXYZArgs *args,
                                                 GArray *dscs,
                                                 GArray *data,
-                                                PointXYZ *points,
+                                                GwyXYZ *points,
                                                 guint i,
                                                 gboolean plot_density);
-static void          find_data_range           (const PointXYZ *points,
+static void          find_data_range           (const GwyXYZ *points,
                                                 NMMXYZInfo *info);
 static void          read_data_file            (GArray *data,
                                                 const gchar *filename,
@@ -233,7 +231,7 @@ nmmxyz_load(const gchar *filename,
     GwyContainer *container = NULL, *meta = NULL;
     GArray *data = NULL;
     GArray *dscs = NULL;
-    PointXYZ *points = NULL;
+    GwyXYZ *points = NULL;
     gboolean waiting = FALSE;
     guint i, ntodo;
 
@@ -625,17 +623,17 @@ xymeasureeq_changed(NMMXYZControls *controls, GtkToggleButton *toggle)
     }
 }
 
-static PointXYZ*
+static GwyXYZ*
 create_points_with_xy(GArray *data, guint nincluded)
 {
-    PointXYZ *points;
+    GwyXYZ *points;
     const gdouble *d;
     gulong i, npts;
 
     gwy_debug("data->len %u, included block size %u", data->len, nincluded);
     d = (const gdouble*)data->data;
     npts = data->len/nincluded;
-    points = g_new(PointXYZ, npts);
+    points = g_new(GwyXYZ, npts);
     gwy_debug("creating %lu XYZ points", npts);
     for (i = 0; i < npts; i++) {
         points[i].x = d[0];
@@ -647,7 +645,7 @@ create_points_with_xy(GArray *data, guint nincluded)
 }
 
 static void
-find_data_range(const PointXYZ *points, NMMXYZInfo *info)
+find_data_range(const GwyXYZ *points, NMMXYZInfo *info)
 {
     gdouble xmin = G_MAXDOUBLE;
     gdouble ymin = G_MAXDOUBLE;
@@ -682,7 +680,7 @@ create_data_field(GwyContainer *container,
                   const NMMXYZArgs *args,
                   GArray *dscs,
                   GArray *data,
-                  PointXYZ *points,
+                  GwyXYZ *points,
                   guint i,
                   gboolean plot_density)
 {
