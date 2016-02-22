@@ -78,6 +78,10 @@ void gwy_data_field_invalidate(GwyDataField *data_field);
 
 GType             gwy_data_field_get_type  (void) G_GNUC_CONST;
 
+/* Do not remove.  It used to be here and code may depend on getting the
+ * GwyTriangulation data types defined via here. */
+#include <libprocess/triangulation.h>
+
 GwyDataField*     gwy_data_field_new                 (gint xres,
                                                       gint yres,
                                                       gdouble xreal,
