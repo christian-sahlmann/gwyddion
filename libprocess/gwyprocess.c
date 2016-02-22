@@ -66,6 +66,7 @@ gwy_process_type_init(void)
     g_type_class_peek(GWY_TYPE_BRICK);
     g_type_class_peek(GWY_TYPE_CDLINE);
     g_type_class_peek(GWY_TYPE_SPECTRA);
+    g_type_class_peek(GWY_TYPE_SURFACE);
     g_type_class_peek(GWY_TYPE_CALDATA);
     g_type_class_peek(GWY_TYPE_TRIANGULATION);
     types_initialized = TRUE;
