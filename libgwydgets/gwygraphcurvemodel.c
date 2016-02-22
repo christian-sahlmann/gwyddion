@@ -62,26 +62,27 @@ typedef enum {
     GWY_GRAPH_CURVE_MODEL_CACHE2_LAST,
 } GwyGraphCurveModelCached;
 
-static void     gwy_graph_curve_model_finalize         (GObject *object);
-static void     gwy_graph_curve_model_serializable_init(GwySerializableIface *iface);
-static GByteArray* gwy_graph_curve_model_serialize     (GObject *object,
-                                                        GByteArray*buffer);
-static gsize    gwy_graph_curve_model_get_size         (GObject *object);
-static GObject* gwy_graph_curve_model_deserialize      (const guchar *buffer,
-                                                        gsize size,
-                                                        gsize *position);
-static GObject* gwy_graph_curve_model_duplicate_real   (GObject *object);
-static void     gwy_graph_curve_model_clone_real       (GObject *source,
-                                                        GObject *copy);
-static void     gwy_graph_curve_model_set_property     (GObject *object,
-                                                        guint prop_id,
-                                                        const GValue *value,
-                                                        GParamSpec *pspec);
-static void     gwy_graph_curve_model_get_property     (GObject*object,
-                                                        guint prop_id,
-                                                        GValue *value,
-                                                        GParamSpec *pspec);
-static void   gwy_graph_curve_model_data_changed  (GwyGraphCurveModel *gcmodel);
+static void        gwy_graph_curve_model_finalize         (GObject *object);
+static void        gwy_graph_curve_model_serializable_init(GwySerializableIface *iface);
+static GByteArray* gwy_graph_curve_model_serialize        (GObject *object,
+                                                           GByteArray*buffer);
+static gsize       gwy_graph_curve_model_get_size         (GObject *object);
+static GObject*    gwy_graph_curve_model_deserialize      (const guchar *buffer,
+                                                           gsize size,
+                                                           gsize *position);
+static GObject*    gwy_graph_curve_model_duplicate_real   (GObject *object);
+static void        gwy_graph_curve_model_clone_real       (GObject *source,
+                                                           GObject *copy);
+static void        gwy_graph_curve_model_set_property     (GObject *object,
+                                                           guint prop_id,
+                                                           const GValue *value,
+                                                           GParamSpec *pspec);
+static void        gwy_graph_curve_model_get_property     (GObject*object,
+                                                           guint prop_id,
+                                                           GValue *value,
+                                                           GParamSpec *pspec);
+static void        gwy_graph_curve_model_data_changed     (GwyGraphCurveModel *gcmodel);
+static void        free_calibration                       (GwyGraphCurveModel *gcmodel);
 
 enum {
     DATA_CHANGED,
@@ -382,6 +383,7 @@ gwy_graph_curve_model_finalize(GObject *object)
     gwy_debug("");
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
 
+    free_calibration(gcmodel);
     g_string_free(gcmodel->description, TRUE);
     g_free(gcmodel->xdata);
     g_free(gcmodel->ydata);
@@ -537,22 +539,23 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
         }
         gcmodel->n = nxdata;
         if (nxerr == nxdata && nyerr == nxdata && nzerr == nxdata
-            && nxunc == nxdata && nyunc == nxdata && nzunc == nxdata)
-        {
+            && nxunc == nxdata && nyunc == nxdata && nzunc == nxdata) {
             gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
+            gcmodel->calibration->n = nxdata;
             gcmodel->calibration->xerr = xerr;
             gcmodel->calibration->yerr = yerr;
             gcmodel->calibration->zerr = zerr;
             gcmodel->calibration->xunc = xunc;
             gcmodel->calibration->yunc = yunc;
             gcmodel->calibration->zunc = zunc;
-        } else {
-            if (xerr) g_free(xerr);
-            if (yerr) g_free(yerr);
-            if (zerr) g_free(zerr);
-            if (xunc) g_free(xunc);
-            if (yunc) g_free(yunc);
-            if (zunc) g_free(zunc);
+        }
+        else {
+            g_free(xerr);
+            g_free(yerr);
+            g_free(zerr);
+            g_free(xunc);
+            g_free(yunc);
+            g_free(zunc);
             gcmodel->calibration = NULL;
         }
     }
@@ -682,15 +685,7 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
         gcmodel->n = n;
     }
 
-    if (gcmodel->calibration) {
-        g_free(gcmodel->calibration->xerr);
-        g_free(gcmodel->calibration->yerr);
-        g_free(gcmodel->calibration->zerr);
-        g_free(gcmodel->calibration->xunc);
-        g_free(gcmodel->calibration->yunc);
-        g_free(gcmodel->calibration->zunc);
-        gcmodel->calibration = NULL;
-    }
+    free_calibration(gcmodel);
     gwy_graph_curve_model_data_changed(gcmodel);
 }
 
@@ -757,6 +752,7 @@ gwy_graph_curve_model_enforce_order(GwyGraphCurveModel *gcmodel)
             GWY_SWAP(gdouble, xdata[i], xdata[n-1 - i]);
             GWY_SWAP(gdouble, ydata[i], ydata[n-1 - i]);
         }
+        free_calibration(gcmodel);
         gwy_graph_curve_model_data_changed(gcmodel);
         return;
     }
@@ -772,7 +768,9 @@ gwy_graph_curve_model_enforce_order(GwyGraphCurveModel *gcmodel)
         xdata[i] = bothdata[2*i + 0];
         ydata[i] = bothdata[2*i + 1];
     }
+
     g_free(bothdata);
+    free_calibration(gcmodel);
     gwy_graph_curve_model_data_changed(gcmodel);
 }
 
@@ -883,10 +881,8 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     }
 
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
-
     g_free(xdata);
     g_free(ydata);
-    gwy_graph_curve_model_data_changed(gcmodel);
 }
 
 
@@ -1200,10 +1196,12 @@ gwy_graph_curve_model_data_changed(GwyGraphCurveModel *gcmodel)
  *
  * Returns: Pointer to the calibration data of present curve (NULL if none).
  *
+ * Since: 2.23
  **/
-GwyCurveCalibrationData *
+GwyCurveCalibrationData*
 gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), NULL);
     return gcmodel->calibration;
 }
 
@@ -1214,35 +1212,49 @@ gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
  *
  * Set calibration data for curve.
  *
+ * The function makes a deep copy of @calibration.
+ *
+ * Since: 2.23
  **/
 void
 gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
                                            const GwyCurveCalibrationData *calibration)
 {
-    if (gcmodel->calibration) {
-        g_free(gcmodel->calibration->xerr);
-        g_free(gcmodel->calibration->yerr);
-        g_free(gcmodel->calibration->zerr);
-        g_free(gcmodel->calibration->xunc);
-        g_free(gcmodel->calibration->yunc);
-        g_free(gcmodel->calibration->zunc);
-    }
-    else
-        gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
+    gsize size;
 
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    free_calibration(gcmodel);
+    if (!calibration)
+        return;
+
+    size = calibration->n * sizeof(gdouble);
+    gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
     gcmodel->calibration->n = calibration->n;
-    gcmodel->calibration->xerr = g_memdup(calibration->xerr,
-                                          calibration->n*sizeof(gdouble));
-    gcmodel->calibration->yerr = g_memdup(calibration->yerr,
-                                          calibration->n*sizeof(gdouble));
-    gcmodel->calibration->zerr = g_memdup(calibration->zerr,
-                                          calibration->n*sizeof(gdouble));
-    gcmodel->calibration->xunc = g_memdup(calibration->xunc,
-                                          calibration->n*sizeof(gdouble));
-    gcmodel->calibration->yunc = g_memdup(calibration->yunc,
-                                          calibration->n*sizeof(gdouble));
-    gcmodel->calibration->zunc = g_memdup(calibration->zunc,
-                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->xerr = g_memdup(calibration->xerr, size);
+    gcmodel->calibration->yerr = g_memdup(calibration->yerr, size);
+    gcmodel->calibration->zerr = g_memdup(calibration->zerr, size);
+    gcmodel->calibration->xunc = g_memdup(calibration->xunc, size);
+    gcmodel->calibration->yunc = g_memdup(calibration->yunc, size);
+    gcmodel->calibration->zunc = g_memdup(calibration->zunc, size);
+}
+
+static void
+free_calibration(GwyGraphCurveModel *gcmodel)
+{
+    GwyCurveCalibrationData *calibration = gcmodel->calibration;
+
+    if (!calibration)
+        return;
+
+    g_free(calibration->xerr);
+    g_free(calibration->yerr);
+    g_free(calibration->zerr);
+    g_free(calibration->xunc);
+    g_free(calibration->yunc);
+    g_free(calibration->zunc);
+    g_free(calibration);
+    gcmodel->calibration = NULL;
 }
 
 /************************** Documentation ****************************/
