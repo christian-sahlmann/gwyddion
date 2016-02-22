@@ -22,6 +22,7 @@
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
 
+#include <libgwyddion/gwymath.h>
 #include <libprocess/dataline.h>
 
 G_BEGIN_DECLS
@@ -67,8 +68,6 @@ struct _GwyDataFieldClass {
     /*< private >*/
     void (*reserved1)(void);
 };
-
-#include <libprocess/triangulation.h>
 
 void gwy_data_field_invalidate(GwyDataField *data_field);
 
@@ -275,7 +274,7 @@ gdouble      gwy_data_field_get_angder     (GwyDataField *data_field,
                                             gdouble theta);
 void         gwy_data_field_average_xyz    (GwyDataField *data_field,
                                             GwyDataField *density_map,
-                                            const GwyTriangulationPointXYZ *points,
+                                            const GwyXYZ *points,
                                             gint npoints);
 
 G_END_DECLS

@@ -41,11 +41,6 @@
 typedef struct _BinTreeNode BinTreeNode;
 typedef struct _QuadTreeNode QuadTreeNode;
 
-typedef struct {
-    gdouble x;
-    gdouble y;
-} GwyXY;
-
 struct _BinTreeNode {
     /* This optimally uses memory on 64bit architectures where pt and
      * children have the same size (16 bytes). */

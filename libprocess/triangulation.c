@@ -55,25 +55,20 @@ enum {
 #define CELL_SIDE 6.0
 
 #define get_point(points, point_size, i) \
-    (const Point*)((const gchar*)(points) + (i)*(point_size))
+    (const GwyXY*)((const gchar*)(points) + (i)*(point_size))
 
 #define get_point_xyz(points, point_size, i) \
-    (const PointXYZ*)((const gchar*)(points) + (i)*(point_size))
+    (const GwyXYZ*)((const gchar*)(points) + (i)*(point_size))
 
 #define get_vpoint(tri, i) \
     ((i) >= tri->npoints \
-     ? (const Point*)(tri->vpoints + ((i) - tri->npoints)) \
-     : (const Point*)((const gchar*)(tri->points) + (i)*(tri->point_size)))
+     ? (const GwyXY*)(tri->vpoints + ((i) - tri->npoints)) \
+     : (const GwyXY*)((const gchar*)(tri->points) + (i)*(tri->point_size)))
 
 #define get_vpoint_xyz(tri, i) \
     ((i) >= tri->npoints \
-     ? (const PointXYZ*)(tri->vpoints + ((i) - tri->npoints)) \
-     : (const PointXYZ*)((const gchar*)(tri->points) + (i)*(tri->point_size)))
-
-/* Representation of input data, they must be typecastable to this but can
- * contain any more data in the structs. */
-typedef GwyTriangulationPointXY Point;
-typedef GwyTriangulationPointXYZ PointXYZ;
+     ? (const GwyXYZ*)(tri->vpoints + ((i) - tri->npoints)) \
+     : (const GwyXYZ*)((const gchar*)(tri->points) + (i)*(tri->point_size)))
 
 /* Triangulation private data.  More or less representation of the result as
  * the in-progress data is represented by Triangulator. */
@@ -85,7 +80,7 @@ typedef struct {
     guint nvoronoi;
     guint point_size;
     gconstpointer points;
-    Point *vpoints;
+    GwyXY *vpoints;
     guint *index;
     guint *neighbours;
     guint *boundary;
@@ -114,7 +109,7 @@ typedef struct {
 /* The neighbourhood of one point, with pre-calculated quantities.  Too
  * large to keep for all points, but we use a cache.  */
 typedef struct {
-    Point origin;
+    GwyXY origin;
     WorkSpacePoint *data;
     guint len;
     guint size;
@@ -144,7 +139,7 @@ typedef struct {
  * anyway. */
 typedef struct {
     guint npoints;          /* Number of points */
-    Point *points;          /* The points */
+    GwyXY *points;          /* The points */
     guint *orig_index;      /* Map from our ids to original point numbers. */
 } PointList;
 
@@ -165,15 +160,15 @@ typedef struct {
 } Triangulator;
 
 typedef struct {
-    Point centre;      /* Point in the side centre */
-    Point outernormal; /* Outer normal of the side */
+    GwyXY centre;      /* Point in the side centre */
+    GwyXY outernormal; /* Outer normal of the side */
     gdouble norm;      /* Scalar product of the vector from cente to the
                           opposite side with outernormal */
 } TriangleSide;
 
 typedef struct {
     TriangleSide sa, sb, sc;    /* Triangle sides, opposite to a, b, c */
-    const PointXYZ *a, *b, *c;  /* Vertices */
+    const GwyXYZ *a, *b, *c;  /* Vertices */
     gdouble da, db, dc;         /* Signed distances of a point from the side,
                                    depends on the point being considered. */
     guint ia, ib, ic;           /* Ids of the triangle vertices */
@@ -315,13 +310,13 @@ build_compact_point_list(PointList *pointlist,
                          gconstpointer points,
                          gsize point_size)
 {
-    const Point *pt;
+    const GwyXY *pt;
     gdouble xmin, xmax, ymin, ymax, xreal, yreal, step, xr, yr;
     guint i, xres, yres, ncells, ig, pos;
     guint *cell_index;
 
     pointlist->npoints = npoints;
-    pointlist->points = g_new(Point, npoints);
+    pointlist->points = g_new(GwyXY, npoints);
     pointlist->orig_index = g_new(guint, npoints);
 
     pt = get_point(points, point_size, 0);
@@ -392,9 +387,9 @@ static inline gboolean
 get_workspace_point(WorkSpacePoint *wpt,
                     const PointList *pointlist,
                     guint id,
-                    const Point *origin)
+                    const GwyXY *origin)
 {
-    Point pt;
+    GwyXY pt;
 
     wpt->id = id;
     pt = pointlist->points[id];
@@ -483,9 +478,9 @@ intersection_times(const WorkSpacePoint *p, gdouble *tp,
 
 /* Returns %TRUE if @pt lies on the right side of line from @a to @b. */
 static inline gboolean
-point_on_right_side(const Point *a, const Point *b, const Point *pt)
+point_on_right_side(const GwyXY *a, const GwyXY *b, const GwyXY *pt)
 {
-    Point c, v;
+    GwyXY c, v;
 
     c.x = pt->x - 0.5*(a->x + b->x);
     c.y = pt->y - 0.5*(a->y + b->y);
@@ -870,9 +865,9 @@ prev_neighbour(const guint *neighbours,
 /* This assumes a counter-clockwise triangle */
 static inline void
 make_triangle_side(TriangleSide *side,
-                   const PointXYZ *from,
-                   const PointXYZ *to,
-                   const PointXYZ *opposite)
+                   const GwyXYZ *from,
+                   const GwyXYZ *to,
+                   const GwyXYZ *opposite)
 {
     side->centre.x = 0.5*(to->x + from->x);
     side->centre.y = 0.5*(to->y + from->y);
@@ -902,7 +897,7 @@ make_triangle(Triangle *triangle,
  * the opposite triangle point -- directly usable for interpolation. */
 static inline gdouble
 side_point_distance(const TriangleSide *side,
-                    const Point *pt)
+                    const GwyXY *pt)
 
 {
     return ((pt->x - side->centre.x)*side->outernormal.x
@@ -911,7 +906,7 @@ side_point_distance(const TriangleSide *side,
 
 static gboolean
 triangle_contains_point(Triangle *triangle,
-                        const Point *pt)
+                        const GwyXY *pt)
 {
     /* Do not terminate permaturely, the caller will typically examine da, db,
      * and dc to determine what to do next if the point is not inside. */
@@ -933,7 +928,7 @@ find_the_other_neighbour_(const Triangulator *triangulator,
                           guint *opposite)
 {
     NeighbourBlock *nb;
-    const Point *a, *b, *c;
+    const GwyXY *a, *b, *c;
     guint to_prev, from_next;
     const guint *neighbours;
 
@@ -977,7 +972,7 @@ move_triangle_a_(const Triangulator *triangulator,
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ib, triangle->ic, &triangle->ia)) {
         GWY_SWAP(guint, triangle->ib, triangle->ic);
-        GWY_SWAP(const PointXYZ*, triangle->b, triangle->c);
+        GWY_SWAP(const GwyXYZ*, triangle->b, triangle->c);
         return TRUE;
     }
     return FALSE;
@@ -991,7 +986,7 @@ move_triangle_b_(const Triangulator *triangulator,
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ic, triangle->ia, &triangle->ib)) {
         GWY_SWAP(guint, triangle->ic, triangle->ia);
-        GWY_SWAP(const PointXYZ*, triangle->c, triangle->a);
+        GWY_SWAP(const GwyXYZ*, triangle->c, triangle->a);
         return TRUE;
     }
     return FALSE;
@@ -1005,7 +1000,7 @@ move_triangle_c_(const Triangulator *triangulator,
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ia, triangle->ib, &triangle->ic)) {
         GWY_SWAP(guint, triangle->ia, triangle->ib);
-        GWY_SWAP(const PointXYZ*, triangle->a, triangle->b);
+        GWY_SWAP(const GwyXYZ*, triangle->a, triangle->b);
         return TRUE;
     }
     return FALSE;
@@ -1018,8 +1013,8 @@ make_valid_triangle(const guint *neighbours, guint len,
                     Triangle *triangle,
                     guint hint)
 {
-    const Point *a = get_point(points, point_size, hint);
-    const Point *b, *c;
+    const GwyXY *a = get_point(points, point_size, hint);
+    const GwyXY *b, *c;
     gdouble phib, phic;
     guint i;
 
@@ -1051,7 +1046,7 @@ find_the_other_neighbour(const Triangulation *triangulation,
                          guint to,
                          guint *opposite)
 {
-    const Point *a, *b, *c;
+    const GwyXY *a, *b, *c;
     guint to_prev, from_next, pos, len;
     const guint *neighbours;
 
@@ -1095,7 +1090,7 @@ move_triangle_a(const Triangulation *triangulation, Triangle *triangle)
     if (find_the_other_neighbour(triangulation,
                                  triangle->ib, triangle->ic, &triangle->ia)) {
         GWY_SWAP(guint, triangle->ib, triangle->ic);
-        GWY_SWAP(const PointXYZ*, triangle->b, triangle->c);
+        GWY_SWAP(const GwyXYZ*, triangle->b, triangle->c);
         return TRUE;
     }
     return FALSE;
@@ -1107,7 +1102,7 @@ move_triangle_b(const Triangulation *triangulation, Triangle *triangle)
     if (find_the_other_neighbour(triangulation,
                                  triangle->ic, triangle->ia, &triangle->ib)) {
         GWY_SWAP(guint, triangle->ic, triangle->ia);
-        GWY_SWAP(const PointXYZ*, triangle->c, triangle->a);
+        GWY_SWAP(const GwyXYZ*, triangle->c, triangle->a);
         return TRUE;
     }
     return FALSE;
@@ -1119,7 +1114,7 @@ move_triangle_c(const Triangulation *triangulation, Triangle *triangle)
     if (find_the_other_neighbour(triangulation,
                                  triangle->ia, triangle->ib, &triangle->ic)) {
         GWY_SWAP(guint, triangle->ia, triangle->ib);
-        GWY_SWAP(const PointXYZ*, triangle->a, triangle->b);
+        GWY_SWAP(const GwyXYZ*, triangle->a, triangle->b);
         return TRUE;
     }
     return FALSE;
@@ -1128,13 +1123,13 @@ move_triangle_c(const Triangulation *triangulation, Triangle *triangle)
 /* Calculate the intersection of dividing lines of the corner angles at a and b
  * in boundary point sequence p, a, b, n. */
 static void
-find_side_section(const Point *p,
-                  const Point *a,
-                  const Point *b,
-                  const Point *n,
-                  Point *origin)
+find_side_section(const GwyXY *p,
+                  const GwyXY *a,
+                  const GwyXY *b,
+                  const GwyXY *n,
+                  GwyXY *origin)
 {
-    Point pa, ab, bn, mA, mB;
+    GwyXY pa, ab, bn, mA, mB;
     gdouble norm, det, rhsa, rhsb;
 
     pa.x = a->x - p->x;
@@ -1171,10 +1166,10 @@ find_side_section(const Point *p,
 /* A number between [-1, 1] means in the side, smaller means back, larger means
  * forward. */
 static gdouble
-side_intersection_distance(const PointXYZ *a, const PointXYZ *b,
-                           const Point *pt)
+side_intersection_distance(const GwyXYZ *a, const GwyXYZ *b,
+                           const GwyXY *pt)
 {
-    Point c, v;
+    GwyXY c, v;
 
     c.x = pt->x - 0.5*(a->x + b->x);
     c.y = pt->y - 0.5*(a->y + b->y);
@@ -1189,12 +1184,12 @@ side_intersection_distance(const PointXYZ *a, const PointXYZ *b,
 static gboolean
 find_nearest_side(const Triangulation *triangulation,
                   guint *pia, guint *pib,
-                  const Point *pt)
+                  const GwyXY *pt)
 {
     guint ip, ia, ib, in, blen, iter;
     const guint *bindex, *boundary;
-    const Point *p, *a, *b, *n;
-    Point origin;
+    const GwyXY *p, *a, *b, *n;
+    GwyXY origin;
     gdouble phia, phib, phi;
     gboolean forw, back;
 
@@ -1266,7 +1261,7 @@ static gboolean
 ensure_triangle_(const Triangulator *triangulator,
                  gconstpointer points, gsize point_size,
                  Triangle *triangle,
-                 const Point *pt)
+                 const GwyXY *pt)
 {
     gboolean moved;
     guint iter;
@@ -1309,7 +1304,7 @@ ensure_triangle_(const Triangulator *triangulator,
 static gboolean
 ensure_triangle(const Triangulation *triangulation,
                 Triangle *triangle,
-                const Point *pt)
+                const GwyXY *pt)
 {
     gboolean moved;
     guint iter;
@@ -1507,10 +1502,10 @@ triangulate(const PointList *pointlist, GwySetFractionFunc set_fraction)
          * previously valid triangle to an invalid one. */
         nb = triangulator->blocks + (i - 1);
         make_valid_triangle(triangulator->neighbours + nb->pos, nb->len,
-                            pointlist->points, sizeof(Point),
+                            pointlist->points, sizeof(GwyXY),
                             &triangle, i-1);
         /* Find the enclosing or the nearest (for outside points) triangle */
-        in = ensure_triangle_(triangulator, pointlist->points, sizeof(Point),
+        in = ensure_triangle_(triangulator, pointlist->points, sizeof(GwyXY),
                               &triangle, pointlist->points + i);
         if (G_UNLIKELY(triangle.ia == UNDEF))
             goto fail;
@@ -1609,7 +1604,7 @@ find_boundary(Triangulation *triangulation,
               gconstpointer points, gsize point_size)
 {
     guint i, imin, bsize, expected_blen, pos, len;
-    const Point *pt;
+    const GwyXY *pt;
     const guint *neighbours;
     gdouble xmin;
 
@@ -1675,12 +1670,12 @@ find_boundary(Triangulation *triangulation,
  * point @a.  Use the trick with shifting the origin to point @a to simplify
  * the formulas. */
 static gboolean
-circumcircle_centre(const Point *a,
-                    const Point *b,
-                    const Point *c,
-                    Point *pt)
+circumcircle_centre(const GwyXY *a,
+                    const GwyXY *b,
+                    const GwyXY *c,
+                    GwyXY *pt)
 {
-    Point ca, ba;
+    GwyXY ca, ba;
     gdouble phib, phic, det, ba2, ca2;
 
     ba.x = b->x - a->x;
@@ -1776,9 +1771,9 @@ static gboolean
 delaunay_to_voronoi(Triangulation *triangulation,
                     gconstpointer points, gsize point_size)
 {
-    const Point *a, *b, *c;
-    Point *vpoints;
-    Point pt;
+    const GwyXY *a, *b, *c;
+    GwyXY *vpoints;
+    GwyXY pt;
     guint *voronoi, *vindex, *neighbours, *remaining;
     guint i, j, n, ni, next, prev, nvpoints, nvoronoi, pos, len, vpos, vm1;
     guint blen;
@@ -1790,7 +1785,7 @@ delaunay_to_voronoi(Triangulation *triangulation,
      * file. */
     vm1 = triangulation->npoints - 1;
     nvpoints = triangulation->nvpoints = 2*vm1;
-    vpoints = triangulation->vpoints = g_renew(Point, triangulation->vpoints,
+    vpoints = triangulation->vpoints = g_renew(GwyXY, triangulation->vpoints,
                                                nvpoints);
     /* Voronoi points in infinity have only 5 neighbours but boundary Delaunay
      * points will gain one neigbour more, so this should be exact. */
@@ -2000,8 +1995,8 @@ gwy_triangulation_new(void)
  * @triangulation: Triangulation.
  * @npoints: Number of points.
  * @points: Array of points.  They must be typecastable to
- *          #GwyTriangulationPointXY for triangulation and to
- *          #GwyTriangulationPointXYZ for interpolation.  However, they can be
+ *          #GwyXY for triangulation and to
+ *          #GwyXYZ for interpolation.  However, they can be
  *          larger than that.  The actual struct size is indicated by
  *          @point_size.
  * @point_size: Size of point struct, in bytes.
@@ -2038,8 +2033,8 @@ gwy_triangulation_triangulate(GwyTriangulation *object,
  * @triangulation: Triangulation.
  * @npoints: Number of points.
  * @points: Array of points.  They must be typecastable to
- *          #GwyTriangulationPointXY for triangulation and to
- *          #GwyTriangulationPointXYZ for interpolation.  However, they can be
+ *          #GwyXY for triangulation and to
+ *          #GwyXYZ for interpolation.  However, they can be
  *          larger than that.  The actual struct size is indicated by
  *          @point_size.
  * @point_size: Size of point struct, in bytes.
@@ -2079,7 +2074,7 @@ gwy_triangulation_triangulate_iterative(GwyTriangulation *object,
     g_return_val_if_fail(GWY_IS_TRIANGULATION(object), FALSE);
     triangulation = GWY_TRIANGULATION_GET_PRIVATE(object);
     make_triangulation_empty(triangulation);
-    g_return_val_if_fail(point_size >= sizeof(Point), FALSE);
+    g_return_val_if_fail(point_size >= sizeof(GwyXY), FALSE);
 
     triangulation->point_size = point_size;
     triangulation->points = points;
@@ -2119,7 +2114,7 @@ fail:
 }
 
 static inline gdouble
-edist2_xyz_xy(const PointXYZ *p, const Point *q)
+edist2_xyz_xy(const GwyXYZ *p, const GwyXY *q)
 {
     gdouble dx = p->x - q->x, dy = p->y - q->y;
 
@@ -2135,7 +2130,7 @@ find_the_other_vneighbour(const Triangulation *triangulation,
                           guint to,
                           guint *opposite)
 {
-    const Point *a, *b, *c;
+    const GwyXY *a, *b, *c;
     guint to_prev, from_next, pos, len;
     const guint *neighbours;
 
@@ -2179,7 +2174,7 @@ move_vtriangle_a(const Triangulation *triangulation, Triangle *vtriangle)
     if (find_the_other_vneighbour(triangulation, vtriangle->ib, vtriangle->ic,
                                   &vtriangle->ia)) {
         GWY_SWAP(guint, vtriangle->ib, vtriangle->ic);
-        GWY_SWAP(const PointXYZ*, vtriangle->b, vtriangle->c);
+        GWY_SWAP(const GwyXYZ*, vtriangle->b, vtriangle->c);
         return TRUE;
     }
     return FALSE;
@@ -2191,7 +2186,7 @@ move_vtriangle_b(const Triangulation *triangulation, Triangle *vtriangle)
     if (find_the_other_vneighbour(triangulation, vtriangle->ic, vtriangle->ia,
                                   &vtriangle->ib)) {
         GWY_SWAP(guint, vtriangle->ic, vtriangle->ia);
-        GWY_SWAP(const PointXYZ*, vtriangle->c, vtriangle->a);
+        GWY_SWAP(const GwyXYZ*, vtriangle->c, vtriangle->a);
         return TRUE;
     }
     return FALSE;
@@ -2203,7 +2198,7 @@ move_vtriangle_c(const Triangulation *triangulation, Triangle *vtriangle)
     if (find_the_other_vneighbour(triangulation, vtriangle->ia, vtriangle->ib,
                                   &vtriangle->ic)) {
         GWY_SWAP(guint, vtriangle->ia, vtriangle->ib);
-        GWY_SWAP(const PointXYZ*, vtriangle->a, vtriangle->b);
+        GWY_SWAP(const GwyXYZ*, vtriangle->a, vtriangle->b);
         return TRUE;
     }
     return FALSE;
@@ -2230,7 +2225,7 @@ make_vtriangle(Triangle *triangle, const Triangulation *triangulation)
 static gboolean
 ensure_vtriangle(const Triangulation *triangulation,
                  Triangle *vtriangle,
-                 const Point *pt)
+                 const GwyXY *pt)
 {
     gboolean moved;
     guint iter;
@@ -2269,8 +2264,8 @@ make_valid_vtriangle(const Triangulation *triangulation,
                      Triangle *vtriangle,
                      guint hint)
 {
-    const Point *a = get_vpoint(triangulation, hint);
-    const Point *b, *c;
+    const GwyXY *a = get_vpoint(triangulation, hint);
+    const GwyXY *b, *c;
     const guint *neighbours;
     gdouble phib, phic;
     guint i, len;
@@ -2299,10 +2294,10 @@ make_valid_vtriangle(const Triangulation *triangulation,
 static gboolean
 interpolate_round(Triangulation *triangulation,
                   Triangle *vtriangle,
-                  const Point *pt,
+                  const GwyXY *pt,
                   gdouble *value)
 {
-    const PointXYZ *p = NULL;
+    const GwyXYZ *p = NULL;
 
     ensure_vtriangle(triangulation, vtriangle, pt);
     if (G_UNLIKELY(vtriangle->ia == UNDEF)) {
@@ -2342,10 +2337,10 @@ tinterpolate_linear(const Triangle *triangle)
 static inline gdouble
 sinterpolate1_linear(gconstpointer points, gsize point_size,
                      guint ia, guint ib,
-                     const Point *pt)
+                     const GwyXY *pt)
 {
-    const PointXYZ *a = get_point_xyz(points, point_size, ia);
-    const PointXYZ *b = get_point_xyz(points, point_size, ib);
+    const GwyXYZ *a = get_point_xyz(points, point_size, ia);
+    const GwyXYZ *b = get_point_xyz(points, point_size, ib);
     gdouble d = side_intersection_distance(a, b, pt);
 
     if (d <= -1.0)
@@ -2358,7 +2353,7 @@ sinterpolate1_linear(gconstpointer points, gsize point_size,
 
 static inline gdouble
 sinterpolate_linear(const Triangulation *triangulation,
-                    const Triangle *triangle, const Point *pt)
+                    const Triangle *triangle, const GwyXY *pt)
 {
     guint ia, ib;
 
@@ -2389,7 +2384,7 @@ success:
 static gboolean
 interpolate_linear(Triangulation *triangulation,
                    Triangle *triangle,
-                   const Point *pt,
+                   const GwyXY *pt,
                    gdouble *value)
 {
     if (ensure_triangle(triangulation, triangle, pt))
@@ -2432,12 +2427,12 @@ gwy_triangulation_interpolate(GwyTriangulation *object,
     gdouble *d;
     Triangle triangle;
     gboolean ok = FALSE;
-    Point pt;
+    GwyXY pt;
 
     g_return_val_if_fail(GWY_IS_TRIANGULATION(object), FALSE);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     triangulation = GWY_TRIANGULATION_GET_PRIVATE(object);
-    g_return_val_if_fail(triangulation->point_size >= sizeof(PointXYZ), FALSE);
+    g_return_val_if_fail(triangulation->point_size >= sizeof(GwyXYZ), FALSE);
     g_return_val_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
                          || interpolation == GWY_INTERPOLATION_ROUND, FALSE);
 
@@ -2609,7 +2604,7 @@ gwy_triangulation_boundary(GwyTriangulation *object)
 GwyTriangulationData*
 gwy_triangulation_voronoi(GwyTriangulation *object,
                           guint *nvpoints,
-                          const GwyTriangulationPointXY **vpoints)
+                          const GwyXY **vpoints)
 {
     Triangulation *triangulation;
     GwyTriangulationData *data = NULL;
@@ -2689,7 +2684,7 @@ dump_points_(const Triangulator *triangulator,
 
     fh = gwy_fopen("points.dat", "w");
     for (i = 0; i < npoints; i++) {
-        const Point *pt = get_point(points, point_size, i);
+        const GwyXY *pt = get_point(points, point_size, i);
         gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
@@ -2701,8 +2696,8 @@ dump_points_(const Triangulator *triangulator,
         for (j = 0; j < nb->len; j++) {
             ni = neighbours[j];
             if (ni > i) {
-                const Point *pt1 = get_point(points, point_size, i);
-                const Point *pt2 = get_point(points, point_size, ni);
+                const GwyXY *pt1 = get_point(points, point_size, i);
+                const GwyXY *pt2 = get_point(points, point_size, ni);
                 gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
@@ -2722,7 +2717,7 @@ dump_points(const Triangulation *triangulation,
 
     fh = gwy_fopen("points.dat", "w");
     for (i = 0; i < triangulation->npoints; i++) {
-        const Point *pt = get_point(points, point_size, i);
+        const GwyXY *pt = get_point(points, point_size, i);
         gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
@@ -2735,8 +2730,8 @@ dump_points(const Triangulation *triangulation,
         for (j = 0; j < len; j++) {
             ni = neighbours[j];
             if (ni > i) {
-                const Point *pt1 = get_point(points, point_size, i);
-                const Point *pt2 = get_point(points, point_size, ni);
+                const GwyXY *pt1 = get_point(points, point_size, i);
+                const GwyXY *pt2 = get_point(points, point_size, ni);
                 gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
@@ -2746,8 +2741,8 @@ dump_points(const Triangulation *triangulation,
         i = triangulation->boundary[j];
         ni = triangulation->boundary[(j + 1) % triangulation->blen];
         {
-            const Point *pt1 = get_point(points, point_size, i);
-            const Point *pt2 = get_point(points, point_size, ni);
+            const GwyXY *pt1 = get_point(points, point_size, i);
+            const GwyXY *pt2 = get_point(points, point_size, ni);
             gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 6\n",
                     pt1->x, pt1->y, pt2->x, pt2->y);
         }
@@ -2768,7 +2763,7 @@ dump_voronoi(const Triangulation *triangulation,
 
     fh = gwy_fopen("vpoints.dat", "w");
     for (i = 0; i < triangulation->nvpoints; i++) {
-        const Point *pt = triangulation->vpoints + i;
+        const GwyXY *pt = triangulation->vpoints + i;
         gwy_fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
     }
     fclose(fh);
@@ -2781,16 +2776,16 @@ dump_voronoi(const Triangulation *triangulation,
         for (j = 0; j < len; j++) {
             ni = neighbours[j];
             if (ni < npts) {
-                const Point *pt1 = triangulation->vpoints + i;
-                const Point *pt2 = get_point(points, point_size, ni);
+                const GwyXY *pt1 = triangulation->vpoints + i;
+                const GwyXY *pt2 = get_point(points, point_size, ni);
                 gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 5\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
             else {
                 ni -= npts;
                 if (ni > i) {
-                    const Point *pt1 = triangulation->vpoints + i;
-                    const Point *pt2 = triangulation->vpoints + ni;
+                    const GwyXY *pt1 = triangulation->vpoints + i;
+                    const GwyXY *pt2 = triangulation->vpoints + ni;
                     gwy_fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 4\n",
                             pt1->x, pt1->y, pt2->x, pt2->y);
                 }
@@ -2844,11 +2839,13 @@ test_reflexivity(const Triangulator *triangulator)
  **/
 
 /**
- * GwyTriangulationPointXY:
+ * GwyTriangluationPointXY:
  * @x: X-coordinate.
  * @y: Y-coordinate.
  *
  * Representation of a point in plane for triangulation.
+ *
+ * Note this is an alias for #GwyXY since 2.45.
  *
  * Since: 2.18
  **/
@@ -2860,6 +2857,8 @@ test_reflexivity(const Triangulator *triangulator)
  * @z: Z-coordinate, i.e. the value in point (@x,@y).
  *
  * Representation of a point in plane with associated value for interpolation.
+ *
+ * Note this is an alias for #GwyXYZ since 2.45.
  *
  * Since: 2.18
  **/

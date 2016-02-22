@@ -22,22 +22,15 @@
 #ifndef __GWY_PROCESS_TRIANGULATION_H__
 #define __GWY_PROCESS_TRIANGULATION_H__ 1
 
+#include <libgwyddion/gwymath.h>
 #include <libprocess/gwyprocesstypes.h>
 
 G_BEGIN_DECLS
 
 #define GWY_TRIANGULATION_NONE G_MAXUINT
 
-typedef struct {
-    gdouble x;
-    gdouble y;
-} GwyTriangulationPointXY;
-
-typedef struct {
-    gdouble x;
-    gdouble y;
-    gdouble z;
-} GwyTriangulationPointXYZ;
+typedef GwyXY GwyTriangulationPointXY;
+typedef GwyXYZ GwyTriangulationPointXYZ;
 
 typedef struct {
     guint npoints;
@@ -86,7 +79,7 @@ GwyTriangulationData* gwy_triangulation_delaunay             (GwyTriangulation *
 GwyTriangulationData* gwy_triangulation_boundary             (GwyTriangulation *triangulation);
 GwyTriangulationData* gwy_triangulation_voronoi              (GwyTriangulation *triangulation,
                                                               guint *nvpoints,
-                                                              const GwyTriangulationPointXY **vpoints);
+                                                              const GwyXY **vpoints);
 
 G_END_DECLS
 

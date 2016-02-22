@@ -33,8 +33,6 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
-#define PointXYZ GwyTriangulationPointXYZ
-
 enum {
     DATA_CHANGED,
     LAST_SIGNAL
@@ -2447,7 +2445,7 @@ fill_missing_points(GwyDataField *dfield, GwyDataField *mask)
 
 static void
 fill_missing_points_all(GwyDataField *dfield,
-                        const GwyTriangulationPointXYZ *points,
+                        const GwyXYZ *points,
                         guint npoints)
 {
     gdouble xc = dfield->xoff + 0.5*dfield->xreal;
@@ -2458,7 +2456,7 @@ fill_missing_points_all(GwyDataField *dfield,
     g_return_if_fail(npoints);
 
     for (k = 0; k < npoints; k++) {
-        const PointXYZ *pt = points + k;
+        const GwyXYZ *pt = points + k;
         gdouble x = pt->x - xc;
         gdouble y = pt->y - yc;
         gdouble d2 = x*x + y*y;
@@ -2498,7 +2496,7 @@ fill_missing_points_all(GwyDataField *dfield,
 void
 gwy_data_field_average_xyz(GwyDataField *dfield,
                            GwyDataField *densitymap,
-                           const GwyTriangulationPointXYZ *points,
+                           const GwyXYZ *points,
                            gint npoints)
 {
     GwyDataField *extfield, *extweights;
@@ -2533,7 +2531,7 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
     gwy_debug("dfield %dx%d", xres, yres);
 
     for (k = 0; k < npoints; k++) {
-        const PointXYZ *pt = points + k;
+        const GwyXYZ *pt = points + k;
         gdouble x = (pt->x - xoff)/qx;
         gdouble y = (pt->y - yoff)/qy;
 
@@ -2571,7 +2569,7 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
     w = gwy_data_field_get_data(extweights);
 
     for (k = 0; k < npoints; k++) {
-        const PointXYZ *pt = points + k;
+        const GwyXYZ *pt = points + k;
         gdouble x = (pt->x - xoff)/qx - jmin;
         gdouble y = (pt->y - yoff)/qy - imin;
         gdouble z = pt->z;

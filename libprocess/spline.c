@@ -27,8 +27,7 @@
 
 #define MAX_RECURSION_DEPTH 20
 
-#define PointXY GwyTriangulationPointXY
-#define point_index(a,i) g_array_index(a, PointXY, i)
+#define point_index(a,i) g_array_index(a, GwyXY, i)
 #define cpoint_index(a,i) g_array_index(a, ControlPoint, i)
 
 typedef enum {
@@ -44,8 +43,8 @@ typedef struct {
 } ControlPoint;
 
 typedef struct {
-    const PointXY *pt0;
-    const PointXY *pt1;
+    const GwyXY *pt0;
+    const GwyXY *pt1;
     const ControlPoint *uv;
     gdouble max_dev;
     gdouble max_vrdev;
@@ -56,8 +55,8 @@ typedef struct {
 } GwySplineSampleParams;
 
 typedef struct {
-    PointXY z;
-    PointXY v;
+    GwyXY z;
+    GwyXY v;
     gdouble t;
     gdouble vl;
 } GwySplineSampleItem;
@@ -92,8 +91,8 @@ static void sample_curve_naturally  (GwySpline *spline,
                                      gdouble max_dev,
                                      gdouble max_vrdev,
                                      GwySplineRecurseOutputType otype);
-static void sample_segment_naturally(const PointXY *pt,
-                                     const PointXY *ptm,
+static void sample_segment_naturally(const GwyXY *pt,
+                                     const GwyXY *ptm,
                                      const ControlPoint *uv,
                                      GArray *natural_points,
                                      GwySplineSampleParams *cparam,
@@ -101,8 +100,8 @@ static void sample_segment_naturally(const PointXY *pt,
 static void normalize_tangents      (GArray *tangents);
 static void sample_curve_uniformly  (GwySpline *spline,
                                      guint nsamples,
-                                     PointXY *coords,
-                                     PointXY *velocities);
+                                     GwyXY *coords,
+                                     GwyXY *velocities);
 static void calculate_point_tangents(GwySpline *spline);
 
 /**
@@ -123,7 +122,7 @@ gwy_spline_new(void)
 {
     GwySpline *spline = g_slice_new0(GwySpline);
 
-    spline->points = g_array_new(FALSE, FALSE, sizeof(PointXY));
+    spline->points = g_array_new(FALSE, FALSE, sizeof(GwyXY));
     spline->slackness = 1.0/G_SQRT2;
 
     return spline;
@@ -171,7 +170,7 @@ gwy_spline_free(GwySpline *spline)
  * Since: 2.45
  **/
 GwySpline*
-gwy_spline_new_from_points(const PointXY *xy,
+gwy_spline_new_from_points(const GwyXY *xy,
                            guint n)
 {
     GwySpline *spline = gwy_spline_new();
@@ -210,7 +209,7 @@ gwy_spline_get_npoints(GwySpline *spline)
  *
  * Since: 2.45
  **/
-const PointXY*
+const GwyXY*
 gwy_spline_get_points(GwySpline *spline)
 {
     if (!spline->points->len)
@@ -235,7 +234,7 @@ gwy_spline_get_points(GwySpline *spline)
  *
  * Since: 2.45
  **/
-const PointXY*
+const GwyXY*
 gwy_spline_get_tangents(GwySpline *spline)
 {
     gwy_spline_length(spline);
@@ -306,13 +305,13 @@ gwy_spline_get_closed(GwySpline *spline)
  **/
 void
 gwy_spline_set_points(GwySpline *spline,
-                      const PointXY *xy,
+                      const GwyXY *xy,
                       guint n)
 {
     GArray *points = spline->points;
 
     if (points->len == n
-        && memcmp(xy, points->data, n*sizeof(PointXY)) == 0)
+        && memcmp(xy, points->data, n*sizeof(GwyXY)) == 0)
         return;
 
     g_array_set_size(spline->points, 0);
@@ -405,7 +404,7 @@ gwy_spline_length(GwySpline *spline)
     GArray *tl_points = spline->tl_points;
 
     if (G_UNLIKELY(!tl_points)) {
-        spline->tl_points = g_array_sized_new(FALSE, FALSE, sizeof(PointXY),
+        spline->tl_points = g_array_sized_new(FALSE, FALSE, sizeof(GwyXY),
                                               2*(spline->points->len + 1));
         tl_points = spline->tl_points;
     }
@@ -443,14 +442,14 @@ gwy_spline_length(GwySpline *spline)
  *
  * Since: 2.45
  **/
-const PointXY*
+const GwyXY*
 gwy_spline_sample_naturally(GwySpline *spline,
                             guint *n)
 {
     GArray *drawing_points = spline->drawing_points;
 
     if (G_UNLIKELY(!drawing_points)) {
-        spline->drawing_points = g_array_new(FALSE, FALSE, sizeof(PointXY));
+        spline->drawing_points = g_array_new(FALSE, FALSE, sizeof(GwyXY));
         drawing_points = spline->drawing_points;
     }
 
@@ -503,8 +502,8 @@ gwy_spline_sample_naturally(GwySpline *spline,
  **/
 gdouble
 gwy_spline_sample_uniformly(GwySpline *spline,
-                            PointXY *xy,
-                            PointXY *t,
+                            GwyXY *xy,
+                            GwyXY *t,
                             guint n)
 {
     GArray *fixed_samples = spline->fixed_samples;
@@ -520,12 +519,12 @@ gwy_spline_sample_uniformly(GwySpline *spline,
 
     if (G_UNLIKELY(!fixed_samples)) {
         spline->fixed_samples = g_array_sized_new(FALSE, FALSE,
-                                                  sizeof(PointXY), n);
+                                                  sizeof(GwyXY), n);
         fixed_samples = spline->fixed_samples;
     }
     if (G_UNLIKELY(!fixed_tangents)) {
         spline->fixed_tangents = g_array_sized_new(FALSE, FALSE,
-                                                   sizeof(PointXY), n);
+                                                   sizeof(GwyXY), n);
         fixed_tangents = spline->fixed_tangents;
     }
 
@@ -541,9 +540,9 @@ gwy_spline_sample_uniformly(GwySpline *spline,
     }
 
     if (xy)
-        memcpy(xy, fixed_samples->data, n*sizeof(PointXY));
+        memcpy(xy, fixed_samples->data, n*sizeof(GwyXY));
     if (t)
-        memcpy(t, fixed_tangents->data, n*sizeof(PointXY));
+        memcpy(t, fixed_tangents->data, n*sizeof(GwyXY));
 
     return length;
 }
@@ -596,11 +595,11 @@ division_time(gdouble v0, gdouble v1, gdouble x)
  * Interpolate position in one spline segment.
  **/
 static inline void
-interpolate_z(const PointXY *pt0,
-              const PointXY *pt1,
+interpolate_z(const GwyXY *pt0,
+              const GwyXY *pt1,
               const ControlPoint *uv,
               gdouble t,
-              PointXY *z)
+              GwyXY *z)
 {
     gdouble s = 1.0 - t;
     gdouble s2 = s*s, s3 = s2*s;
@@ -621,11 +620,11 @@ interpolate_z(const PointXY *pt0,
  * Interpolate velocity in one spline segment.
  **/
 static inline void
-interpolate_v(const PointXY *pt0,
-              const PointXY *pt1,
+interpolate_v(const GwyXY *pt0,
+              const GwyXY *pt1,
               const ControlPoint *uv,
               gdouble t,
-              PointXY *v)
+              GwyXY *v)
 {
     gdouble s = 1.0 - t;
     gdouble s2 = s*s;
@@ -637,7 +636,7 @@ interpolate_v(const PointXY *pt0,
 }
 
 static inline void
-interpolate_straight_line(const PointXY *xyp, const PointXY *xyn,
+interpolate_straight_line(const GwyXY *xyp, const GwyXY *xyn,
                           ControlPoint *uv)
 {
     uv->ux = (2.0*xyp->x + xyn->x)/3.0;
@@ -648,7 +647,7 @@ interpolate_straight_line(const PointXY *xyp, const PointXY *xyn,
 
 /* Interpolate the next control point u. */
 static inline void
-interpolate_cu_next(const PointXY *xyp, const PointXY *cp, const PointXY *cn,
+interpolate_cu_next(const GwyXY *xyp, const GwyXY *cp, const GwyXY *cn,
                     gdouble kq,
                     ControlPoint *uv)
 {
@@ -658,7 +657,7 @@ interpolate_cu_next(const PointXY *xyp, const PointXY *cp, const PointXY *cn,
 
 /* Interpolate the previous control point v. */
 static inline void
-interpolate_cv_prev(const PointXY *xyp, const PointXY *cp, const PointXY *cn,
+interpolate_cv_prev(const GwyXY *xyp, const GwyXY *cp, const GwyXY *cn,
                     gdouble kq,
                     ControlPoint *uv)
 {
@@ -679,13 +678,13 @@ interpolate_cv_prev(const PointXY *xyp, const PointXY *cp, const PointXY *cn,
  **/
 static void
 calculate_control_points(gint n,
-                         const PointXY *xy,
+                         const GwyXY *xy,
                          gdouble slackness,
                          gboolean closed,
                          ControlPoint *uv)
 {
-    const PointXY *xyp, *xyn;
-    PointXY cp, cn;
+    const GwyXY *xyp, *xyn;
+    GwyXY cp, cn;
     gdouble lenp, lenn, q;
     gint i, to;
 
@@ -751,7 +750,7 @@ sample_segment_recurse(GwySplineSampleParams *cparam,
                        const GwySplineSampleItem *c1)
 {
     gdouble q, t, eps;
-    PointXY z, v;
+    GwyXY z, v;
     GwySplineSampleItem cc;
 
     z.x = (c0->z.x + c1->z.x)/2.0;
@@ -778,7 +777,7 @@ sample_segment_recurse(GwySplineSampleParams *cparam,
 
             case CURVE_RECURSE_OUTPUT_T_L:
             {
-                PointXY tl;
+                GwyXY tl;
                 tl.x = c1->t;
                 tl.y = (hypot(c0->z.x - cc.z.x, c0->z.y - cc.z.y)
                         + hypot(cc.z.x - c1->z.x, cc.z.y - c1->z.y));
@@ -806,7 +805,7 @@ sample_curve_naturally(GwySpline *spline,
     GArray *points = spline->points;
     GArray *tangents = spline->tangents;
     GwySplineSampleParams cparam;
-    const PointXY *pt, *ptm;
+    const GwyXY *pt, *ptm;
     guint i, nseg;
 
     g_array_set_size(natural_points, 0);
@@ -814,15 +813,15 @@ sample_curve_naturally(GwySpline *spline,
         return;
 
     if (G_UNLIKELY(!tangents)) {
-        spline->tangents = g_array_sized_new(FALSE, FALSE, sizeof(PointXY),
+        spline->tangents = g_array_sized_new(FALSE, FALSE, sizeof(GwyXY),
                                              points->len);
         tangents = spline->tangents;
     }
     g_array_set_size(tangents, points->len);
 
     if (points->len == 1) {
-        PointXY singlept = point_index(points, 0);
-        PointXY zero = { 0.0, 0.0 };
+        GwyXY singlept = point_index(points, 0);
+        GwyXY zero = { 0.0, 0.0 };
         g_array_append_val(natural_points, singlept);
         point_index(tangents, 0) = zero;
         return;
@@ -851,7 +850,7 @@ sample_curve_naturally(GwySpline *spline,
     if (otype == CURVE_RECURSE_OUTPUT_X_Y)
         g_array_append_vals(natural_points, pt, 1);
     else if (otype == CURVE_RECURSE_OUTPUT_T_L) {
-        PointXY zero = { 0.0, 0.0 };
+        GwyXY zero = { 0.0, 0.0 };
         g_array_append_val(natural_points, zero);
     }
     else {
@@ -874,7 +873,7 @@ sample_curve_naturally(GwySpline *spline,
 }
 
 static void
-sample_segment_naturally(const PointXY *pt, const PointXY *ptm,
+sample_segment_naturally(const GwyXY *pt, const GwyXY *ptm,
                          const ControlPoint *uv, GArray *natural_points,
                          GwySplineSampleParams *cparam,
                          guint i)
@@ -903,7 +902,7 @@ sample_segment_naturally(const PointXY *pt, const PointXY *ptm,
 
     if (cparam->otype == CURVE_RECURSE_OUTPUT_T_L) {
         for (j = start; j < natural_points->len; j++) {
-            PointXY *natpt = &point_index(natural_points, j);
+            GwyXY *natpt = &point_index(natural_points, j);
             natpt->x += i - 1.0;
             natpt->y += point_index(natural_points, j-1).y;
         }
@@ -919,7 +918,7 @@ calculate_point_tangents(GwySpline *spline)
     guint i;
 
     for (i = 0; i < points->len; i++) {
-        PointXY prev, next;
+        GwyXY prev, next;
 
         if (i) {
             prev.x = cpoint_index(control_points, i-1).vx;
@@ -951,17 +950,17 @@ calculate_point_tangents(GwySpline *spline)
 static void
 sample_curve_uniformly(GwySpline *spline,
                        guint nsamples,
-                       PointXY *coords,
-                       PointXY *velocities)
+                       GwyXY *coords,
+                       GwyXY *velocities)
 {
     GArray *tl_points = spline->tl_points;
     GArray *control_points = spline->control_points;
     GArray *points = spline->points;
     guint i, j, k, kmax, npts;
     gdouble pos, t, q, v0l, v1l, t0, t1, l0, l1, length;
-    const PointXY *pt0, *pt1;
+    const GwyXY *pt0, *pt1;
     ControlPoint *uv;
-    PointXY v0, v1;
+    GwyXY v0, v1;
 
     /* Handle miscellaneous degenerate cases.  We could also handle npts == 2
      * directly but this one should be fine for sample_curve() so let it deal
@@ -972,8 +971,8 @@ sample_curve_uniformly(GwySpline *spline,
 
     g_return_if_fail(npts);
     if (npts == 1) {
-        PointXY singlept = point_index(points, 0);
-        PointXY zero = { 0.0, 0.0 };
+        GwyXY singlept = point_index(points, 0);
+        GwyXY zero = { 0.0, 0.0 };
         for (i = 0; i < nsamples; i++) {
             if (coords)
                 coords[i] = singlept;
@@ -1044,7 +1043,7 @@ normalize_tangents(GArray *tangents)
     guint i, n = tangents->len;
 
     for (i = 0; i < n; i++) {
-        PointXY *v = &point_index(tangents, i);
+        GwyXY *v = &point_index(tangents, i);
         gdouble vl = hypot(v->x, v->y);
         if (vl > 0.0) {
             v->x /= vl;

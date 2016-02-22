@@ -22,6 +22,7 @@
 #ifndef __GWY_PROCESS_CORRECT_H__
 #define __GWY_PROCESS_CORRECT_H__
 
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
@@ -57,7 +58,7 @@ void gwy_data_field_distort                  (GwyDataField *source,
                                               gdouble fill_value);
 void gwy_data_field_sample_distorted         (GwyDataField *source,
                                               GwyDataField *dest,
-                                              const GwyTriangulationPointXY *coords,
+                                              const GwyXY *coords,
                                               GwyInterpolationType interp,
                                               GwyExteriorType exterior,
                                               gdouble fill_value);

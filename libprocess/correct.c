@@ -28,14 +28,12 @@
 #include <libprocess/correct.h>
 #include <libprocess/interpolation.h>
 
-#define PointXY GwyTriangulationPointXY
-
 static void    gwy_data_field_distort_internal(GwyDataField *source,
                                                GwyDataField *dest,
                                                GwyInterpolationType interp,
                                                GwyExteriorType exterior,
                                                gdouble fill_value,
-                                               const PointXY *coords,
+                                               const GwyXY *coords,
                                                GwyCoordTransform2DFunc invtrans,
                                                gpointer user_data);
 static gdouble unrotate_refine_correction     (GwyDataLine *derdist,
@@ -490,7 +488,7 @@ unrotate_refine_correction(GwyDataLine *derdist,
 void
 gwy_data_field_sample_distorted(GwyDataField *source,
                                 GwyDataField *dest,
-                                const PointXY *coords,
+                                const GwyXY *coords,
                                 GwyInterpolationType interp,
                                 GwyExteriorType exterior,
                                 gdouble fill_value)
@@ -542,7 +540,7 @@ gwy_data_field_distort_internal(GwyDataField *source,
                                 GwyInterpolationType interp,
                                 GwyExteriorType exterior,
                                 gdouble fill_value,
-                                const PointXY *coords,
+                                const GwyXY *coords,
                                 GwyCoordTransform2DFunc invtrans,
                                 gpointer user_data)
 {
