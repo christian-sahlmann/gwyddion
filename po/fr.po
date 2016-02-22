@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-02-05 02:14+0100\n"
-"PO-Revision-Date: 2016-02-06 16:11+0100\n"
+"POT-Creation-Date: 2016-02-21 02:14+0100\n"
+"PO-Revision-Date: 2016-02-21 11:24+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -125,10 +125,10 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2124 app/data-browser.c:2906 app/data-browser.c:3768
-#: app/data-browser.c:3927 app/data-browser.c:4213 app/data-browser.c:4620
-#: app/data-browser.c:7155 app/data-browser.c:7237 app/resource-editor.c:366
-#: modules/process/convolution_filter.c:692
+#: app/data-browser.c:2152 app/data-browser.c:2934 app/data-browser.c:3796
+#: app/data-browser.c:3955 app/data-browser.c:4241 app/data-browser.c:4648
+#: app/data-browser.c:7183 app/data-browser.c:7265 app/resource-editor.c:366
+#: modules/process/convolution_filter.c:693
 msgid "Untitled"
 msgstr "Sans titre"
 
@@ -441,7 +441,8 @@ msgstr "Orientation de l'ellipse équivalente"
 msgid "Id"
 msgstr "Identifiant"
 
-#: libprocess/gwygrainvalue.c:1121 modules/process/wave_synth.c:486
+#: libprocess/gwygrainvalue.c:1121 modules/graph/graph_peaks.c:156
+#: modules/process/extract_path.c:392 modules/process/wave_synth.c:486
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Position"
@@ -456,7 +457,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5183 app/toolbox.c:117
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5211 app/toolbox.c:117
 msgid "Volume"
 msgstr "Volume"
 
@@ -521,11 +522,11 @@ msgstr "Plateau"
 
 #: libprocess/gwyprocessenums.c:126
 #: libgwydgets/gwygraphwindowmeasuredialog.c:52
-#: modules/process/convolution_filter.c:413
+#: modules/process/convolution_filter.c:414
 msgid "Horizontal"
 msgstr "Horizontale"
 
-#: libprocess/gwyprocessenums.c:127 modules/process/convolution_filter.c:429
+#: libprocess/gwyprocessenums.c:127 modules/process/convolution_filter.c:430
 msgid "Vertical"
 msgstr "Verticale"
 
@@ -1287,7 +1288,7 @@ msgstr "Préféré"
 
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
 #: modules/file/imgexport.c:3879 modules/file/imgexport.c:4305
-#: modules/file/rawfile.c:995 modules/process/convolution_filter.c:539
+#: modules/file/rawfile.c:995 modules/process/convolution_filter.c:540
 #: modules/process/neural.c:421 modules/tools/selectionmanager.c:336
 msgid "Name"
 msgstr "Nom"
@@ -1605,57 +1606,57 @@ msgstr "Canal :"
 msgid "Section:"
 msgstr "Section :"
 
-#: app/data-browser.c:5044
+#: app/data-browser.c:5072
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:5045
+#: app/data-browser.c:5073
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:5046
+#: app/data-browser.c:5074
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:5091
+#: app/data-browser.c:5119
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5116
+#: app/data-browser.c:5144
 msgid "Show file messages"
 msgstr "Afficher les messages de chargement de fichier"
 
-#: app/data-browser.c:5128
+#: app/data-browser.c:5156
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5141
+#: app/data-browser.c:5169
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5155 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5183 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:5197
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:6436
+#: app/data-browser.c:6464
 #, c-format
 msgid "Messages for %s"
 msgstr "Messages pour %s"
 
-#: app/data-browser.c:6440
+#: app/data-browser.c:6468
 msgid "Messages for Untitled"
 msgstr "Messages pour Untitled"
 
-#: app/data-browser.c:7193
+#: app/data-browser.c:7221
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser.c:7279
+#: app/data-browser.c:7307
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
@@ -1988,8 +1989,8 @@ msgid "Origin"
 msgstr "Origine"
 
 #: app/gwyplaintool.c:1019 modules/file/rawfile.c:997
-#: modules/process/convolution_filter.c:350
-#: modules/process/convolution_filter.c:554 modules/process/neural.c:422
+#: modules/process/convolution_filter.c:351
+#: modules/process/convolution_filter.c:555 modules/process/neural.c:422
 #: modules/process/obj_synth.c:539 modules/process/pat_synth.c:1453
 msgid "Size"
 msgstr "Taille"
@@ -2126,15 +2127,15 @@ msgstr "Enregistrer les méta-données"
 msgid "Edit selected item"
 msgstr "Éditer l'élément sélectionné"
 
-#: app/resource-editor.c:140 modules/process/convolution_filter.c:504
+#: app/resource-editor.c:140 modules/process/convolution_filter.c:505
 msgid "Create a new item"
 msgstr "Créer un nouvel élément"
 
-#: app/resource-editor.c:146 modules/process/convolution_filter.c:509
+#: app/resource-editor.c:146 modules/process/convolution_filter.c:510
 msgid "Create a new item based on selected one"
 msgstr "Créer un nouvel élément basé sur celui sélectionné"
 
-#: app/resource-editor.c:152 modules/process/convolution_filter.c:514
+#: app/resource-editor.c:152 modules/process/convolution_filter.c:515
 msgid "Delete selected item"
 msgstr "Supprimer l'élément sélectionné"
 
@@ -2887,60 +2888,60 @@ msgstr "octet à la position %d"
 msgid "%s instead of %s"
 msgstr "%s au lieu de %s"
 
-#: app/validate.c:365
+#: app/validate.c:374
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "aucun canal %d n'existe pour %s"
 
-#: app/validate.c:374
+#: app/validate.c:385
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "aucun graphe %d n'existe pour %s"
 
-#: app/validate.c:383
+#: app/validate.c:394
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "aucun spectre %d n'existe pour %s"
 
-#: app/validate.c:397
+#: app/validate.c:409
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "aucun volume %d n'existe pour %s"
 
-#: app/validate.c:450
+#: app/validate.c:462
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count est à %d sur %s"
 
-#: app/validate.c:631
+#: app/validate.c:643
 msgid "Invalid item key format"
 msgstr "Format d'élément invalide"
 
-#: app/validate.c:632
+#: app/validate.c:644
 msgid "Item key contains invalid characters"
 msgstr "Le nom d'élément contient des caractères invalides"
 
-#: app/validate.c:633
+#: app/validate.c:645
 msgid "Item key does not belong to any known data"
 msgstr "Le nom d'élément ne correspond à aucune donnée connue"
 
-#: app/validate.c:634
+#: app/validate.c:646
 msgid "Wrong data item id"
 msgstr "Numéro d'élément de données erroné"
 
-#: app/validate.c:635
+#: app/validate.c:647
 msgid "Unexpected data item type"
 msgstr "Type d'élément inattendu"
 
-#: app/validate.c:636
+#: app/validate.c:648
 msgid "String value is not valid UTF-8"
 msgstr "La chaîne de caractère n'a pas un format UTF-8 valide"
 
-#: app/validate.c:637
+#: app/validate.c:649
 msgid "Object has several references"
 msgstr "L'objet a plusieurs références"
 
-#: app/validate.c:638
+#: app/validate.c:650
 msgid "Secondary data item has no primary data"
 msgstr "L'élément de données secondaires n'a pas de données primaires"
 
@@ -3016,7 +3017,7 @@ msgstr ""
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:168 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:182 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "L'en-tête de fichier est tronqué."
@@ -3101,7 +3102,7 @@ msgstr "Hauteur :"
 msgid "Value units:"
 msgstr "Unités :"
 
-#: modules/file/asciiexport.c:264 modules/graph/graph_export_ascii.c:111
+#: modules/file/asciiexport.c:264 modules/graph/graph_export_ascii.c:112
 msgid "Export Text"
 msgstr "Exporter au format texte"
 
@@ -3223,19 +3224,19 @@ msgid "Neither `%s' nor `%s' header field found."
 msgstr "Les champs d'en-tête `%s' et `%s' n'ont pas été trouvés."
 
 #: modules/file/createc.c:771 modules/file/matfile.c:600
-#: modules/file/rhk-sm4.c:1469
+#: modules/file/rhk-sm4.c:1470
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
 "L'initialisation de zlib a échoué avec l'erreur %d, impossible de "
 "décompresser les données."
 
-#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1483
+#: modules/file/createc.c:785 modules/file/rhk-sm4.c:1484
 #, c-format
 msgid "Decompression of compressed data failed with error %d."
 msgstr "La décompression des données a échoué avec l'erreur %d."
 
-#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1526
+#: modules/file/createc.c:830 modules/file/rhk-sm4.c:1527
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr ""
 "Impossible de décompresser les données. Le support Zlib n'a pas été intégré."
@@ -3678,7 +3679,7 @@ msgstr "Importe les fichiers Gwyddion XYZ."
 msgid "GwyXYZ data files"
 msgstr "Données GwyXYZ"
 
-#: modules/file/gxyzffile.c:195
+#: modules/file/gxyzffile.c:209
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr ""
@@ -4198,7 +4199,7 @@ msgstr "Image"
 #: modules/process/dwtanisotropy.c:203 modules/process/fft_filter_1d.c:299
 #: modules/process/fft_profile.c:296 modules/process/fractal.c:257
 #: modules/process/nanoindent_adjust.c:229 modules/process/polydistort.c:251
-#: modules/process/rotate.c:288 modules/process/scale.c:252
+#: modules/process/rotate.c:288 modules/process/scale.c:253
 #: modules/process/straighten_path.c:276 modules/process/unrotate.c:278
 #: modules/tools/linestats.c:413 modules/tools/profile.c:559
 #: modules/tools/roughness.c:868 modules/tools/sfunctions.c:449
@@ -4294,7 +4295,7 @@ msgid "Selection"
 msgstr "Sélection"
 
 #: modules/file/imgexport.c:4514 modules/file/rawfile.c:462
-#: modules/process/convolution_filter.c:276
+#: modules/process/convolution_filter.c:277
 msgid "Presets"
 msgstr "Préréglages"
 
@@ -4743,7 +4744,7 @@ msgid "Nanonics files (.nan)"
 msgstr "Nanonis NAN (.nan)"
 
 #: modules/file/nanonics.c:177 modules/file/nanonics.c:446
-#: modules/file/wsxmfile.c:222
+#: modules/file/wsxmfile.c:231
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Le marqueur de fin d'en-tête attendu ‘%s’ n'a pas été trouvé."
@@ -5576,9 +5577,9 @@ msgstr "Format de données"
 
 #: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
 #: modules/process/arithmetic.c:235 modules/process/calcoefs_view.c:325
-#: modules/process/convolution_filter.c:237
+#: modules/process/convolution_filter.c:238
 #: modules/process/deposit_synth.c:643 modules/process/drift.c:247
-#: modules/process/edge.c:640 modules/process/entropy.c:180
+#: modules/process/edge.c:640 modules/process/entropy.c:181
 #: modules/process/fft_filter_1d.c:188 modules/process/grain_edge.c:215
 #: modules/process/grain_filter.c:317 modules/process/grain_mark.c:249
 #: modules/process/grain_wshed.c:168 modules/process/mark_disconn.c:209
@@ -6071,7 +6072,7 @@ msgstr "Type de données %d invalides pour les données de ligne."
 msgid "data ranges"
 msgstr "Plages de données"
 
-#: modules/file/rhk-spm32.c:492
+#: modules/file/rhk-spm32.c:490
 msgid "data offset"
 msgstr "Offset de données"
 
@@ -6494,23 +6495,23 @@ msgstr "WSF ASCII (.wsf)"
 msgid "File header does not end with an empty line."
 msgstr "L'en-tête de fichier ne se termine pas par une ligne vide."
 
-#: modules/file/wsxmfile.c:99
+#: modules/file/wsxmfile.c:103
 msgid "Imports Nanotec WSxM data files."
 msgstr "Importe les fichiers Nanotec WSxM."
 
-#: modules/file/wsxmfile.c:112
+#: modules/file/wsxmfile.c:116
 msgid "WSxM files (.tom, .stp)"
 msgstr "WSxM (.tom, .stp)"
 
-#: modules/file/wsxmfile.c:248
+#: modules/file/wsxmfile.c:257
 msgid "number of columns"
 msgstr "Nombre de colonnes"
 
-#: modules/file/wsxmfile.c:255
+#: modules/file/wsxmfile.c:264
 msgid "number of rows"
 msgstr "Nombre de lignes"
 
-#: modules/file/wsxmfile.c:266
+#: modules/file/wsxmfile.c:275
 #, c-format
 msgid "Unknown data type `%s'."
 msgstr "Type de données `%s' inconnu."
@@ -6532,7 +6533,7 @@ msgid "Export XYZ"
 msgstr "Exporter au format XYZ"
 
 #: modules/file/xyzexport.c:319 modules/process/curvature.c:705
-#: modules/process/entropy.c:216 modules/process/facet-level.c:207
+#: modules/process/entropy.c:217 modules/process/facet-level.c:207
 #: modules/process/level.c:259 modules/process/linematch.c:904
 #: modules/process/neural.c:596 modules/process/polylevel.c:492
 #: modules/process/slope_dist.c:419 modules/tools/filter.c:300
@@ -6571,98 +6572,99 @@ msgstr "Le code d'unité %d est invalide ou n'est pas supporté."
 msgid "The first line contains too many items."
 msgstr "La première ligne contient trop d'éléments."
 
-#: modules/graph/graph_align.c:56
+#: modules/graph/graph_align.c:57
 msgid "Aligns graph curves."
 msgstr "Aligne les courbes."
 
-#: modules/graph/graph_align.c:70
+#: modules/graph/graph_align.c:71
 msgid "/_Align"
 msgstr "/_Aligner"
 
-#: modules/graph/graph_align.c:73
+#: modules/graph/graph_align.c:74
 msgid "Align curves"
 msgstr "Aligner les courbes"
 
-#: modules/graph/graph_cd.c:140
+#: modules/graph/graph_cd.c:136
 msgid "Critical dimension measurements"
 msgstr "Mesures de dimensions critiques"
 
-#: modules/graph/graph_cd.c:154
+#: modules/graph/graph_cd.c:150
 msgid "/_Critical Dimension..."
 msgstr "/Dimension _critique..."
 
-#: modules/graph/graph_cd.c:157
+#: modules/graph/graph_cd.c:153
 msgid "Fit critical dimension"
 msgstr "Ajuster la dimension critique"
 
-#: modules/graph/graph_cd.c:213 modules/graph/graph_fit.c:271
+#: modules/graph/graph_cd.c:209 modules/graph/graph_fit.c:267
 msgid "Fit Graph"
 msgstr "Ajuster le graphe"
 
-#: modules/graph/graph_cd.c:216 modules/graph/graph_fdfit.c:255
-#: modules/graph/graph_fit.c:274 modules/process/fit_2d.c:249
+#: modules/graph/graph_cd.c:212 modules/graph/graph_fdfit.c:251
+#: modules/graph/graph_fit.c:270 modules/process/fit_2d.c:249
 #: modules/volume/volume_fdfit.c:300
 msgid "verb|_Fit"
 msgstr "Ajuster"
 
-#: modules/graph/graph_cd.c:263 modules/graph/graph_cut.c:163
-#: modules/graph/graph_fdfit.c:307 modules/graph/graph_fit.c:326
+#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:160
+#: modules/graph/graph_fdfit.c:306 modules/graph/graph_fit.c:325
+#: modules/graph/graph_peaks.c:194
 msgid "_Graph curve:"
 msgstr "_Graphe :"
 
-#: modules/graph/graph_cd.c:277 modules/graph/graph_fdfit.c:321
-#: modules/graph/graph_fit.c:340 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_cd.c:276 modules/graph/graph_fdfit.c:320
+#: modules/graph/graph_fit.c:339 modules/volume/volume_fdfit.c:406
 msgid "F_unction:"
 msgstr "Fonction :"
 
-#: modules/graph/graph_cd.c:306 modules/graph/graph_fdfit.c:362
-#: modules/graph/graph_fit.c:376 modules/process/curvature.c:746
+#: modules/graph/graph_cd.c:305 modules/graph/graph_fdfit.c:361
+#: modules/graph/graph_fit.c:375 modules/process/curvature.c:746
 #: modules/volume/volume_fdfit.c:447
 msgid "Parameter"
 msgstr "Paramètre"
 
-#: modules/graph/graph_cd.c:308 modules/graph/graph_fdfit.c:364
-#: modules/graph/graph_fit.c:378 modules/process/fit_2d.c:339
+#: modules/graph/graph_cd.c:307 modules/graph/graph_fdfit.c:363
+#: modules/graph/graph_fit.c:377 modules/process/fit_2d.c:339
 #: modules/volume/volume_fdfit.c:449
 msgid "Error"
 msgstr "Erreur"
 
-#: modules/graph/graph_cd.c:320 modules/graph/graph_cut.c:193
-#: modules/graph/graph_fdfit.c:416 modules/graph/graph_fit.c:434
+#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:190
+#: modules/graph/graph_fdfit.c:415 modules/graph/graph_fit.c:433
 #: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:389
 msgid "Range:"
 msgstr "Plage :"
 
-#: modules/graph/graph_cd.c:331 modules/graph/graph_cut.c:204
-#: modules/graph/graph_fdfit.c:427 modules/graph/graph_fit.c:445
+#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:201
+#: modules/graph/graph_fdfit.c:426 modules/graph/graph_fit.c:444
 #: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:400
 msgid "range|to"
 msgstr "jusqu'à"
 
-#: modules/graph/graph_cd.c:348
+#: modules/graph/graph_cd.c:347
 msgid "_Draw whole circle"
 msgstr "_Dessiner un cercle entier"
 
-#: modules/graph/graph_cd.c:383 modules/graph/graph_fdfit.c:492
-#: modules/graph/graph_fit.c:532 modules/process/fit_2d.c:985
+#: modules/graph/graph_cd.c:382 modules/graph/graph_fdfit.c:491
+#: modules/graph/graph_fit.c:531 modules/process/fit_2d.c:985
 #: modules/volume/volume_fdfit.c:574
 msgid "Save Fit Report"
 msgstr "Sauver le rapport d'ajustement"
 
-#: modules/graph/graph_cd.c:530 modules/graph/graph_cd.c:1137
-#: modules/graph/graph_fdfit.c:710 modules/graph/graph_fit.c:764
+#: modules/graph/graph_cd.c:529 modules/graph/graph_cd.c:1107
+#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
 #: modules/volume/volume_fdfit.c:908
 msgid "Fit"
 msgstr "Ajustement"
 
-#: modules/graph/graph_cd.c:556 modules/graph/graph_fdfit.c:750
-#: modules/graph/graph_fit.c:804 modules/volume/volume_fdfit.c:979
+#: modules/graph/graph_cd.c:555 modules/graph/graph_fdfit.c:749
+#: modules/graph/graph_fit.c:803 modules/volume/volume_fdfit.c:979
 #: modules/volume/volume_fdfit.c:1086
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 
-#: modules/graph/graph_cd.c:711 modules/graph/graph_fdfit.c:799
-#: modules/graph/graph_fit.c:853 modules/process/entropy.c:556
+#: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
+#: modules/graph/graph_fit.c:852 modules/process/entropy.c:557
 #: modules/process/fit_2d.c:396 modules/tools/grainmeasure.c:217
 #: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
@@ -6672,57 +6674,57 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 msgid "N.A."
 msgstr "N. A."
 
-#: modules/graph/graph_cd.c:1023 modules/graph/graph_fdfit.c:1388
-#: modules/graph/graph_fit.c:1525 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1358
+#: modules/graph/graph_fit.c:1495 modules/volume/volume_fdfit.c:1721
 msgid "===== Fit Results ====="
 msgstr "===== Résultats de l'ajustement ====="
 
-#: modules/graph/graph_cd.c:1027 modules/graph/graph_fdfit.c:1392
-#: modules/graph/graph_fit.c:1529 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1362
+#: modules/graph/graph_fit.c:1499 modules/volume/volume_fdfit.c:1725
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Données :             %s\n"
 
-#: modules/graph/graph_cd.c:1030 modules/graph/graph_fdfit.c:1395
-#: modules/graph/graph_fit.c:1532 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1365
+#: modules/graph/graph_fit.c:1502 modules/volume/volume_fdfit.c:1728
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Nombre de points : %d sur %d\n"
 
-#: modules/graph/graph_cd.c:1034 modules/graph/graph_fdfit.c:1399
-#: modules/graph/graph_fit.c:1536 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1369
+#: modules/graph/graph_fit.c:1506 modules/volume/volume_fdfit.c:1732
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1040 modules/graph/graph_fdfit.c:1405
-#: modules/graph/graph_fit.c:1542 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1375
+#: modules/graph/graph_fit.c:1512 modules/volume/volume_fdfit.c:1738
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fonction ajustée :  %s\n"
 
-#: modules/graph/graph_cd.c:1043 modules/graph/graph_fdfit.c:1408
-#: modules/graph/graph_fit.c:1545 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1378
+#: modules/graph/graph_fit.c:1515 modules/volume/volume_fdfit.c:1741
 msgid "Results\n"
 msgstr "Résultats\n"
 
-#: modules/graph/graph_cut.c:87
+#: modules/graph/graph_cut.c:84
 msgid "Cut graph"
 msgstr "Couper le graphe"
 
-#: modules/graph/graph_cut.c:101
-msgid "/_Cut Graph..."
-msgstr "/_Couper le graphe..."
+#: modules/graph/graph_cut.c:98
+msgid "/_Cut..."
+msgstr "/_Couper..."
 
-#: modules/graph/graph_cut.c:104
+#: modules/graph/graph_cut.c:101
 msgid "Extract part of graph into new one"
 msgstr "Extraire la partie du graphe en nouveau graphe"
 
-#: modules/graph/graph_cut.c:143
+#: modules/graph/graph_cut.c:140
 msgid "Cut Graph"
 msgstr "Couper le graphe"
 
-#: modules/graph/graph_cut.c:176
+#: modules/graph/graph_cut.c:173
 msgid "Cut _all curves"
 msgstr "Couper toute les courbes"
 
@@ -6748,67 +6750,67 @@ msgstr "%s: le graphe doit être un spectre I-V."
 msgid "DOS Spectrum for \"%s\""
 msgstr "Spectre DOS pour \"%s\""
 
-#: modules/graph/graph_export_ascii.c:52
+#: modules/graph/graph_export_ascii.c:53
 msgid "Plain text"
 msgstr "Texte brut"
 
-#: modules/graph/graph_export_ascii.c:53
+#: modules/graph/graph_export_ascii.c:54
 msgid "Gnuplot friendly"
 msgstr "Compatible Gnuplot"
 
-#: modules/graph/graph_export_ascii.c:54
+#: modules/graph/graph_export_ascii.c:55
 msgid "Comma separated values"
 msgstr "Valeurs séparées par des virgules"
 
-#: modules/graph/graph_export_ascii.c:55
+#: modules/graph/graph_export_ascii.c:56
 msgid "Origin friendly"
 msgstr "Compatible Origin"
 
-#: modules/graph/graph_export_ascii.c:56
+#: modules/graph/graph_export_ascii.c:57
 msgid "Igor Pro text wave"
 msgstr "Igor Pro wave texte"
 
-#: modules/graph/graph_export_ascii.c:70
+#: modules/graph/graph_export_ascii.c:71
 msgid "Exports graph data to text files."
 msgstr "Exporte le graphe dans un fichier texte."
 
-#: modules/graph/graph_export_ascii.c:84
+#: modules/graph/graph_export_ascii.c:85
 msgid "/Export _Text..."
 msgstr "/Exporter au format _texte..."
 
-#: modules/graph/graph_export_ascii.c:87
+#: modules/graph/graph_export_ascii.c:88
 msgid "Export graph data to a text file"
 msgstr "Exporter le graphe dans un fichier texte"
 
-#: modules/graph/graph_export_ascii.c:127
+#: modules/graph/graph_export_ascii.c:128
 msgid "POSIX _number format"
 msgstr "_Nombre au format POSIX"
 
-#: modules/graph/graph_export_ascii.c:133
+#: modules/graph/graph_export_ascii.c:134
 msgid "Export _labels"
 msgstr "Exporter les _labels"
 
-#: modules/graph/graph_export_ascii.c:139
+#: modules/graph/graph_export_ascii.c:140
 msgid "Export _units"
 msgstr "Exporter les _unités"
 
-#: modules/graph/graph_export_ascii.c:145
+#: modules/graph/graph_export_ascii.c:146
 msgid "Export _metadata"
 msgstr "Exporter les _métadonnées"
 
-#: modules/graph/graph_export_bitmap.c:35
+#: modules/graph/graph_export_bitmap.c:36
 msgid "Export graph into bitmap"
 msgstr "Exporter le graphe en image PNG"
 
-#: modules/graph/graph_export_bitmap.c:49
+#: modules/graph/graph_export_bitmap.c:50
 msgid "/Export _Bitmap"
 msgstr "/Exporter en image PNG"
 
-#: modules/graph/graph_export_bitmap.c:52
+#: modules/graph/graph_export_bitmap.c:53
 msgid "Export graph to a raster image"
 msgstr "Exporter le graphe sous forme d' image"
 
-#: modules/graph/graph_export_bitmap.c:64
+#: modules/graph/graph_export_bitmap.c:65
 msgid "Export to PNG"
 msgstr "Exporter en PNG"
 
@@ -6828,130 +6830,176 @@ msgstr "Exporter le graphe au format PostScript"
 msgid "Export to PostScript"
 msgstr "Exporter en PostScript"
 
-#: modules/graph/graph_fdfit.c:172
+#: modules/graph/graph_fdfit.c:168
 msgid "Fit force-distance data"
 msgstr "Ajuster les données force-distance"
 
-#: modules/graph/graph_fdfit.c:186
+#: modules/graph/graph_fdfit.c:182
 msgid "/_Fit FD Curve..."
 msgstr "/Ajuster la courbe _force-distance..."
 
-#: modules/graph/graph_fdfit.c:189
+#: modules/graph/graph_fdfit.c:185
 msgid "Fit a force-distance curve"
 msgstr "Ajuster une courbe force-distance"
 
-#: modules/graph/graph_fdfit.c:252 modules/volume/volume_fdfit.c:297
+#: modules/graph/graph_fdfit.c:248 modules/volume/volume_fdfit.c:297
 msgid "Fit FD Curve"
 msgstr "Ajuster la courbe FD"
 
-#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:278
+#: modules/graph/graph_fdfit.c:255 modules/graph/graph_fit.c:274
 #: modules/process/fit_2d.c:251 modules/process/measure_lattice.c:263
 #: modules/volume/volume_fdfit.c:304
 msgid "verb|_Estimate"
 msgstr "_Estimer"
 
-#: modules/graph/graph_fdfit.c:261 modules/graph/graph_fit.c:280
+#: modules/graph/graph_fdfit.c:257 modules/graph/graph_fit.c:276
 #: modules/process/fit_2d.c:253 modules/volume/volume_fdfit.c:306
 msgid "_Plot Inits"
 msgstr "Initialiser"
 
-#: modules/graph/graph_fdfit.c:360 modules/graph/graph_fit.c:374
+#: modules/graph/graph_fdfit.c:359 modules/graph/graph_fit.c:373
 #: modules/process/fit_2d.c:347 modules/volume/volume_fdfit.c:445
 msgid "Fix"
 msgstr "Fixe"
 
-#: modules/graph/graph_fdfit.c:366 modules/graph/graph_fit.c:380
+#: modules/graph/graph_fdfit.c:365 modules/graph/graph_fit.c:379
 #: modules/process/fit_2d.c:330 modules/volume/volume_fdfit.c:451
 msgid "Initial"
 msgstr "Initial"
 
-#: modules/graph/graph_fdfit.c:377 modules/graph/graph_fit.c:395
+#: modules/graph/graph_fdfit.c:376 modules/graph/graph_fit.c:394
 #: modules/process/fit_2d.c:433 modules/volume/volume_fdfit.c:462
 msgid "χ<sup>2</sup> result:"
 msgstr "Résultat χ<sup>2</sup> :"
 
-#: modules/graph/graph_fdfit.c:393 modules/graph/graph_fit.c:411
+#: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
 #: modules/process/fit_2d.c:416 modules/volume/volume_fdfit.c:478
 msgid "Correlation Matrix"
 msgstr "Matrice de corrélation"
 
-#: modules/graph/graph_fdfit.c:448 modules/graph/graph_fit.c:486
+#: modules/graph/graph_fdfit.c:447 modules/graph/graph_fit.c:485
 #: modules/process/wpour_mark.c:415 modules/volume/volume_fdfit.c:533
 msgid "Instant:"
 msgstr "Affichage immédiat :"
 
-#: modules/graph/graph_fdfit.c:451 modules/graph/graph_fit.c:489
+#: modules/graph/graph_fdfit.c:450 modules/graph/graph_fit.c:488
 msgid "esti_mate"
 msgstr "e_stimer"
 
-#: modules/graph/graph_fdfit.c:458 modules/graph/graph_fit.c:496
+#: modules/graph/graph_fdfit.c:457 modules/graph/graph_fit.c:495
 #: modules/volume/volume_fdfit.c:543
 msgid "p_lot"
 msgstr "graphe"
 
-#: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
+#: modules/graph/graph_fdfit.c:708 modules/graph/graph_fit.c:762
 #: modules/volume/volume_fdfit.c:907
 msgid "Estimate"
 msgstr "Estimation"
 
-#: modules/graph/graph_fdfit.c:1434 modules/graph/graph_fit.c:1571
+#: modules/graph/graph_fdfit.c:1404 modules/graph/graph_fit.c:1541
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somme résiduelle :   %g\n"
 
-#: modules/graph/graph_fdfit.c:1437 modules/graph/graph_fit.c:1574
+#: modules/graph/graph_fdfit.c:1407 modules/graph/graph_fit.c:1544
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
 
-#: modules/graph/graph_filter.c:39
+#: modules/graph/graph_filter.c:40
 msgid "Remove graph noise by filtering."
 msgstr "Supprimer le bruit d'un graphe par  filtrage."
 
-#: modules/graph/graph_filter.c:53
+#: modules/graph/graph_filter.c:54
 msgid "/_Filter"
 msgstr "/_Filtre"
 
-#: modules/graph/graph_filter.c:56
+#: modules/graph/graph_filter.c:57
 msgid "Remove noise from graph curves"
 msgstr "Supprimer le bruit présent dans des courbes"
 
-#: modules/graph/graph_fit.c:185
+#: modules/graph/graph_fit.c:181
 msgid "Fit graph with function"
 msgstr "Ajuster le graphe avec une fonction"
 
-#: modules/graph/graph_fit.c:199
+#: modules/graph/graph_fit.c:195
 msgid "/_Fit Function..."
 msgstr "/_Fonction d'ajustement..."
 
-#: modules/graph/graph_fit.c:202
+#: modules/graph/graph_fit.c:198
 msgid "Fit a function on graph data"
 msgstr "Ajustement d'une fonction sur un graphe"
 
-#: modules/graph/graph_fit.c:387
+#: modules/graph/graph_fit.c:386
 msgid "Copy all fitted values to estimates"
 msgstr "Copier toutes les valeurs ajustées vers les valeurs estimées"
 
-#: modules/graph/graph_fit.c:461
+#: modules/graph/graph_fit.c:460
 msgid "Plot full range"
 msgstr "Afficher la plage complète"
 
-#: modules/graph/graph_fit.c:471
+#: modules/graph/graph_fit.c:470
 msgid "Create a difference graph"
 msgstr "Différence entre l'ajustement et les données"
 
-#: modules/graph/graph_level.c:38
+#: modules/graph/graph_level.c:39
 msgid "Level graph by line."
 msgstr "Ajustement linéaire d'un graphe."
 
-#: modules/graph/graph_level.c:52
+#: modules/graph/graph_level.c:53
 msgid "/_Level"
 msgstr "/Niveau"
 
-#: modules/graph/graph_level.c:55
+#: modules/graph/graph_level.c:56
 msgid "Level graph curves"
 msgstr "Ajustement de graphes"
+
+#: modules/graph/graph_peaks.c:118
+msgid "Finds peaks on graph curves."
+msgstr "Localise les pics dans un graphe."
+
+#: modules/graph/graph_peaks.c:132
+msgid "/Find _Peaks..."
+msgstr "/Localisation de _pics..."
+
+#: modules/graph/graph_peaks.c:135
+msgid "Find graph curve peaks"
+msgstr "Localisation de pics dans un graphe"
+
+#: modules/graph/graph_peaks.c:157
+msgid "Prominence"
+msgstr ""
+
+#: modules/graph/graph_peaks.c:173
+msgid "Graph Peaks"
+msgstr "Pics du graphe"
+
+#: modules/graph/graph_peaks.c:207
+msgid "Order peaks _by:"
+msgstr "Classer les pics par :"
+
+#: modules/graph/graph_peaks.c:222
+msgid "Number of _peaks:"
+msgstr "Nombre de _pics :"
+
+#: modules/graph/graph_peaks.c:243 modules/process/curvature.c:774
+#: modules/process/grain_stat.c:345 modules/process/measure_lattice.c:402
+#: modules/process/polylevel.c:608 modules/tools/distance.c:264
+#: modules/tools/roughness.c:822 modules/tools/stats.c:451
+msgid "Save table to a file"
+msgstr "Sauver le tableau"
+
+#: modules/graph/graph_peaks.c:247 modules/process/curvature.c:779
+#: modules/process/grain_stat.c:350 modules/process/measure_lattice.c:406
+#: modules/process/polylevel.c:618 modules/tools/distance.c:269
+#: modules/tools/roughness.c:827 modules/tools/stats.c:456
+msgid "Copy table to clipboard"
+msgstr "Copier la table vers le presse-papier"
+
+#: modules/graph/graph_peaks.c:625
+msgid "Save Peak Parameters"
+msgstr "Enregistrer les paramètres des pics"
 
 #: modules/layer/axis.c:143
 msgid "Layer allowing selection of horizontal or vertical lines."
@@ -7105,12 +7153,12 @@ msgstr "_Nombre de pas :"
 msgid "_Logarithmic value scale"
 msgstr "Échelle _logarithmique"
 
-#: modules/process/angle_dist.c:204 modules/process/entropy.c:233
+#: modules/process/angle_dist.c:204 modules/process/entropy.c:234
 #: modules/process/slope_dist.c:391
 msgid "Use local plane _fitting"
 msgstr "Utiliser l'ajustement du plan local"
 
-#: modules/process/angle_dist.c:213 modules/process/entropy.c:244
+#: modules/process/angle_dist.c:213 modules/process/entropy.c:245
 #: modules/process/slope_dist.c:402
 msgid "_Plane size:"
 msgstr "Taille du _plan :"
@@ -7872,60 +7920,60 @@ msgstr "Faible"
 msgid "Strong"
 msgstr "Forte"
 
-#: modules/process/convolution_filter.c:123
+#: modules/process/convolution_filter.c:124
 msgid "symmetry|None"
 msgstr "Aucune"
 
-#: modules/process/convolution_filter.c:124
+#: modules/process/convolution_filter.c:125
 msgid "symmetry|Even"
 msgstr "Paire"
 
-#: modules/process/convolution_filter.c:125
+#: modules/process/convolution_filter.c:126
 msgid "symmetry|Odd"
 msgstr "Impaire"
 
-#: modules/process/convolution_filter.c:131
+#: modules/process/convolution_filter.c:132
 msgid "Generic convolution filter with a user-defined matrix."
 msgstr "Filtre de convolution générique avec matrice utilisateur"
 
-#: modules/process/convolution_filter.c:156
+#: modules/process/convolution_filter.c:157
 msgid "/_Integral Transforms/Con_volution Filter..."
 msgstr "/Transformées/Filtre de con_volution..."
 
-#: modules/process/convolution_filter.c:160
+#: modules/process/convolution_filter.c:161
 msgid "General convolution filter"
 msgstr "Filtre de convolution "
 
-#: modules/process/convolution_filter.c:234
+#: modules/process/convolution_filter.c:235
 msgid "Convolution Filter"
 msgstr "Filtre de convolution"
 
-#: modules/process/convolution_filter.c:270 modules/tools/filter.c:170
+#: modules/process/convolution_filter.c:271 modules/tools/filter.c:170
 #: modules/tools/filter.c:274
 msgid "Filter"
 msgstr "Filtre"
 
-#: modules/process/convolution_filter.c:367
+#: modules/process/convolution_filter.c:368
 msgid "Coefficient Matrix"
 msgstr "Matrice de coefficients"
 
-#: modules/process/convolution_filter.c:387
+#: modules/process/convolution_filter.c:388
 msgid "_Divisor:"
 msgstr "_Diviseur :"
 
-#: modules/process/convolution_filter.c:392
+#: modules/process/convolution_filter.c:393
 msgid "_automatic"
 msgstr "_automatique"
 
-#: modules/process/convolution_filter.c:402
+#: modules/process/convolution_filter.c:403
 msgid "Symmetry"
 msgstr "Symétrie"
 
-#: modules/process/convolution_filter.c:562
+#: modules/process/convolution_filter.c:563
 msgid "HSym"
 msgstr "Symétrie horizontale"
 
-#: modules/process/convolution_filter.c:572
+#: modules/process/convolution_filter.c:573
 msgid "VSym"
 msgstr "Symétrie verticale"
 
@@ -7938,8 +7986,8 @@ msgstr ""
 "sur la matrice réelle."
 
 #: modules/process/correct_affine.c:247
-msgid "/_Correct Data/_Affine Distortion..."
-msgstr "/_Correction des données/Distorsion _affine..."
+msgid "/_Distortion/_Affine..."
+msgstr "/_Distorsion/_Affine..."
 
 #: modules/process/correct_affine.c:251
 msgid "Correct affine distortion"
@@ -8210,20 +8258,6 @@ msgstr "_Graphe cible :"
 msgid "New graph"
 msgstr "Nouveau graphe"
 
-#: modules/process/curvature.c:774 modules/process/grain_stat.c:345
-#: modules/process/measure_lattice.c:402 modules/process/polylevel.c:608
-#: modules/tools/distance.c:264 modules/tools/roughness.c:822
-#: modules/tools/stats.c:451
-msgid "Save table to a file"
-msgstr "Sauver le tableau"
-
-#: modules/process/curvature.c:779 modules/process/grain_stat.c:350
-#: modules/process/measure_lattice.c:406 modules/process/polylevel.c:618
-#: modules/tools/distance.c:269 modules/tools/roughness.c:827
-#: modules/tools/stats.c:456
-msgid "Copy table to clipboard"
-msgstr "Copier la table vers le presse-papier"
-
 #: modules/process/curvature.c:952
 msgid "Axes are outside the image."
 msgstr "Les axes sont en-dehors de l'image."
@@ -8486,8 +8520,8 @@ msgid "Evaluates and/or correct thermal drift in fast scan axis."
 msgstr "Évalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
 
 #: modules/process/drift.c:189
-msgid "/_Correct Data/Compensate _Drift..."
-msgstr "/_Correction des données/Compenser la _dérive..."
+msgid "/_Distortion/Compensate _Drift..."
+msgstr "/_Distorsion/Compenser la _dérive..."
 
 #: modules/process/drift.c:193
 msgid "Evaluate/correct thermal drift in fast scan axis"
@@ -8768,53 +8802,53 @@ msgstr "Convoluer par le laplacien d'une gaussienne (LoG)"
 msgid "Detected st_ep"
 msgstr "Saut dét_ecté"
 
-#: modules/process/entropy.c:114
+#: modules/process/entropy.c:115
 msgid "Visualizes entropy calculation for value and slope distribution."
 msgstr ""
 "Permet de visualiser les calculs d'entropie d'une distribution des valeurs "
 "ou des pentes."
 
-#: modules/process/entropy.c:128
+#: modules/process/entropy.c:129
 msgid "/_Statistics/_Entropy..."
 msgstr "/_Statistiques/_Entropie..."
 
-#: modules/process/entropy.c:132
+#: modules/process/entropy.c:133
 msgid "Calculate entropy of value and slope distributions"
 msgstr "Calculer l'entropie des distributions des pentes et des valeurs"
 
-#: modules/process/entropy.c:177
+#: modules/process/entropy.c:178
 msgid "Entropy"
 msgstr "Entropie"
 
-#: modules/process/entropy.c:205
+#: modules/process/entropy.c:206
 msgid "Value distribution"
 msgstr "Distribution  des valeurs"
 
-#: modules/process/entropy.c:207
+#: modules/process/entropy.c:208
 msgid "Slope derivative distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/entropy.c:209
+#: modules/process/entropy.c:210
 msgid "Slope angle distribution"
 msgstr "Distribution angulaire des pentes"
 
-#: modules/process/entropy.c:252
+#: modules/process/entropy.c:253
 msgid "_Zoom graph around estimate"
 msgstr "_Zoomer le graphe autour de l'estimation"
 
-#: modules/process/entropy.c:261 modules/tools/stats.c:212
+#: modules/process/entropy.c:262 modules/tools/stats.c:212
 msgid "Entropy:"
 msgstr "Entropie : "
 
-#: modules/process/entropy.c:272 modules/tools/stats.c:213
+#: modules/process/entropy.c:273 modules/tools/stats.c:213
 msgid "Entropy deficit:"
 msgstr "Déficit d'entropie : "
 
-#: modules/process/entropy.c:569
+#: modules/process/entropy.c:570
 msgid "Entropy at scales"
 msgstr "Entropie des échelles"
 
-#: modules/process/entropy.c:588
+#: modules/process/entropy.c:589
 msgid "Best estimate"
 msgstr "Meilleure estimation"
 
@@ -8865,6 +8899,55 @@ msgstr "Étendre de manière _symétrique"
 #: modules/process/extend.c:283 modules/tools/crop.c:202
 msgid "Keep lateral offsets"
 msgstr "Conserver les décalages latéraux"
+
+#: modules/process/extract_path.c:88
+msgid "Extracts coordinates and tangents along a path selection."
+msgstr "Extrait les coordonnées et tangentes le long d'un chemin."
+
+#: modules/process/extract_path.c:102
+msgid "/_Distortion/Extract _Path Selection..."
+msgstr "/_Distorsion/Extraire un chemin..."
+
+#: modules/process/extract_path.c:106
+msgid "Extract path selection data"
+msgstr "Extraire les données le long d'un chemin"
+
+#: modules/process/extract_path.c:160
+msgid "Extract Path Selection"
+msgstr "Extraire un chemin"
+
+#: modules/process/extract_path.c:177
+msgid "Number of path points:"
+msgstr "Nombre de points dans le chemin :"
+
+#: modules/process/extract_path.c:184
+msgid "There is no path selection."
+msgstr "Il n'y a aucun chemin."
+
+#: modules/process/extract_path.c:190 modules/volume/volume_extract.c:390
+msgid "X position"
+msgstr "Position X"
+
+#: modules/process/extract_path.c:194 modules/volume/volume_extract.c:397
+msgid "Y position"
+msgstr "Position Y"
+
+#: modules/process/extract_path.c:198
+msgid "X tangent"
+msgstr "Tangente X"
+
+#: modules/process/extract_path.c:202
+msgid "Y tangent"
+msgstr "Tangente Y"
+
+#: modules/process/extract_path.c:393 modules/process/extract_path.c:405
+#: modules/process/pat_synth.c:1436 modules/tools/distance.c:146
+msgid "Distance"
+msgstr "Distance"
+
+#: modules/process/extract_path.c:404
+msgid "Tangent"
+msgstr "Tangente"
 
 #: modules/process/facet-level.c:64
 msgid ""
@@ -9024,8 +9107,9 @@ msgid "FFT Real"
 msgstr "FFT Partie réelle"
 
 #: modules/process/fft.c:234
-msgid "FFT Imag"
-msgstr "FFT Partie Imaginaire"
+#, fuzzy
+msgid "FFT Imaginary"
+msgstr "Partie imaginaire de la FFT"
 
 #: modules/process/fft.c:239
 msgid "FFT Modulus"
@@ -9173,8 +9257,8 @@ msgid "Subtract an ellipse from the FFT mask"
 msgstr "Soustraire une ellipse au masque de filtrage"
 
 #: modules/process/fft_filter_2d.c:361
-msgid "Subtract a rectange from the FFT mask"
-msgstr "Soustraire un rectangle au masque de filtrage"
+msgid "Subtract a rectangle from the FFT mask"
+msgstr "Soustraire un rectangle au masque de FFT"
 
 #: modules/process/fft_filter_2d.c:372
 msgid "_FFT mask editor"
@@ -9811,16 +9895,16 @@ msgid "/_Grains/Select _Inscribed Discs"
 msgstr "/_Grains/Sélectionner les disques inscrits aux grains"
 
 #: modules/process/grain_stat.c:80
-msgid "Create a selection visualising discs incribed into grains"
-msgstr "Créer une sélection visualisant les disques inscrits aux grains"
+msgid "Create a selection visualizing discs incribed into grains"
+msgstr "Créer une sélection donnant les disques inscrits aux grains"
 
 #: modules/process/grain_stat.c:84
 msgid "/_Grains/Select _Excscribed Circles"
 msgstr "/_Grains/Sélectionner les cercles circonscrits aux grains"
 
 #: modules/process/grain_stat.c:88
-msgid "Create a selection visualising grain circumcircles"
-msgstr "Créer une sélection visualisant les cercles circonscrits aux grains"
+msgid "Create a selection visualizing grain circumcircles"
+msgstr "Créer une sélection donnant les cercles circonscrits aux grains"
 
 #: modules/process/grain_stat.c:141
 msgid "Save Grain Statistics"
@@ -10146,8 +10230,8 @@ msgid "Angle _1 tolerance:"
 msgstr "Tolérance angle _1 :"
 
 #: modules/process/indent_analyze.c:485
-msgid "Indent centre at"
-msgstr "Centre de la nano-indentation"
+msgid "Indent center at"
+msgstr "Centre de la nano-indentation à "
 
 #: modules/process/indent_analyze.c:488
 msgid "Maximum at"
@@ -10229,7 +10313,7 @@ msgstr "Unité de longueur : %s\n"
 
 #: modules/process/indent_analyze.c:1627
 #, c-format
-msgid "Indentation centre at [%d, %d] px:      %lf\n"
+msgid "Indentation center at [%d, %d] px:      %lf\n"
 msgstr "Centre de l'indentation à [%d, %d] px :      %lf\n"
 
 #: modules/process/indent_analyze.c:1629
@@ -11631,10 +11715,6 @@ msgstr "Bas"
 msgid "Flat _bottom width:"
 msgstr "Largeur :"
 
-#: modules/process/pat_synth.c:1436 modules/tools/distance.c:146
-msgid "Distance"
-msgstr "Distance"
-
 #: modules/process/pat_synth.c:1444
 msgid "_Distance:"
 msgstr "_Distance :"
@@ -11712,8 +11792,8 @@ msgid "Apllies polynomial distortion in the horizontal plane."
 msgstr "Applique une distorsion polynomiale dans le plan horizontal."
 
 #: modules/process/polydistort.c:152
-msgid "/_Correct Data/Pol_ynomial Distortion..."
-msgstr "/_Correction des données/Distorsion pol_ynomiale..."
+msgid "/_Distortion/Pol_ynomial..."
+msgstr "/_Distorsion/Pol_ynomiale... "
 
 #: modules/process/polydistort.c:156
 msgid "Apllies polynomial distortion in the horizontal plane"
@@ -11948,19 +12028,19 @@ msgstr "Données mises à l'échelle"
 msgid "verb|Scale"
 msgstr "Mettre à l'échelle"
 
-#: modules/process/scale.c:215
+#: modules/process/scale.c:216
 msgid "Scale by _ratio:"
 msgstr "Rapport d'échelle :"
 
-#: modules/process/scale.c:223
+#: modules/process/scale.c:224
 msgid "_proportional"
 msgstr "_proportionnel"
 
-#: modules/process/scale.c:234
+#: modules/process/scale.c:235
 msgid "New _width:"
 msgstr "Nouvelle largeur : "
 
-#: modules/process/scale.c:242
+#: modules/process/scale.c:243
 msgid "New _height:"
 msgstr "Nouvelle _hauteur :"
 
@@ -12155,8 +12235,8 @@ msgid "Extracts a straightened part of image along a curve."
 msgstr "Extrait une partie redressée de l'image le long d'un chemin."
 
 #: modules/process/straighten_path.c:145
-msgid "/_Correct Data/Straighten _Path..."
-msgstr "/_Correction des données/Redresser un chemin..."
+msgid "/_Distortion/Straighten _Path..."
+msgstr "/_Distorsion/Redresser un chemin..."
 
 #: modules/process/straighten_path.c:149
 msgid "Straighten along a path"
@@ -12167,13 +12247,12 @@ msgid "Straighten Path"
 msgstr "Redresser un chemin"
 
 #: modules/process/straighten_path.c:259
-#, fuzzy
 msgid "Res_tore"
-msgstr "Modèle rés_ultant : "
+msgstr "Recharger"
 
 #: modules/process/straighten_path.c:264
 msgid "Re_verse"
-msgstr "in_verser"
+msgstr "In_verser"
 
 #: modules/process/straighten_path.c:282 modules/tools/pathlevel.c:256
 #: modules/tools/profile.c:511 modules/tools/roughness.c:858
@@ -13898,14 +13977,6 @@ msgstr "_Extraire la projection"
 msgid "Projections"
 msgstr "Intersections"
 
-#: modules/volume/volume_extract.c:390
-msgid "X position"
-msgstr "Position X"
-
-#: modules/volume/volume_extract.c:397
-msgid "Y position"
-msgstr "Position Y"
-
 #: modules/volume/volume_extract.c:404
 msgid "Z position"
 msgstr "Position Z"
@@ -14297,6 +14368,15 @@ msgid ""
 msgstr ""
 "Le nombre de valeurs du fichier de données %d\n"
 "diffère du nombre de plans %d."
+
+#~ msgid "/_Correct Data/_Affine Distortion..."
+#~ msgstr "/_Correction des données/Distorsion _affine..."
+
+#~ msgid "/_Correct Data/Pol_ynomial Distortion..."
+#~ msgstr "/_Correction des données/Distorsion pol_ynomiale..."
+
+#~ msgid "FFT Imag"
+#~ msgstr "FFT Partie Imaginaire"
 
 #~ msgid "Data file too small."
 #~ msgstr "Le fichier de données est trop petit."
@@ -14709,9 +14789,6 @@ msgstr ""
 
 #~ msgid "Load and show 3D data"
 #~ msgstr "Charger et afficher des données 3D"
-
-#~ msgid "/_Extract Section"
-#~ msgstr "/_Extraire la section"
 
 #~ msgid "Neural network AFM data processing"
 #~ msgstr "Réseau neuronal de traitement de données AFM"
