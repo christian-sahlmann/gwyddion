@@ -653,7 +653,7 @@ gwy_graph_curve_model_clone_real(GObject *source,
  * @ydata: Y data points (array of size @n).
  * @n: Number of points, i.e. items in @xdata and @ydata.
  *
- * Sets curve model data.
+ * Sets curve model data from separated X and Y arrays.
  *
  * If there were calibration data in the former @gcmodel, they are removed.
  *
@@ -670,6 +670,8 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                const gdouble *ydata,
                                gint n)
 {
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
     if (gcmodel->n == n) {
         memcpy(gcmodel->xdata, xdata, n*sizeof(gdouble));
         memcpy(gcmodel->ydata, ydata, n*sizeof(gdouble));
@@ -686,6 +688,54 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
         g_free(old);
 
         gcmodel->n = n;
+    }
+
+    free_calibration(gcmodel);
+    gwy_graph_curve_model_data_changed(gcmodel);
+}
+
+/**
+ * gwy_graph_curve_model_set_data_interleaved:
+ * @gcmodel: A graph curve model.
+ * @xydata: X data points (array of size 2*@n).
+ * @n: Number of points, i.e. half the number of items in @xydata.
+ *
+ * Sets curve model data from an interleaved array.
+ *
+ * The array should contain interleaved abscissa and ordinate values:
+ * x0, x0, x1, y1, x2, y2, etc.
+ *
+ * If there were calibration data in the former @gcmodel, they are removed.
+ *
+ * <warning>The points should be ordered in ascending abscissa order, meaning
+ * @xdata values ordered from smallest to largest.  It is not enforced and you
+ * can create graphs of data the do not satisfy this condition.  However,
+ * various graph functionality may be unavailable or degraded then.  You also
+ * can use gwy_graph_curve_model_enforce_order() afterwards to ensure the
+ * recommended data point order.</warning>
+ *
+ * Since: 2.45
+ **/
+void
+gwy_graph_curve_model_set_data_interleaved(GwyGraphCurveModel *gcmodel,
+                                           const gdouble *xydata,
+                                           gint n)
+{
+    gint i;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+
+    if (gcmodel->n != n) {
+        g_free(gcmodel->xdata);
+        g_free(gcmodel->ydata);
+        gcmodel->xdata = g_new(gdouble, n);
+        gcmodel->ydata = g_new(gdouble, n);
+    }
+
+    gcmodel->n = n;
+    for (i = 0; i < n; i++) {
+        gcmodel->xdata[i] = *(xydata++);
+        gcmodel->ydata[i] = *(xydata++);
     }
 
     free_calibration(gcmodel);
@@ -781,15 +831,18 @@ gwy_graph_curve_model_enforce_order(GwyGraphCurveModel *gcmodel)
  * gwy_graph_curve_model_get_xdata:
  * @gcmodel: A graph curve model.
  *
- * Gets pointer to x data points.
+ * Gets y data points of a graph curve model.
  *
- * Data are used within the graph and cannot be freed.
+ * The returned data are owned by the and cannot be modified nor freed.  The
+ * returned pointer is valid only so long as the curve model exists and its
+ * data do not change.
  *
  * Returns: X data points, owned by the curve model.
  **/
 const gdouble*
 gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), NULL);
     return gcmodel->xdata;
 }
 
@@ -797,15 +850,18 @@ gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
  * gwy_graph_curve_model_get_ydata:
  * @gcmodel: A graph curve model.
  *
- * Gets pointer to y data points.
+ * Gets y data points of a graph curve model.
  *
- * Data are used within the graph and cannot be freed.
+ * The returned data are owned by the and cannot be modified nor freed.  The
+ * returned pointer is valid only so long as the curve model exists and its
+ * data do not change.
  *
  * Returns: Y data points, owned by the curve model.
  **/
 const gdouble*
 gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), NULL);
     return gcmodel->ydata;
 }
 
@@ -813,12 +869,14 @@ gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
  * gwy_graph_curve_model_get_ndata:
  * @gcmodel: A graph curve model.
  *
+ * Gets the number of points in a graph curve model.
+ *
  * Returns: number of data points within the curve data
  **/
-/* XXX: Malformed documentation. */
 gint
 gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 {
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), 0);
     return gcmodel->n;
 }
 
@@ -849,6 +907,9 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     const gdouble *ldata;
     gint res, i;
     gdouble realmin, realmax, offset;
+
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+    g_return_if_fail(GWY_IS_DATA_LINE(dline));
 
     if (from_index == to_index || from_index > to_index) {
         res = gwy_data_line_get_res(dline);

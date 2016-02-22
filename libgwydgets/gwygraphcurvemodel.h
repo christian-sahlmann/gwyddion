@@ -96,6 +96,9 @@ void                gwy_graph_curve_model_set_data   (GwyGraphCurveModel *gcmode
                                                       const gdouble *xdata,
                                                       const gdouble *ydata,
                                                       gint n);
+void     gwy_graph_curve_model_set_data_interleaved  (GwyGraphCurveModel *gcmodel,
+                                                      const gdouble *xydata,
+                                                      gint n);
 void     gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                                       GwyDataLine *dline,
                                                       gint from_index,
