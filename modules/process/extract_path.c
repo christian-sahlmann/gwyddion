@@ -38,8 +38,6 @@
 
 #define EXTR_PATH_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
-#define PointXY GwyTriangulationPointXY
-
 typedef struct {
     gboolean x;
     gboolean y;
@@ -249,7 +247,7 @@ output_changed(GtkToggleButton *toggle, gboolean *target)
 }
 
 static GwyGraphModel*
-create_graph_model(const PointXY *points,
+create_graph_model(const GwyXY *points,
                    const gdouble *xdata, gdouble *ydata, guint n,
                    gboolean x, gboolean y)
 {
@@ -292,13 +290,13 @@ create_graph_model(const PointXY *points,
 }
 
 /* XXX: This replicates straighten_path.c */
-static PointXY*
+static GwyXY*
 rescale_points(GwySelection *selection, GwyDataField *dfield,
                gboolean realsquare,
                gdouble *pdx, gdouble *pdy, gdouble *pqx, gdouble *pqy)
 {
     gdouble dx, dy, qx, qy, h;
-    PointXY *points;
+    GwyXY *points;
     guint n, i;
 
     dx = gwy_data_field_get_xmeasure(dfield);
@@ -313,7 +311,7 @@ rescale_points(GwySelection *selection, GwyDataField *dfield,
         qx = qy = 1.0;
 
     n = gwy_selection_get_data(selection, NULL);
-    points = g_new(PointXY, n);
+    points = g_new(GwyXY, n);
     for (i = 0; i < n; i++) {
         gdouble xy[2];
 
@@ -337,7 +335,7 @@ extract_path_do(GwyContainer *data,
 {
     GwyGraphModel *gmodel;
     GwySpline *spline;
-    PointXY *points, *tangents;
+    GwyXY *points, *tangents;
     GwySIUnit *xyunit;
     gdouble dx, dy, qx, qy, h, l, length, slackness;
     gdouble *xdata, *ydata;
@@ -364,8 +362,8 @@ extract_path_do(GwyContainer *data,
 
     /* This would give natural sampling for a straight line along some axis. */
     n = GWY_ROUND(length + 1.0);
-    points = g_new(PointXY, n);
-    tangents = g_new(PointXY, n);
+    points = g_new(GwyXY, n);
+    tangents = g_new(GwyXY, n);
     xdata = g_new(gdouble, n);
     ydata = g_new(gdouble, n);
     gwy_spline_sample_uniformly(spline, points, tangents, n);

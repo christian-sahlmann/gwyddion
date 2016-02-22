@@ -56,7 +56,7 @@
 #define CROSSPROD_PP(a, b) ((a)->x*(b)->y - (a)->y*(b)->x)
 
 #define DECLARE_SURFACE(x) \
-    static gdouble surface_##x(const VoronoiCoords *point, \
+    static gdouble surface_##x(const GwyXY *point, \
                                const VoronoiObject *owner, \
                                const LatSynthArgs *args)
 
@@ -106,16 +106,12 @@ typedef struct _LatSynthArgs LatSynthArgs;
 typedef struct _LatSynthControls LatSynthControls;
 
 typedef struct {
-    gdouble x, y;
-} VoronoiCoords;
-
-typedef struct {
-    VoronoiCoords v; /* line equation: v*r == d */
+    GwyXY v; /* line equation: v*r == d */
     gdouble d;
 } VoronoiLine;
 
 typedef struct {
-    VoronoiCoords pos; /* coordinates */
+    GwyXY pos; /* coordinates */
     VoronoiLine rel; /* precomputed coordinates relative to currently processed
                         object and their norm */
     gdouble angle; /* precomputed angle relative to currently processed object
@@ -134,7 +130,7 @@ typedef struct {
     gdouble scale;    /* ratio of square side to the average cell size */
 } VoronoiState;
 
-typedef gdouble (*RenderFunc)(const VoronoiCoords *point,
+typedef gdouble (*RenderFunc)(const GwyXY *point,
                               const VoronoiObject *owner,
                               const LatSynthArgs *args);
 
@@ -277,7 +273,7 @@ static void           create_regular_points       (VoronoiState *vstate,
                                                    gint xres,
                                                    gint yres);
 static gboolean       place_point_to_square       (VoronoiState *vstate,
-                                                   VoronoiCoords *pos,
+                                                   GwyXY *pos,
                                                    gdouble random);
 static GwyDataField*  make_displacement_map       (guint xres,
                                                    guint yres,
@@ -287,7 +283,7 @@ static GwyDataField*  make_displacement_map       (guint xres,
 static VoronoiState*  relax_lattice               (VoronoiState *vstate,
                                                    gdouble relax);
 static gdouble        cell_area_and_centre_of_mass(VoronoiObject *obj,
-                                                   VoronoiCoords *centre);
+                                                   GwyXY *centre);
 static void           find_cell_vertices          (VoronoiObject *obj);
 static void           init_relaxed_random         (VoronoiState *vstate);
 static void           relax_random_values         (VoronoiState *vstate,
@@ -295,13 +291,13 @@ static void           relax_random_values         (VoronoiState *vstate,
 static void           find_voronoi_neighbours_iter(VoronoiState *vstate,
                                                    gint iter);
 static VoronoiObject* find_owner                  (VoronoiState *vstate,
-                                                   const VoronoiCoords *point);
+                                                   const GwyXY *point);
 static void           neighbourize                (GSList *ne0,
-                                                   const VoronoiCoords *center);
+                                                   const GwyXY *center);
 static void           compute_segment_angles      (GSList *ne0);
 static VoronoiObject* move_along_line             (const VoronoiObject *owner,
-                                                   const VoronoiCoords *start,
-                                                   const VoronoiCoords *end,
+                                                   const GwyXY *start,
+                                                   const GwyXY *end,
                                                    gint *next_safe);
 static void           voronoi_state_free          (VoronoiState *vstate);
 static void           lat_synth_load_args         (GwyContainer *container,
@@ -1214,7 +1210,7 @@ construct_surface(LatSynthArgs *args,
 {
     GwyDataField *tmpfield = gwy_data_field_new_alike(dfield, FALSE);
     VoronoiObject *owner, *line_start;
-    VoronoiCoords z, zline, tmp;
+    GwyXY z, zline, tmp;
     guint xres = dfield->xres, yres = dfield->yres;
     gint hsafe, vsafe;
     guint x, y, i;
@@ -1376,7 +1372,7 @@ random_squarized_points(VoronoiState *vstate, guint npts)
      * does not depend on the mean cell size which is good because the radnom
      * lattice changes more or less smoothly with size then. */
     while (nrem > nempty) {
-        VoronoiCoords pos;
+        GwyXY pos;
         pos.x = g_rand_double(rng)*(extwsq - 2.0*EPS) + EPS;
         pos.y = g_rand_double(rng)*(exthsq - 2.0*EPS) + EPS;
         if (place_point_to_square(vstate, &pos, g_rand_double(rng)))
@@ -1453,7 +1449,7 @@ create_regular_points(VoronoiState *vstate, const LatSynthArgs *args,
     GRand *rng = gwy_rand_gen_set_rng(vstate->rngset, RNG_POINTS);
     gdouble scale = vstate->scale, cth, sth, t;
     LatSynthType lattice_type = args->lattice_type;
-    VoronoiCoords cpos, pos;
+    GwyXY cpos, pos;
     gint i = 0, j = 0, disp_i, disp_j;
     const gdouble *dx_data, *dy_data;
     G_GNUC_UNUSED guint npts = 0;
@@ -1526,7 +1522,7 @@ create_regular_points(VoronoiState *vstate, const LatSynthArgs *args,
 }
 
 static gboolean
-place_point_to_square(VoronoiState *vstate, VoronoiCoords *pos, gdouble random)
+place_point_to_square(VoronoiState *vstate, GwyXY *pos, gdouble random)
 {
     VoronoiObject *obj;
     G_GNUC_UNUSED guint exthsq = vstate->hsq + 2*SQBORDER;
@@ -1664,10 +1660,10 @@ make_displacement_map(guint xres, guint yres,
     return dfield;
 }
 
-static inline VoronoiCoords
-coords_minus(const VoronoiCoords *a, const VoronoiCoords *b)
+static inline GwyXY
+coords_minus(const GwyXY *a, const GwyXY *b)
 {
-    VoronoiCoords z;
+    GwyXY z;
 
     z.x = a->x - b->x;
     z.y = a->y - b->y;
@@ -1675,10 +1671,10 @@ coords_minus(const VoronoiCoords *a, const VoronoiCoords *b)
     return z;
 }
 
-static inline VoronoiCoords
-coords_plus(const VoronoiCoords *a, const VoronoiCoords *b)
+static inline GwyXY
+coords_plus(const GwyXY *a, const GwyXY *b)
 {
-    VoronoiCoords z;
+    GwyXY z;
 
     z.x = a->x + b->x;
     z.y = a->y + b->y;
@@ -1713,7 +1709,7 @@ relax_lattice(VoronoiState *oldvstate, gdouble relax)
                 VoronoiObject *oldobj = VOBJ(l);
 
                 if (r > 0.0) {
-                    VoronoiCoords pos;
+                    GwyXY pos;
                     cell_area_and_centre_of_mass(oldobj, &pos);
                     pos.x = r*pos.x + (1.0 - r)*oldobj->pos.x;
                     pos.y = r*pos.y + (1.0 - r)*oldobj->pos.y;
@@ -1744,7 +1740,7 @@ relax_lattice(VoronoiState *oldvstate, gdouble relax)
 /* ne requirements: cyclic
  * destroys neighbourisaion by recycling rel! */
 static gdouble
-cell_area_and_centre_of_mass(VoronoiObject *obj, VoronoiCoords *centre)
+cell_area_and_centre_of_mass(VoronoiObject *obj, GwyXY *centre)
 {
     GSList *ne = obj->ne, *ne2 = ne->next;
     gdouble area = 0.0;
@@ -1752,9 +1748,9 @@ cell_area_and_centre_of_mass(VoronoiObject *obj, VoronoiCoords *centre)
     find_cell_vertices(obj);
     gwy_clear(centre, 1);
     do {
-        const VoronoiCoords *v1 = &VOBJ(ne)->rel.v;
-        const VoronoiCoords *v2 = &VOBJ(ne2)->rel.v;
-        VoronoiCoords mid = coords_plus(v1, v2);
+        const GwyXY *v1 = &VOBJ(ne)->rel.v;
+        const GwyXY *v2 = &VOBJ(ne2)->rel.v;
+        GwyXY mid = coords_plus(v1, v2);
         gdouble a = CROSSPROD_PP(v1, v2);
 
         area += a;
@@ -1778,7 +1774,7 @@ find_cell_vertices(VoronoiObject *obj)
     GSList *ne = obj->ne, *ne2;
 
     do {
-        VoronoiCoords v1, v2;
+        GwyXY v1, v2;
         gdouble D, l1, l2;
 
         ne2 = ne->next;
@@ -1831,7 +1827,7 @@ relax_random_values(VoronoiState *vstate, gdouble relax)
                 gdouble w = 0.0, z = 0.0;
 
                 do {
-                    VoronoiCoords v = coords_minus(&VOBJ(ne)->pos, &obj->pos);
+                    GwyXY v = coords_minus(&VOBJ(ne)->pos, &obj->pos);
                     gdouble v2 = 1.0/DOTPROD_SS(v, v);
 
                     w += v2;
@@ -1856,7 +1852,7 @@ relax_random_values(VoronoiState *vstate, gdouble relax)
 }
 
 static inline gdouble
-angle(const VoronoiCoords *r)
+angle(const GwyXY *r)
 {
     return atan2(r->y, r->x);
 }
@@ -1878,7 +1874,7 @@ vobj_angle_compare(gconstpointer x, gconstpointer y)
 
 /* owner->ne requirements: NONE */
 static gdouble
-surface_flat(G_GNUC_UNUSED const VoronoiCoords *point,
+surface_flat(G_GNUC_UNUSED const GwyXY *point,
              const VoronoiObject *owner,
              G_GNUC_UNUSED const LatSynthArgs *args)
 {
@@ -1892,13 +1888,13 @@ surface_flat(G_GNUC_UNUSED const VoronoiCoords *point,
 /* Returns TRUE if owner does not change and we can assume everything is
  * neighbourised.  FALSE is returned if we moved to another cell. */
 static gboolean
-find_delaunay_triangle(const VoronoiCoords *point,
+find_delaunay_triangle(const GwyXY *point,
                        const VoronoiObject **owner,
                        const VoronoiObject **neigh1,
                        const VoronoiObject **neigh2)
 {
-    VoronoiCoords dist;
-    const VoronoiCoords *v1, *v2, *v;
+    GwyXY dist;
+    const GwyXY *v1, *v2, *v;
     const VoronoiObject *pivot;
     GSList *ne1, *ne2, *ne;
     gdouble cp1, cp2;
@@ -1928,7 +1924,7 @@ find_delaunay_triangle(const VoronoiCoords *point,
     /* We are not.  The somewhat slower path is to check the opposite cell that
      * also has ne1 and ne2 neighbours. */
     while (TRUE) {
-        VoronoiCoords tdist;
+        GwyXY tdist;
         gdouble a1, a2, a12;
 
         /* Find ne1 and the third point (ne) in the neighbour list of ne2. */
@@ -1995,11 +1991,11 @@ find_delaunay_triangle(const VoronoiCoords *point,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-surface_linear(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_linear(const GwyXY *point, const VoronoiObject *owner,
                G_GNUC_UNUSED const LatSynthArgs *args)
 {
     const VoronoiObject *neigh1, *neigh2;
-    VoronoiCoords dist, v1, v2;
+    GwyXY dist, v1, v2;
     gdouble r, D, c1, c2, c;
 
     if (find_delaunay_triangle(point, &owner, &neigh1, &neigh2)) {
@@ -2023,11 +2019,11 @@ surface_linear(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-surface_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_bumpy(const GwyXY *point, const VoronoiObject *owner,
               G_GNUC_UNUSED const LatSynthArgs *args)
 {
     const VoronoiObject *neigh1, *neigh2;
-    VoronoiCoords dist, v1, v2;
+    GwyXY dist, v1, v2;
     gdouble r, D, c1, c2, c, cs;
 
     if (find_delaunay_triangle(point, &owner, &neigh1, &neigh2)) {
@@ -2055,10 +2051,10 @@ surface_bumpy(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: NONE */
 static gdouble
-surface_radial(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_radial(const GwyXY *point, const VoronoiObject *owner,
                const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r;
 
     dist = coords_minus(point, &owner->pos);
@@ -2069,10 +2065,10 @@ surface_radial(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-surface_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_segmented(const GwyXY *point, const VoronoiObject *owner,
                   G_GNUC_UNUSED const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r, phi;
     GSList *ne;
 
@@ -2092,10 +2088,10 @@ surface_segmented(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: cyclic, neighbourized, segment angles */
 static gdouble
-surface_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_zsegmented(const GwyXY *point, const VoronoiObject *owner,
                    G_GNUC_UNUSED const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r, phi;
     GSList *ne;
 
@@ -2116,10 +2112,10 @@ surface_zsegmented(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: neighbourized */
 static gdouble
-surface_border(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_border(const GwyXY *point, const VoronoiObject *owner,
                const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r, r_min;
     GSList *ne;
 
@@ -2142,10 +2138,10 @@ surface_border(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: neighbourized */
 static gdouble
-surface_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_zborder(const GwyXY *point, const VoronoiObject *owner,
                 const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r, r_min;
     GSList *ne;
 
@@ -2168,10 +2164,10 @@ surface_zborder(const VoronoiCoords *point, const VoronoiObject *owner,
 
 /* owner->ne requirements: NONE */
 static gdouble
-surface_second(const VoronoiCoords *point, const VoronoiObject *owner,
+surface_second(const GwyXY *point, const VoronoiObject *owner,
                const LatSynthArgs *args)
 {
-    VoronoiCoords dist;
+    GwyXY dist;
     gdouble r, r_min;
     GSList *ne;
 
@@ -2201,7 +2197,7 @@ compute_segment_angles(GSList *ne0)
 {
     GSList *ne;
     VoronoiObject *p, *q;
-    VoronoiCoords z;
+    GwyXY z;
 
     ne = ne0;
     do {
@@ -2220,10 +2216,10 @@ compute_segment_angles(GSList *ne0)
  * |r - a| = |r - b|
  */
 static inline gdouble
-intersection_time(const VoronoiCoords *a, const VoronoiCoords *b,
-                  const VoronoiCoords *linevec, const VoronoiCoords *start)
+intersection_time(const GwyXY *a, const GwyXY *b,
+                  const GwyXY *linevec, const GwyXY *start)
 {
-    VoronoiCoords p, q;
+    GwyXY p, q;
     gdouble s;
 
     /* line dividing a-neighbourhood and b-neighbourhood */
@@ -2244,10 +2240,10 @@ intersection_time(const VoronoiCoords *a, const VoronoiCoords *b,
  * remaining in the new owner */
 static VoronoiObject*
 move_along_line(const VoronoiObject *owner,
-                const VoronoiCoords *start,
-                const VoronoiCoords *end, gint *next_safe)
+                const GwyXY *start,
+                const GwyXY *end, gint *next_safe)
 {
-    VoronoiCoords linevec;
+    GwyXY linevec;
     VoronoiObject *ow;
     GSList *ne, *nearest = NULL;
     gdouble t, t_min, t_back;
@@ -2294,11 +2290,11 @@ move_along_line(const VoronoiObject *owner,
  * grip, use move_along_line() then
  * works for both cyclic and noncyclic ne-> */
 static VoronoiObject*
-find_owner(VoronoiState *vstate, const VoronoiCoords *point)
+find_owner(VoronoiState *vstate, const GwyXY *point)
 {
     GSList *ne, **squares = vstate->squares;
     VoronoiObject *owner = NULL;
-    VoronoiCoords dist;
+    GwyXY dist;
     gint jx, jy;
     gint ix, iy;
     gint wsq = vstate->wsq, hsq = vstate->hsq;
@@ -2362,7 +2358,7 @@ compute_straight_angles(GSList *ne0)
  *
  * ne0 requirements: NONE */
 static void
-neighbourize(GSList *ne0, const VoronoiCoords *center)
+neighbourize(GSList *ne0, const GwyXY *center)
 {
     GSList *ne;
 
@@ -2379,9 +2375,9 @@ neighbourize(GSList *ne0, const VoronoiCoords *center)
 /* return true iff point z (given as VoronoiLine) is shadowed by points a and b
  * (XXX: all coordiantes are relative) */
 static inline gboolean
-in_shadow(const VoronoiLine *a, const VoronoiLine *b, const VoronoiCoords *z)
+in_shadow(const VoronoiLine *a, const VoronoiLine *b, const GwyXY *z)
 {
-    VoronoiCoords r, oa, ob, rz;
+    GwyXY r, oa, ob, rz;
     gdouble s;
 
     /* Artifical fix for periodic grids, because in Real World This Just Does

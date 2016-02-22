@@ -39,8 +39,6 @@
 
 #define STRAIGHTEN_RUN_MODES (GWY_RUN_INTERACTIVE)
 
-#define PointXY GwyTriangulationPointXY
-
 enum {
     RESPONSE_PREVIEW = 1,
 };
@@ -675,13 +673,13 @@ closed_changed(StraightenControls *controls, GtkToggleButton *toggle)
 }
 
 /* XXX: This replicates straighten_path.c */
-static PointXY*
+static GwyXY*
 rescale_points(GwySelection *selection, GwyDataField *dfield,
                gboolean realsquare,
                gdouble *pdx, gdouble *pdy, gdouble *pqx, gdouble *pqy)
 {
     gdouble dx, dy, qx, qy, h;
-    PointXY *points;
+    GwyXY *points;
     guint n, i;
 
     dx = gwy_data_field_get_xmeasure(dfield);
@@ -696,7 +694,7 @@ rescale_points(GwySelection *selection, GwyDataField *dfield,
         qx = qy = 1.0;
 
     n = gwy_selection_get_data(selection, NULL);
-    points = g_new(PointXY, n);
+    points = g_new(GwyXY, n);
     for (i = 0; i < n; i++) {
         gdouble xy[2];
 
@@ -719,7 +717,7 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
 {
     GwyDataField *mask;
     GwySpline *spline;
-    PointXY *points, *tangents, *coords;
+    GwyXY *points, *tangents, *coords;
     gdouble dx, dy, qx, qy, h, length;
     guint n, i, j, k, thickness;
     gboolean have_exterior = FALSE;
@@ -759,9 +757,9 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     mask = gwy_data_field_new_alike(result, TRUE);
     m = gwy_data_field_get_data(mask);
 
-    points = g_new(PointXY, n);
-    tangents = g_new(PointXY, n);
-    coords = g_new(PointXY, n*thickness);
+    points = g_new(GwyXY, n);
+    tangents = g_new(GwyXY, n);
+    coords = g_new(GwyXY, n*thickness);
     gwy_spline_sample_uniformly(spline, points, tangents, n);
     for (i = k = 0; i < n; i++) {
         gdouble xc = qx*points[i].x, yc = qy*points[i].y;
