@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  The quicksort algorithm was copied from GNU C library,
@@ -33,6 +33,98 @@
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
 #define DSWAP(x, y) GWY_SWAP(gdouble, x, y)
+
+GType
+gwy_xy_get_type(void)
+{
+    static GType xy_type = 0;
+
+    if (G_UNLIKELY(!xy_type)) {
+        xy_type = g_boxed_type_register_static("GwyXY",
+                                               (GBoxedCopyFunc)gwy_xy_copy,
+                                               (GBoxedFreeFunc)gwy_xy_free);
+    }
+
+    return xy_type;
+}
+
+/**
+ * gwy_xy_copy:
+ * @xy: Cartesian coordinates in plane.
+ *
+ * Copies Cartesian coordinates in plane.
+ *
+ * Returns: A copy of @xy. The result must be freed using gwy_xy_free(),
+ *          not g_free().
+ *
+ * Since: 2.45
+ **/
+GwyXY*
+gwy_xy_copy(const GwyXY *xy)
+{
+    g_return_val_if_fail(xy, NULL);
+    return g_slice_copy(sizeof(GwyXY), xy);
+}
+
+/**
+ * gwy_xy_free:
+ * @xy: Cartesian coordinates in plane.
+ *
+ * Frees Cartesian coordinates in plane created with gwy_xy_copy().
+ *
+ * Since: 2.45
+ **/
+void
+gwy_xy_free(GwyXY *xy)
+{
+    g_slice_free1(sizeof(GwyXY), xy);
+}
+
+GType
+gwy_xyz_get_type(void)
+{
+    static GType xyz_type = 0;
+
+    if (G_UNLIKELY(!xyz_type)) {
+        xyz_type = g_boxed_type_register_static("GwyXYZ",
+                                                (GBoxedCopyFunc)gwy_xyz_copy,
+                                                (GBoxedFreeFunc)gwy_xyz_free);
+    }
+
+    return xyz_type;
+}
+
+/**
+ * gwy_xyz_copy:
+ * @xyz: Cartesian coordinates in space.
+ *
+ * Copies Cartesian coordinates in space.
+ *
+ * Returns: A copy of @xyz. The result must be freed using gwy_xyz_free(),
+ *          not g_free().
+ *
+ * Since: 2.45
+ **/
+GwyXYZ*
+gwy_xyz_copy(const GwyXYZ *xyz)
+{
+    g_return_val_if_fail(xyz, NULL);
+    return g_slice_copy(sizeof(GwyXYZ), xyz);
+}
+
+/**
+ * gwy_xyz_free:
+ * @xyz: Cartesian coordinates in space.
+ *
+ * Frees Cartesian coordinates in space created with gwy_xyz_copy().
+ *
+ * Since: 2.45
+ **/
+void
+gwy_xyz_free(GwyXYZ *xyz)
+{
+    g_slice_free1(sizeof(GwyXYZ), xyz);
+}
 
 /**
  * gwy_math_humanize_numbers:
@@ -1263,6 +1355,27 @@ gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
  * GWY_SQRT_PI:
  *
  * The square root of pi.
+ **/
+
+/**
+ * GwyXY:
+ * @x: X-coordinate.
+ * @y: Y-coordinate.
+ *
+ * Representation of Cartesian coordinates in plane.
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GwyXYZ:
+ * @x: X-coordinate.
+ * @y: Y-coordinate.
+ * @z: Z-coordinate.
+ *
+ * Representation of Cartesian coordinates in space.
+ *
+ * Since: 2.45
  **/
 
 /**

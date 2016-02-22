@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #define __GWY_MATH_H__
 
 #include <glib.h>
+#include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
 #include <math.h>
 
@@ -41,6 +42,29 @@ G_BEGIN_DECLS
 
 #define GWY_SQRT3 1.73205080756887729352744634150587236694280525381038
 #define GWY_SQRT_PI 1.77245385090551602729816748334114518279754945612237
+
+typedef struct {
+    gdouble x;
+    gdouble y;
+} GwyXY;
+
+typedef struct {
+    gdouble x;
+    gdouble y;
+    gdouble z;
+} GwyXYZ;
+
+#define GWY_TYPE_XY (gwy_xy_get_type())
+
+GType  gwy_xy_get_type(void)            G_GNUC_CONST;
+GwyXY* gwy_xy_copy    (const GwyXY *xy) G_GNUC_MALLOC;
+void   gwy_xy_free    (GwyXY *xy);
+
+#define GWY_TYPE_XYZ (gwy_xyz_get_type())
+
+GType   gwy_xyz_get_type(void)              G_GNUC_CONST;
+GwyXYZ* gwy_xyz_copy    (const GwyXYZ *xyz) G_GNUC_MALLOC;
+void    gwy_xyz_free    (GwyXYZ *xyz);
 
 gdouble  gwy_math_humanize_numbers     (gdouble unit,
                                         gdouble maximum,
