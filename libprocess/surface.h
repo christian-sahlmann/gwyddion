@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: brick.h 18119 2016-01-19 11:01:32Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2011-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *

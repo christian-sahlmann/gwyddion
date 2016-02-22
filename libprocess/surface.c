@@ -1,5 +1,5 @@
 /*
- *  $Id: surface.c 15637 2013-11-18 19:57:00Z yeti-dn $
+ *  $Id$
  *  Copyright (C) 2011-2016 David Nečas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
