@@ -39,6 +39,7 @@ libgwyprocess2include_HEADERS = \
 	spline.h \
 	stats.h \
 	stats_uncertainty.h \
+	surface.h \
 	tip.h \
 	triangulation.h
 
@@ -124,6 +125,7 @@ libgwyprocess2_la_SOURCES = \
 	spline.c \
 	stats.c \
 	stats_uncertainty.c \
+	surface.c \
 	tip.c \
 	triangulation.c
 

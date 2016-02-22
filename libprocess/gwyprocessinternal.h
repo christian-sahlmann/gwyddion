@@ -63,6 +63,18 @@ void _gwy_grain_value_class_setup_presets(void);
 G_GNUC_INTERNAL
 void _gwy_calibration_class_setup_presets(void);
 
+struct _GwySurfacePrivate {
+    GwySIUnit *si_unit_xy;
+    GwySIUnit *si_unit_z;
+    GwyXYZ min;
+    GwyXYZ max;
+    guchar checksum[16];
+    gboolean cached_ranges : 1;
+    gboolean cached_checksum : 1;
+};
+
+typedef struct _GwySurfacePrivate Surface;
+
 G_END_DECLS
 
 #endif /* __GWYPROCESS_INTERNAL_H__ */
