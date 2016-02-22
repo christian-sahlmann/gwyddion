@@ -577,6 +577,7 @@ gwy_module_get_rid_of(const gchar *modname)
         { GWY_MODULE_PREFIX_TOOL,   _gwy_tool_func_remove },
         { GWY_MODULE_PREFIX_LAYER,  _gwy_layer_func_remove },
         { GWY_MODULE_PREFIX_VOLUME, _gwy_volume_func_remove },
+        { GWY_MODULE_PREFIX_XYZ,    _gwy_xyz_func_remove },
     };
 
     _GwyModuleInfoInternal *iinfo;

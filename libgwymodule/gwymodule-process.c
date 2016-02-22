@@ -24,8 +24,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwymodule/gwymodule-process.h>
 #include "gwymoduleinternal.h"
-#include "gwymodule-process.h"
 
 /* The process function information */
 typedef struct {
