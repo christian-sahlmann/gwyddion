@@ -11,8 +11,13 @@ Application:
 - The current file can be closed using Ctrl-W (or File → Close in the menu).
 
 Libraries:
+- libgwyprocess: GwySurface is a new data object representing XYZ data,
+  currently providing just a few basic methods.
 - libgwyprocess: GwySpline is a new helper data structure for sampling along
   curves.
+- libgwyddion, libgwyprocess: New standard boxed structs GwyXY and GwyXYZ were
+  added to gwymath.  GwyTriangulationPointXY and GwyTriangulationPointXYZ are
+  now their aliases.
 - libgwyapp: All program messages are gathered by the default logger and
   displayed in a text view.
 - libgwyapp: Data browser can show warnings and other messages ocurring during
@@ -38,6 +43,8 @@ Libraries:
   means, not the global mean.
 - libgwydgets: Convenience combo box constructor for graph curves was added.
 - libgwydgets: Editability of graph area selections can be controlled.
+- libgwydgets: Function for setting graph curve data from a single interleaved
+  array was added.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
