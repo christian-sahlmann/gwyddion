@@ -22,6 +22,8 @@ Libraries:
   displayed in a text view.
 - libgwyapp: Data browser can show warnings and other messages ocurring during
   the opening or merging of specific files.
+- libgwyapp: Data browser displays thumbnails for graphs.
+- libgwyapp: Data browser displays thumbnails for graphs.
 - libgwyprocess: Wrong estimated sizes for tip models were corrected.
 - libgwyprocess: Two new tip models were added: Parabola and Cone.
 - libgwyprocess: Function for filling missing valies in GwyDataLine using
@@ -69,9 +71,10 @@ Modules:
 - RHK SPM32 and SM4: Imported graph curves are sorted by abscissa, fixing
   some graph functionality being broken.
 - WSxM: Files starting ‘WSxM file copyright WSxM solutions’ are also
-  recognised now.
+  recognised now.  Single-precision files are loaded correctly.
 - GWYXYZF: Byte order handling was corrected to follow the specification.
-  Physical pixel aspect ratio is set automatically upon import if appropriate.
+  The data are loaded a native XYZ data instead of being regularised to image
+  upon import.
 
 
 2.44 (2016-01-11)
@@ -912,7 +915,7 @@ Libraries:
   fails was corrected.
 - libgwyprocess: Swapped x and y coordinates of spectra in serialisation were
   fixed.
-- libgwyprocess: Added brick (3D) data support backported from Gwyddion 3
+- libgwyprocess: Added brick (volume) data support backported from Gwyddion 3
   development branch.
 - libgwydgets: Crashes upon clicking colour selection buttons were fixed.
 - libgwydgets: 3D view false colour axis shows overlay, not height units in the
