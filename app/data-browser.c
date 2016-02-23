@@ -241,7 +241,8 @@ static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 static GwyDataField* create_simple_brick_preview_field(GwyBrick *brick);
 static GwyDataField* create_simple_surface_preview_field(GwySurface *surface,
-                                                         gint maxres);
+                                                         gint max_xres,
+                                                         gint max_yres);
 static GdkPixbuf* gwy_app_get_graph_thumbnail      (GwyContainer *data,
                                                     gint id,
                                                     gint max_width,
@@ -5293,6 +5294,7 @@ gwy_app_data_browser_create_xyz(GwyAppDataBrowser *browser,
     }
     else {
         preview = create_simple_surface_preview_field(GWY_SURFACE(surface),
+                                                      SURFACE_PREVIEW_SIZE,
                                                       SURFACE_PREVIEW_SIZE);
         gwy_container_set_object_by_name(proxy->container, key, preview);
         g_object_unref(preview);
@@ -7865,7 +7867,9 @@ gwy_app_data_browser_add_surface(GwySurface *surface,
      * Among other things, it will update proxy->lists[PAGE_XYZS].last. */
     gwy_container_set_object_by_name(proxy->container, key, surface);
 
-    raster = create_simple_surface_preview_field(surface, SURFACE_PREVIEW_SIZE);
+    raster = create_simple_surface_preview_field(surface,
+                                                 SURFACE_PREVIEW_SIZE,
+                                                 SURFACE_PREVIEW_SIZE);
     g_snprintf(key, sizeof(key), "/surface/%d/preview", list->last);
     gwy_container_set_object_by_name(proxy->container, key, raster);
     g_object_unref(raster);
@@ -9690,14 +9694,15 @@ create_simple_brick_preview_field(GwyBrick *brick)
 
 static GwyDataField*
 create_simple_surface_preview_field(GwySurface *surface,
-                                    gint maxres)
+                                    gint max_xres, gint max_yres)
 {
     GwyDataField *raster;
     gint n = surface->n;
     gint xres, yres;
     gdouble xmin, xmax, ymin, ymax, q, h;
 
-    g_return_val_if_fail(maxres >= 2, NULL);
+    g_return_val_if_fail(max_xres >= 2, NULL);
+    g_return_val_if_fail(max_yres >= 2, NULL);
 
     gwy_surface_get_xrange(surface, &xmin, &xmax);
     if (xmin == xmax) {
@@ -9725,8 +9730,8 @@ create_simple_surface_preview_field(GwySurface *surface,
         yres = MAX(yres, 2);
         h = (ymax - ymin)/yres;
         xres = GWY_ROUND((xmax - xmin)/h);
-        if (CLAMP(xres, THUMB_SIZE, maxres) != xres) {
-            xres = CLAMP(xres, THUMB_SIZE, maxres);
+        if (CLAMP(xres, THUMB_SIZE, max_xres) != xres) {
+            xres = CLAMP(xres, THUMB_SIZE, max_xres);
             h = (xmax - xmin)/xres;
             yres = (gint)ceil((ymax - ymin)/h);
         }
@@ -9736,8 +9741,8 @@ create_simple_surface_preview_field(GwySurface *surface,
         xres = MAX(xres, 2);
         h = (xmax - xmin)/xres;
         yres = GWY_ROUND((ymax - ymin)/h);
-        if (CLAMP(yres, THUMB_SIZE, maxres) != yres) {
-            yres = CLAMP(yres, THUMB_SIZE, maxres);
+        if (CLAMP(yres, THUMB_SIZE, max_yres) != yres) {
+            yres = CLAMP(yres, THUMB_SIZE, max_yres);
             h = (ymax - ymin)/yres;
             xres = (gint)ceil((xmax - xmin)/h);
         }
@@ -10050,20 +10055,16 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
                                   &surface))
         return NULL;
 
-    g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
-    if (!gwy_container_gis_object_by_name(data, key, &raster)) {
-        raster = create_simple_surface_preview_field(surface,
-                                                     SURFACE_PREVIEW_SIZE);
-        gwy_container_set_object_by_name(data, key, raster);
-        g_object_unref(raster);
-    }
 
     g_snprintf(key, sizeof(key), "/surface/%d/preview/palette", id);
     gwy_container_gis_string_by_name(data, key, &gradient);
 
+    raster = create_simple_surface_preview_field(surface,
+                                                 max_width, max_height);
     pixbuf = render_data_thumbnail(raster, gradient,
                                    GWY_LAYER_BASIC_RANGE_FULL,
                                    max_width, max_height, NULL, NULL);
+    g_object_unref(raster);
 
     return pixbuf;
 }
