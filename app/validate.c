@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwystringlist.h>
+#include <libprocess/gwyprocess.h>
 #include <app/validate.h>
 #include "gwyappinternal.h"
 
@@ -46,6 +47,7 @@ typedef struct {
     GArray *graphs;
     GArray *spectra;
     GArray *volumes;
+    GArray *xyzs;
 } GwyDataValidationInfo;
 
 static GwyDataValidationFailure*
@@ -232,6 +234,7 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_SHOW:
         case KEY_IS_CALDATA:
         case KEY_IS_BRICK_PREVIEW:
+        case KEY_IS_SURFACE_PREVIEW:
         check_type(gvalue, GWY_TYPE_DATA_FIELD, key, errors);
         break;
 
@@ -250,13 +253,20 @@ validate_item_pass1(gpointer hash_key,
             g_array_append_val(info->volumes, id);
         break;
 
+        case KEY_IS_SURFACE:
+        if (check_type(gvalue, GWY_TYPE_SURFACE, key, errors))
+            g_array_append_val(info->xyzs, id);
+        break;
+
         case KEY_IS_CHANNEL_META:
         case KEY_IS_BRICK_META:
+        case KEY_IS_SURFACE_META:
         check_type(gvalue, GWY_TYPE_CONTAINER, key, errors);
         break;
 
         case KEY_IS_CHANNEL_LOG:
         case KEY_IS_BRICK_LOG:
+        case KEY_IS_SURFACE_LOG:
         check_type(gvalue, GWY_TYPE_STRING_LIST, key, errors);
         break;
 
@@ -266,6 +276,8 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_3D_MATERIAL:
         case KEY_IS_BRICK_TITLE:
         case KEY_IS_BRICK_PREVIEW_PALETTE:
+        case KEY_IS_SURFACE_TITLE:
+        case KEY_IS_SURFACE_PREVIEW_PALETTE:
         check_type(gvalue, G_TYPE_STRING, key, errors);
         break;
 
@@ -284,6 +296,7 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_MASK_COLOR:
         case KEY_IS_DATA_VIEW_SCALE:
         case KEY_IS_BRICK_VIEW_SCALE:
+        case KEY_IS_SURFACE_VIEW_SCALE:
         case KEY_IS_GRAPH_VIEW_SCALE:
         case KEY_IS_3D_VIEW_SCALE:
         check_type(gvalue, G_TYPE_DOUBLE, key, errors);
@@ -294,6 +307,7 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_GRAPH_VISIBLE:
         case KEY_IS_SPECTRA_VISIBLE:
         case KEY_IS_BRICK_VISIBLE:
+        case KEY_IS_SURFACE_VISIBLE:
         check_type(gvalue, G_TYPE_BOOLEAN, key, errors);
         break;
 
@@ -367,32 +381,35 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_3D_VIEW_SCALE:
         case KEY_IS_3D_VIEW_SIZE:
         case KEY_IS_DATA_VIEW_SCALE:
-        if (!in_array(info->channels, id))
+        if (!in_array(info->channels, id)) {
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
                                            key,
                                            _("no channel %d exists for %s"),
                                            id, strkey));
+        }
         break;
 
         case KEY_IS_GRAPH_VISIBLE:
         case KEY_IS_GRAPH_VIEW_SCALE:
         case KEY_IS_GRAPH_VIEW_SIZE:
-        if (!in_array(info->graphs, id))
+        if (!in_array(info->graphs, id)) {
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
                                            key,
                                            _("no graph %d exists for %s"),
                                            id, strkey));
+        }
         break;
 
         case KEY_IS_SPECTRA_VISIBLE:
-        if (!in_array(info->spectra, id))
+        if (!in_array(info->spectra, id)) {
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
                                            key,
                                            _("no spectra %d exists for %s"),
                                            id, strkey));
+        }
         break;
 
         case KEY_IS_BRICK_VISIBLE:
@@ -402,12 +419,30 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_BRICK_META:
         case KEY_IS_BRICK_LOG:
         case KEY_IS_BRICK_VIEW_SCALE:
-        if (!in_array(info->volumes, id))
+        if (!in_array(info->volumes, id)) {
             *errors = g_slist_prepend(*errors,
                                       FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
                                            key,
                                            _("no brick %d exists for %s"),
                                            id, strkey));
+        }
+        break;
+
+        case KEY_IS_SURFACE_VISIBLE:
+        case KEY_IS_SURFACE_TITLE:
+        case KEY_IS_SURFACE_PREVIEW:
+        case KEY_IS_SURFACE_PREVIEW_PALETTE:
+        case KEY_IS_SURFACE_META:
+        case KEY_IS_SURFACE_LOG:
+        case KEY_IS_SURFACE_VIEW_SCALE:
+        if (!in_array(info->xyzs, id)) {
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
+                                           key,
+                                           _("no surface %d exists for %s"),
+                                           id, strkey));
+        }
+        break;
 
         default:
         break;
@@ -600,6 +635,7 @@ gwy_data_validate(GwyContainer *data,
     info.graphs = g_array_new(FALSE, FALSE, sizeof(gint));
     info.spectra = g_array_new(FALSE, FALSE, sizeof(gint));
     info.volumes = g_array_new(FALSE, FALSE, sizeof(gint));
+    info.xyzs = g_array_new(FALSE, FALSE, sizeof(gint));
 
     gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
     gwy_container_foreach(data, NULL, &validate_item_pass2, &info);
@@ -616,6 +652,7 @@ gwy_data_validate(GwyContainer *data,
     g_array_free(info.graphs, TRUE);
     g_array_free(info.spectra, TRUE);
     g_array_free(info.volumes, TRUE);
+    g_array_free(info.xyzs, TRUE);
 
     if (flags & GWY_DATA_VALIDATE_NO_REPORT) {
         gwy_data_validation_failure_list_free(errors);
