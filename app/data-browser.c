@@ -3925,7 +3925,7 @@ gwy_app_data_browser_graph_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_object_unref(gmodel);
 }
 
-G_GNUC_UNUSED static void
+static void
 gwy_app_data_browser_render_graph(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                   GtkCellRenderer *renderer,
                                   GtkTreeModel *model,
@@ -4221,7 +4221,9 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
                                                       NULL);
-    gtk_tree_view_column_set_visible(column, FALSE);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_graph, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
@@ -10024,14 +10026,23 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
     return pixbuf;
 }
 
-/* Keep this private.  We cannot render graphs completely off-screen. */
-G_GNUC_UNUSED static GdkPixbuf*
+static GdkPixbuf*
 gwy_app_get_graph_thumbnail(GwyContainer *data,
                             gint id,
                             gint max_width,
                             gint max_height)
 {
+    GdkColor color = { 0, 65535, 65535, 65535 };
+    gint width = 150, height = 150;
+    GdkPixbuf *big_pixbuf, *pixbuf;
+    GdkColormap *cmap;
+    GdkGC *gc;
+    GdkVisual *visual;
+    GdkPixmap *pixmap;
     GwyGraphModel *gmodel;
+    GwyGraph *graph;
+    GwyGraphArea *area;
+    gdouble min, max, d;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
@@ -10041,10 +10052,54 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
                                   &gmodel))
         return NULL;
 
-    /* FIXME: I do not know how to implement this w/o showing windows on
-     * screen... */
+    visual = gdk_visual_get_best();
+    cmap = gdk_colormap_new(visual, FALSE);
 
-    return NULL;
+    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
+    gdk_drawable_set_colormap(pixmap, cmap);
+
+    gc = gdk_gc_new(pixmap);
+    gdk_gc_set_colormap(gc, cmap);
+
+    gdk_gc_set_rgb_fg_color(gc, &color);
+    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
+
+    graph = GWY_GRAPH(gwy_graph_new(gmodel));
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+
+    gwy_graph_model_get_x_range(gmodel, &min, &max);
+    gwy_graph_area_set_x_range(area, min, max);
+
+    /* TODO: support logscale correctly. */
+    gwy_graph_model_get_y_range(gmodel, &min, &max);
+    if (max > min) {
+        d = max - min;
+        min -= 0.05*d;
+        max += 0.05*d;
+    }
+    else if (max) {
+        min = 0.5*max;
+        max = 1.5*max;
+    }
+    else {
+        min = -1.0;
+        max = 1.0;
+    }
+    gwy_graph_area_set_y_range(area, min, max);
+
+    gwy_graph_area_draw_on_drawable(area, pixmap, gc, 0, 0, width, height);
+    big_pixbuf = gdk_pixbuf_get_from_drawable(NULL, pixmap, cmap,
+                                              0, 0, 0, 0,
+                                              -1, -1);
+    g_object_unref(pixmap);
+    g_object_unref(gc);
+    g_object_unref(cmap);
+
+    pixbuf = gdk_pixbuf_scale_simple(big_pixbuf, max_width, max_height,
+                                     GDK_INTERP_BILINEAR);
+    g_object_unref(big_pixbuf);
+
+    return pixbuf;
 }
 
 /**
