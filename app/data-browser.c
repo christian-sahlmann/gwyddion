@@ -98,6 +98,13 @@ typedef enum {
     GWY_BRICK_ITEM_TITLE,
 } GwyBrickItem;
 
+typedef enum {
+    GWY_SURFACE_ITEM_PREVIEW,
+    GWY_SURFACE_ITEM_GRADIENT,
+    GWY_SURFACE_ITEM_META,
+    GWY_SURFACE_ITEM_TITLE,
+} GwySurfaceItem;
+
 typedef struct _GwyAppDataBrowser GwyAppDataBrowser;
 typedef struct _GwyAppDataProxy   GwyAppDataProxy;
 
@@ -252,6 +259,12 @@ static void       gwy_app_data_browser_notify_watch(GList *watchers,
                                                     gint id,
                                                     GwyDataWatchEventType event);
 static void       gwy_app_sync_brick_items         (GwyContainer *source,
+                                                    GwyContainer *dest,
+                                                    gint from_id,
+                                                    gint to_id,
+                                                    gboolean delete_too,
+                                                    ...);
+static void       gwy_app_sync_surface_items       (GwyContainer *source,
                                                     GwyContainer *dest,
                                                     gint from_id,
                                                     gint to_id,
@@ -5594,6 +5607,12 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
             gwy_app_data_proxy_brick_set_visible(proxy, iter, FALSE);
             proxy->resetting_visibility = FALSE;
             break;
+
+            case PAGE_XYZS:
+            proxy->resetting_visibility = TRUE;
+            gwy_app_data_proxy_surface_set_visible(proxy, iter, FALSE);
+            proxy->resetting_visibility = FALSE;
+            break;
         }
         gwy_app_data_proxy_maybe_finalize(proxy);
     }
@@ -5659,26 +5678,19 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         g_snprintf(key, sizeof(key), "%s/%d", BRICK_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
+
+        case PAGE_XYZS:
+        g_snprintf(key, sizeof(key), "%s/%d", SURFACE_PREFIX, i);
+        gwy_container_remove_by_prefix(data, key);
+        break;
     }
     g_object_unref(object);
 
-    switch (pageno) {
-        case PAGE_CHANNELS:
-        gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
-        break;
-
-        case PAGE_GRAPHS:
+    /* Graph numbers start from 1 for historical reasons. */
+    if (pageno == PAGE_GRAPHS)
         gwy_app_data_list_update_last(&proxy->lists[pageno], 0);
-        break;
-
-        case PAGE_SPECTRA:
+    else
         gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
-        break;
-
-        case PAGE_VOLUMES:
-        gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
-        break;
-    }
 }
 
 static void
@@ -5732,6 +5744,10 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
 
         case PAGE_VOLUMES:
         gwy_app_data_browser_copy_volume(srcproxy->container, id, container);
+        break;
+
+        case PAGE_XYZS:
+        gwy_app_data_browser_copy_xyz(srcproxy->container, id, container);
         break;
     }
 
@@ -9442,7 +9458,7 @@ gwy_app_sync_brick_items(GwyContainer *source,
         return;
 
     va_start(ap, delete_too);
-    while ((what = va_arg(ap, GwyDataItem))) {
+    while ((what = va_arg(ap, GwyBrickItem))) {
         switch (what) {
             case GWY_BRICK_ITEM_PREVIEW:
             g_snprintf(key_from, sizeof(key_from),
@@ -9556,6 +9572,142 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
         && gwy_string_list_get_length(slog)) {
         slog = gwy_string_list_duplicate(slog);
         g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/log", newid);
+        gwy_container_set_object_by_name(dest, buf, slog);
+        g_object_unref(slog);
+        gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",
+                                NULL);
+    }
+
+    return newid;
+}
+
+static void
+gwy_app_sync_surface_items(GwyContainer *source,
+                           GwyContainer *dest,
+                           gint from_id,
+                           gint to_id,
+                           gboolean delete_too,
+                           ...)
+{
+
+    GwySurfaceItem what;
+    gchar key_from[40];
+    gchar key_to[40];
+    const guchar *name;
+    GObject *obj;
+    va_list ap;
+
+    g_return_if_fail(GWY_IS_CONTAINER(source));
+    g_return_if_fail(GWY_IS_CONTAINER(dest));
+    g_return_if_fail(from_id >= 0 && to_id >= 0);
+    if (source == dest && from_id == to_id)
+        return;
+
+    va_start(ap, delete_too);
+    while ((what = va_arg(ap, GwySurfaceItem))) {
+        switch (what) {
+            case GWY_SURFACE_ITEM_PREVIEW:
+            g_snprintf(key_from, sizeof(key_from),
+                       SURFACE_PREFIX "/%d/preview", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       SURFACE_PREFIX "/%d/preview", to_id);
+            if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                obj = gwy_serializable_duplicate(obj);
+                gwy_container_set_object_by_name(dest, key_to, obj);
+                g_object_unref(obj);
+            }
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_SURFACE_ITEM_GRADIENT:
+            g_snprintf(key_from, sizeof(key_from),
+                       SURFACE_PREFIX "/%d/preview/palette", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       SURFACE_PREFIX "/%d/preview/palette", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_SURFACE_ITEM_TITLE:
+            g_snprintf(key_from, sizeof(key_from),
+                       SURFACE_PREFIX "/%d/title", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       SURFACE_PREFIX "/%d/title", to_id);
+            if (gwy_container_gis_string_by_name(source, key_from, &name))
+                gwy_container_set_string_by_name(dest, key_to, g_strdup(name));
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            case GWY_SURFACE_ITEM_META:
+            g_snprintf(key_from, sizeof(key_from),
+                       SURFACE_PREFIX "/%d/meta", from_id);
+            g_snprintf(key_to, sizeof(key_to),
+                       SURFACE_PREFIX "/%d/meta", to_id);
+            if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                obj = gwy_serializable_duplicate(obj);
+                gwy_container_set_object_by_name(dest, key_to, obj);
+                g_object_unref(obj);
+            }
+            else if (delete_too)
+                gwy_container_remove_by_name(dest, key_to);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    }
+    va_end(ap);
+}
+
+/**
+ * gwy_app_data_browser_copy_xyz:
+ * @source: Source container.
+ * @id: XYZ surface data id.
+ * @dest: Target container (may be identical to source).
+ *
+ * Copies XYZ surface data including all auxiliary data.
+ *
+ * Returns: The id of the copy.
+ *
+ * Since: 2.45
+ **/
+gint
+gwy_app_data_browser_copy_xyz(GwyContainer *source,
+                              gint id,
+                              GwyContainer *dest)
+{
+    GwySurface *surface;
+    GwyStringList *slog;
+    GQuark key;
+    gchar buf[32];
+    gint newid;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(source), -1);
+    g_return_val_if_fail(GWY_IS_CONTAINER(dest), -1);
+    key = gwy_app_get_surface_key_for_id(id);
+    surface = gwy_container_get_object(source, key);
+    g_return_val_if_fail(GWY_IS_SURFACE(surface), -1);
+
+    surface = gwy_surface_duplicate(surface);
+    newid = gwy_app_data_browser_add_surface(surface, dest, TRUE);
+    g_object_unref(surface);
+
+    gwy_app_sync_surface_items(source, dest, id, newid, FALSE,
+                               GWY_SURFACE_ITEM_GRADIENT,
+                               GWY_SURFACE_ITEM_META,
+                               GWY_SURFACE_ITEM_TITLE,
+                               0);
+
+    g_snprintf(buf, sizeof(buf), SURFACE_PREFIX "/%d/log", id);
+    if (gwy_container_gis_object_by_name(source, buf, &slog)
+        && gwy_string_list_get_length(slog)) {
+        slog = gwy_string_list_duplicate(slog);
+        g_snprintf(buf, sizeof(buf), SURFACE_PREFIX "/%d/log", newid);
         gwy_container_set_object_by_name(dest, buf, slog);
         g_object_unref(slog);
         gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",

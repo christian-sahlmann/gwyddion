@@ -163,6 +163,9 @@ gint   gwy_app_data_browser_copy_channel     (GwyContainer *source,
 gint   gwy_app_data_browser_copy_volume      (GwyContainer *source,
                                               gint id,
                                               GwyContainer *dest);
+gint   gwy_app_data_browser_copy_xyz         (GwyContainer *source,
+                                              gint id,
+                                              GwyContainer *dest);
 GQuark gwy_app_get_data_key_for_id           (gint id);
 GQuark gwy_app_get_mask_key_for_id           (gint id);
 GQuark gwy_app_get_show_key_for_id           (gint id);
