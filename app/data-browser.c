@@ -3902,10 +3902,10 @@ gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
 
 static void
 gwy_app_data_browser_graph_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                                          GtkCellRenderer *renderer,
-                                          GtkTreeModel *model,
-                                          GtkTreeIter *iter,
-                                          G_GNUC_UNUSED gpointer userdata)
+                                        GtkCellRenderer *renderer,
+                                        GtkTreeModel *model,
+                                        GtkTreeIter *iter,
+                                        G_GNUC_UNUSED gpointer userdata)
 {
     GwyGraphModel *gmodel;
     gchar s[8];
@@ -3958,7 +3958,8 @@ gwy_app_data_browser_render_graph(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 
     pixbuf = gwy_app_get_graph_thumbnail(container, id,
-                                         THUMB_SIZE, THUMB_SIZE);
+                                         500*THUMB_SIZE/433,
+                                         433*THUMB_SIZE/500);
     pbuf_timestamp = g_new(gdouble, 1);
     *pbuf_timestamp = gwy_get_timestamp();
     g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuf_timestamp,
@@ -9693,14 +9694,10 @@ create_simple_surface_preview_field(GwySurface *surface,
 {
     GwyDataField *raster;
     gint n = surface->n;
-    gint res = GWY_ROUND(2.0*sqrt(n));
-    gdouble xmin, xmax, ymin, ymax;
+    gint xres, yres;
+    gdouble xmin, xmax, ymin, ymax, q, h;
 
     g_return_val_if_fail(maxres >= 2, NULL);
-    if (res < 64)
-        res = 64;
-    if (res > maxres)
-        res = maxres;
 
     gwy_surface_get_xrange(surface, &xmin, &xmax);
     if (xmin == xmax) {
@@ -9722,9 +9719,54 @@ create_simple_surface_preview_field(GwySurface *surface,
             ymax = 1.0;
     }
 
-    // TODO: Create the image with a sane aspect ratio!
-    raster = gwy_data_field_new(res, res, xmax - xmin, ymax - ymin, FALSE);
+    q = (ymax - ymin)/(xmax - xmin);
+    if (q <= 1.0) {
+        yres = GWY_ROUND(sqrt(4.0*q*n));
+        yres = MAX(yres, 2);
+        h = (ymax - ymin)/yres;
+        xres = GWY_ROUND((xmax - xmin)/h);
+        if (CLAMP(xres, THUMB_SIZE, maxres) != xres) {
+            xres = CLAMP(xres, THUMB_SIZE, maxres);
+            h = (xmax - xmin)/xres;
+            yres = (gint)ceil((ymax - ymin)/h);
+        }
+    }
+    else {
+        xres = GWY_ROUND(sqrt(4.0/q*n));
+        xres = MAX(xres, 2);
+        h = (xmax - xmin)/xres;
+        yres = GWY_ROUND((ymax - ymin)/h);
+        if (CLAMP(yres, THUMB_SIZE, maxres) != yres) {
+            yres = CLAMP(yres, THUMB_SIZE, maxres);
+            h = (ymax - ymin)/yres;
+            xres = (gint)ceil((xmax - xmin)/h);
+        }
+    }
+
+    xmin -= 0.5*h;
+    ymin -= 0.5*h;
+    xmax += 0.5*h;
+    ymax += 0.5*h;
+    if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
+        gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
+        xmin -= 0.5*excess;
+        xmax += 0.5*excess;
+    }
+    else {
+        gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
+        ymin -= 0.5*excess;
+        ymax += 0.5*excess;
+    }
+
+    raster = gwy_data_field_new(xres, yres, xmax - xmin, ymax - ymin, FALSE);
+    gwy_data_field_set_xoffset(raster, xmin);
+    gwy_data_field_set_yoffset(raster, ymin);
     gwy_data_field_average_xyz(raster, NULL, surface->data, n);
+
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(raster)));
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(raster)));
 
     return raster;
 }
@@ -10074,8 +10116,8 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     gwy_graph_model_get_y_range(gmodel, &min, &max);
     if (max > min) {
         d = max - min;
-        min -= 0.05*d;
-        max += 0.05*d;
+        min -= 0.07*d;
+        max += 0.07*d;
     }
     else if (max) {
         min = 0.5*max;
