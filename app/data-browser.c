@@ -60,6 +60,7 @@ enum {
     THUMB_TIMEOUT = 100,
     THUMB_SIZE = 60,
     CACHED_IDS = 24,
+    SURFACE_PREVIEW_SIZE = 512,
 };
 
 /* Notebook pages */
@@ -1545,7 +1546,7 @@ gwy_app_data_proxy_reconnect_surface(GwyAppDataProxy *proxy,
 }
 
 static void
-gwy_app_data_proxy_raster_changed(GObject *preview,
+gwy_app_data_proxy_raster_changed(GObject *raster,
                                   GwyAppDataProxy *proxy)
 {
     GwyAppKeyType type;
@@ -1553,8 +1554,8 @@ gwy_app_data_proxy_raster_changed(GObject *preview,
     GQuark quark;
     gint id;
 
-    gwy_debug("proxy=%p preview=%p", proxy, preview);
-    quark = GPOINTER_TO_UINT(g_object_get_qdata(preview, own_key_quark));
+    gwy_debug("proxy=%p raster=%p", proxy, raster);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(raster, own_key_quark));
     g_return_if_fail(quark);
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0 && type == KEY_IS_SURFACE_PREVIEW);
@@ -5284,8 +5285,15 @@ gwy_app_data_browser_create_xyz(GwyAppDataBrowser *browser,
     g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
 
     g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
-    gwy_container_gis_object_by_name(proxy->container, key, &preview);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(preview), NULL);
+    if (gwy_container_gis_object_by_name(proxy->container, key, &preview)) {
+        g_return_val_if_fail(GWY_IS_DATA_FIELD(preview), NULL);
+    }
+    else {
+        preview = create_simple_surface_preview_field(GWY_SURFACE(surface),
+                                                      SURFACE_PREVIEW_SIZE);
+        gwy_container_set_object_by_name(proxy->container, key, preview);
+        g_object_unref(preview);
+    }
 
     layer = gwy_layer_basic_new();
     layer_basic = GWY_LAYER_BASIC(layer);
@@ -6513,7 +6521,7 @@ gwy_app_data_browser_select_xyz(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_SURFACE_PREVIEW);
-    proxy->lists[PAGE_VOLUMES].active = i;
+    proxy->lists[PAGE_XYZS].active = i;
 
     gwy_app_data_browser_select_object(browser, proxy, PAGE_XYZS);
     update_surface_sens();
@@ -7831,7 +7839,7 @@ gwy_app_data_browser_add_surface(GwySurface *surface,
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyAppDataList *list;
-    GwyDataField *preview;
+    GwyDataField *raster;
     GtkTreeIter iter;
     gchar key[32];
 
@@ -7851,13 +7859,13 @@ gwy_app_data_browser_add_surface(GwySurface *surface,
     list = &proxy->lists[PAGE_XYZS];
     g_snprintf(key, sizeof(key), "/surface/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_VOLUMES].last. */
+     * Among other things, it will update proxy->lists[PAGE_XYZS].last. */
     gwy_container_set_object_by_name(proxy->container, key, surface);
 
-    preview = create_simple_surface_preview_field(surface, 512);
+    raster = create_simple_surface_preview_field(surface, SURFACE_PREVIEW_SIZE);
     g_snprintf(key, sizeof(key), "/surface/%d/preview", list->last);
-    gwy_container_set_object_by_name(proxy->container, key, preview);
-    g_object_unref(preview);
+    gwy_container_set_object_by_name(proxy->container, key, raster);
+    g_object_unref(raster);
 
     if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
@@ -9683,7 +9691,7 @@ create_simple_surface_preview_field(GwySurface *surface,
 {
     GwyDataField *raster;
     gint n = surface->n;
-    gint res = GWY_ROUND(sqrt(n));
+    gint res = GWY_ROUND(2.0*sqrt(n));
     gdouble xmin, xmax, ymin, ymax;
 
     g_return_val_if_fail(maxres >= 2, NULL);
@@ -9985,7 +9993,7 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
                           gint max_height)
 {
     GwySurface *surface;
-    GwyDataField *dfield = NULL;
+    GwyDataField *raster = NULL;
     const guchar *gradient = NULL;
     GdkPixbuf *pixbuf;
     gchar key[48];
@@ -9999,17 +10007,17 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
         return NULL;
 
     g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
-    if (!gwy_container_gis_object_by_name(data, key, &dfield)) {
-        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                                max_width, max_height);
-        gdk_pixbuf_fill(pixbuf, 0);
-        return pixbuf;
+    if (!gwy_container_gis_object_by_name(data, key, &raster)) {
+        raster = create_simple_surface_preview_field(surface,
+                                                     SURFACE_PREVIEW_SIZE);
+        gwy_container_set_object_by_name(data, key, raster);
+        g_object_unref(raster);
     }
 
     g_snprintf(key, sizeof(key), "/surface/%d/preview/palette", id);
     gwy_container_gis_string_by_name(data, key, &gradient);
 
-    pixbuf = render_data_thumbnail(dfield, gradient,
+    pixbuf = render_data_thumbnail(raster, gradient,
                                    GWY_LAYER_BASIC_RANGE_FULL,
                                    max_width, max_height, NULL, NULL);
 
