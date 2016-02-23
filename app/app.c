@@ -27,10 +27,7 @@
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
-#include <libprocess/datafield.h>
-#include <libprocess/arithmetic.h>
-#include <libprocess/gwygrainvalue.h>
-#include <libprocess/gwycalibration.h>
+#include <libprocess/gwyprocess.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwygraphwindow.h>
@@ -92,6 +89,7 @@ static gboolean   gwy_app_brick_popup_menu_popup_mouse  (GtkWidget *menu,
 static void       gwy_app_brick_popup_menu_popup_key    (GtkWidget *menu,
                                                          GtkWidget *data_window);
 static gboolean   gwy_app_surface_window_configured     (GwyDataWindow *window);
+static void       update_surface_preview                (GwyDataWindow *data_window);
 static GtkWidget* gwy_app_menu_surface_popup_create     (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_surface_popup_menu_popup_mouse(GtkWidget *menu,
                                                          GdkEventButton *event,
@@ -1824,7 +1822,7 @@ _gwy_app_surface_window_setup(GwyDataWindow *data_window)
     GtkAccelGroup *accel_group;
     GwyDataView *data_view;
     GtkWidget *main_window;
-    GtkWidget *vbox, *hbox, *label;
+    GtkWidget *vbox, *hbox, *label, *button;
 
     if (!popup_menu
         && (main_window = gwy_app_main_window_get())) {
@@ -1857,13 +1855,11 @@ _gwy_app_surface_window_setup(GwyDataWindow *data_window)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 2);
     gtk_box_reorder_child(GTK_BOX(vbox), hbox, 0);
 
-#if 0
-    button = gtk_button_new_with_mnemonic(_("_Change Preview"));
+    button = gtk_button_new_with_mnemonic(_("_Update Preview"));
     GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(change_surface_preview), data_window);
-#endif
+                             G_CALLBACK(update_surface_preview), data_window);
 
     label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -1899,6 +1895,69 @@ gwy_app_surface_window_configured(GwyDataWindow *window)
     save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
 
     return FALSE;
+}
+
+static void
+update_surface_preview(GwyDataWindow *data_window)
+{
+    GwyDataView *data_view;
+    GwyContainer *data;
+    GwySurface *surface;
+    GwyDataField *raster;
+    gint xres, yres, id;
+    gdouble h, xmin, xmax, ymin, ymax;
+    gchar key[32];
+
+    gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &id,
+                                     GWY_APP_CONTAINER, &data,
+                                     0);
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+    g_return_if_fail(id >= 0);
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
+    raster = gwy_container_get_object_by_name(data, key);
+    g_return_if_fail(raster);
+
+    h = gwy_data_view_get_xmeasure(data_view);
+    gwy_surface_get_xrange(surface, &xmin, &xmax);
+    xres = GWY_ROUND((xmax - xmin)/h);
+    xres = MAX(xres, 2);
+    xmin -= 0.5*h;
+    xmax += 0.5*h;
+    xres = GWY_ROUND((xmax - xmin)/h);
+    xres = MAX(xres, 2);
+
+    h = gwy_data_view_get_ymeasure(data_view);
+    gwy_surface_get_yrange(surface, &ymin, &ymax);
+    yres = GWY_ROUND((ymax - ymin)/h);
+    yres = MAX(xres, 2);
+    ymin -= 0.5*h;
+    ymax += 0.5*h;
+    yres = GWY_ROUND((ymax - ymin)/h);
+    yres = MAX(xres, 2);
+
+    if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
+        gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
+        xmin -= 0.5*excess;
+        xmax += 0.5*excess;
+    }
+    else {
+        gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
+        ymin -= 0.5*excess;
+        ymax += 0.5*excess;
+    }
+
+    gwy_data_field_resample(raster, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_set_xreal(raster, xmax - xmin);
+    gwy_data_field_set_yreal(raster, ymax - ymin);
+    gwy_data_field_set_xoffset(raster, xmin);
+    gwy_data_field_set_yoffset(raster, ymin);
+    gwy_data_field_average_xyz(raster, NULL, surface->data, surface->n);
+
+    gwy_data_view_set_zoom(data_view, 1.0);
+    gwy_data_field_data_changed(raster);
 }
 
 static GtkWidget*
