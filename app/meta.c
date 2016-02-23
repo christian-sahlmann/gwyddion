@@ -41,6 +41,7 @@ enum {
 typedef enum {
     BROWSER_DATA_CHANNEL,
     BROWSER_DATA_VOLUME,
+    BROWSER_DATA_XYZ,
 } BrowserDataType;
 
 typedef struct {
@@ -139,6 +140,28 @@ gwy_app_metadata_browser_for_volume(GwyContainer *data,
                                     gint id)
 {
     return get_metadata_browser(data, BROWSER_DATA_VOLUME, id);
+}
+
+/**
+ * gwy_app_metadata_browser_for_xyz:
+ * @data: A data container.
+ * @id: Id of XYZ data in @data to show metadata for.
+ *
+ * Shows a simple metadata browser for XYZ data.
+ *
+ * If the metadata browser is already shown for this XYZ data it is just
+ * raised and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The metadata browser (owned by the library).  Usually, you can
+ *          ignore the return value.
+ *
+ * Since: 2.45
+ **/
+GtkWidget*
+gwy_app_metadata_browser_for_xyz(GwyContainer *data,
+                                 gint id)
+{
+    return get_metadata_browser(data, BROWSER_DATA_XYZ, id);
 }
 
 static GtkWidget*
@@ -290,17 +313,19 @@ gwy_meta_switch_data(MetadataBrowser *browser,
     GtkTreeView *treeview;
     GtkTreeIter iter;
     GSList *fixlist, *l;
-    gchar key[32];
+    GQuark quark;
 
     if (type == BROWSER_DATA_CHANNEL)
-        g_snprintf(key, sizeof(key), "/%d/meta", id);
+        quark = gwy_app_get_data_meta_key_for_id(id);
     else if (type == BROWSER_DATA_VOLUME)
-        g_snprintf(key, sizeof(key), "/brick/%d/meta", id);
+        quark = gwy_app_get_brick_meta_key_for_id(id);
+    else if (type == BROWSER_DATA_XYZ)
+        quark = gwy_app_get_surface_meta_key_for_id(id);
     else {
         g_return_val_if_reached(NULL);
     }
 
-    if (gwy_container_gis_object_by_name(data, key, &meta)) {
+    if (gwy_container_gis_object(data, quark, &meta)) {
         if (!browser)
             browser = g_object_get_data(G_OBJECT(meta), "metadata-browser");
         if (!browser || browser->meta == meta)
@@ -332,7 +357,7 @@ gwy_meta_switch_data(MetadataBrowser *browser,
             return NULL;
 
         meta = gwy_container_new();
-        gwy_container_set_object_by_name(data, key, meta);
+        gwy_container_set_object(data, quark, meta);
         g_object_unref(meta);
         store = gtk_list_store_new(1, G_TYPE_UINT);
     }

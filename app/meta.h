@@ -31,6 +31,8 @@ GtkWidget *gwy_app_metadata_browser_for_channel(GwyContainer *data,
                                                 gint id);
 GtkWidget *gwy_app_metadata_browser_for_volume (GwyContainer *data,
                                                 gint id);
+GtkWidget *gwy_app_metadata_browser_for_xyz    (GwyContainer *data,
+                                                gint id);
 
 G_END_DECLS
 

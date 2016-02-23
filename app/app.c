@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006,2013-2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2013-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,59 +58,71 @@ static GtkWidget *gwy_app_main_window = NULL;
 static GwyTool* current_tool = NULL;
 static GQuark corner_item_quark = 0;
 
-static gboolean   gwy_app_main_window_save_position   (void);
-static void       gwy_app_main_window_restore_position(void);
-static gboolean   gwy_app_confirm_quit                (void);
-static gboolean   gwy_app_confirm_quit_dialog         (GSList *unsaved);
-static gboolean   gwy_app_data_window_configured      (GwyDataWindow *window);
-static GtkWidget* gwy_app_menu_data_popup_create      (GtkAccelGroup *accel_group);
-static GtkWidget* gwy_app_menu_data_corner_create     (GtkAccelGroup *accel_group);
-static void       gwy_app_data_window_change_square   (GtkWidget *item,
-                                                       gpointer user_data);
-static gboolean   gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
-                                                       GdkEventButton *event,
-                                                       GtkWidget *ebox);
-static gboolean   gwy_app_data_popup_menu_popup_mouse (GtkWidget *menu,
-                                                       GdkEventButton *event,
-                                                       GwyDataView *data_view);
-static void       gwy_app_data_popup_menu_popup_key   (GtkWidget *menu,
-                                                       GtkWidget *data_window);
-static gboolean   gwy_app_graph_window_configured     (GwyGraphWindow *window);
-static gboolean   gwy_app_graph_popup_menu_popup_mouse(GtkWidget *menu,
-                                                       GdkEventButton *event,
-                                                       GwyGraph *graph);
-static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
-                                                       GtkWidget *graph);
-static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
-static void       gwy_app_3d_window_set_defaults      (Gwy3DWindow *window);
-static gboolean   gwy_app_brick_window_configured     (GwyDataWindow *window);
-static void       change_brick_preview                (GwyDataWindow *data_window);
-static GtkWidget* gwy_app_menu_brick_popup_create     (GtkAccelGroup *accel_group);
-static gboolean   gwy_app_brick_popup_menu_popup_mouse(GtkWidget *menu,
-                                                       GdkEventButton *event,
-                                                       GwyDataView *data_view);
-static void       gwy_app_brick_popup_menu_popup_key  (GtkWidget *menu,
-                                                       GtkWidget *data_window);
-static void       gwy_app_save_3d_export              (GtkWidget *dialog,
-                                                       gint response,
-                                                       Gwy3DWindow *gwy3dwindow);
-static gboolean   gwy_app_3d_window_configured        (Gwy3DWindow *window);
-static void       gwy_app_3d_window_add_overlay_menu  (Gwy3DWindow *gwy3dwindow);
-static void       gwy_app_3d_window_update_chooser    (Gwy3DWindow *gwy3dwindow);
-static void       gwy_app_3d_window_set_data2         (Gwy3DWindow *gwy3dwindow,
-                                                       gint id,
-                                                       gboolean mask);
-static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
-                                                       gint id2,
-                                                       gpointer user_data);
-static void       gwy_app_data_window_reset_zoom      (void);
-static void       gwy_app_volume_window_reset_zoom    (void);
-static void       metadata_browser                    (gpointer pwhat);
-static void       log_browser                         (gpointer pwhat);
-static void       gwy_app_change_mask_color           (void);
-static void       save_window_screen_relative_size    (GtkWindow *window,
-                                                       GwyContainer *container,
-                                                       const gchar *prefix);
+static gboolean   gwy_app_main_window_save_position     (void);
+static void       gwy_app_main_window_restore_position  (void);
+static gboolean   gwy_app_confirm_quit                  (void);
+static gboolean   gwy_app_confirm_quit_dialog           (GSList *unsaved);
+static gboolean   gwy_app_data_window_configured        (GwyDataWindow *window);
+static GtkWidget* gwy_app_menu_data_popup_create        (GtkAccelGroup *accel_group);
+static GtkWidget* gwy_app_menu_data_corner_create       (GtkAccelGroup *accel_group);
+static void       gwy_app_data_window_change_square     (GtkWidget *item,
+                                                         gpointer user_data);
+static gboolean   gwy_app_data_corner_menu_popup_mouse  (GtkWidget *menu,
+                                                         GdkEventButton *event,
+                                                         GtkWidget *ebox);
+static gboolean   gwy_app_data_popup_menu_popup_mouse   (GtkWidget *menu,
+                                                         GdkEventButton *event,
+                                                         GwyDataView *data_view);
+static void       gwy_app_data_popup_menu_popup_key     (GtkWidget *menu,
+                                                         GtkWidget *data_window);
+static gboolean   gwy_app_graph_window_configured       (GwyGraphWindow *window);
+static gboolean   gwy_app_graph_popup_menu_popup_mouse  (GtkWidget *menu,
+                                                         GdkEventButton *event,
+                                                         GwyGraph *graph);
+static void       gwy_app_graph_popup_menu_popup_key    (GtkWidget *menu,
+                                                         GtkWidget *graph);
+static void       gwy_app_3d_window_export              (Gwy3DWindow *window);
+static void       gwy_app_3d_window_set_defaults        (Gwy3DWindow *window);
+static gboolean   gwy_app_brick_window_configured       (GwyDataWindow *window);
+static void       change_brick_preview                  (GwyDataWindow *data_window);
+static GtkWidget* gwy_app_menu_brick_popup_create       (GtkAccelGroup *accel_group);
+static gboolean   gwy_app_brick_popup_menu_popup_mouse  (GtkWidget *menu,
+                                                         GdkEventButton *event,
+                                                         GwyDataView *data_view);
+static void       gwy_app_brick_popup_menu_popup_key    (GtkWidget *menu,
+                                                         GtkWidget *data_window);
+static gboolean   gwy_app_surface_window_configured     (GwyDataWindow *window);
+static GtkWidget* gwy_app_menu_surface_popup_create     (GtkAccelGroup *accel_group);
+static gboolean   gwy_app_surface_popup_menu_popup_mouse(GtkWidget *menu,
+                                                         GdkEventButton *event,
+                                                         GwyDataView *data_view);
+static void       gwy_app_surface_popup_menu_popup_key  (GtkWidget *menu,
+                                                         GtkWidget *data_window);
+static void       gwy_app_save_3d_export                (GtkWidget *dialog,
+                                                         gint response,
+                                                         Gwy3DWindow *gwy3dwindow);
+static gboolean   gwy_app_3d_window_configured          (Gwy3DWindow *window);
+static void       gwy_app_3d_window_add_overlay_menu    (Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_update_chooser      (Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_set_data2           (Gwy3DWindow *gwy3dwindow,
+                                                         gint id,
+                                                         gboolean mask);
+static gboolean   gwy_app_3d_window_data2_filter        (GwyContainer *data2,
+                                                         gint id2,
+                                                         gpointer user_data);
+static void       gwy_app_data_window_reset_zoom        (void);
+static void       gwy_app_volume_window_reset_zoom      (void);
+static void       data_view_popup_menu_position         (GtkMenu *menu,
+                                                         gint *x,
+                                                         gint *y,
+                                                         gboolean *push_in,
+                                                         GtkWidget *window);
+static void       metadata_browser                      (gpointer pwhat);
+static void       log_browser                           (gpointer pwhat);
+static void       gwy_app_change_mask_color             (void);
+static void       save_window_screen_relative_size      (GtkWindow *window,
+                                                         GwyContainer *container,
+                                                         const gchar *prefix);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -513,25 +525,11 @@ gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
 }
 
 static void
-gwy_app_data_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
-                                 gint *x,
-                                 gint *y,
-                                 gboolean *push_in,
-                                 GtkWidget *window)
-{
-    GwyDataView *data_view;
-
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
-    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
-    *push_in = TRUE;
-}
-
-static void
 gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
                                   GtkWidget *data_window)
 {
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
-                   (GtkMenuPositionFunc)gwy_app_data_popup_menu_position,
+                   (GtkMenuPositionFunc)data_view_popup_menu_position,
                    data_window,
                    0, gtk_get_current_event_time());
 }
@@ -1803,25 +1801,195 @@ gwy_app_brick_popup_menu_popup_mouse(GtkWidget *menu,
 }
 
 static void
-gwy_app_brick_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
-                                  gint *x,
-                                  gint *y,
-                                  gboolean *push_in,
-                                  GtkWidget *window)
-{
-    GwyDataView *data_view;
-
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
-    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
-    *push_in = TRUE;
-}
-
-static void
 gwy_app_brick_popup_menu_popup_key(GtkWidget *menu,
                                    GtkWidget *data_window)
 {
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
-                   (GtkMenuPositionFunc)gwy_app_brick_popup_menu_position,
+                   (GtkMenuPositionFunc)data_view_popup_menu_position,
+                   data_window,
+                   0, gtk_get_current_event_time());
+}
+
+/*****************************************************************************
+ *                                                                           *
+ *     XYZs                                                                  *
+ *                                                                           *
+ *****************************************************************************/
+
+void
+_gwy_app_surface_window_setup(GwyDataWindow *data_window)
+{
+    static GtkWidget *popup_menu = NULL;
+
+    GtkAccelGroup *accel_group;
+    GwyDataView *data_view;
+    GtkWidget *main_window;
+    GtkWidget *vbox, *hbox, *label;
+
+    if (!popup_menu
+        && (main_window = gwy_app_main_window_get())) {
+
+        g_return_if_fail(GTK_IS_WINDOW(main_window));
+        accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                        "accel_group"));
+
+        if (accel_group && !popup_menu) {
+            popup_menu = gwy_app_menu_surface_popup_create(accel_group);
+            gtk_widget_show_all(popup_menu);
+        }
+    }
+
+    gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
+    gwy_help_add_to_window(GTK_WINDOW(data_window), "xyz-data", NULL,
+                           GWY_HELP_DEFAULT);
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_signal_connect_swapped(data_view, "button-press-event",
+                             G_CALLBACK(gwy_app_surface_popup_menu_popup_mouse),
+                             popup_menu);
+    g_signal_connect_swapped(data_window, "popup-menu",
+                             G_CALLBACK(gwy_app_surface_popup_menu_popup_key),
+                             popup_menu);
+
+    hbox = gtk_hbox_new(FALSE, 0);
+
+    vbox = gtk_bin_get_child(GTK_BIN(data_window));
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 2);
+    gtk_box_reorder_child(GTK_BOX(vbox), hbox, 0);
+
+#if 0
+    button = gtk_button_new_with_mnemonic(_("_Change Preview"));
+    GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(change_surface_preview), data_window);
+#endif
+
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+    g_object_set_data(G_OBJECT(data_window), "gwy-surface-info", label);
+
+    g_signal_connect(data_window, "configure-event",
+                     G_CALLBACK(gwy_app_surface_window_configured), NULL);
+}
+
+static gboolean
+gwy_app_surface_window_configured(GwyDataWindow *window)
+{
+    GwyDataView *view = gwy_data_window_get_data_view(window);
+    GwyContainer *container = gwy_data_view_get_data(view);
+    const gchar *prefix = gwy_data_view_get_data_prefix(view);
+    //gchar *key;
+
+    g_return_val_if_fail(container, FALSE);
+    g_return_val_if_fail(prefix, FALSE);
+
+    /* TODO: We actually need width and height as XYZ have no natural size. */
+    /* This leads to some odd keys containing .../preview/view/... */
+#if 0
+    key = g_strconcat(prefix, "/view/scale", NULL);
+    gwy_container_set_double_by_name(container,
+                                     key, gwy_data_view_get_real_zoom(view));
+    g_free(key);
+#endif
+
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+
+    return FALSE;
+}
+
+static GtkWidget*
+gwy_app_menu_surface_popup_create(GtkAccelGroup *accel_group)
+{
+    static struct {
+        const gchar *label;
+        gpointer callback;
+        gpointer cbdata;
+        guint key;
+        GdkModifierType mods;
+    }
+    const menu_items[] = {
+        {
+            N_("Metadata _Browser..."),
+            metadata_browser, GUINT_TO_POINTER(GWY_APP_SURFACE),
+            GDK_B, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+        },
+        {
+            N_("View _Log..."),
+            log_browser, GUINT_TO_POINTER(GWY_APP_SURFACE),
+            0, 0
+        },
+    };
+    GwySensitivityGroup *sensgroup;
+    GtkWidget *menu, *item;
+    const gchar *name;
+    guint i, mask;
+
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    sensgroup = gwy_app_sensitivity_get_group();
+    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
+        if (menu_items[i].callback == gwy_app_run_xyz_func
+            && !gwy_xyz_func_get_run_types((gchar*)menu_items[i].cbdata)) {
+            g_warning("Surface function <%s> for "
+                      "data view context menu is not available.",
+                      (const gchar*)menu_items[i].cbdata);
+            continue;
+        }
+        if (menu_items[i].callback == gwy_app_run_xyz_func) {
+            name = _(gwy_xyz_func_get_menu_path(menu_items[i].cbdata));
+            name = strrchr(name, '/');
+            if (!name) {
+                g_warning("Invalid translated menu path for <%s>",
+                          (const gchar*)menu_items[i].cbdata);
+                continue;
+            }
+            item = gtk_menu_item_new_with_mnemonic(name + 1);
+            mask = gwy_xyz_func_get_sensitivity_mask(menu_items[i].cbdata);
+            gwy_sensitivity_group_add_widget(sensgroup, item, mask);
+        }
+        else {
+            item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+        }
+
+        if (menu_items[i].key)
+            gtk_widget_add_accelerator(item, "activate", accel_group,
+                                       menu_items[i].key, menu_items[i].mods,
+                                       GTK_ACCEL_VISIBLE | GTK_ACCEL_LOCKED);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_signal_connect_swapped(item, "activate",
+                                 G_CALLBACK(menu_items[i].callback),
+                                 menu_items[i].cbdata);
+    }
+
+    return menu;
+}
+
+static gboolean
+gwy_app_surface_popup_menu_popup_mouse(GtkWidget *menu,
+                                       GdkEventButton *event,
+                                       GwyDataView *data_view)
+{
+    if (event->button != 3)
+        return FALSE;
+
+    gwy_app_data_browser_select_xyz(data_view);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return TRUE;
+}
+
+static void
+gwy_app_surface_popup_menu_popup_key(GtkWidget *menu,
+                                   GtkWidget *data_window)
+{
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
+                   (GtkMenuPositionFunc)data_view_popup_menu_position,
                    data_window,
                    0, gtk_get_current_event_time());
 }
@@ -1831,6 +1999,18 @@ gwy_app_brick_popup_menu_popup_key(GtkWidget *menu,
  *     Miscellaneous                                                         *
  *                                                                           *
  *****************************************************************************/
+
+static void
+data_view_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
+                              gint *x, gint *y, gboolean *push_in,
+                              GtkWidget *window)
+{
+    GwyDataView *data_view;
+
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
+    *push_in = TRUE;
+}
 
 /**
  * gwy_app_switch_tool:
@@ -1933,6 +2113,33 @@ gwy_app_volume_window_reset_zoom(void)
 }
 
 static void
+get_current_view_data_and_id(GwyAppWhat what,
+                             GtkWidget **view, GwyContainer **data, gint *id)
+{
+    if (what == GWY_APP_DATA_FIELD) {
+        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, view,
+                                         GWY_APP_CONTAINER, data,
+                                         GWY_APP_DATA_FIELD_ID, id,
+                                         0);
+    }
+    else if (what == GWY_APP_BRICK) {
+        gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, view,
+                                         GWY_APP_CONTAINER, data,
+                                         GWY_APP_BRICK_ID, id,
+                                         0);
+    }
+    else if (what == GWY_APP_SURFACE) {
+        gwy_app_data_browser_get_current(GWY_APP_XYZ_VIEW, view,
+                                         GWY_APP_CONTAINER, data,
+                                         GWY_APP_SURFACE_ID, id,
+                                         0);
+    }
+    else {
+        g_return_if_reached();
+    }
+}
+
+static void
 metadata_browser(gpointer pwhat)
 {
     GwyAppWhat what = GPOINTER_TO_UINT(pwhat);
@@ -1940,20 +2147,7 @@ metadata_browser(gpointer pwhat)
     GwyContainer *container;
     gint id;
 
-    if (what == GWY_APP_DATA_FIELD)
-        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
-                                         GWY_APP_CONTAINER, &container,
-                                         GWY_APP_DATA_FIELD_ID, &id,
-                                         0);
-    else if (what == GWY_APP_BRICK)
-        gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &view,
-                                         GWY_APP_CONTAINER, &container,
-                                         GWY_APP_BRICK_ID, &id,
-                                         0);
-    else {
-        g_return_if_reached();
-    }
-
+    get_current_view_data_and_id(what, &view, &container, &id);
     if (!view || !container || id == -1)
         return;
 
@@ -1961,6 +2155,8 @@ metadata_browser(gpointer pwhat)
         gwy_app_metadata_browser_for_channel(container, id);
     else if (what == GWY_APP_BRICK)
         gwy_app_metadata_browser_for_volume(container, id);
+    else if (what == GWY_APP_SURFACE)
+        gwy_app_metadata_browser_for_xyz(container, id);
 }
 
 static void
@@ -1971,20 +2167,7 @@ log_browser(gpointer pwhat)
     GwyContainer *container;
     gint id;
 
-    if (what == GWY_APP_DATA_FIELD)
-        gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &view,
-                                         GWY_APP_CONTAINER, &container,
-                                         GWY_APP_DATA_FIELD_ID, &id,
-                                         0);
-    else if (what == GWY_APP_BRICK)
-        gwy_app_data_browser_get_current(GWY_APP_VOLUME_VIEW, &view,
-                                         GWY_APP_CONTAINER, &container,
-                                         GWY_APP_BRICK_ID, &id,
-                                         0);
-    else {
-        g_return_if_reached();
-    }
-
+    get_current_view_data_and_id(what, &view, &container, &id);
     if (!view || !container || id == -1)
         return;
 
@@ -1992,6 +2175,8 @@ log_browser(gpointer pwhat)
         gwy_app_log_browser_for_channel(container, id);
     else if (what == GWY_APP_BRICK)
         gwy_app_log_browser_for_volume(container, id);
+    else if (what == GWY_APP_SURFACE)
+        gwy_app_log_browser_for_xyz(container, id);
 }
 
 static void

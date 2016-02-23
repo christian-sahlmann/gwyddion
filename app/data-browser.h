@@ -26,6 +26,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/brick.h>
 #include <libprocess/spectra.h>
+#include <libprocess/surface.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
 
@@ -54,9 +55,12 @@ typedef enum {
     GWY_APP_BRICK,
     GWY_APP_BRICK_KEY,
     GWY_APP_BRICK_ID,
-    GWY_APP_CONTAINER_ID
+    GWY_APP_CONTAINER_ID,
+    GWY_APP_XYZ_VIEW,
+    GWY_APP_SURFACE,
+    GWY_APP_SURFACE_KEY,
+    GWY_APP_SURFACE_ID,
 } GwyAppWhat;
-/* XXX: silly name */
 
 typedef enum {
     GWY_DATA_ITEM_GRADIENT = 1,
@@ -106,6 +110,7 @@ void   gwy_app_data_browser_select_data_view(GwyDataView *data_view);
 void   gwy_app_data_browser_select_graph    (GwyGraph *graph);
 void   gwy_app_data_browser_select_spectra  (GwySpectra *spectra);
 void   gwy_app_data_browser_select_volume   (GwyDataView *data_view);
+void   gwy_app_data_browser_select_xyz      (GwyDataView *data_view);
 gint   gwy_app_data_browser_add_data_field  (GwyDataField *dfield,
                                              GwyContainer *data,
                                              gboolean showit);
@@ -117,6 +122,9 @@ gint   gwy_app_data_browser_add_spectra     (GwySpectra *spectra,
                                              gboolean showit);
 gint   gwy_app_data_browser_add_brick       (GwyBrick *brick,
                                              GwyDataField *preview,
+                                             GwyContainer *data,
+                                             gboolean showit);
+gint   gwy_app_data_browser_add_surface     (GwySurface *surface,
                                              GwyContainer *data,
                                              gboolean showit);
 void   gwy_app_data_browser_get_current     (GwyAppWhat what,
@@ -161,6 +169,7 @@ GQuark gwy_app_get_show_key_for_id           (gint id);
 GQuark gwy_app_get_graph_key_for_id          (gint id);
 GQuark gwy_app_get_spectra_key_for_id        (gint id);
 GQuark gwy_app_get_brick_key_for_id          (gint id);
+GQuark gwy_app_get_surface_key_for_id        (gint id);
 GQuark gwy_app_get_data_title_key_for_id     (gint id);
 GQuark gwy_app_get_data_range_type_key_for_id(gint id);
 GQuark gwy_app_get_data_range_min_key_for_id (gint id);
@@ -171,6 +180,9 @@ GQuark gwy_app_get_brick_title_key_for_id    (gint id);
 GQuark gwy_app_get_brick_preview_key_for_id  (gint id);
 GQuark gwy_app_get_brick_palette_key_for_id  (gint id);
 GQuark gwy_app_get_brick_meta_key_for_id     (gint id);
+GQuark gwy_app_get_surface_title_key_for_id  (gint id);
+GQuark gwy_app_get_surface_palette_key_for_id(gint id);
+GQuark gwy_app_get_surface_meta_key_for_id   (gint id);
 void   gwy_app_set_data_field_title          (GwyContainer *data,
                                               gint id,
                                               const gchar *name);
@@ -180,6 +192,11 @@ void   gwy_app_set_brick_title               (GwyContainer *data,
                                               gint id,
                                               const gchar *name);
 gchar* gwy_app_get_brick_title               (GwyContainer *data,
+                                              gint id);
+void   gwy_app_set_surface_title             (GwyContainer *data,
+                                              gint id,
+                                              const gchar *name);
+gchar* gwy_app_get_surface_title             (GwyContainer *data,
                                               gint id);
 
 void       gwy_app_data_browser_show        (void);
@@ -191,6 +208,10 @@ GdkPixbuf* gwy_app_get_channel_thumbnail(GwyContainer *data,
                                          gint max_width,
                                          gint max_height);
 GdkPixbuf* gwy_app_get_volume_thumbnail (GwyContainer *data,
+                                         gint id,
+                                         gint max_width,
+                                         gint max_height);
+GdkPixbuf* gwy_app_get_xyz_thumbnail    (GwyContainer *data,
                                          gint id,
                                          gint max_width,
                                          gint max_height);

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,6 +47,8 @@ void       gwy_app_volume_log_add_volume  (GwyContainer *data,
 GtkWidget* gwy_app_log_browser_for_channel(GwyContainer *data,
                                            gint id);
 GtkWidget* gwy_app_log_browser_for_volume (GwyContainer *data,
+                                           gint id);
+GtkWidget* gwy_app_log_browser_for_xyz    (GwyContainer *data,
                                            gint id);
 gboolean   gwy_log_get_enabled            (void);
 void       gwy_log_set_enabled            (gboolean setting);

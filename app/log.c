@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,8 +38,8 @@ enum {
 typedef enum {
     BROWSER_DATA_CHANNEL,
     BROWSER_DATA_VOLUME,
+    BROWSER_DATA_XYZ,
 } BrowserDataType;
-
 
 typedef GQuark (*LogKeyFync)(gint id);
 
@@ -379,6 +379,28 @@ gwy_app_log_browser_for_volume(GwyContainer *data,
     return get_log_browser(data, BROWSER_DATA_VOLUME, id);
 }
 
+/**
+ * gwy_app_log_browser_for_xyz:
+ * @data: A data container.
+ * @id: Id of XYZ data in @data to show log for.
+ *
+ * Shows a simple log browser for XYZ data.
+ *
+ * If the log browser is already shown for this XYZ data it is just raised
+ * and given focus.  Otherwise, a new window is created.
+ *
+ * Returns: The log browser (owned by the library).  Usually, you can
+ *          ignore the return value.
+ *
+ * Since: 2.45
+ **/
+GtkWidget*
+gwy_app_log_browser_for_xyz(GwyContainer *data,
+                            gint id)
+{
+    return get_log_browser(data, BROWSER_DATA_XYZ, id);
+}
+
 static GtkWidget*
 get_log_browser(GwyContainer *data,
                 BrowserDataType type,
@@ -395,6 +417,8 @@ get_log_browser(GwyContainer *data,
         g_snprintf(key, sizeof(key), "/%d/data/log", id);
     else if (type == BROWSER_DATA_VOLUME)
         g_snprintf(key, sizeof(key), "/brick/%d/log", id);
+    else if (type == BROWSER_DATA_XYZ)
+        g_snprintf(key, sizeof(key), "/surface/%d/log", id);
     else {
         g_return_val_if_reached(NULL);
     }
@@ -438,6 +462,8 @@ log_browser_new(GwyContainer *data,
         dataname = gwy_app_get_data_field_title(data, id);
     else if (type == BROWSER_DATA_VOLUME)
         dataname = gwy_app_get_brick_title(data, id);
+    else if (type == BROWSER_DATA_XYZ)
+        dataname = gwy_app_get_surface_title(data, id);
     else {
         g_return_val_if_reached(browser);
     }

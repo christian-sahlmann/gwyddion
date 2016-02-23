@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 /* Data types interesting keys can correspond to */
 typedef enum {
     KEY_IS_NONE = 0,
+    KEY_IS_FILENAME,
     KEY_IS_DATA,
     KEY_IS_DATA_VISIBLE,
     KEY_IS_CHANNEL_META,
@@ -77,7 +78,15 @@ typedef enum {
     KEY_IS_BRICK_META,
     KEY_IS_BRICK_LOG,
     KEY_IS_BRICK_VIEW_SCALE,
-    KEY_IS_FILENAME,
+    KEY_IS_SURFACE,
+    KEY_IS_SURFACE_VISIBLE,
+    KEY_IS_SURFACE_TITLE,
+    KEY_IS_SURFACE_PREVIEW,
+    KEY_IS_SURFACE_PREVIEW_PALETTE,
+    KEY_IS_SURFACE_META,
+    KEY_IS_SURFACE_LOG,
+    KEY_IS_SURFACE_VIEW_SCALE,
+    KEY_IS_SURFACE_VIEW_SIZE,
 } GwyAppKeyType;
 
 typedef struct {
@@ -102,6 +111,9 @@ void     _gwy_app_graph_window_setup          (GwyGraphWindow *graph_window,
                                                GQuark prefix);
 G_GNUC_INTERNAL
 void     _gwy_app_brick_window_setup          (GwyDataWindow *data_window);
+
+G_GNUC_INTERNAL
+void     _gwy_app_surface_window_setup        (GwyDataWindow *data_window);
 
 G_GNUC_INTERNAL
 void     _gwy_app_data_view_set_current       (GwyDataView *data_view);
