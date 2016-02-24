@@ -2552,10 +2552,10 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
     /* Honour exterior if it is not too far away.  We do not want to construct
      * useless huge data fields for zoom-in scenarios. */
     gwy_debug("true extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
-    imin = CLAMP(imin, -(yres/2 + 16), 0);
-    imax = CLAMP(imax, yres-1, yres + yres/2 + 15);
-    jmin = CLAMP(jmin, -(xres/2 + 16), 0);
-    jmax = CLAMP(jmax, xres-1, xres + xres/2 + 15);
+    imin = CLAMP(imin, -(yres/4 + 16), 0);
+    imax = CLAMP(imax, yres-1, yres + yres/4 + 15);
+    jmin = CLAMP(jmin, -(xres/4 + 16), 0);
+    jmax = CLAMP(jmax, xres-1, xres + xres/4 + 15);
     gwy_debug("extrange [%d,%d)x[%d,%d)", jmin, jmax, imin, imax);
 
     extxres = jmax+1 - jmin;
@@ -2634,6 +2634,7 @@ gwy_data_field_average_xyz(GwyDataField *dfield,
         }
     }
 
+    gwy_debug("nfilled: %d, nmissing: %d", ninside, extxres*extyres - ninside);
     if (ninside) {
         fill_missing_points(extfield, extweights);
         gwy_data_field_area_copy(extfield, dfield,
