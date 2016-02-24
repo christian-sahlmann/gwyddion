@@ -646,6 +646,34 @@ gwy_help_add_to_volume_dialog(GtkDialog *dialog, GwyHelpFlags flags)
 }
 
 /**
+ * gwy_help_add_to_xyz_dialog:
+ * @dialog: Main dialog for a XYZ data processing function.
+ * @flags: Flags allowing to modify the help setup.
+ *
+ * Adds help to a XYZ data processing function dialog.
+ *
+ * Note the help button will not be added if no help URI is found for the
+ * currently running function or help is not available.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_help_add_to_xyz_dialog(GtkDialog *dialog, GwyHelpFlags flags)
+{
+    const gchar *funcname;
+    gchar *uri;
+
+    g_return_if_fail(GTK_IS_DIALOG(dialog));
+    funcname = gwy_xyz_func_current();
+    g_return_if_fail(funcname);
+
+    if (!(uri = build_uri_for_function("xyz", funcname)))
+        return;
+
+    add_help_to_window(GTK_WINDOW(dialog), uri, flags);
+}
+
+/**
  * gwy_help_add_to_file_dialog:
  * @dialog: Main dialog for a file function.
  * @flags: Flags allowing to modify the help setup.

@@ -38,6 +38,8 @@ void     gwy_help_add_to_graph_dialog (GtkDialog *dialog,
                                        GwyHelpFlags flags);
 void     gwy_help_add_to_volume_dialog(GtkDialog *dialog,
                                        GwyHelpFlags flags);
+void     gwy_help_add_to_xyz_dialog   (GtkDialog *dialog,
+                                       GwyHelpFlags flags);
 void     gwy_help_add_to_file_dialog  (GtkDialog *dialog,
                                        GwyHelpFlags flags);
 void     gwy_help_add_to_tool_dialog  (GtkDialog *dialog,
