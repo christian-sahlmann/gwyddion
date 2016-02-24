@@ -29,6 +29,7 @@
 #include <libprocess/grains.h>
 #include <libprocess/triangulation.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-xyz.h>
@@ -38,14 +39,14 @@
 
 #define XYZRAS_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
-#define EPSREL 1e-7
+#define EPSREL 1e-8
 
 /* Use smaller cell sides than the triangulation algorithm as we only need them
  * for identical point detection and border extension. */
 #define CELL_SIDE 1.6
 
 enum {
-    PREVIEW_SIZE = 240,
+    PREVIEW_SIZE = 400,
     UNDEF = G_MAXUINT
 };
 
@@ -53,12 +54,6 @@ enum {
     GWY_INTERPOLATION_FIELD = -1,
     GWY_INTERPOLATION_AVERAGE = -2,
 };
-
-typedef struct {
-    gdouble dist;
-    gint i;
-    gint j;
-} MaskedPoint;
 
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
@@ -80,6 +75,7 @@ typedef struct {
     guint norigpoints;
     guint nbasepoints;
     gdouble step;
+    gdouble xymag;
 } XYZRasData;
 
 typedef struct {
@@ -95,7 +91,7 @@ typedef struct {
     GtkObject *yres;
     GtkWidget *interpolation;
     GtkWidget *exterior;
-    GtkWidget *preview;
+    GtkWidget *view;
     GtkWidget *do_preview;
     GtkWidget *error;
     gboolean in_update;
@@ -112,7 +108,9 @@ static gboolean      module_register        (void);
 static void          xyzras                 (GwyContainer *data,
                                              GwyRunType run);
 static gboolean      xyzras_dialog          (XYZRasArgs *arg,
-                                             XYZRasData *rdata);
+                                             XYZRasData *rdata,
+                                             GwyContainer *data,
+                                             gint id);
 static gint          construct_resolutions  (XYZRasControls *controls,
                                              GtkTable *table,
                                              gint row);
@@ -145,9 +143,11 @@ static GwyDataField* xyzras_do              (XYZRasData *rdata,
                                              const XYZRasArgs *args,
                                              GtkWindow *dialog,
                                              gchar **error);
-static void          interpolate_field      (guint npoints,
+static gboolean      interpolate_field      (guint npoints,
                                              const GwyXYZ *points,
-                                             GwyDataField *dfield);
+                                             GwyDataField *dfield,
+                                             GwySetFractionFunc set_fraction,
+                                             GwySetMessageFunc set_message);
 static gboolean      extend_borders         (XYZRasData *rdata,
                                              const XYZRasArgs *args,
                                              gboolean check_for_changes,
@@ -203,8 +203,9 @@ xyzras(GwyContainer *data, GwyRunType run)
 
     GwyContainer *settings;
     GwySurface *surface = NULL;
+    GwyDataField *dfield;
     gboolean ok = TRUE;
-    gint id;
+    gint id, newid;
 
     g_return_if_fail(run & XYZRAS_RUN_MODES);
 
@@ -216,41 +217,56 @@ xyzras(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     xyzras_load_args(settings, &args);
     rdata.surface = surface;
+    rdata.points = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     analyse_points(&rdata, EPSREL);
     initialize_ranges(&rdata, &args);
 
     if (run == GWY_RUN_INTERACTIVE)
-        ok = xyzras_dialog(&args, &rdata);
+        ok = xyzras_dialog(&args, &rdata, data, id);
 
     xyzras_save_args(settings, &args);
 
-    /*
-    if (ok)
-        xyzras_do();
-        */
+    if (ok) {
+        gchar *error = NULL;
+        dfield = xyzras_do(&rdata, &args, NULL, &error);
+        if (dfield) {
+            newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+            gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
+        }
+        else {
+            /* TODO */
+            g_free(error);
+        }
+    }
 
     xyzras_free(&rdata);
 }
 
 static gboolean
 xyzras_dialog(XYZRasArgs *args,
-              XYZRasData *rdata)
+              XYZRasData *rdata,
+              GwyContainer *data,
+              gint id)
 {
     GtkWidget *dialog, *vbox, *align, *label, *hbox, *button;
+    GwyPixmapLayer *layer;
+    GwyDataField *dfield;
     GtkTable *table;
     XYZRasControls controls;
     gint row, response;
+    const guchar *gradient;
+    GQuark quark;
 
     controls.args = args;
     controls.rdata = rdata;
     controls.mydata = gwy_container_new();
 
-    dialog = gtk_dialog_new_with_buttons(_("Import XYZ Data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Rasterize XYZ Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gwy_help_add_to_file_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+    gwy_help_add_to_xyz_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 20);
@@ -261,7 +277,7 @@ xyzras_dialog(XYZRasArgs *args,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 5, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
@@ -288,8 +304,25 @@ xyzras_dialog(XYZRasArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    controls.preview = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.preview, FALSE, FALSE, 0);
+    quark = gwy_app_get_surface_palette_key_for_id(id);
+    if (gwy_container_gis_string(data, quark, &gradient)) {
+        gwy_container_set_const_string_by_name(controls.mydata,
+                                               "/0/base/palette", gradient);
+    }
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 1.0, 1.0, TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    controls.view = gwy_data_view_new(controls.mydata);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    layer = gwy_layer_basic_new();
+    g_object_set(layer,
+                 "data-key", "/0/data",
+                 "gradient-key", "/0/base/palette",
+                 NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
@@ -402,7 +435,12 @@ construct_physical_dims(XYZRasControls *controls,
                         GtkTable *table,
                         gint row)
 {
+    GwySurface *surface = controls->rdata->surface;
+    GwySIValueFormat *vf;
     GtkWidget *label;
+
+    vf = gwy_surface_get_value_format_xy(surface, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                         NULL);
 
     gtk_table_attach(table, gwy_label_new_header(_("Physical Dimensions")),
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -424,6 +462,10 @@ construct_physical_dims(XYZRasControls *controls,
     gwy_widget_set_activate_on_unfocus(controls->xmax, TRUE);
     gtk_table_attach(table, controls->xmax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), vf->units);
+    gtk_table_attach(table, label, 4, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Y-range:"));
@@ -442,7 +484,14 @@ construct_physical_dims(XYZRasControls *controls,
     gwy_widget_set_activate_on_unfocus(controls->ymax, TRUE);
     gtk_table_attach(table, controls->ymax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), vf->units);
+    gtk_table_attach(table, label, 4, 5, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    controls->rdata->xymag = vf->magnitude;
+    gwy_si_unit_value_format_free(vf);
 
     return row;
 }
@@ -523,7 +572,7 @@ set_physical_dimension(XYZRasControls *controls,
         controls->in_update = TRUE;
     }
 
-    g_snprintf(buf, sizeof(buf), "%g", value);
+    g_snprintf(buf, sizeof(buf), "%g", value/controls->rdata->xymag);
     gtk_entry_set_text(entry, buf);
 
     if (in_update)
@@ -587,7 +636,7 @@ xmin_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->xmin = val;
+    args->xmin = val * controls->rdata->xymag;
     if (!controls->in_update) {
         args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
@@ -603,7 +652,7 @@ xmax_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->xmax = val;
+    args->xmax = val * controls->rdata->xymag;
     if (!controls->in_update) {
         args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
@@ -619,7 +668,7 @@ ymin_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->ymin = val;
+    args->ymin = val * controls->rdata->xymag;
     if (!controls->in_update) {
         args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
@@ -635,7 +684,7 @@ ymax_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->ymax = val;
+    args->ymax = val * controls->rdata->xymag;
     if (!controls->in_update) {
         args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
@@ -683,7 +732,6 @@ preview(XYZRasControls *controls)
 {
     XYZRasArgs *args = controls->args;
     GwyDataField *dfield;
-    GdkPixbuf *pixbuf;
     GtkWidget *entry;
     gint xres, yres;
     gchar *error = NULL;
@@ -698,26 +746,20 @@ preview(XYZRasControls *controls)
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
     dfield = xyzras_do(controls->rdata, args,
                        GTK_WINDOW(controls->dialog), &error);
-    /* Regular grids are always created at full size. */
-    if (dfield)
-        gwy_data_field_resample(dfield, args->xres, args->yres,
-                                GWY_INTERPOLATION_KEY);
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                            args->xres, args->yres);
-    args->xres = xres;
-    args->yres = yres;
     if (dfield) {
         triangulation_info(controls);
-        //gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
-        g_object_unref(dfield);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->error), error);
         g_free(error);
-        gdk_pixbuf_fill(pixbuf, 0x00000000);
+        dfield = gwy_data_field_new(args->xres, args->yres,
+                                    args->xres, args->yres, TRUE);
     }
-    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
-    g_object_unref(pixbuf);
+    args->xres = xres;
+    args->yres = yres;
+
+    gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
+    g_object_unref(dfield);
 }
 
 static void
@@ -743,8 +785,13 @@ xyzras_do(XYZRasData *rdata,
           GtkWindow *window,
           gchar **error)
 {
+    GwyTriangulation *triangulation = rdata->triangulation;
     GArray *points = rdata->points;
     GwyDataField *dfield;
+    GwySurface *surface = rdata->surface;
+    GwySetMessageFunc set_message = (window ? gwy_app_wait_set_message : NULL);
+    GwySetFractionFunc set_fraction = (window ? gwy_app_wait_set_fraction : NULL);
+    gboolean ok = TRUE;
 
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
     if (!(args->xmax > args->xmin) || !(args->ymax > args->ymin)) {
@@ -759,26 +806,26 @@ xyzras_do(XYZRasData *rdata,
                                 FALSE);
     gwy_data_field_set_xoffset(dfield, args->xmin);
     gwy_data_field_set_yoffset(dfield, args->ymin);
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)));
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(dfield)));
 
     if ((gint)args->interpolation == GWY_INTERPOLATION_FIELD) {
+        if (window)
+            gwy_app_wait_start(window, _("Initializing..."));
+
         extend_borders(rdata, args, FALSE, EPSREL);
-        interpolate_field(points->len, (const GwyXYZ*)points->data, dfield);
+        ok = interpolate_field(points->len, (const GwyXYZ*)points->data, dfield,
+                               set_fraction, set_message);
     }
     else if ((gint)args->interpolation == GWY_INTERPOLATION_AVERAGE) {
         extend_borders(rdata, args, FALSE, EPSREL);
         gwy_data_field_average_xyz(dfield, NULL,
                                    (const GwyXYZ*)points->data, points->len);
+        ok = TRUE;
     }
     else {
-        GwyTriangulation *triangulation = rdata->triangulation;
-        GwySetMessageFunc set_message = (window
-                                         ? gwy_app_wait_set_message
-                                         : NULL);
-        GwySetFractionFunc set_fraction = (window
-                                           ? gwy_app_wait_set_fraction
-                                           : NULL);
-        gboolean ok = TRUE;
-
         if (window)
             gwy_app_wait_start(window, _("Initializing..."));
         /* [Try to] perform triangulation if either there is none yet or
@@ -809,22 +856,25 @@ xyzras_do(XYZRasData *rdata,
         if (window)
             gwy_app_wait_finish();
 
-        if (!ok) {
-            gwy_object_unref(rdata->triangulation);
-            g_object_unref(dfield);
-            *error = g_strdup(_("XYZ data regularization failed due to "
-                                "numerical instability or was interrupted."));
-            return NULL;
-        }
+    }
+
+    if (!ok) {
+        gwy_object_unref(rdata->triangulation);
+        g_object_unref(dfield);
+        *error = g_strdup(_("XYZ data regularization failed due to "
+                            "numerical instability or was interrupted."));
+        return NULL;
     }
 
     return dfield;
 }
 
-static void
+static gboolean
 interpolate_field(guint npoints,
                   const GwyXYZ *points,
-                  GwyDataField *dfield)
+                  GwyDataField *dfield,
+                  GwySetFractionFunc set_fraction,
+                  GwySetMessageFunc set_message)
 {
     gdouble xoff, yoff, qx, qy;
     guint xres, yres, i, j, k;
@@ -837,6 +887,9 @@ interpolate_field(guint npoints,
     qx = gwy_data_field_get_xreal(dfield)/xres;
     qy = gwy_data_field_get_yreal(dfield)/yres;
     d = gwy_data_field_get_data(dfield);
+
+    if (set_message)
+        set_message(_("Interpolating..."));
 
     for (i = 0; i < yres; i++) {
         gdouble y = yoff + qy*(i + 0.5);
@@ -865,7 +918,12 @@ interpolate_field(guint npoints,
             }
             *(d++) = s/w;
         }
+
+        if (set_fraction && !set_fraction(i/(gdouble)yres))
+            return FALSE;
     }
+
+    return TRUE;
 }
 
 /* Return TRUE if extpoints have changed. */
