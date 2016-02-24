@@ -38,6 +38,8 @@ Subdir dependencies (fully resolved):
     modules:      libgwyddion libprocess libdraw libgwydgets libgwymodule app
     devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule app
     po:           libdraw libgwydgets libgwymodule app modules
+    thumbnailer:  libgwyddion libprocess libdraw libgwydgets libgwymodule app
+                  modules
 
 Subdir contents:
     libgwyddion:  Gwyddion library
@@ -46,8 +48,9 @@ Subdir contents:
     libgwydgets:  Gwyddion widget library
     libgwymodule: Gwyddion module library
     app:          Gwyddion application library (libgwyapp), main application
-    modules:      Standard modules (file, graph, layer, process, tool)
+    modules:      Standard modules (file, graph, layer, process, tool, ...)
     plugins:      Standard and sample plug-ins (file, process)
+    thumbnailer:  Tool for creating thumbnails of SPM data
     devel-docs:   Developer-documentation for each library
     data:         Miscellaneous auxiliary data files
     po:           Translations

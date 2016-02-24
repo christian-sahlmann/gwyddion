@@ -29,6 +29,7 @@ AC_CONFIG_FILES(\
   modules/pygwy/Makefile \
   modules/tools/Makefile \
   modules/volume/Makefile \
+  modules/xyz/Makefile \
   plugins/Makefile \
   plugins/file/Makefile \
   plugins/process/Makefile \

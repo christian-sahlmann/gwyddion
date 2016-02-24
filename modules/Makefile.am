@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-SUBDIRS = file graph layer process tools volume pygwy
+SUBDIRS = file graph layer process tools volume xyz pygwy
 
 moduledir = $(pkglibdir)/modules
 

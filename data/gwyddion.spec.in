@@ -277,6 +277,7 @@ fi
 %{pkglibdir}/modules/process/*.so
 %{pkglibdir}/modules/tool/*.so
 %{pkglibdir}/modules/volume/*.so
+%{pkglibdir}/modules/xyz/*.so
 %{pkglibdir}/modules/*.so
 %dir %{pkglibdir}/modules/file
 %dir %{pkglibdir}/modules/graph
@@ -284,6 +285,7 @@ fi
 %dir %{pkglibdir}/modules/process
 %dir %{pkglibdir}/modules/tool
 %dir %{pkglibdir}/modules/volume
+%dir %{pkglibdir}/modules/xyz
 %dir %{pkglibdir}/modules
 %dir %{pkglibdir}
 %{_libdir}/*.so.*
