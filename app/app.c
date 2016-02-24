@@ -2511,8 +2511,8 @@ gwy_app_init_i18n(void)
  * @error: Error location for settings loading error.
  * @...: List of module types to load, terminated with %NULL.  Possible types
  *       are "file", "graph", "layer", "process", "tool", "volume" and "xyz",
- *       plus two special values "" and "all" for untyped modules (like plug-in
- *       proxy) and all modules, respectively.
+ *       plus two special values "" and "all" for untyped modules (like pygwy
+ *       or plug-in proxy) and all modules, respectively.
  *
  * Performs common application initialization.
  *
