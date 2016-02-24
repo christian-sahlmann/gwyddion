@@ -1368,6 +1368,8 @@ gwy_app_get_tooltips(void)
  * @GWY_MENU_FLAG_FILE: A file is open, with any type of data (Since 2.5).
  * @GWY_MENU_FLAG_VOLUME: There is at least one volume data window present
  *                        (Since 2.32).
+ * @GWY_MENU_FLAG_XYZ: There is at least one XYZ surface data window present
+ *                        (Since 2.45).
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
  * Global application sensitivity flags.
