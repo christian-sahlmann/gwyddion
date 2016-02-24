@@ -90,6 +90,7 @@ static void           format_arg                   (gpointer hkey,
                                                     gpointer user_data);
 static GQuark         channel_log_key              (gint id);
 static GQuark         volume_log_key               (gint id);
+static GQuark         xyz_log_key                  (gint id);
 static gboolean       find_settings_prefix         (const gchar *function,
                                                     const gchar *settings_name,
                                                     GString *prefix);
@@ -171,8 +172,7 @@ gwy_app_channel_log_add_proc(GwyContainer *data,
  *          Pass -1 for a no-source (or unclear source) operation.
  * @newid: Identifier of the new (target) volume data in the container.
  * @function: Quailified name of the function applied as shown by the module
- *            browser.  For instance "proc::facet-level" or
- *            "tool::GwyToolCrop".
+ *            browser.  For instance "volume::volume_invert".
  * @...: Logging options as a %NULL-terminated list of pairs name, value.
  *
  * Adds an entry to the log of data processing operations for volume data.
@@ -228,6 +228,72 @@ gwy_app_volume_log_add_volume(GwyContainer *data,
     g_return_if_fail(funcname);
     qname = g_strconcat("volume::", funcname, NULL);
     gwy_app_volume_log_add(data, previd, newid, qname, NULL);
+    g_free(qname);
+}
+
+/**
+ * gwy_app_xyz_log_add:
+ * @data: A data container.
+ * @previd: Identifier of the previous (source) XYZ data in the container.
+ *          Pass -1 for a no-source (or unclear source) operation.
+ * @newid: Identifier of the new (target) XYZ data in the container.
+ * @function: Quailified name of the function applied as shown by the module
+ *            browser.  For instance "xyz::xyz_invert".
+ * @...: Logging options as a %NULL-terminated list of pairs name, value.
+ *
+ * Adds an entry to the log of data processing operations for XYZ data.
+ *
+ * See the introduction for a description of valid @previd and @newid.
+ *
+ * It is possible to pass %NULL as @function.  In this case the log is just
+ * copied from source to target without adding any entries.  This can be useful
+ * to prevent duplicate log entries in modules that modify a data field and
+ * then can also create secondary outputs.  Note you still need to pass a
+ * second %NULL argument as the option terminator.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_app_xyz_log_add(GwyContainer *data,
+                    gint previd,
+                    gint newid,
+                    const gchar *function,
+                    ...)
+{
+    va_list ap;
+    va_start(ap, function);
+    data_log_add_valist(data, xyz_log_key, previd, newid, function, ap);
+    va_end(ap);
+}
+
+/**
+ * gwy_app_xyz_log_add_xyz:
+ * @data: A data container.
+ * @previd: Identifier of the previous (source) XYZ data in the container.
+ *          Pass -1 for a no-source (or unclear source) operation.
+ * @newid: Identifier of the new (target) XYZ data in the container.
+ *
+ * Adds an entry to the log of the current XYZ data processing operations
+ * for XYZ data.
+ *
+ * This simplified variant of gwy_app_xyz_log_add() takes the currently
+ * running function XYZ data processing name and constructs the qualified
+ * function name from that.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_app_xyz_log_add_xyz(GwyContainer *data,
+                        gint previd,
+                        gint newid)
+{
+    const gchar *funcname;
+    gchar *qname = NULL;
+
+    funcname = current_function_name_by_type("xyz");
+    g_return_if_fail(funcname);
+    qname = g_strconcat("xyz::", funcname, NULL);
+    gwy_app_xyz_log_add(data, previd, newid, qname, NULL);
     g_free(qname);
 }
 
@@ -791,57 +857,63 @@ volume_log_key(gint id)
     return g_quark_from_string(buf);
 }
 
+static GQuark
+xyz_log_key(gint id)
+{
+    static gchar buf[32];
+    g_snprintf(buf, sizeof(buf), "/surface/%d/log", id);
+    return g_quark_from_string(buf);
+}
+
 static gboolean
 find_settings_prefix(const gchar *function,
                      const gchar *settings_name,
                      GString *prefix)
 {
+    static const struct {
+        const gchar *prefix;
+        gboolean (*func_exists)(const gchar *name);
+    }
+    function_types[] = {
+        { "proc::",    &gwy_process_func_exists, },
+        { "file::",    &gwy_file_func_exists,    },
+        { "graph::",   &gwy_graph_func_exists,   },
+        { "volume::",  &gwy_volume_func_exists,  },
+        { "xyz::",     &gwy_xyz_func_exists,     },
+    };
+
+    guint i;
+
     g_string_assign(prefix, "/module/");
 
     if (settings_name)
         g_string_append(prefix, settings_name);
 
     if (g_str_has_prefix(function, "builtin::")) {
+        /* Ensure a non-existent prefix for builtins. */
         if (!settings_name)
             g_string_assign(prefix, "/NO-SUCH-FUNCTION");
+        return TRUE;
     }
-    else if (g_str_has_prefix(function, "proc::")) {
-        const gchar *name = function + 6;
-        if (!gwy_process_func_exists(name)) {
-            g_warning("Invalid data processing function name %s.", name);
-            return FALSE;
+
+    for (i = 0; i < G_N_ELEMENTS(function_types); i++) {
+        const gchar *ftpfx = function_types[i].prefix;
+
+        if (g_str_has_prefix(function, ftpfx)) {
+            const gchar *name = function + strlen(ftpfx);
+
+            if (!function_types[i].func_exists(name)) {
+                g_warning("Invalid %.*s function name %s.",
+                          (gint)strlen(ftpfx)-2, ftpfx, name);
+                return FALSE;
+            }
+            if (!settings_name)
+                g_string_append(prefix, name);
+            return TRUE;
         }
-        if (!settings_name)
-            g_string_append(prefix, name);
     }
-    else if (g_str_has_prefix(function, "file::")) {
-        const gchar *name = function + 6;
-        if (!gwy_file_func_exists(name)) {
-            g_warning("Invalid file function name %s.", name);
-            return FALSE;
-        }
-        if (!settings_name)
-            g_string_append(prefix, name);
-    }
-    else if (g_str_has_prefix(function, "graph::")) {
-        const gchar *name = function + 7;
-        if (!gwy_graph_func_exists(name)) {
-            g_warning("Invalid graph function name %s.", name);
-            return FALSE;
-        }
-        if (!settings_name)
-            g_string_append(prefix, name);
-    }
-    else if (g_str_has_prefix(function, "volume::")) {
-        const gchar *name = function + 8;
-        if (!gwy_volume_func_exists(name)) {
-            g_warning("Invalid volume function name %s.", name);
-            return FALSE;
-        }
-        if (!settings_name)
-            g_string_append(prefix, name);
-    }
-    else if (g_str_has_prefix(function, "tool::")) {
+
+    if (g_str_has_prefix(function, "tool::")) {
         const gchar *name = function + 6;
         GType type = g_type_from_name(name);
         GwyToolClass *klass;
@@ -858,13 +930,11 @@ find_settings_prefix(const gchar *function,
 
         g_string_assign(prefix, klass->prefix);
         g_type_class_unref(klass);
-    }
-    else {
-        g_warning("Invalid function name %s.", function);
-        return FALSE;
+        return TRUE;
     }
 
-    return TRUE;
+    g_warning("Invalid function name %s.", function);
+    return FALSE;
 }
 
 /**
@@ -918,6 +988,8 @@ current_function_name_by_type(const gchar *type)
         funcname = gwy_file_func_current();
     else if (gwy_strequal(type, "volume"))
         funcname = gwy_volume_func_current();
+    else if (gwy_strequal(type, "xyz"))
+        funcname = gwy_xyz_func_current();
     else if (gwy_strequal(type, "tool"))
         funcname = gwy_app_current_tool_name();
 
