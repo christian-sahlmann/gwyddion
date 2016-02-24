@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-02-21 21:45+0300\n"
-"PO-Revision-Date: 2016-02-21 21:50+0300\n"
+"POT-Creation-Date: 2016-02-24 08:16+0300\n"
+"PO-Revision-Date: 2016-02-24 08:18+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -128,9 +128,10 @@ msgid "contact: Hertz (paraboloid)"
 msgstr "контакт: Герц (параболоид)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:665
-#: app/data-browser.c:2152 app/data-browser.c:2934 app/data-browser.c:3796
-#: app/data-browser.c:3955 app/data-browser.c:4241 app/data-browser.c:4648
-#: app/data-browser.c:7183 app/data-browser.c:7265 app/resource-editor.c:366
+#: app/data-browser.c:2556 app/data-browser.c:3336 app/data-browser.c:4211
+#: app/data-browser.c:4370 app/data-browser.c:4654 app/data-browser.c:5057
+#: app/data-browser.c:5144 app/data-browser.c:5548 app/data-browser.c:8349
+#: app/data-browser.c:8431 app/data-browser.c:8497 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:693
 msgid "Untitled"
 msgstr "Безымянный"
@@ -445,12 +446,12 @@ msgid "Id"
 msgstr "Идентификатор"
 
 #: libprocess/gwygrainvalue.c:1121 modules/graph/graph_peaks.c:156
-#: modules/process/extract_path.c:392 modules/process/wave_synth.c:486
+#: modules/process/extract_path.c:390 modules/process/wave_synth.c:486
 #: modules/tools/readvalue.c:262
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:384 modules/file/imgexport.c:4323
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4323
 #: modules/process/curvature.c:763 modules/tools/level3.c:468
 #: modules/tools/readvalue.c:297
 msgid "Value"
@@ -460,7 +461,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5211 app/toolbox.c:117
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:6114 app/toolbox.c:118
 msgid "Volume"
 msgstr "Объём"
 
@@ -571,12 +572,12 @@ msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3529
-#: modules/file/rawxyz.c:742
+#: modules/file/rawxyz.c:740
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3530
-#: modules/file/rawxyz.c:743
+#: modules/file/rawxyz.c:741
 msgid "Linear"
 msgstr "Линейная"
 
@@ -774,8 +775,8 @@ msgstr "Запускается частичная оценка"
 msgid "Starting full estimation"
 msgstr "Запускается полная оценка"
 
-#: libprocess/triangulation.c:2087 modules/process/calcoefs_view.c:798
-#: modules/process/lat_synth.c:1142
+#: libprocess/triangulation.c:2082 modules/process/calcoefs_view.c:798
+#: modules/process/lat_synth.c:1138
 msgid "Triangulating..."
 msgstr "Производится триангуляция..."
 
@@ -921,7 +922,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/fft_filter_2d.c:421 modules/process/fft_synth.c:345
 #: modules/process/fractal.c:235 modules/process/grain_edge.c:218
 #: modules/process/grain_mark.c:252 modules/process/grain_wshed.c:171
-#: modules/process/hough.c:179 modules/process/lat_synth.c:531
+#: modules/process/hough.c:179 modules/process/lat_synth.c:527
 #: modules/process/latsim.c:158 modules/process/level.c:245
 #: modules/process/linematch.c:802 modules/process/lno_synth.c:437
 #: modules/process/local_contrast.c:130 modules/process/mark_disconn.c:212
@@ -934,7 +935,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/scale.c:196 modules/process/scars.c:453
 #: modules/process/semsim.c:211 modules/process/shade.c:209
 #: modules/process/slope_dist.c:277 modules/process/sphere-revolve.c:218
-#: modules/process/straighten_path.c:254 modules/process/tilt.c:161
+#: modules/process/straighten_path.c:252 modules/process/tilt.c:161
 #: modules/process/tip_model.c:169 modules/process/unrotate.c:221
 #: modules/process/volumize_layers.c:213 modules/process/wave_synth.c:353
 #: modules/process/wpour_mark.c:283 modules/volume/volume_calibrate.c:370
@@ -1212,7 +1213,7 @@ msgstr "Толщина рамки:"
 msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
-#: libgwydgets/gwygraphwindow.c:152 app/toolbox.c:117
+#: libgwydgets/gwygraphwindow.c:152 app/toolbox.c:118
 msgid "Graph"
 msgstr "График"
 
@@ -1261,7 +1262,7 @@ msgstr "Длина"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:398
 #: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
-#: modules/process/lat_synth.c:711 modules/process/obj_synth.c:570
+#: modules/process/lat_synth.c:707 modules/process/obj_synth.c:570
 #: modules/process/pat_synth.c:850 modules/process/pat_synth.c:1152
 #: modules/process/pat_synth.c:1487
 msgid "Height"
@@ -1289,7 +1290,7 @@ msgstr "Угол"
 msgid "Preferred"
 msgstr "Предпочтительное"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:383
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:408
 #: modules/file/imgexport.c:3879 modules/file/imgexport.c:4305
 #: modules/file/rawfile.c:995 modules/process/convolution_filter.c:540
 #: modules/process/neural.c:421 modules/tools/selectionmanager.c:336
@@ -1329,7 +1330,7 @@ msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/file/rawxyz.c:473
+#: modules/file/rawxyz.c:471
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -1495,7 +1496,7 @@ msgstr "Удалённое управление"
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
-#: app/app.c:283
+#: app/app.c:293
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1506,161 +1507,179 @@ msgstr ""
 "%s\n"
 "Действительно выйти?"
 
-#: app/app.c:420
+#: app/app.c:430
 msgid "Mask _Color..."
 msgstr "_Цвет маски..."
 
-#: app/app.c:436 app/app.c:1730
+#: app/app.c:446 app/app.c:1726
 msgid "Zoom _1:1"
 msgstr "Масштаб _1:1"
 
-#: app/app.c:440 app/app.c:1734
+#: app/app.c:450 app/app.c:1730 app/app.c:1975
 msgid "Metadata _Browser..."
 msgstr "Просмотр _метаданных"
 
-#: app/app.c:445 app/app.c:1739
+#: app/app.c:455 app/app.c:1735 app/app.c:1980
 msgid "View _Log..."
 msgstr "Просмотр _журнала..."
 
-#: app/app.c:643
+#: app/app.c:639
 msgid "Pi_xelwise Square"
 msgstr "Квадратные _пиксели"
 
-#: app/app.c:653
+#: app/app.c:649
 msgid "_Physically Square"
 msgstr "Равные _масштабы осей"
 
-#: app/app.c:837
+#: app/app.c:833
 msgid "verb|Save"
 msgstr "Сохранить"
 
-#: app/app.c:840 app/app.c:844
+#: app/app.c:836 app/app.c:840
 msgid "Save 3D view to an image"
 msgstr "Сохранить трёхмерный вид в изображение"
 
-#: app/app.c:850
+#: app/app.c:846
 msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
-#: app/app.c:852
+#: app/app.c:848
 msgid "Set the current view setup as the default"
 msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
-#: app/app.c:947
+#: app/app.c:943
 msgid "_Show mask"
 msgstr "Показывать _маску"
 
-#: app/app.c:1113
+#: app/app.c:1109
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Не удалось сохранить трёхмерный вид в `%s'"
 
-#: app/app.c:1157
+#: app/app.c:1153
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/app.c:1463
+#: app/app.c:1459
 msgid "_Change Preview"
 msgstr "_Изменить изображение предпросмотра"
 
-#: app/app.c:1588
+#: app/app.c:1584
 msgid "Change Volume Data Preview"
 msgstr "Изменить изображение предпросмотра для объёмных данных"
 
-#: app/app.c:1598
+#: app/app.c:1594
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1608 modules/process/extend.c:267 modules/tools/linestats.c:162
+#: app/app.c:1604 modules/process/extend.c:267 modules/tools/linestats.c:162
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Среднее"
 
-#: app/app.c:1609 modules/process/polydistort.c:259 modules/tools/filter.c:240
+#: app/app.c:1605 modules/process/polydistort.c:259 modules/tools/filter.c:240
 #: modules/tools/icolorange.c:424 modules/tools/linestats.c:164
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Минимум"
 
-#: app/app.c:1610 modules/process/col_synth.c:169 modules/tools/filter.c:241
+#: app/app.c:1606 modules/process/col_synth.c:169 modules/tools/filter.c:241
 #: modules/tools/icolorange.c:435 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Максимум"
 
-#: app/app.c:1611
+#: app/app.c:1607
 msgid "Min. position"
 msgstr "Положение минимума"
 
-#: app/app.c:1612
+#: app/app.c:1608
 msgid "Max. position"
 msgstr "Положение максимума"
 
-#: app/app.c:1613 modules/process/bdep_synth.c:138
+#: app/app.c:1609 modules/process/bdep_synth.c:138
 #: modules/process/col_synth.c:170 modules/process/scars.c:501
 #: modules/process/scars.c:508 modules/process/threshold.c:339
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/app.c:1614 modules/file/asciiexport.c:187 modules/file/xyzexport.c:190
+#: app/app.c:1610 modules/file/asciiexport.c:187 modules/file/xyzexport.c:190
 msgid "Channel:"
 msgstr "Канал:"
 
-#: app/app.c:1615
+#: app/app.c:1611
 msgid "Section:"
 msgstr "Сечение:"
 
-#: app/data-browser.c:5072
+#: app/app.c:1858
+msgid "_Update Preview"
+msgstr "Обновить _предпросмотр"
+
+#: app/data-browser.c:4880
+#, c-format
+msgid "Z levels: %d, Z unit: %s"
+msgstr "Уровней Z: %d, единицы измерения Z: %s"
+
+#: app/data-browser.c:5373
+#, c-format
+msgid "Points: %d"
+msgstr "Точек: %d"
+
+#: app/data-browser.c:5975
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:5073
+#: app/data-browser.c:5976
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:5074
+#: app/data-browser.c:5977
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:5119
+#: app/data-browser.c:6022
 msgid "Data Browser"
 msgstr "Браузер данных"
 
-#: app/data-browser.c:5144
+#: app/data-browser.c:6047
 msgid "Show file messages"
 msgstr "Показать сообщения программы"
 
-#: app/data-browser.c:5156
+#: app/data-browser.c:6059
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:6072
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:5183 modules/volume/volume_extract.c:444
+#: app/data-browser.c:6086 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:5197
+#: app/data-browser.c:6100
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:6464
+#: app/data-browser.c:6128
+msgid "XYZ"
+msgstr "XYZ"
+
+#: app/data-browser.c:7470
 #, c-format
 msgid "Messages for %s"
 msgstr "Сообщения для %s"
 
-#: app/data-browser.c:6468
+#: app/data-browser.c:7474
 msgid "Messages for Untitled"
 msgstr "Сообщения для безымянного."
 
-#: app/data-browser.c:7221
+#: app/data-browser.c:8387
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
-#: app/data-browser.c:7307
+#: app/data-browser.c:8473 app/data-browser.c:8539
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Неизвестный объём %d"
@@ -2036,95 +2055,99 @@ msgstr ""
 msgid "current-language-code|en"
 msgstr "ru"
 
-#: app/log.c:445
+#: app/log.c:471
 #, c-format
 msgid "Log of %s (%s)"
 msgstr "Журнал %s (%s)"
 
-#: app/log.c:497 app/meta.c:201
+#: app/log.c:523 app/meta.c:224
 msgid "_Export"
 msgstr "_Экспорт"
 
-#: app/log.c:503
+#: app/log.c:529
 msgid "Clea_r"
 msgstr "О_чистить"
 
-#: app/log.c:508 app/meta.c:217
+#: app/log.c:534 app/meta.c:240
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: app/log.c:524 modules/file/imgexport.c:3887 modules/file/rawfile.c:996
+#: app/log.c:550 modules/file/imgexport.c:3887 modules/file/rawfile.c:996
 msgid "Type"
 msgstr "Тип"
 
-#: app/log.c:525
+#: app/log.c:551
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:526 modules/file/imgexport.c:2824 modules/process/neural.c:613
+#: app/log.c:552 modules/file/imgexport.c:2824 modules/process/neural.c:613
 #: modules/tools/stats.c:426
 msgid "Parameters"
 msgstr "Параметры"
 
-#: app/log.c:527
+#: app/log.c:553
 msgid "Time"
 msgstr "Время"
 
-#: app/log.c:639
+#: app/log.c:665
 msgid "Export Log"
 msgstr "Экспортировать журнал"
 
-#: app/menu.c:558 app/toolbox.c:638
+#: app/menu.c:556 app/toolbox.c:651
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
-#: app/menu.c:600 app/toolbox.c:641
+#: app/menu.c:598 app/toolbox.c:654
 msgid "_Graph"
 msgstr "_График"
 
-#: app/menu.c:645 app/toolbox.c:644
+#: app/menu.c:641 app/toolbox.c:657
 msgid "_Volume Data"
 msgstr "_Объёмные данные"
 
-#: app/menu.c:677
+#: app/menu.c:684 app/toolbox.c:660
+msgid "_XYZ Data"
+msgstr "_Данные XYZ"
+
+#: app/menu.c:715
 msgid "Re-show Last"
 msgstr "Повторить с настройкой последний"
 
-#: app/menu.c:692
+#: app/menu.c:730
 msgid "Repeat Last"
 msgstr "Повторить последний"
 
-#: app/menu.c:820
+#: app/menu.c:858
 msgid "Repeat"
 msgstr "Повторить"
 
-#: app/menu.c:826
+#: app/menu.c:864
 msgid "Re-show"
 msgstr "Перепоказать"
 
-#: app/menu.c:1095
+#: app/menu.c:1186
 msgid "_Document history"
 msgstr "_Предыдущие документы"
 
-#: app/meta.c:207
+#: app/meta.c:230
 msgid "_New"
 msgstr "Новый _элемент"
 
-#: app/meta.c:212 modules/file/imgexport.c:4370 modules/file/rawfile.c:1058
+#: app/meta.c:235 modules/file/imgexport.c:4370 modules/file/rawfile.c:1058
 #: modules/process/neural.c:714
 msgid "_Delete"
 msgstr "_Удалить"
 
-#: app/meta.c:269
+#: app/meta.c:292
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Метаданные %s (%s)"
 
-#: app/meta.c:592
+#: app/meta.c:617
 msgid "New item"
 msgstr "Новый элемент"
 
-#: app/meta.c:710
+#: app/meta.c:735
 msgid "Save Metadata"
 msgstr "Сохранить метаданные"
 
@@ -2733,147 +2756,147 @@ msgstr "_Пред. совет"
 msgid "_Next Tip"
 msgstr "_Следующий совет"
 
-#: app/toolbox.c:117
+#: app/toolbox.c:118
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:117
+#: app/toolbox.c:118
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox.c:117
+#: app/toolbox.c:118
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:173
+#: app/toolbox.c:174
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:180
+#: app/toolbox.c:181
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:184
+#: app/toolbox.c:185
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:188
+#: app/toolbox.c:189
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:632
+#: app/toolbox.c:645
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:634
+#: app/toolbox.c:647
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:647
+#: app/toolbox.c:663
 msgid "_Info"
 msgstr "_Информация"
 
-#: app/toolbox.c:682
+#: app/toolbox.c:698
 msgid "/Show _Data Browser"
 msgstr "/Показать браузер _данных"
 
-#: app/toolbox.c:690
+#: app/toolbox.c:706
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:698
+#: app/toolbox.c:714
 msgid "/Program _Messages"
 msgstr "/_Сообщения программы"
 
-#: app/toolbox.c:713
+#: app/toolbox.c:729
 msgid "/_User Guide"
 msgstr "/_Руководство пользователя"
 
-#: app/toolbox.c:721
+#: app/toolbox.c:737
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:729
+#: app/toolbox.c:745
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:766
+#: app/toolbox.c:782
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:774
+#: app/toolbox.c:790
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:782
+#: app/toolbox.c:798
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:790
+#: app/toolbox.c:806
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:798
+#: app/toolbox.c:814
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:806
+#: app/toolbox.c:822
 msgid "/_Close..."
 msgstr "/_Закрыть..."
 
-#: app/toolbox.c:814
+#: app/toolbox.c:830
 msgid "/Remo_ve All Logs"
 msgstr "/_Удалить все журналы"
 
-#: app/toolbox.c:830
+#: app/toolbox.c:846
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:870
+#: app/toolbox.c:886
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:878
+#: app/toolbox.c:894
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:894
+#: app/toolbox.c:910
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:902
+#: app/toolbox.c:918
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:910
+#: app/toolbox.c:926
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:918
+#: app/toolbox.c:934
 msgid "/_Keyboard Shortcuts"
 msgstr "/_Комбинации клавиш"
 
-#: app/toolbox.c:926
+#: app/toolbox.c:942
 msgid "/_Logging Enabled"
 msgstr "/Включить _журналирование"
 
-#: app/toolbox.c:1067
+#: app/toolbox.c:1083
 msgid "Program Messages"
 msgstr "Сообщения программы"
 
-#: app/toolbox.c:1296
+#: app/toolbox.c:1312
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1324
+#: app/toolbox.c:1340
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1329
+#: app/toolbox.c:1345
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL был отключен опцией командной строки."
 
-#: app/toolbox.c:1337
+#: app/toolbox.c:1353
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -2881,74 +2904,79 @@ msgstr ""
 "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и "
 "предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1344
+#: app/toolbox.c:1360
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
-#: app/validate.c:112 app/validate.c:133
+#: app/validate.c:114 app/validate.c:135
 #, c-format
 msgid "byte at position %d"
 msgstr "Байт в позиции %d"
 
-#: app/validate.c:159 app/validate.c:172
+#: app/validate.c:161 app/validate.c:174
 #, c-format
 msgid "%s instead of %s"
 msgstr "%s вместо %s"
 
-#: app/validate.c:374
+#: app/validate.c:388
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "отсутствует канал %d для %s"
 
-#: app/validate.c:385
+#: app/validate.c:400
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:394
+#: app/validate.c:410
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:409
+#: app/validate.c:426
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "отсутствует блок %d для %s"
 
-#: app/validate.c:462
+#: app/validate.c:442
+#, c-format
+msgid "no surface %d exists for %s"
+msgstr "отсутствует поверхность %d для %s"
+
+#: app/validate.c:497
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:643
+#: app/validate.c:680
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:644
+#: app/validate.c:681
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:645
+#: app/validate.c:682
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:646
+#: app/validate.c:683
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:647
+#: app/validate.c:684
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:648
+#: app/validate.c:685
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:649
+#: app/validate.c:686
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:650
+#: app/validate.c:687
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -3022,7 +3050,7 @@ msgstr "Значение тега заголовка ‘%s’ не выровн�
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:182 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:159 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
@@ -3112,7 +3140,7 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:275 modules/file/imgexport.c:3922
-#: modules/file/rawfile.c:758 modules/file/rawxyz.c:730
+#: modules/file/rawfile.c:758 modules/file/rawxyz.c:728
 #: modules/file/xyzexport.c:290 modules/process/calibrate.c:607
 #: modules/process/col_synth.c:505 modules/process/correct_affine.c:471
 #: modules/process/extend.c:259 modules/process/fft_filter_1d.c:266
@@ -3671,15 +3699,15 @@ msgstr "Не удаётся получить размер несжатого ф�
 msgid "Cannot read file contents."
 msgstr "Не удаётся прочитать содержимое файла."
 
-#: modules/file/gxyzffile.c:100
+#: modules/file/gxyzffile.c:78
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Импортирует файлы Gwyddion XYZ-полей."
 
-#: modules/file/gxyzffile.c:113
+#: modules/file/gxyzffile.c:91
 msgid "GwyXYZ data files"
 msgstr "Файлы данных GwyXYZ"
 
-#: modules/file/gxyzffile.c:209
+#: modules/file/gxyzffile.c:186
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Размер данных %lu не является кратным размеру точки  %u."
@@ -3830,7 +3858,7 @@ msgstr "Страницы:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/file/rawxyz.c:625 modules/process/dimensions.h:467
+#: modules/file/rawxyz.c:623 modules/process/dimensions.h:467
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
@@ -3860,9 +3888,9 @@ msgstr "Изменить"
 msgid "H_eight:"
 msgstr "_Высота:"
 
-#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:557
+#: modules/file/hdrimage.cc:2354 modules/file/nmmxyz.c:555
 #: modules/file/pixmap.c:914 modules/file/rawfile.c:701
-#: modules/file/rawxyz.c:606
+#: modules/file/rawxyz.c:604
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -4014,8 +4042,8 @@ msgstr "Линии"
 msgid "Rectangles"
 msgstr "Прямоугольники"
 
-#: modules/file/imgexport.c:463 modules/process/lat_synth.c:529
-#: modules/process/lat_synth.c:601 modules/tools/selectionmanager.c:262
+#: modules/file/imgexport.c:463 modules/process/lat_synth.c:525
+#: modules/process/lat_synth.c:597 modules/tools/selectionmanager.c:262
 msgid "Lattice"
 msgstr "Решетка"
 
@@ -4077,7 +4105,7 @@ msgstr "_Увеличение:"
 #: modules/file/imgexport.c:2815 modules/process/bdep_synth.c:434
 #: modules/process/col_synth.c:475 modules/process/diff_synth.c:512
 #: modules/process/domain_synth.c:514 modules/process/grain_mark.c:290
-#: modules/process/lat_synth.c:717 modules/process/obj_synth.c:576
+#: modules/process/lat_synth.c:713 modules/process/obj_synth.c:576
 #: modules/process/pat_synth.c:856 modules/process/pat_synth.c:1158
 #: modules/process/pat_synth.c:1493 modules/process/tip_blind.c:344
 msgid "_Height:"
@@ -4187,14 +4215,14 @@ msgstr "Рисовать подпис_ь"
 msgid "Image"
 msgstr "Изображение"
 
-#: modules/file/imgexport.c:3515 modules/file/rawxyz.c:734
+#: modules/file/imgexport.c:3515 modules/file/rawxyz.c:732
 #: modules/process/calcoefs_view.c:478 modules/process/correct_affine.c:489
 #: modules/process/drift.c:302 modules/process/dwt.c:206
 #: modules/process/dwtanisotropy.c:203 modules/process/fft_filter_1d.c:299
 #: modules/process/fft_profile.c:296 modules/process/fractal.c:257
 #: modules/process/nanoindent_adjust.c:229 modules/process/polydistort.c:251
 #: modules/process/rotate.c:288 modules/process/scale.c:253
-#: modules/process/straighten_path.c:276 modules/process/unrotate.c:278
+#: modules/process/straighten_path.c:274 modules/process/unrotate.c:278
 #: modules/tools/linestats.c:413 modules/tools/profile.c:559
 #: modules/tools/roughness.c:868 modules/tools/sfunctions.c:449
 msgid "_Interpolation type:"
@@ -4727,7 +4755,7 @@ msgid "Nanonics files (.nan)"
 msgstr "Файлы Nanoniсs (.nan)"
 
 #: modules/file/nanonics.c:177 modules/file/nanonics.c:446
-#: modules/file/wsxmfile.c:231
+#: modules/file/wsxmfile.c:226
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Ожидаемый маркер конца заголовка ‘%s’ не был найден."
@@ -4918,76 +4946,76 @@ msgstr ""
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nmmxyz.c:188
+#: modules/file/nmmxyz.c:186
 msgid "Imports Nano Measuring Machine profile files."
 msgstr "Импортирует файлы профилей Nano Measuring Machine."
 
-#: modules/file/nmmxyz.c:201
+#: modules/file/nmmxyz.c:199
 msgid "Nano Measuring Machine files (*.dsc)"
 msgstr "Файлы Nano Measuring Machine (*.dsc)"
 
-#: modules/file/nmmxyz.c:245
+#: modules/file/nmmxyz.c:243
 msgid "Nano Measuring Machine data import must be run as interactive."
 msgstr ""
 "Модуль импорта данных Nano Measuring Machine должен быть запущен в "
 "интерактивном режиме."
 
-#: modules/file/nmmxyz.c:285
+#: modules/file/nmmxyz.c:283
 msgid "Reading files..."
 msgstr "Считываются файлы..."
 
-#: modules/file/nmmxyz.c:293 modules/process/lat_synth.c:1188
+#: modules/file/nmmxyz.c:291 modules/process/lat_synth.c:1184
 msgid "Rendering surface..."
 msgstr "Строится поверхность..."
 
-#: modules/file/nmmxyz.c:372
+#: modules/file/nmmxyz.c:370
 msgid "Import NMM Profile Set"
 msgstr "Импортировать набор профилей NMM"
 
-#: modules/file/nmmxyz.c:388 modules/file/rawfile.c:450
+#: modules/file/nmmxyz.c:386 modules/file/rawfile.c:450
 msgid "Information"
 msgstr "Информация"
 
-#: modules/file/nmmxyz.c:394
+#: modules/file/nmmxyz.c:392
 msgid "Number of data files:"
 msgstr "Число файлов данных:"
 
-#: modules/file/nmmxyz.c:396
+#: modules/file/nmmxyz.c:394
 msgid "Total number of points:"
 msgstr "Общее количество точек:"
 
-#: modules/file/nmmxyz.c:398
+#: modules/file/nmmxyz.c:396
 msgid "Points per profile:"
 msgstr "Точек в профиле:"
 
-#: modules/file/nmmxyz.c:403
+#: modules/file/nmmxyz.c:401
 msgid "Imported Channels"
 msgstr "Импортированные каналы"
 
-#: modules/file/nmmxyz.c:425 modules/file/rawxyz.c:773
+#: modules/file/nmmxyz.c:423 modules/file/rawxyz.c:771
 msgid "Plot point density map"
 msgstr "Строить карту плотности точек"
 
-#: modules/file/nmmxyz.c:521 modules/file/rawfile.c:626
-#: modules/file/rawxyz.c:572 modules/process/dimensions.h:445
+#: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
+#: modules/file/rawxyz.c:570 modules/process/dimensions.h:445
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/nmmxyz.c:525 modules/file/rawfile.c:631
-#: modules/file/rawxyz.c:576 modules/process/dimensions.h:451
+#: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
+#: modules/file/rawxyz.c:574 modules/process/dimensions.h:451
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/nmmxyz.c:541 modules/file/rawfile.c:638
-#: modules/file/rawxyz.c:591 modules/process/dimensions.h:454
+#: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
+#: modules/file/rawxyz.c:589 modules/process/dimensions.h:454
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/nmmxyz.c:780 modules/file/rawxyz.c:377
+#: modules/file/nmmxyz.c:778 modules/file/rawxyz.c:375
 msgid "Point density map"
 msgstr "Карта плотности точек"
 
-#: modules/file/nmmxyz.c:856
+#: modules/file/nmmxyz.c:854
 msgid "Something is changing the data files on disk."
 msgstr "Что-то меняет данные на диске."
 
@@ -5535,7 +5563,7 @@ msgstr "Прочитать неизвестный файл"
 msgid "Data Format"
 msgstr "Формат данных"
 
-#: modules/file/rawfile.c:567 modules/file/rawxyz.c:487
+#: modules/file/rawfile.c:567 modules/file/rawxyz.c:485
 #: modules/process/arithmetic.c:235 modules/process/calcoefs_view.c:325
 #: modules/process/convolution_filter.c:238 modules/process/deposit_synth.c:643
 #: modules/process/drift.c:247 modules/process/edge.c:640
@@ -5544,7 +5572,7 @@ msgstr "Формат данных"
 #: modules/process/grain_mark.c:249 modules/process/grain_wshed.c:168
 #: modules/process/mark_disconn.c:209 modules/process/mark_with.c:199
 #: modules/process/polydistort.c:209 modules/process/scars.c:450
-#: modules/process/slope_dist.c:274 modules/process/straighten_path.c:203
+#: modules/process/slope_dist.c:274 modules/process/straighten_path.c:201
 #: modules/process/synth.h:509 modules/process/tip_model.c:166
 #: modules/process/wpour_mark.c:278 modules/tools/linestats.c:454
 #: modules/tools/sfunctions.c:515 modules/tools/stats.c:460
@@ -5556,7 +5584,7 @@ msgstr "О_бновить"
 msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
-#: modules/file/rawfile.c:643 modules/file/rawxyz.c:665
+#: modules/file/rawfile.c:643 modules/file/rawxyz.c:663
 msgid "S_quare sample"
 msgstr "_Квадратный сэмпл"
 
@@ -5791,77 +5819,77 @@ msgstr "Могут быть импортированы только файлы �
 msgid "Curve"
 msgstr "Кривая"
 
-#: modules/file/rawxyz.c:243
+#: modules/file/rawxyz.c:241
 msgid "Imports raw XYZ data files."
 msgstr "Импортирует неформатированные файлы XYZ."
 
-#: modules/file/rawxyz.c:256
+#: modules/file/rawxyz.c:254
 msgid "XYZ data files"
 msgstr "Импорт файлов данных XYZ"
 
-#: modules/file/rawxyz.c:335
+#: modules/file/rawxyz.c:333
 msgid "Raw XYZ data import must be run as interactive."
 msgstr ""
 "импорт неформатированных данных XYZ должен быть запущен в интерактивном "
 "режиме."
 
-#: modules/file/rawxyz.c:371
+#: modules/file/rawxyz.c:369
 msgid "Regularized XYZ"
 msgstr "Упорядоченные XYZ"
 
-#: modules/file/rawxyz.c:421
+#: modules/file/rawxyz.c:419
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:450
+#: modules/file/rawxyz.c:448
 msgid "Reset Ran_ges"
 msgstr "Сбросить _диапазоны"
 
-#: modules/file/rawxyz.c:629
+#: modules/file/rawxyz.c:627
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:647
+#: modules/file/rawxyz.c:645
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:684
+#: modules/file/rawxyz.c:682
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:701 modules/process/dimensions.h:494
+#: modules/file/rawxyz.c:699 modules/process/dimensions.h:494
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:744
+#: modules/file/rawxyz.c:742
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:745 modules/process/merge.c:197
+#: modules/file/rawxyz.c:743 modules/process/merge.c:197
 msgid "Average"
 msgstr "Среднее"
 
-#: modules/file/rawxyz.c:752 modules/process/extend.c:275
+#: modules/file/rawxyz.c:750 modules/process/extend.c:275
 #: modules/process/polydistort.c:267
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:760 modules/process/extend.c:268
+#: modules/file/rawxyz.c:758 modules/process/extend.c:268
 #: modules/process/polydistort.c:260
 msgid "exterior|Border"
 msgstr "Граница"
 
-#: modules/file/rawxyz.c:762 modules/process/extend.c:270
+#: modules/file/rawxyz.c:760 modules/process/extend.c:270
 #: modules/process/polydistort.c:262
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
-#: modules/file/rawxyz.c:764 modules/process/extend.c:272
+#: modules/file/rawxyz.c:762 modules/process/extend.c:272
 #: modules/process/polydistort.c:264
 msgid "exterior|Periodic"
 msgstr "Периодический"
 
-#: modules/file/rawxyz.c:1087
+#: modules/file/rawxyz.c:1085
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5872,7 +5900,7 @@ msgstr ""
 "Объединено как слишком близких: %u\n"
 "Добавлено на границах: %u"
 
-#: modules/file/rawxyz.c:1095
+#: modules/file/rawxyz.c:1093
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -5881,18 +5909,18 @@ msgstr ""
 "Точек считано из файла: %u\n"
 "Точки формируют правильную сетку: %u×%u"
 
-#: modules/file/rawxyz.c:1126
+#: modules/file/rawxyz.c:1124
 msgid "Physical dimensions are invalid."
 msgstr "Физические размеры неверны."
 
-#: modules/file/rawxyz.c:1173 modules/process/bdep_synth.c:243
+#: modules/file/rawxyz.c:1171 modules/process/bdep_synth.c:243
 #: modules/process/bdep_synth.c:600 modules/process/calcoefs_simple.c:636
 #: modules/process/col_synth.c:278 modules/process/col_synth.c:721
 #: modules/process/crosscor.c:599 modules/process/crosscor.c:624
 #: modules/process/deposit_synth.c:274 modules/process/deposit_synth.c:865
 #: modules/process/diff_synth.c:308 modules/process/diff_synth.c:709
 #: modules/process/domain_synth.c:259 modules/process/domain_synth.c:749
-#: modules/process/grain_wshed.c:433 modules/process/lat_synth.c:461
+#: modules/process/grain_wshed.c:433 modules/process/lat_synth.c:457
 #: modules/process/mark_disconn.c:152 modules/process/mark_disconn.c:377
 #: modules/process/maskcor.c:331 modules/process/mcrop.c:321
 #: modules/process/merge.c:1078 modules/process/nanoindent_adjust.c:323
@@ -5904,11 +5932,11 @@ msgstr "Физические размеры неверны."
 msgid "Initializing..."
 msgstr "Инициализация..."
 
-#: modules/file/rawxyz.c:1194 modules/process/superresolution.c:554
+#: modules/file/rawxyz.c:1192 modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Интерполяция..."
 
-#: modules/file/rawxyz.c:1206
+#: modules/file/rawxyz.c:1204
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
@@ -6455,23 +6483,23 @@ msgstr "ASCII файлы WSF (.wsf)"
 msgid "File header does not end with an empty line."
 msgstr "Заголовок файла не заканчивается пустой строкой."
 
-#: modules/file/wsxmfile.c:103
+#: modules/file/wsxmfile.c:98
 msgid "Imports Nanotec WSxM data files."
 msgstr "Импортирует файлы данных Nanotec WSxM."
 
-#: modules/file/wsxmfile.c:116
+#: modules/file/wsxmfile.c:111
 msgid "WSxM files (.tom, .stp)"
 msgstr "Файлы WSxM (.tom, .stp)"
 
-#: modules/file/wsxmfile.c:257
+#: modules/file/wsxmfile.c:252
 msgid "number of columns"
 msgstr "количество столбцов"
 
-#: modules/file/wsxmfile.c:264
+#: modules/file/wsxmfile.c:259
 msgid "number of rows"
 msgstr "количество строк"
 
-#: modules/file/wsxmfile.c:275
+#: modules/file/wsxmfile.c:272
 #, c-format
 msgid "Unknown data type `%s'."
 msgstr "Неизвестный тип данных `%s'."
@@ -6930,9 +6958,8 @@ msgid "Find graph curve peaks"
 msgstr "Найти пики графиков кривых"
 
 #: modules/graph/graph_peaks.c:157
-#, fuzzy
 msgid "Prominence"
-msgstr "Рельефность"
+msgstr "Выдающесть"
 
 #: modules/graph/graph_peaks.c:173
 msgid "Graph Peaks"
@@ -6980,7 +7007,7 @@ msgstr "Слой, позволяющий выбирать двумерную р�
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Слой, позволяющий выбрать произвольные прямые линии."
 
-#: modules/layer/path.c:167
+#: modules/layer/path.c:171
 msgid "Layer allowing selection of a single long curve."
 msgstr "Слой, позволяющий выбрать одну длинную кривую."
 
@@ -7301,7 +7328,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/deposit_synth.c:537 modules/process/deposit_synth.c:550
 #: modules/process/diff_synth.c:346 modules/process/domain_synth.c:323
 #: modules/process/domain_synth.c:331 modules/process/fbm_synth.c:282
-#: modules/process/fft_synth.c:318 modules/process/lat_synth.c:499
+#: modules/process/fft_synth.c:318 modules/process/lat_synth.c:495
 #: modules/process/lno_synth.c:411 modules/process/noise_synth.c:315
 #: modules/process/obj_synth.c:408 modules/process/pat_synth.c:361
 #: modules/process/wave_synth.c:327
@@ -7325,7 +7352,7 @@ msgstr "Прогрессивное обновление"
 #: modules/process/bdep_synth.c:411 modules/process/col_synth.c:447
 #: modules/process/deposit_synth.c:418 modules/process/diff_synth.c:481
 #: modules/process/domain_synth.c:434 modules/process/fbm_synth.c:364
-#: modules/process/fft_synth.c:402 modules/process/lat_synth.c:590
+#: modules/process/fft_synth.c:402 modules/process/lat_synth.c:586
 #: modules/process/lno_synth.c:494 modules/process/noise_synth.c:398
 #: modules/process/obj_synth.c:499 modules/process/pat_synth.c:446
 #: modules/process/wave_synth.c:411
@@ -7349,7 +7376,7 @@ msgstr "По_крытие:"
 
 #: modules/process/bdep_synth.c:438 modules/process/diff_synth.c:516
 #: modules/process/domain_synth.c:518 modules/process/fbm_synth.c:416
-#: modules/process/fft_synth.c:422 modules/process/lat_synth.c:722
+#: modules/process/fft_synth.c:422 modules/process/lat_synth.c:718
 #: modules/process/lno_synth.c:541 modules/process/noise_synth.c:441
 #: modules/process/obj_synth.c:580 modules/process/wave_synth.c:457
 msgid "_Like Current Channel"
@@ -8863,52 +8890,52 @@ msgstr "Расширить си_мметрично"
 msgid "Keep lateral offsets"
 msgstr "Сохранять пространственные смещения"
 
-#: modules/process/extract_path.c:88
+#: modules/process/extract_path.c:86
 msgid "Extracts coordinates and tangents along a path selection."
 msgstr "Извлекает координаты и производные вдоль выбранного пути."
 
-#: modules/process/extract_path.c:102
+#: modules/process/extract_path.c:100
 msgid "/_Distortion/Extract _Path Selection..."
 msgstr "/_Искажение/Извлечь выбранный _путь..."
 
-#: modules/process/extract_path.c:106
+#: modules/process/extract_path.c:104
 msgid "Extract path selection data"
 msgstr "Извлекает данные выбранного пути"
 
-#: modules/process/extract_path.c:160
+#: modules/process/extract_path.c:158
 msgid "Extract Path Selection"
 msgstr "Извлечь выбранный путь"
 
-#: modules/process/extract_path.c:177
+#: modules/process/extract_path.c:175
 msgid "Number of path points:"
 msgstr "Количество точек пути:"
 
-#: modules/process/extract_path.c:184
+#: modules/process/extract_path.c:182
 msgid "There is no path selection."
 msgstr "Выбранный путь отсутствует."
 
-#: modules/process/extract_path.c:190 modules/volume/volume_extract.c:390
+#: modules/process/extract_path.c:188 modules/volume/volume_extract.c:390
 msgid "X position"
 msgstr "Положение по X"
 
-#: modules/process/extract_path.c:194 modules/volume/volume_extract.c:397
+#: modules/process/extract_path.c:192 modules/volume/volume_extract.c:397
 msgid "Y position"
 msgstr "Положение по Y"
 
-#: modules/process/extract_path.c:198
+#: modules/process/extract_path.c:196
 msgid "X tangent"
 msgstr "Касательная по X"
 
-#: modules/process/extract_path.c:202
+#: modules/process/extract_path.c:200
 msgid "Y tangent"
 msgstr "Касательная по Y"
 
-#: modules/process/extract_path.c:393 modules/process/extract_path.c:405
+#: modules/process/extract_path.c:391 modules/process/extract_path.c:403
 #: modules/process/pat_synth.c:1436 modules/tools/distance.c:146
 msgid "Distance"
 msgstr "Расстояние"
 
-#: modules/process/extract_path.c:404
+#: modules/process/extract_path.c:402
 msgid "Tangent"
 msgstr "Касательная"
 
@@ -9786,11 +9813,11 @@ msgstr "Установить выбранное как:"
 msgid "Keep grains satisfying:"
 msgstr "Оставлять зёрна, удовлетворяющие:"
 
-#: modules/process/grain_filter.c:438 modules/process/lat_synth.c:697
+#: modules/process/grain_filter.c:438 modules/process/lat_synth.c:693
 msgid "Lower threshold:"
 msgstr "Нижний порог:"
 
-#: modules/process/grain_filter.c:473 modules/process/lat_synth.c:704
+#: modules/process/grain_filter.c:473 modules/process/lat_synth.c:700
 msgid "Upper threshold:"
 msgstr "Верхний порог:"
 
@@ -10366,104 +10393,104 @@ msgstr "Интерполировать данные под маской реше
 msgid "Laplace interpolation..."
 msgstr "Интерполяция Лапласа..."
 
-#: modules/process/lat_synth.c:343
+#: modules/process/lat_synth.c:339
 msgid "Random constant"
 msgstr "Случайная постоянная"
 
-#: modules/process/lat_synth.c:344
+#: modules/process/lat_synth.c:340
 msgid "Random linear"
 msgstr "Случаная линейная"
 
-#: modules/process/lat_synth.c:345
+#: modules/process/lat_synth.c:341
 msgid "Random bumpy"
 msgstr "Случайная выпуклая"
 
-#: modules/process/lat_synth.c:346
+#: modules/process/lat_synth.c:342
 msgid "Radial distance"
 msgstr "Радиальное расстояние"
 
-#: modules/process/lat_synth.c:347
+#: modules/process/lat_synth.c:343
 msgid "Segmented distance"
 msgstr "Сегментированное расстояние"
 
-#: modules/process/lat_synth.c:348
+#: modules/process/lat_synth.c:344
 msgid "Segmented random"
 msgstr "Сегментированное случайное"
 
-#: modules/process/lat_synth.c:349
+#: modules/process/lat_synth.c:345
 msgid "Border distance"
 msgstr "Расстояние до границы"
 
-#: modules/process/lat_synth.c:350
+#: modules/process/lat_synth.c:346
 msgid "Border random"
 msgstr "Случайное до границы"
 
-#: modules/process/lat_synth.c:351
+#: modules/process/lat_synth.c:347
 msgid "Second nearest distance"
 msgstr "Расстояние до второго ближайшего"
 
-#: modules/process/lat_synth.c:375
+#: modules/process/lat_synth.c:371
 msgid "Generates surfaces based on regular or random lattices."
 msgstr "Генерирует поверхности на основе правильных или случайных решеток."
 
-#: modules/process/lat_synth.c:389
+#: modules/process/lat_synth.c:385
 msgid "/S_ynthetic/_Lattice..."
 msgstr "/Син_тез/_Решетка..."
 
-#: modules/process/lat_synth.c:393
+#: modules/process/lat_synth.c:389
 msgid "Generate lattice based surface"
 msgstr "Создать основанную на решетке поверхность"
 
-#: modules/process/lat_synth.c:512
+#: modules/process/lat_synth.c:508
 msgid "lattice|Random"
 msgstr "Случайная"
 
-#: modules/process/lat_synth.c:513
+#: modules/process/lat_synth.c:509
 msgid "lattice|Square"
 msgstr "Квадратная"
 
-#: modules/process/lat_synth.c:514
+#: modules/process/lat_synth.c:510
 msgid "lattice|Hexagonal"
 msgstr "Гексагональная"
 
-#: modules/process/lat_synth.c:515
+#: modules/process/lat_synth.c:511
 msgid "lattice|Triangular"
 msgstr "Треугольная"
 
-#: modules/process/lat_synth.c:608
+#: modules/process/lat_synth.c:604
 msgid "_Lattice:"
 msgstr "_Решетка:"
 
-#: modules/process/lat_synth.c:615 modules/process/obj_synth.c:545
+#: modules/process/lat_synth.c:611 modules/process/obj_synth.c:545
 #: modules/process/pat_synth.c:1461
 msgid "_Size:"
 msgstr "Р_азмер:"
 
-#: modules/process/lat_synth.c:626
+#: modules/process/lat_synth.c:622
 msgid "Lattice rela_xation:"
 msgstr "Рела_ксация решетки:"
 
-#: modules/process/lat_synth.c:638
+#: modules/process/lat_synth.c:634
 msgid "_Height relaxation:"
 msgstr "Релаксация в_ысоты"
 
-#: modules/process/lat_synth.c:669
+#: modules/process/lat_synth.c:665
 msgid "Surface"
 msgstr "Поверхность"
 
-#: modules/process/lat_synth.c:690 modules/process/local_contrast.c:154
+#: modules/process/lat_synth.c:686 modules/process/local_contrast.c:154
 msgid "_Weight:"
 msgstr "_Вес:"
 
-#: modules/process/lat_synth.c:1131
+#: modules/process/lat_synth.c:1127
 msgid "Constructing lattice..."
 msgstr "Конструируется решетка..."
 
-#: modules/process/lat_synth.c:1158
+#: modules/process/lat_synth.c:1154
 msgid "Relaxing lattice..."
 msgstr "Производится релаксация решетки..."
 
-#: modules/process/lat_synth.c:1173
+#: modules/process/lat_synth.c:1169
 msgid "Relaxing heights..."
 msgstr "Производится релаксация высот..."
 
@@ -12183,44 +12210,44 @@ msgstr "О_ба направления"
 msgid "Revolve Arc"
 msgstr "Вращение дуги"
 
-#: modules/process/straighten_path.c:131
+#: modules/process/straighten_path.c:129
 msgid "Extracts a straightened part of image along a curve."
 msgstr "Извлекает выпрямленную часть изображения вдоль кривой"
 
-#: modules/process/straighten_path.c:145
+#: modules/process/straighten_path.c:143
 msgid "/_Distortion/Straighten _Path..."
 msgstr "/_Искажение/Выпрямить _путь..."
 
-#: modules/process/straighten_path.c:149
+#: modules/process/straighten_path.c:147
 msgid "Straighten along a path"
 msgstr "Выпрямить вдоль пути"
 
-#: modules/process/straighten_path.c:199
+#: modules/process/straighten_path.c:197
 msgid "Straighten Path"
 msgstr "Выпрямить путь"
 
-#: modules/process/straighten_path.c:259
+#: modules/process/straighten_path.c:257
 msgid "Res_tore"
 msgstr "_Восстановить"
 
-#: modules/process/straighten_path.c:264
+#: modules/process/straighten_path.c:262
 msgid "Re_verse"
 msgstr "_Обратный порядок"
 
-#: modules/process/straighten_path.c:282 modules/tools/pathlevel.c:256
+#: modules/process/straighten_path.c:281 modules/tools/pathlevel.c:256
 #: modules/tools/profile.c:511 modules/tools/roughness.c:858
 msgid "_Thickness:"
 msgstr "_Толщина:"
 
-#: modules/process/straighten_path.c:290
+#: modules/process/straighten_path.c:289
 msgid "_Slackness:"
 msgstr "_Неточность:"
 
-#: modules/process/straighten_path.c:296
+#: modules/process/straighten_path.c:295
 msgid "C_losed curve"
 msgstr "_Замкнутая кривая"
 
-#: modules/process/straighten_path.c:380
+#: modules/process/straighten_path.c:382
 msgid "Straightened"
 msgstr "Выпрямленное"
 
