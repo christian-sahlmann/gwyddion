@@ -120,7 +120,8 @@ static void       log_browser                           (gpointer pwhat);
 static void       gwy_app_change_mask_color             (void);
 static void       save_window_screen_relative_size      (GtkWindow *window,
                                                          GwyContainer *container,
-                                                         const gchar *prefix);
+                                                         const gchar *prefix,
+                                                         gboolean absolute_too);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -406,7 +407,8 @@ gwy_app_data_window_configured(GwyDataWindow *window)
                                      key, gwy_data_view_get_real_zoom(view));
     g_free(key);
 
-    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix,
+                                     FALSE);
 
     return FALSE;
 }
@@ -750,25 +752,15 @@ gwy_app_graph_window_configured(GwyGraphWindow *window)
     GwyContainer *container;
     const gchar *prefix;
     GQuark qprefix;
-    gint w, h;
-    gchar *key;
 
     container = g_object_get_data(G_OBJECT(window), "gwy-app-container");
     qprefix = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(window),
                                                  "gwy-app-prefix-quark"));
     g_return_val_if_fail(GWY_IS_CONTAINER(container) && qprefix, FALSE);
     prefix = g_quark_to_string(qprefix);
-    gtk_window_get_size(GTK_WINDOW(window), &w, &h);
 
-    key = g_strconcat(prefix, "/view/width", NULL);
-    gwy_container_set_int32_by_name(container, key, w);
-    g_free(key);
-
-    key = g_strconcat(prefix, "/view/height", NULL);
-    gwy_container_set_int32_by_name(container, key, h);
-    g_free(key);
-
-    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix,
+                                     TRUE);
 
     return FALSE;
 }
@@ -865,25 +857,14 @@ gwy_app_3d_window_configured(Gwy3DWindow *window)
     GwyContainer *container;
     const gchar *prefix;
     Gwy3DView *view;
-    gchar *key;
-    gint w, h;
 
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window));
     container = gwy_3d_view_get_data(view);
     prefix = gwy_3d_view_get_setup_prefix(view);
     g_return_val_if_fail(GWY_IS_CONTAINER(container) && prefix, FALSE);
 
-    gtk_window_get_size(GTK_WINDOW(window), &w, &h);
-
-    key = g_strconcat(prefix, "/view/width", NULL);
-    gwy_container_set_int32_by_name(container, key, w);
-    g_free(key);
-
-    key = g_strconcat(prefix, "/view/height", NULL);
-    gwy_container_set_int32_by_name(container, key, h);
-    g_free(key);
-
-    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix,
+                                     TRUE);
 
     return FALSE;
 }
@@ -1490,7 +1471,8 @@ gwy_app_brick_window_configured(GwyDataWindow *window)
                                      key, gwy_data_view_get_real_zoom(view));
     g_free(key);
 
-    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix,
+                                     FALSE);
 
     return FALSE;
 }
@@ -1878,21 +1860,12 @@ gwy_app_surface_window_configured(GwyDataWindow *window)
     GwyDataView *view = gwy_data_window_get_data_view(window);
     GwyContainer *container = gwy_data_view_get_data(view);
     const gchar *prefix = gwy_data_view_get_data_prefix(view);
-    //gchar *key;
 
     g_return_val_if_fail(container, FALSE);
     g_return_val_if_fail(prefix, FALSE);
 
-    /* TODO: We actually need width and height as XYZ have no natural size. */
-    /* This leads to some odd keys containing .../preview/view/... */
-#if 0
-    key = g_strconcat(prefix, "/view/scale", NULL);
-    gwy_container_set_double_by_name(container,
-                                     key, gwy_data_view_get_real_zoom(view));
-    g_free(key);
-#endif
-
-    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix);
+    save_window_screen_relative_size(GTK_WINDOW(window), container, prefix,
+                                     TRUE);
 
     return FALSE;
 }
@@ -2411,7 +2384,8 @@ gwy_app_restore_window_position(GtkWindow *window,
 
 static void
 save_window_screen_relative_size(GtkWindow *window,
-                                 GwyContainer *container, const gchar *prefix)
+                                 GwyContainer *container, const gchar *prefix,
+                                 gboolean absolute_too)
 {
     GdkScreen *screen;
     gdouble scw, sch, relsize;
@@ -2429,6 +2403,16 @@ save_window_screen_relative_size(GtkWindow *window,
     key = g_strconcat(prefix, "/view/relative-size", NULL);
     gwy_container_set_double_by_name(container, key, relsize);
     g_free(key);
+
+    if (absolute_too) {
+        key = g_strconcat(prefix, "/view/width", NULL);
+        gwy_container_set_int32_by_name(container, key, w);
+        g_free(key);
+
+        key = g_strconcat(prefix, "/view/height", NULL);
+        gwy_container_set_int32_by_name(container, key, h);
+        g_free(key);
+    }
 }
 
 gint
