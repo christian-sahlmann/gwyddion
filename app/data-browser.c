@@ -1577,9 +1577,14 @@ gwy_app_data_proxy_raster_changed(GObject *raster,
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
                                         &iter))
         return;
+
+    /* We do not want to recaulcate the thumbnail when just the preview image
+     * changes.  The thumbnail would be the same. */
+    /*
     gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
+                       */
 }
 
 static void
@@ -1609,9 +1614,13 @@ gwy_app_data_proxy_connect_raster(GwyAppDataProxy *proxy,
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
                                         &iter))
         return;
+    /* We do not want to recaulcate the thumbnail when just the preview image
+     * changes.  The thumbnail would be the same. */
+    /*
     gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
+                       */
 }
 
 static void
@@ -1642,9 +1651,13 @@ gwy_app_data_proxy_disconnect_raster(GwyAppDataProxy *proxy,
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
                                         &iter))
         return;
+    /* We do not want to recaulcate the thumbnail when just the preview image
+     * changes.  The thumbnail would be the same. */
+    /*
     gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
+                       */
 }
 
 static void
