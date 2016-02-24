@@ -10626,6 +10626,12 @@ gwy_app_data_browser_remove_graph_watch(gulong id)
  * @GWY_APP_BRICK_KEY: Quark corresponding to the data brick (Since 2.32).
  * @GWY_APP_BRICK_ID: Number (id) of the the data brick in its container
  *                    (Since 2.32).
+ * @GWY_APP_XYZ_VIEW: Data view widget (shows preview of surface XYZ data)
+ *                    (Since 2.45).
+ * @GWY_APP_SURFACE: Surface data (XYZ) (Since 2.45).
+ * @GWY_APP_SURFACE_KEY: Quark corresponding to the surface data (Since 2.45).
+ * @GWY_APP_SURFACE_ID: Number (id) of the the surface data in its container
+ *                      (Since 2.45).
  * @GWY_APP_CONTAINER_ID: Numeric id of data container (Since 2.41).
  *
  * Types of current objects that can be requested with
