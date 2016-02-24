@@ -9574,8 +9574,7 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
         g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/log", newid);
         gwy_container_set_object_by_name(dest, buf, slog);
         g_object_unref(slog);
-        gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",
-                                NULL);
+        gwy_app_volume_log_add(dest, newid, newid, "builtin::duplicate", NULL);
     }
 
     return newid;
@@ -9710,8 +9709,7 @@ gwy_app_data_browser_copy_xyz(GwyContainer *source,
         g_snprintf(buf, sizeof(buf), SURFACE_PREFIX "/%d/log", newid);
         gwy_container_set_object_by_name(dest, buf, slog);
         g_object_unref(slog);
-        gwy_app_channel_log_add(dest, newid, newid, "builtin::duplicate",
-                                NULL);
+        gwy_app_xyz_log_add(dest, newid, newid, "builtin::duplicate", NULL);
     }
 
     return newid;
