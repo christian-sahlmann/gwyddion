@@ -376,10 +376,14 @@ void gwy_file_channel_import_log_add(GwyContainer *data,
                                      gint id,
                                      const gchar *filetype,
                                      const gchar *filename);
-void gwy_file_volume_import_log_add(GwyContainer *data,
-                                    gint id,
-                                    const gchar *filetype,
-                                    const gchar *filename);
+void gwy_file_volume_import_log_add (GwyContainer *data,
+                                     gint id,
+                                     const gchar *filetype,
+                                     const gchar *filename);
+void gwy_file_xyz_import_log_add    (GwyContainer *data,
+                                     gint id,
+                                     const gchar *filetype,
+                                     const gchar *filename);
 
 G_END_DECLS
 

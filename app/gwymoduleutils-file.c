@@ -748,6 +748,34 @@ gwy_file_volume_import_log_add(GwyContainer *data,
     add_import_log(data, id, gwy_app_volume_log_add, filetype, filename);
 }
 
+/**
+ * gwy_file_xyz_import_log_add:
+ * @data: A data container.
+ * @id: XYZ surface data id.
+ * @filetype: File type, i.e. the name of the function importing the data
+ *            (without any "file::" prefix).  It is possible to
+ *            pass %NULL to fill the name of the currently running file type
+ *            function automatically.
+ * @filename: Name of the imported file.  If it is not valid UTF-8, it will be
+ *            converted to UTF-8 using g_filename_to_utf8().  Failing even
+ *            that, non-ASCII characters will be escaped.
+ *
+ * Logs the import of xyz data from third-party file.
+ *
+ * This is a convenience wrapper for gwy_app_xyz_log_add().  The source id
+ * will be set to -1.  The file name will be added to function arguments.
+ *
+ * Since: 2.45
+ **/
+void
+gwy_file_xyz_import_log_add(GwyContainer *data,
+                            gint id,
+                            const gchar *filetype,
+                            const gchar *filename)
+{
+    add_import_log(data, id, gwy_app_xyz_log_add, filetype, filename);
+}
+
 static void
 add_import_log(GwyContainer *data,
                gint id,
