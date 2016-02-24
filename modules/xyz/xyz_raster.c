@@ -216,6 +216,7 @@ xyzras(GwyContainer *data, GwyRunType run)
 
     settings = gwy_app_settings_get();
     xyzras_load_args(settings, &args);
+    gwy_clear(&rdata, 1);
     rdata.surface = surface;
     rdata.points = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     analyse_points(&rdata, EPSREL);
@@ -855,7 +856,6 @@ xyzras_do(XYZRasData *rdata,
         }
         if (window)
             gwy_app_wait_finish();
-
     }
 
     if (!ok) {
