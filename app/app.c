@@ -90,6 +90,8 @@ static void       gwy_app_brick_popup_menu_popup_key    (GtkWidget *menu,
                                                          GtkWidget *data_window);
 static gboolean   gwy_app_surface_window_configured     (GwyDataWindow *window);
 static void       update_surface_preview                (GwyDataWindow *data_window);
+static void       surface_density_map_toggled           (GwyDataWindow *data_window,
+                                                         GtkToggleButton *toggle);
 static GtkWidget* gwy_app_menu_surface_popup_create     (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_surface_popup_menu_popup_mouse(GtkWidget *menu,
                                                          GdkEventButton *event,
@@ -1843,6 +1845,13 @@ _gwy_app_surface_window_setup(GwyDataWindow *data_window)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(update_surface_preview), data_window);
 
+    button = gtk_toggle_button_new_with_mnemonic(_("_Density Map"));
+    GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "toggled",
+                             G_CALLBACK(surface_density_map_toggled),
+                             data_window);
+
     label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
@@ -1873,12 +1882,13 @@ gwy_app_surface_window_configured(GwyDataWindow *window)
 static void
 update_surface_preview(GwyDataWindow *data_window)
 {
-    GwyDataView *data_view;
+    GwyDataView *data_view = gwy_data_window_get_data_view(data_window);
     GwyContainer *data;
     GwySurface *surface;
-    GwyDataField *raster;
+    GwyDataField *raster, *densitymap = NULL;
     gint xres, yres, id;
     gdouble h, xmin, xmax, ymin, ymax;
+    gboolean want_densitymap;
     gchar key[32];
 
     gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
@@ -1888,10 +1898,12 @@ update_surface_preview(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_SURFACE(surface));
     g_return_if_fail(id >= 0);
 
-    data_view = gwy_data_window_get_data_view(data_window);
     g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
     raster = gwy_container_get_object_by_name(data, key);
     g_return_if_fail(raster);
+
+    want_densitymap = !!g_object_get_data(G_OBJECT(data_view),
+                                          "gwy-app-surface-density-map");
 
     h = gwy_data_view_get_xmeasure(data_view);
     gwy_surface_get_xrange(surface, &xmin, &xmax);
@@ -1927,10 +1939,29 @@ update_surface_preview(GwyDataWindow *data_window)
     gwy_data_field_set_yreal(raster, ymax - ymin);
     gwy_data_field_set_xoffset(raster, xmin);
     gwy_data_field_set_yoffset(raster, ymin);
-    gwy_data_field_average_xyz(raster, NULL, surface->data, surface->n);
+    if (want_densitymap)
+        densitymap = gwy_data_field_new_alike(raster, FALSE);
+
+    gwy_data_field_average_xyz(raster, densitymap, surface->data, surface->n);
 
     gwy_data_view_set_zoom(data_view, 1.0);
+    if (want_densitymap) {
+        gwy_data_field_copy(densitymap, raster, FALSE);
+        g_object_unref(densitymap);
+    }
     gwy_data_field_data_changed(raster);
+}
+
+static void
+surface_density_map_toggled(GwyDataWindow *data_window,
+                            GtkToggleButton *toggle)
+{
+    GwyDataView *data_view = gwy_data_window_get_data_view(data_window);
+    gboolean active = gtk_toggle_button_get_active(toggle);
+
+    g_object_set_data(G_OBJECT(data_view), "gwy-app-surface-density-map",
+                      GINT_TO_POINTER(active));
+    update_surface_preview(data_window);
 }
 
 static GtkWidget*
