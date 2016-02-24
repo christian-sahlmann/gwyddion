@@ -240,8 +240,7 @@ gxyzf_load(const gchar *filename,
             quark = gwy_app_get_surface_title_key_for_id(id);
             gwy_container_set_const_string(container, quark, value);
         }
-        // TODO
-        // gwy_file_xyz_import_log_add(container, id, NULL, filename);
+        gwy_file_xyz_import_log_add(container, id, NULL, filename);
     }
 
 fail:
