@@ -2228,7 +2228,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_DATA_VISIBLE:
-        if (!proxy->resetting_visibility) {
+        if (!proxy->resetting_visibility && !gui_disabled) {
             pageno = PAGE_CHANNELS;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
@@ -2287,7 +2287,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_GRAPH_VISIBLE:
-        if (!proxy->resetting_visibility) {
+        if (!proxy->resetting_visibility && !gui_disabled) {
             pageno = PAGE_GRAPHS;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
@@ -2301,7 +2301,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_BRICK_VISIBLE:
-        if (!proxy->resetting_visibility) {
+        if (!proxy->resetting_visibility && !gui_disabled) {
             pageno = PAGE_VOLUMES;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
@@ -2309,6 +2309,20 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 gboolean visible = FALSE;
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_brick_set_visible(proxy, &iter, visible);
+            }
+            pageno = -1;
+        }
+        break;
+
+        case KEY_IS_SURFACE_VISIBLE:
+        if (!proxy->resetting_visibility && !gui_disabled) {
+            pageno = PAGE_XYZS;
+            list = &proxy->lists[pageno];
+            found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+            if (found) {
+                gboolean visible = FALSE;
+                gwy_container_gis_boolean(data, quark, &visible);
+                gwy_app_data_proxy_surface_set_visible(proxy, &iter, visible);
             }
             pageno = -1;
         }
