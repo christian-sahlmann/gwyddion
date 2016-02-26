@@ -2421,6 +2421,9 @@ gwy_app_data_proxy_finalize(gpointer user_data)
         browser->proxy_list = g_list_remove(browser->proxy_list, proxy);
     }
 
+    g_signal_handlers_disconnect_by_func(proxy->container,
+                                         gwy_app_data_proxy_item_changed,
+                                         proxy);
     gwy_app_data_proxy_finalize_list
         (GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store),
          MODEL_OBJECT, &gwy_app_data_proxy_channel_changed, proxy);
