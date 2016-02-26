@@ -1907,7 +1907,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     if (id < 0) {
         if (type == KEY_IS_FILENAME) {
             gwy_app_data_browser_update_filename(proxy);
-            gwy_app_data_proxy_update_window_titles(proxy);
+            if (!gui_disabled)
+                gwy_app_data_proxy_update_window_titles(proxy);
         }
         return;
     }
