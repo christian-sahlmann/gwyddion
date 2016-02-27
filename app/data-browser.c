@@ -3691,6 +3691,7 @@ update_channel_sens(void)
 
     if (!data || !dataview) {
         gwy_app_sensitivity_set_state(mask, flags);
+        _gwy_app_data_view_set_current(NULL);
         return;
     }
 
