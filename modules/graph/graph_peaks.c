@@ -46,6 +46,12 @@ typedef enum {
     PEAK_ORDER_NTYPES,
 } PeaksOrderType;
 
+typedef enum {
+    PEAK_BACKGROUND_ZERO,
+    PEAK_BACKGROUND_MMSTEP,
+    PEAK_BACKGROUND_NTYPES,
+} PeaksBackgroundType;
+
 typedef struct {
     gdouble prominence;
     gdouble x;
@@ -58,6 +64,7 @@ typedef struct {
 typedef struct {
     gint curve;
     gint npeaks;
+    PeaksBackgroundType background;
     PeaksOrderType order;
 } PeaksArgs;
 
@@ -67,6 +74,7 @@ typedef struct {
     GtkWidget *dialogue;
     GtkWidget *graph;
     GtkWidget *curve;
+    GtkWidget *background;
     GtkWidget *order;
     GtkWidget *peaklist;
     GtkObject *npeaks;
@@ -88,6 +96,8 @@ static GtkWidget* add_aux_button      (GtkWidget *hbox,
                                        const gchar *tooltip);
 static void       curve_changed       (GtkComboBox *combo,
                                        PeaksControls *controls);
+static void       background_changed  (GtkComboBox *combo,
+                                       PeaksControls *controls);
 static void       order_changed       (GtkComboBox *combo,
                                        PeaksControls *controls);
 static void       update_value_formats(PeaksControls *controls);
@@ -102,14 +112,15 @@ static void       graph_peaks_save    (PeaksControls *controls);
 static void       graph_peaks_copy    (PeaksControls *controls);
 static gchar*     format_report       (PeaksControls *controls);
 static void       analyse_peaks       (GwyGraphCurveModel *gcmodel,
-                                       GArray *peaks);
+                                       GArray *peaks,
+                                       PeaksBackgroundType background);
 static void       load_args           (GwyContainer *container,
                                        PeaksArgs *args);
 static void       save_args           (GwyContainer *container,
                                        PeaksArgs *args);
 
 static const PeaksArgs peaks_defaults = {
-    0, 5, PEAK_ORDER_ABSCISSA,
+    0, 5, PEAK_ORDER_ABSCISSA, PEAK_BACKGROUND_MMSTEP,
 };
 
 static GwyModuleInfo module_info = {
@@ -157,6 +168,11 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
         { N_("Prominence"), PEAK_ORDER_PROMINENCE, },
     };
 
+    static const GwyEnum background_types[] = {
+        { N_("Zero"),              PEAK_BACKGROUND_ZERO,   },
+        { N_("Bilateral minimum"), PEAK_BACKGROUND_MMSTEP, },
+    };
+
     GtkWidget *dialogue, *hbox, *table, *label, *scwin, *hbox2, *button;
     GwyGraphModel *gmodel;
     GwyGraphArea *area;
@@ -184,7 +200,7 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
                        TRUE, TRUE, 0);
 
     /* Parameters */
-    table = gtk_table_new(5, 4, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
@@ -201,6 +217,21 @@ graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
                                         parent_gmodel, args->curve);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
     gtk_table_attach(GTK_TABLE(table), controls.curve,
+                     1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Background type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.background
+        = gwy_enum_combo_box_new(background_types,
+                                 G_N_ELEMENTS(background_types),
+                                 G_CALLBACK(background_changed), &controls,
+                                 args->background, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.background);
+    gtk_table_attach(GTK_TABLE(table), controls.background,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -420,7 +451,7 @@ curve_changed(GtkComboBox *combo,
     gwy_graph_model_remove_all_curves(gmodel);
     gcmodel = gwy_graph_model_get_curve(controls->parent_gmodel, args->curve);
     gwy_graph_model_add_curve(gmodel, gcmodel);
-    analyse_peaks(gcmodel, controls->peaks);
+    analyse_peaks(gcmodel, controls->peaks, args->background);
     update_value_formats(controls);
     select_peaks(controls);
 
@@ -540,6 +571,15 @@ update_value_formats(PeaksControls *controls)
     label = GTK_LABEL(gtk_tree_view_column_get_widget(column));
     gtk_label_set_markup(label, title);
     g_free(title);
+}
+
+static void
+background_changed(GtkComboBox *combo,
+                   PeaksControls *controls)
+{
+    controls->args->background = gwy_enum_combo_box_get_active(combo);
+    /* Force recalculation. */
+    curve_changed(GTK_COMBO_BOX(controls->curve), controls);
 }
 
 static void
@@ -695,7 +735,8 @@ compare_double_descending(gconstpointer a, gconstpointer b)
 }
 
 static void
-analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
+analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks,
+              PeaksBackgroundType background)
 {
     gdouble *ydata_filtered;
     const gdouble *xdata, *ydata;
@@ -753,6 +794,7 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
         gint ileft, iright;
         gdouble yleft, yright, arealeft, arearight, disp2left, disp2right;
 
+        /* Find the peak extents. */
         for (ileft = peak->i - 1;
              ileft && ydata[ileft] == ydata[ileft+1];
              ileft--)
@@ -769,6 +811,11 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
             iright++;
         yright = ydata[iright];
 
+        if (background == PEAK_BACKGROUND_ZERO) {
+            yleft = yright = 0.0;
+        }
+
+        /* Calculate height, area, etc. */
         arealeft = arearight = 0.0;
         disp2left = disp2right = 0.0;
         peak->x = xdata[peak->i];
@@ -803,7 +850,7 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
         }
     }
 
-    for (k = 0; k < peaks->len; k++) {
+    for (k = 0; k < peaks->len; ) {
         Peak *peak = &g_array_index(peaks, Peak, k);
         gdouble xleft = (k > 0
                          ? g_array_index(peaks, Peak, k-1).x
@@ -812,21 +859,32 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks)
                           ? g_array_index(peaks, Peak, k+1).x
                           : xdata[n-1]);
 
-        peak->prominence = log(peak->height * peak->area
-                               * (xright - peak->x) * (peak->x - xleft));
+        if (peak->height <= 0.0
+            || peak->area <= 0.0
+            || peak->x >= xright
+            || peak->x <= xleft) {
+            g_array_remove_index_fast(peaks, k);
+        }
+        else {
+            peak->prominence = log(peak->height * peak->area
+                                   * (xright - peak->x) * (peak->x - xleft));
+            k++;
+        }
     }
 
     g_array_sort(peaks, compare_double_descending);
 }
 
-static const gchar npeaks_key[] = "/module/graph_peaks/npeaks";
-static const gchar order_key[]  = "/module/graph_peaks/order";
+static const gchar background_key[] = "/module/graph_peaks/background";
+static const gchar npeaks_key[]     = "/module/graph_peaks/npeaks";
+static const gchar order_key[]      = "/module/graph_peaks/order";
 
 static void
 sanitize_args(PeaksArgs *args)
 {
     args->npeaks = CLAMP(args->npeaks, 1, 128);
     args->order = MIN(args->order, PEAK_ORDER_NTYPES-1);
+    args->background = MIN(args->background, PEAK_BACKGROUND_NTYPES-1);
 }
 
 static void
@@ -836,6 +894,8 @@ load_args(GwyContainer *container,
     *args = peaks_defaults;
     gwy_container_gis_int32_by_name(container, npeaks_key, &args->npeaks);
     gwy_container_gis_enum_by_name(container, order_key, &args->order);
+    gwy_container_gis_enum_by_name(container, background_key,
+                                   &args->background);
     sanitize_args(args);
 }
 
@@ -845,6 +905,7 @@ save_args(GwyContainer *container,
 {
     gwy_container_set_int32_by_name(container, npeaks_key, args->npeaks);
     gwy_container_set_enum_by_name(container, order_key, args->order);
+    gwy_container_set_enum_by_name(container, background_key, args->background);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
