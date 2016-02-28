@@ -157,6 +157,7 @@ static void          initialize_ranges      (const XYZRasData *rdata,
                                              XYZRasArgs *args);
 static void          analyse_points         (XYZRasData *rdata,
                                              double epsrel);
+static GwyDataField* check_regular_grid     (GwySurface *surface);
 static void          xyzras_load_args       (GwyContainer *container,
                                              XYZRasArgs *args);
 static void          xyzras_save_args       (GwyContainer *container,
@@ -213,6 +214,12 @@ xyzras(GwyContainer *data, GwyRunType run)
                                      GWY_APP_SURFACE_ID, &id,
                                      0);
     g_return_if_fail(GWY_IS_SURFACE(surface));
+
+    if ((dfield = check_regular_grid(surface))) {
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
+        return;
+    }
 
     settings = gwy_app_settings_get();
     xyzras_load_args(settings, &args);
@@ -799,8 +806,6 @@ xyzras_do(XYZRasData *rdata,
         *error = g_strdup(_("Physical dimensions are invalid."));
         return NULL;
     }
-    /* XXX: Handle unit scale.  Ideally by applying conversion factors already
-     * in the GUI? */
     dfield = gwy_data_field_new(args->xres, args->yres,
                                 args->xmax - args->xmin,
                                 args->ymax - args->ymin,
@@ -1386,6 +1391,99 @@ analyse_points(XYZRasData *rdata,
     g_free(newpoints);
 
     rdata->nbasepoints = rdata->points->len;
+}
+
+/* Create a data field directly if the XY positions form a complete regular
+ * grid.  */
+static GwyDataField*
+check_regular_grid(GwySurface *surface)
+{
+    gdouble ymaxstep, xmin, xmax, ymin, ymax, dx, dy;
+    guint n, xres, yres, k;
+    GwyDataField *dfield;
+    gdouble *yvalues, *data;
+    gboolean *encountered;
+    gboolean ok = TRUE;
+
+    n = surface->n;
+    if (n < 4)
+        return NULL;
+
+    /* Do not create Nx1 or 1xN fields. */
+    gwy_surface_get_xrange(surface, &xmin, &xmax);
+    gwy_surface_get_yrange(surface, &ymin, &ymax);
+    if (xmin == xmax || ymin == ymax)
+        return NULL;
+
+    yvalues = g_new(gdouble, n);
+    for (k = 0; k < n; k++)
+        yvalues[k] = surface->data[k].y;
+    gwy_math_sort(n, yvalues);
+
+    ymaxstep = 0.0;
+    for (k = 1; k < n; k++) {
+        if (yvalues[k] - yvalues[k-1] > ymaxstep)
+            ymaxstep = yvalues[k] - yvalues[k-1];
+    }
+    gwy_debug("ymaxstep %g", ymaxstep);
+    yres = (gint)ceil((ymax - ymin)/ymaxstep) + 1;
+    gwy_debug("estimated yres %d", yres);
+    g_free(yvalues);
+
+    if (n % yres != 0)
+        return NULL;
+
+    xres = n/yres;
+    gwy_debug("yres %d", xres);
+    dx = (xmax - xmin)/(xres - 1);
+    dy = (ymax - ymin)/(yres - 1);
+    xmin -= 0.5*dx;
+    xmax += 0.5*dx;
+    ymin -= 0.5*dy;
+    ymax += 0.5*dy;
+
+    dfield = gwy_data_field_new(xres, yres, xmax - xmin, ymax - ymin, FALSE);
+    data = gwy_data_field_get_data(dfield);
+    encountered = g_new0(gboolean, n);
+    for (k = 0; k < n; k++) {
+        gdouble y = (surface->data[k].y - ymin)/dy;
+        gdouble x = (surface->data[k].x - xmin)/dx;
+        gint i = (gint)floor(y);
+        gint j = (gint)floor(x);
+
+        if (fabs(x - j - 0.5) > 0.01) {
+            gwy_debug("point (%d,%d) too far in x %g", j, i, x - j - 0.5);
+            ok = FALSE;
+            break;
+        }
+        if (fabs(y - i - 0.5) > 0.01) {
+            gwy_debug("point (%d,%d) too far in y %g", j, i, y - i - 0.5);
+            ok = FALSE;
+            break;
+        }
+        if (encountered[i*xres + j]) {
+            gwy_debug("point (%d,%d) encountered twice", j, i);
+            ok = FALSE;
+            break;
+        }
+
+        encountered[i*xres + j] = TRUE;
+        data[i*xres + j] = surface->data[k].z;
+    }
+
+    g_free(encountered);
+    if (!ok) {
+        g_object_unref(dfield);
+        return NULL;
+    }
+
+    gwy_data_field_set_xoffset(dfield, xmin);
+    gwy_data_field_set_yoffset(dfield, ymin);
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)));
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(dfield)));
+    return dfield;
 }
 
 static const gchar exterior_key[]      = "/module/xyz_raster/exterior";
