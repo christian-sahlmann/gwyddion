@@ -40,8 +40,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * Gwyddion XYZ data
  * .gxyzf
- * Read[1] Export
- * [1] XYZ data are interpolated to a regular grid upon import.
+ * Read Export
  **/
 
 #include <string.h>
