@@ -49,7 +49,7 @@ void       gwy_app_channel_log_add_proc   (GwyContainer *data,
 void       gwy_app_volume_log_add_volume  (GwyContainer *data,
                                            gint previd,
                                            gint newid);
-void       gwy_app_volume_log_add_xyz     (GwyContainer *data,
+void       gwy_app_xyz_log_add_xyz        (GwyContainer *data,
                                            gint previd,
                                            gint newid);
 GtkWidget* gwy_app_log_browser_for_channel(GwyContainer *data,
