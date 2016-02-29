@@ -30,7 +30,7 @@ Libraries:
   Laplace data correction was added.
 - libgwyddion: GwyNLFitter fit returns -1 and NULLs the covariance matrix when
   it gets infinities or NaNs anywhere in the matrix or parameters.
-- libprocess: New DataField distortion function that takes explicit list of
+- libgwyprocess: New DataField distortion function that takes explicit list of
   coordinates in the original data field.
 - libgwydgets: A large number of new stock icons were added.
 - libgwyddion: New macro gwy_info() emits an INFO-level log message.
@@ -55,6 +55,7 @@ Modules:
 - Extract path selection (new): Extracts positions and tangents of sampled 
   path selections as graph curves.
 - Find graph peaks (new): Simple location of peaks on graph curves.
+- Rasterize XYZ (new): Renders XYZ data to an image.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
@@ -73,8 +74,8 @@ Modules:
 - WSxM: Files starting ‘WSxM file copyright WSxM solutions’ are also
   recognised now.  Single-precision files are loaded correctly.
 - GWYXYZF: Byte order handling was corrected to follow the specification.
-  The data are loaded a native XYZ data instead of being regularised to image
-  upon import.
+- GWYXYZF, Raw XZY: The data are loaded a native XYZ data instead of being
+  regularised to image upon import.
 
 
 2.44 (2016-01-11)
@@ -90,8 +91,8 @@ Libraries:
 - libgwydgets: Gwy3DView light source distance from the surface no longer
   scales with Value scale, improving views with small Value scale a lot.
 - libgwyddion: gwy_debug() adds timestamp to the messages (where available).
-- libprocess: Rare incorrect memory reallocation in Delaunay triangulation was
-  fixed.
+- libgwyprocess: Rare incorrect memory reallocation in Delaunay triangulation
+  was fixed.
 - libgwyapp: gwy_app_channel_remove_bad_data() now ensures the mask field has
   the same lateral dimensions and units as the data field.
 - libgwyprocess: Bogus value returned by gwy_data_field_area_get_entropy() with
@@ -192,7 +193,7 @@ Libraries:
   and move methods now.
 - libgwyapp: Drag'n'drop of selections from Selection Manager tool to
   channels works for images with offset top-left corner.
-- libprocess: A function for trimming empty border rows and columns from
+- libgwyprocess: A function for trimming empty border rows and columns from
   a mask data field was added.
 - libgwyapp: Functions for obtaining quark keys of various common items
   (range, palette, title, meta, ...) in the file were added.
@@ -289,12 +290,12 @@ Libraries:
 - libgwydgets: Misaligned Y-grids in graphs exported to bitmap were fixed.
 - libgwyprocess: A function for subpixel maximum refinement was added.
 - libgwydgets: 3D view axis and tick line width is controllable now.
-- libprocess: New functions to calculate data line total variation, skew,
+- libgwyprocess: New functions to calculate data line total variation, skew,
   kurtosis, mean absolute deviation of values and peak statisics.
-- libprocess: Normalisation of tan β₀ data line statistics was corrected.
-- libprocess: New functions for obtaining GwyDataLine minimum and maximum
+- libgwyprocess: Normalisation of tan β₀ data line statistics was corrected.
+- libgwyprocess: New functions for obtaining GwyDataLine minimum and maximum
   values simultaneously.
-- libprocess: Range and total variation can be now calculated by
+- libgwyprocess: Range and total variation can be now calculated by
   gwy_data_field_area_get_line_stats().
 - libgwyapp: File thumbnails (for document history) are created from volume
   data when the file does not contain any channels.
@@ -381,7 +382,7 @@ Libraries:
 - libgwyapp: New helper function for adding graph curves to another graph or
   creaing a new graph if units are incompatibile.
 - libgwydgets: Graph key frame size should better correspond to the content.
-- libprocess: Functions for various simple distance transforms were added.
+- libgwyprocess: Functions for various simple distance transforms were added.
 - libgwyprocess: New fitting presets: Smooth slanted step and Smooth bent
   step.
 
