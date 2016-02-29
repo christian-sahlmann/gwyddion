@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007,2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -101,6 +101,39 @@ gwy_app_channel_check_nonsquare(GwyContainer *data,
     return nonsquare;
 }
 
+static const gchar*
+guess_title_from_units(GwySIUnit *siunit)
+{
+    static const struct {
+        const gchar *unit;
+        const gchar *title;
+    }
+    map[] = {
+        { "m",   "Topography", },
+        { "A",   "Current",    },
+        { "deg", "Phase",      },
+        { "V",   "Voltage",    },
+        { "N",   "Force",      },
+        { "s",   "Time",       },
+    };
+
+    GwySIUnit *test;
+    const gchar *title = NULL;
+    guint i;
+
+    test = gwy_si_unit_new(NULL);
+    for (i = 0; i < G_N_ELEMENTS(map); i++) {
+        gwy_si_unit_set_from_string(test, map[i].unit);
+        if (gwy_si_unit_equal(siunit, test)) {
+            title = map[i].title;
+            break;
+        }
+    }
+    g_object_unref(test);
+
+    return title;
+}
+
 /**
  * gwy_app_channel_title_fall_back:
  * @data: A data container.
@@ -120,50 +153,61 @@ gboolean
 gwy_app_channel_title_fall_back(GwyContainer *data,
                                 gint id)
 {
-    static const struct {
-        const gchar *unit;
-        const gchar *title;
-    }
-    map[] = {
-        { "m",   "Topography", },
-        { "A",   "Current",    },
-        { "deg", "Phase",      },
-        { "V",   "Voltage",    },
-        { "N",   "Force",      },
-    };
-
-    GwySIUnit *siunit, *test;
     GwyDataField *dfield;
-    const gchar *key, *title;
+    const gchar *title;
     GQuark quark;
-    guint i;
-    gchar *s;
 
     quark = gwy_app_get_data_key_for_id(id);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+    dfield = gwy_container_get_object(data, quark);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
 
-    key = g_quark_to_string(quark);
-    s = g_strconcat(key, "/title", NULL);
-    quark = g_quark_from_string(s);
-    g_free(s);
+    quark = gwy_app_get_data_title_key_for_id(id);
     if (gwy_container_contains(data, quark))
         return TRUE;
 
-    siunit = gwy_data_field_get_si_unit_z(dfield);
-    test = gwy_si_unit_new(NULL);
-    title = NULL;
-
-    for (title = NULL, i = 0; i < G_N_ELEMENTS(map) && !title; i++) {
-        gwy_si_unit_set_from_string(test, map[i].unit);
-        if (gwy_si_unit_equal(siunit, test))
-            title = map[i].title;
+    title = guess_title_from_units(gwy_data_field_get_si_unit_z(dfield));
+    if (title) {
+        gwy_container_set_const_string(data, quark, title);
+        return TRUE;
     }
 
-    g_object_unref(test);
+    return FALSE;
+}
 
+/**
+ * gwy_app_xyz_title_fall_back:
+ * @data: A data container.
+ * @id: XYZ surface data id.
+ *
+ * Adds a XYZ data title based on surface value units.
+ *
+ * The guess is very simple, but probably better than `Unknown channel' in
+ * most cases.  If there already is a title it is left intact, making use of
+ * this function as a fall-back easier.
+ *
+ * Returns: %TRUE if the title was set (either by this function or before).
+ *
+ * Since: 2.45
+ **/
+gboolean
+gwy_app_xyz_title_fall_back(GwyContainer *data,
+                            gint id)
+{
+    GwySurface *surface;
+    const gchar *title;
+    GQuark quark;
+
+    quark = gwy_app_get_surface_key_for_id(id);
+    surface = gwy_container_get_object(data, quark);
+    g_return_val_if_fail(GWY_IS_SURFACE(surface), FALSE);
+
+    quark = gwy_app_get_surface_title_key_for_id(id);
+    if (gwy_container_contains(data, quark))
+        return TRUE;
+
+    title = guess_title_from_units(gwy_surface_get_si_unit_z(surface));
     if (title) {
-        gwy_container_set_string(data, quark, g_strdup(title));
+        gwy_container_set_const_string(data, quark, title);
         return TRUE;
     }
 

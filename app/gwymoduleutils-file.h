@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007,2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -310,6 +310,8 @@ gwy_get_pascal_real_be(const guchar **ppv)
 gboolean      gwy_app_channel_check_nonsquare(GwyContainer *data,
                                               gint id);
 gboolean      gwy_app_channel_title_fall_back(GwyContainer *data,
+                                              gint id);
+gboolean      gwy_app_xyz_title_fall_back    (GwyContainer *data,
                                               gint id);
 guint         gwy_app_channel_remove_bad_data(GwyDataField *dfield,
                                               GwyDataField *mfield);
