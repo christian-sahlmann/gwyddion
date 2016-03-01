@@ -35,8 +35,6 @@
 #include <libgwymodule/gwymodule-xyz.h>
 #include <app/gwyapp.h>
 
-#include "err.h"
-
 #define XYZRAS_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
 
 #define EPSREL 1e-8
