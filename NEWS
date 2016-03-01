@@ -23,7 +23,6 @@ Libraries:
 - libgwyapp: Data browser can show warnings and other messages ocurring during
   the opening or merging of specific files.
 - libgwyapp: Data browser displays thumbnails for graphs.
-- libgwyapp: Data browser displays thumbnails for graphs.
 - libgwyprocess: Wrong estimated sizes for tip models were corrected.
 - libgwyprocess: Two new tip models were added: Parabola and Cone.
 - libgwyprocess: Function for filling missing valies in GwyDataLine using
