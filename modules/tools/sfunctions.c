@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2011 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -53,6 +54,7 @@ typedef enum {
     GWY_SF_MINKOWSKI_CONNECTIVITY = 9,
     GWY_SF_RPSDF                  = 10,
     GWY_SF_RACF                   = 11,
+    GWY_SF_RANGE                  = 12,
 } GwySFOutputType;
 
 enum {
@@ -111,7 +113,6 @@ struct _GwyToolSFunctions {
     GwyDataField *yunc;
     GwyDataField *zunc;
 
-
     /* potential class data */
     GType layer_type_rect;
 };
@@ -160,6 +161,12 @@ static gboolean filter_target_graphs                      (GwyContainer *data,
                                                            gpointer user_data);
 static void     gwy_tool_sfunctions_target_changed        (GwyToolSFunctions *tool);
 static void     gwy_tool_sfunctions_apply                 (GwyToolSFunctions *tool);
+static void     gwy_data_field_area_range                 (GwyDataField *dfield,
+                                                           GwyDataLine *dline,
+                                                           gint col, gint row, gint width, gint height,
+                                                           GwyOrientation direction,
+                                                           GwyInterpolationType interp,
+                                                           gint lineres);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -168,7 +175,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.12",
+    "2.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -209,6 +216,7 @@ static const GwyEnum sf_types[] =  {
     { N_("Minkowski volume"),            GWY_SF_MINKOWSKI_VOLUME,       },
     { N_("Minkowski boundary"),          GWY_SF_MINKOWSKI_BOUNDARY,     },
     { N_("Minkowski connectivity"),      GWY_SF_MINKOWSKI_CONNECTIVITY, },
+    { N_("Range"),                       GWY_SF_RANGE,                  },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -540,7 +548,6 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
     gchar yukey[24];
     gchar zukey[24];
 
-
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
     GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->data_switched(gwytool,
@@ -557,7 +564,6 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-
 
         g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
         g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
@@ -808,7 +814,6 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
             tool->has_uline = TRUE;
         }
 
-
         break;
 
         case GWY_SF_DA:
@@ -934,11 +939,21 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         ylabel = "G<sub>r</sub>";
         break;
 
+        case GWY_SF_RANGE:
+        gwy_data_field_area_range(plain_tool->data_field,
+                                  tool->line,
+                                  isel[0], isel[1], w, h,
+                                  tool->args.direction,
+                                  tool->args.interpolation,
+                                  lineres);
+        xlabel = "τ";
+        ylabel = "R";
+        break;
+
         default:
         g_return_if_reached();
         break;
     }
-
 
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
@@ -1145,6 +1160,82 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
                                              TRUE);
 
     g_object_unref(gmodel);
+}
+
+static void
+gwy_data_line_range_transform(GwyDataLine *dline, GwyDataLine *target,
+                              gdouble *mindata, gdouble *maxdata)
+{
+    gint res = dline->res, tres = target->res;
+    gint i, j;
+
+    g_return_if_fail(tres < res);
+    memcpy(mindata, dline->data, res*sizeof(gdouble));
+    memcpy(maxdata, dline->data, res*sizeof(gdouble));
+
+    for (i = 1; i < tres; i++) {
+        gdouble r = 0.0;
+        for (j = 0; j < res-i; j++) {
+            if (mindata[j+1] < mindata[j])
+                mindata[j] = mindata[j+1];
+            if (maxdata[j+1] > maxdata[j])
+                maxdata[j] = maxdata[j+1];
+            r += maxdata[j] - mindata[j];
+        }
+        target->data[i] += r/(res - i);
+    }
+}
+
+static void
+gwy_data_field_area_range(GwyDataField *dfield,
+                          GwyDataLine *dline,
+                          gint col, gint row, gint width, gint height,
+                          GwyOrientation direction,
+                          G_GNUC_UNUSED GwyInterpolationType interp,
+                          gint lineres)
+{
+    GwyDataLine *buf = gwy_data_line_new(1, 1.0, FALSE);
+    gint res, thickness, i;
+    gdouble *mindata, *maxdata;
+    gdouble h;
+
+    gwy_data_field_copy_units_to_data_line(dfield, dline);
+    if (direction == GWY_ORIENTATION_HORIZONTAL) {
+        res = width-1;
+        thickness = height;
+        h = gwy_data_field_get_xmeasure(dfield);
+    }
+    else if (direction == GWY_ORIENTATION_VERTICAL) {
+        res = height-1;
+        thickness = width;
+        h = gwy_data_field_get_ymeasure(dfield);
+    }
+    else {
+        g_return_if_reached();
+    }
+
+    mindata = g_new(gdouble, res+1);
+    maxdata = g_new(gdouble, res+1);
+    if (lineres > 0)
+        res = MIN(lineres, res);
+
+    gwy_data_line_resample(dline, res, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(dline);
+    gwy_data_line_set_offset(dline, 0.0);
+    gwy_data_line_set_real(dline, res*h);
+    for (i = 0; i < thickness; i++) {
+        if (direction == GWY_ORIENTATION_HORIZONTAL)
+            gwy_data_field_get_row_part(dfield, buf, row+i, col, col+width);
+        else
+            gwy_data_field_get_column_part(dfield, buf, col+i, row, row+height);
+
+        gwy_data_line_range_transform(buf, dline, mindata, maxdata);
+    }
+    gwy_data_line_multiply(dline, 1.0/thickness);
+
+    g_free(maxdata);
+    g_free(mindata);
+    g_object_unref(buf);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
