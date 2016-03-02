@@ -10319,6 +10319,7 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     GwyGraph *graph;
     GwyGraphArea *area;
     gdouble min, max, d;
+    gboolean is_logscale = FALSE;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
@@ -10346,20 +10347,38 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     gwy_graph_model_get_x_range(gmodel, &min, &max);
     gwy_graph_area_set_x_range(area, min, max);
 
-    /* TODO: support logscale correctly. */
+    g_object_get(gmodel, "y-logarithmic", &is_logscale, NULL);
     gwy_graph_model_get_y_range(gmodel, &min, &max);
-    if (max > min) {
-        d = max - min;
-        min -= 0.07*d;
-        max += 0.07*d;
-    }
-    else if (max) {
-        min = 0.5*max;
-        max = 1.5*max;
+    if (is_logscale) {
+        if (max > min) {
+            d = max/min;
+            d = pow(d, 0.07);
+            min /= d;
+            max *= d;
+        }
+        else if (max) {
+            min = 0.5*max;
+            max = 2.0*max;
+        }
+        else {
+            min = 0.1;
+            max = 10.0;
+        }
     }
     else {
-        min = -1.0;
-        max = 1.0;
+        if (max > min) {
+            d = max - min;
+            min -= 0.07*d;
+            max += 0.07*d;
+        }
+        else if (max) {
+            min = 0.5*max;
+            max = 1.5*max;
+        }
+        else {
+            min = -1.0;
+            max = 1.0;
+        }
     }
     gwy_graph_area_set_y_range(area, min, max);
 
