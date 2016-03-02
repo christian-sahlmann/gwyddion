@@ -167,7 +167,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Aligns rows by various methods."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -227,7 +227,9 @@ linematch(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add_proc(data, id, id);
+    gwy_app_channel_log_add(data, id, id, "proc::align_rows",
+                            "settings-name", "linematch",
+                            NULL);
 
     methodname = gwy_enum_to_string(args.method,
                                     methods, G_N_ELEMENTS(methods));
@@ -240,7 +242,9 @@ linematch(GwyContainer *data, GwyRunType run)
                                 GWY_DATA_ITEM_GRADIENT,
                                 0);
         gwy_app_set_data_field_title(data, newid, title);
-        gwy_app_channel_log_add(data, id, newid, NULL, NULL);
+        gwy_app_channel_log_add(data, id, newid, "proc::align_rows",
+                                "settings-name", "linematch",
+                                NULL);
     }
 
     if (args.do_plot) {
