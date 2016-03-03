@@ -264,7 +264,7 @@ wsxmfile_load(const gchar *filename,
         && (p = g_hash_table_lookup(meta, "General Info::Image Data Type"))) {
         if (gwy_strequal(p, "double"))
             type = GWY_RAW_DATA_DOUBLE;
-        if (gwy_strequal(p, "float"))
+        else if (gwy_strequal(p, "float"))
             type = GWY_RAW_DATA_FLOAT;
         else {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
