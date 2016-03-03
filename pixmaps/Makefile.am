@@ -12,7 +12,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.34: pygwy
 # Since 2.37: correct_affine extend mark_with synthetic_columnar synthetic_domains synthetic_lattice synthetic_line_noise synthetic_noise synthetic_objects synthetic_particles synthetic_pattern synthetic_waves
 # Since 2.38: synthetic_diffusion
-# Since 2.45: convolution distribution_angle distribution_slope entropy fft_2d fft_filter_2d grain_correlation grain_exscribed_circle grain_inscribed_circle grains_edge graph_align graph_cut graph_dos graph_export_ascii graph_export_png graph_export_vector graph_fd graph_filter graph_level hough level_flatten_base level_median load_debug load_info load_warning local_slope mask_distribute mask_extract mask_morph mask_thin measure_lattice neural_apply neural_train presentation_attach presentation_extract presentation_local_contrast presentation_log presentation_rank presentation_remove presentation_sem presentation_shading presentation_edge_canny presentation_edge_harris_corner presentation_edge_hough presentation_edge_inclination presentation_edge_laplace_gauss presentation_edge_local_non_linearity presentation_edge_prewitt presentation_edge_rms presentation_edge_rms_edge presentation_edge_sobel presentation_edge_step presentation_edge_zero_crossing psd_section psdf_log_phi synthetic_ballistic_deposition synthetic_brownian_motion synthetic_spectral tilt tip_dilation tip_erosion tip_estimation tip_map tip_model tip_pid
+# Since 2.45: convolution distribution_angle distribution_slope entropy fft_2d fft_filter_2d grain_correlation grain_exscribed_circle grain_inscribed_circle grains_edge graph_align graph_cut graph_dos graph_export_ascii graph_export_png graph_export_vector graph_fd graph_filter graph_level hough level_flatten_base level_median load_debug load_info load_warning local_slope mask_distribute mask_extract mask_morph mask_thin measure_lattice neural_apply neural_train presentation_attach presentation_extract presentation_local_contrast presentation_log presentation_rank presentation_remove presentation_sem presentation_shading presentation_edge_canny presentation_edge_harris_corner presentation_edge_hough presentation_edge_inclination presentation_edge_laplace_gauss presentation_edge_local_non_linearity presentation_edge_prewitt presentation_edge_rms presentation_edge_rms_edge presentation_edge_sobel presentation_edge_step presentation_edge_zero_crossing psd_section psdf_log_phi synthetic_ballistic_deposition synthetic_brownian_motion synthetic_spectral tilt tip_dilation tip_erosion tip_estimation tip_map tip_model tip_pid volume volume_calibrate volume_dimensions volume_invert volumize_layers
 #
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -207,6 +207,11 @@ pixmapdata_DATA = \
 	gwy_tip_pid-24.png \
 	gwy_unrotate-24.png \
 	gwy_value_invert-24.png \
+	gwy_volume-24.png \
+	gwy_volume_calibrate-24.png \
+	gwy_volume_dimensions-24.png \
+	gwy_volume_invert-24.png \
+	gwy_volumize_layers-24.png \
 	gwy_zoom_1_1-24.png \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \
@@ -280,7 +285,8 @@ xcf_sources = \
 	gwy_zoom-24.xcf
 
 svg_sources = \
-	gwy_neural.svg
+	gwy_neural.svg \
+	gwy_volume.svg
 
 EXTRA_DIST = \
 	gwyddion.icns \
