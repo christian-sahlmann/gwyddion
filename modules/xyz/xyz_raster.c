@@ -236,8 +236,15 @@ xyzras(GwyContainer *data, GwyRunType run)
         gchar *error = NULL;
         dfield = xyzras_do(&rdata, &args, NULL, &error);
         if (dfield) {
+            GQuark qsrc, qdest;
+            const guchar *s;
+
             newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
             gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
+            qsrc = gwy_app_get_surface_palette_key_for_id(id);
+            qdest = gwy_app_get_data_palette_key_for_id(newid);
+            if (gwy_container_gis_string(data, qsrc, &s))
+                gwy_container_set_const_string(data, qdest, s);
         }
         else {
             /* TODO */
@@ -642,7 +649,11 @@ xmin_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->xmin = val * controls->rdata->xymag;
+    val *= controls->rdata->xymag;
+    if (val == args->xmin)
+        return;
+
+    args->xmin = val;
     if (!controls->in_update) {
         args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
@@ -658,7 +669,11 @@ xmax_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->xmax = val * controls->rdata->xymag;
+    val *= controls->rdata->xymag;
+    if (val == args->xmax)
+        return;
+
+    args->xmax = val;
     if (!controls->in_update) {
         args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
@@ -674,7 +689,11 @@ ymin_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->ymin = val * controls->rdata->xymag;
+    val *= controls->rdata->xymag;
+    if (val == args->ymin)
+        return;
+
+    args->ymin = val;
     if (!controls->in_update) {
         args->ymax = args->ymin + (args->xmax - args->xmin);
         set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
@@ -690,7 +709,11 @@ ymax_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
     gdouble val = g_strtod(gtk_entry_get_text(entry), NULL);
 
-    args->ymax = val * controls->rdata->xymag;
+    val *= controls->rdata->xymag;
+    if (val == args->ymax)
+        return;
+
+    args->ymax = val;
     if (!controls->in_update) {
         args->xmax = args->xmin + (args->ymax - args->ymin);
         set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
@@ -785,6 +808,30 @@ triangulation_info(XYZRasControls *controls)
     g_free(s);
 }
 
+static GArray*
+add_jitter(GArray *points, GwyDataField *dfield)
+{
+    /* We want this to be deterministic.  Otherwise the triangulation can
+     * randomly fail and succeed.  This does normally fix the ambiguous cases
+     * that cause problems and if it does not, well, though luck. */
+    GRand *rng = g_rand_new_with_seed(42);
+    guint n = points->len;
+    GArray *jpoints = g_array_sized_new(FALSE, FALSE, sizeof(GwyXYZ), n);
+    gdouble xj = 0.1*gwy_data_field_get_xmeasure(dfield);
+    gdouble yj = 0.1*gwy_data_field_get_ymeasure(dfield);
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        GwyXYZ pt = g_array_index(points, GwyXYZ, i);
+        pt.x += xj*(g_rand_double(rng) - 0.5);
+        pt.y += yj*(g_rand_double(rng) - 0.5);
+        g_array_append_val(jpoints, pt);
+    }
+    g_rand_free(rng);
+
+    return jpoints;
+}
+
 static GwyDataField*
 xyzras_do(XYZRasData *rdata,
           const XYZRasArgs *args,
@@ -822,6 +869,8 @@ xyzras_do(XYZRasData *rdata,
         extend_borders(rdata, args, FALSE, EPSREL);
         ok = interpolate_field(points->len, (const GwyXYZ*)points->data, dfield,
                                set_fraction, set_message);
+        if (window)
+            gwy_app_wait_finish();
     }
     else if ((gint)args->interpolation == GWY_INTERPOLATION_AVERAGE) {
         extend_borders(rdata, args, FALSE, EPSREL);
@@ -845,6 +894,19 @@ xyzras_do(XYZRasData *rdata,
                                                          sizeof(GwyXYZ),
                                                          set_fraction,
                                                          set_message);
+            if (!ok) {
+                /* Try again with a small jitter.  The jitter is small
+                 * compared to pixel size, not typical point distance, so
+                 * it should be insubstantial in the raster image. */
+                GArray *jpoints = add_jitter(points, dfield);
+                ok = gwy_triangulation_triangulate_iterative(triangulation,
+                                                             points->len,
+                                                             points->data,
+                                                             sizeof(GwyXYZ),
+                                                             set_fraction,
+                                                             set_message);
+                g_array_free(jpoints, TRUE);
+            }
         }
         else {
             gwy_debug("points did not change, recycling triangulation");
