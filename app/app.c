@@ -1917,11 +1917,11 @@ update_surface_preview(GwyDataWindow *data_window)
     h = gwy_data_view_get_ymeasure(data_view);
     gwy_surface_get_yrange(surface, &ymin, &ymax);
     yres = GWY_ROUND((ymax - ymin)/h);
-    yres = MAX(xres, 2);
+    yres = MAX(yres, 2);
     ymin -= 0.5*h;
     ymax += 0.5*h;
     yres = GWY_ROUND((ymax - ymin)/h);
-    yres = MAX(xres, 2);
+    yres = MAX(yres, 2);
 
     if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
         gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
