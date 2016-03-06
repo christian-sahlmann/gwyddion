@@ -70,6 +70,7 @@ typedef struct {
     GwySurface *surface;
     GwyTriangulation *triangulation;
     GArray *points;
+    GArray *jpoints;
     guint norigpoints;
     guint nbasepoints;
     gdouble step;
@@ -224,6 +225,7 @@ xyzras(GwyContainer *data, GwyRunType run)
     gwy_clear(&rdata, 1);
     rdata.surface = surface;
     rdata.points = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
+    rdata.jpoints = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     analyse_points(&rdata, EPSREL);
     initialize_ranges(&rdata, &args);
 
@@ -808,19 +810,19 @@ triangulation_info(XYZRasControls *controls)
     g_free(s);
 }
 
-static GArray*
-add_jitter(GArray *points, GwyDataField *dfield)
+static void
+add_jitter(GArray *points, GArray *jpoints, GwyDataField *dfield)
 {
     /* We want this to be deterministic.  Otherwise the triangulation can
      * randomly fail and succeed.  This does normally fix the ambiguous cases
      * that cause problems and if it does not, well, though luck. */
     GRand *rng = g_rand_new_with_seed(42);
     guint n = points->len;
-    GArray *jpoints = g_array_sized_new(FALSE, FALSE, sizeof(GwyXYZ), n);
-    gdouble xj = 0.1*gwy_data_field_get_xmeasure(dfield);
-    gdouble yj = 0.1*gwy_data_field_get_ymeasure(dfield);
+    gdouble xj = 0.01*gwy_data_field_get_xmeasure(dfield);
+    gdouble yj = 0.01*gwy_data_field_get_ymeasure(dfield);
     guint i;
 
+    g_array_set_size(jpoints, 0);
     for (i = 0; i < n; i++) {
         GwyXYZ pt = g_array_index(points, GwyXYZ, i);
         pt.x += xj*(g_rand_double(rng) - 0.5);
@@ -828,8 +830,6 @@ add_jitter(GArray *points, GwyDataField *dfield)
         g_array_append_val(jpoints, pt);
     }
     g_rand_free(rng);
-
-    return jpoints;
 }
 
 static GwyDataField*
@@ -839,7 +839,7 @@ xyzras_do(XYZRasData *rdata,
           gchar **error)
 {
     GwyTriangulation *triangulation = rdata->triangulation;
-    GArray *points = rdata->points;
+    GArray *points = rdata->points, *jpoints = rdata->jpoints;
     GwyDataField *dfield;
     GwySurface *surface = rdata->surface;
     GwySetMessageFunc set_message = (window ? gwy_app_wait_set_message : NULL);
@@ -886,8 +886,8 @@ xyzras_do(XYZRasData *rdata,
         gwy_debug("have triangulation: %d", !!triangulation);
         if (!triangulation || extend_borders(rdata, args, TRUE, EPSREL)) {
             gwy_debug("must triangulate");
-            gwy_object_unref(rdata->triangulation);
-            rdata->triangulation = triangulation = gwy_triangulation_new();
+            if (!triangulation)
+                rdata->triangulation = triangulation = gwy_triangulation_new();
             ok = gwy_triangulation_triangulate_iterative(triangulation,
                                                          points->len,
                                                          points->data,
@@ -898,14 +898,14 @@ xyzras_do(XYZRasData *rdata,
                 /* Try again with a small jitter.  The jitter is small
                  * compared to pixel size, not typical point distance, so
                  * it should be insubstantial in the raster image. */
-                GArray *jpoints = add_jitter(points, dfield);
+                gwy_debug("trying again with jitter");
+                add_jitter(points, jpoints, dfield);
                 ok = gwy_triangulation_triangulate_iterative(triangulation,
-                                                             points->len,
-                                                             points->data,
+                                                             jpoints->len,
+                                                             jpoints->data,
                                                              sizeof(GwyXYZ),
                                                              set_fraction,
                                                              set_message);
-                g_array_free(jpoints, TRUE);
             }
         }
         else {
@@ -1132,6 +1132,7 @@ xyzras_free(XYZRasData *rdata)
 {
     gwy_object_unref(rdata->triangulation);
     g_array_free(rdata->points, TRUE);
+    g_array_free(rdata->jpoints, TRUE);
 }
 
 static gdouble
