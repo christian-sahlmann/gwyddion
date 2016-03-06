@@ -248,8 +248,19 @@ xyzras(GwyContainer *data, GwyRunType run)
             if (gwy_container_gis_string(data, qsrc, &s))
                 gwy_container_set_const_string(data, qdest, s);
         }
+        else if (run == GWY_RUN_INTERACTIVE) {
+            GtkWidget *dialog;
+            dialog = gtk_message_dialog_new
+                                (gwy_app_find_window_for_channel(data, id),
+                                 GTK_DIALOG_DESTROY_WITH_PARENT,
+                                 GTK_MESSAGE_ERROR,
+                                 GTK_BUTTONS_OK,
+                                 "%s", error);
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            g_free(error);
+        }
         else {
-            /* TODO */
             g_free(error);
         }
     }
