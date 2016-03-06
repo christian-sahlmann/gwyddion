@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2009-2011 David Necas (Yeti).
+ *  Copyright (C) 2009-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -291,7 +291,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates randomly patterned surfaces by placing objects."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -516,7 +516,7 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.001, 12.0, 0.001, 1.0, 0);
+                                           0.001, 50.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
     gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
                             controls.coverage, GWY_HSCALE_SQRT);
@@ -1502,7 +1502,8 @@ calculate_n_objects(const ObjSynthArgs *args,
     const ObjSynthFeature *feature = get_feature(args->type);
     gdouble noise_corr = exp(2.0*args->size_noise*args->size_noise);
     gdouble area_ratio = feature->get_coverage(args->aspect);
-    gdouble mean_obj_area = args->size*args->size * area_ratio * noise_corr;
+    /* Size is radius, not diameter, so multiply by 4. */
+    gdouble mean_obj_area = 4.0*args->size*args->size * area_ratio * noise_corr;
     gdouble must_cover = args->coverage*xres*yres;
     return (glong)ceil(must_cover/mean_obj_area);
 }
@@ -1616,7 +1617,7 @@ obj_synth_sanitize_args(ObjSynthArgs *args)
     args->sculpt = MIN(args->sculpt, SCULPT_NTYPES-1);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->angle_noise = CLAMP(args->angle_noise, 0.0, 1.0);
-    args->coverage = CLAMP(args->coverage, 0.001, 12.0);
+    args->coverage = CLAMP(args->coverage, 0.001, 50.0);
 }
 
 static void
