@@ -75,6 +75,9 @@ Modules:
 - GWYXYZF: Byte order handling was corrected to follow the specification.
 - GWYXYZF, Raw XZY: The data are loaded a native XYZ data instead of being
   regularised to image upon import.
+- Statistical functions: Local range was added as a new quantity.
+- Object synthesis: Coverage parameter was fixed to actually mean what the
+  documentation describes.  Multiply old values by 4 to get the same coverage.
 
 
 2.44 (2016-01-11)
@@ -3529,8 +3532,8 @@ Modules:
   Laplace: Undo works properly (bug #17, bug #18, bug #19, bug #20).
 - Filters: More cases of bug #7 (preview confused by tool switch) were fixed,
   preview properly reflects changes in data.
-- Statistical functions: x axis scale fixed for height and slope distributions,
-  PSDF output improved using windowing properly.
+- Statistical functions: X axis scale was fixed for height and slope
+  distributions, PSDF output improved using windowing properly.
 - Profile selection: profile "thickness" introduced - up to 20 pixel thick
   averaged profile can be interactively selected and processed.
 - All modules: Dialogs have standard (HIG) button orders.
