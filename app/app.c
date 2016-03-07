@@ -1948,6 +1948,7 @@ update_surface_preview(GwyDataWindow *data_window)
     if (want_densitymap) {
         gwy_data_field_copy(densitymap, raster, FALSE);
         g_object_unref(densitymap);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(raster), NULL);
     }
     gwy_data_field_data_changed(raster);
 }
