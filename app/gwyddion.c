@@ -95,6 +95,10 @@ main(int argc, char *argv[])
     GError *settings_err = NULL;
     GTimer *timer;
 
+# ifdef __MINGW64__
+    int _dowildcard = -1;  /* Enable wildcard expansion for Win64. */
+# endif
+
     sneaking_thread_init();
     g_unsetenv("UBUNTU_MENUPROXY");
     timer = g_timer_new();
