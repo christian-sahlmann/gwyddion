@@ -133,6 +133,7 @@ gint*  gwy_app_data_browser_get_data_ids    (GwyContainer *data);
 gint*  gwy_app_data_browser_get_graph_ids   (GwyContainer *data);
 gint*  gwy_app_data_browser_get_spectra_ids (GwyContainer *data);
 gint*  gwy_app_data_browser_get_volume_ids  (GwyContainer *data);
+gint*  gwy_app_data_browser_get_xyz_ids     (GwyContainer *data);
 gint* gwy_app_data_browser_find_data_by_title   (GwyContainer *data,
                                                  const gchar *titleglob);
 gint* gwy_app_data_browser_find_graphs_by_title (GwyContainer *data,

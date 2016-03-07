@@ -132,6 +132,12 @@ typedef struct {
     gulong id;
 } GwyAppWatcherData;
 
+typedef struct {
+    GwyAppKeyType keytype;
+    GType gtype;
+    GArray *ids;
+} GwyAppFindIdsData;
+
 /* The data browser */
 struct _GwyAppDataBrowser {
     GList *proxy_list;
@@ -5625,7 +5631,7 @@ gwy_app_update_surface_window_title(GwyDataView *data_view,
     GtkWidget *data_window;
     GwyContainer *data;
     const guchar *filename;
-    gchar *title, *bname, *btitle;
+    gchar *title, *bname, *stitle;
 
     data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
                                           GWY_TYPE_DATA_WINDOW);
@@ -5635,10 +5641,10 @@ gwy_app_update_surface_window_title(GwyDataView *data_view,
     }
 
     data = gwy_data_view_get_data(data_view);
-    btitle = gwy_app_get_surface_title(data, id);
+    stitle = gwy_app_get_surface_title(data, id);
     if (gwy_container_gis_string(data, filename_quark, &filename)) {
         bname = g_path_get_basename(filename);
-        title = g_strdup_printf("%s [%s]", bname, btitle);
+        title = g_strdup_printf("%s [%s]", bname, stitle);
         g_free(bname);
     }
     else {
@@ -5648,10 +5654,10 @@ gwy_app_update_surface_window_title(GwyDataView *data_view,
         browser = gwy_app_get_data_browser();
         proxy = gwy_app_data_browser_get_proxy(browser, data);
         title = g_strdup_printf("%s %d [%s]",
-                                _("Untitled"), proxy->untitled_no, btitle);
+                                _("Untitled"), proxy->untitled_no, stitle);
     }
     gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
-    g_free(btitle);
+    g_free(stitle);
     g_free(title);
 }
 
@@ -7285,8 +7291,8 @@ fail:
 }
 
 static gint
-compare_int(gconstpointer a,
-            gconstpointer b)
+compare_int_direct(gconstpointer a,
+                   gconstpointer b)
 {
     gint ia, ib;
 
@@ -7338,7 +7344,7 @@ gwy_app_data_browser_merge(GwyContainer *container)
         gwy_debug("page %d", pageno);
         last = proxy->lists[pageno].last;
         map[pageno] = g_hash_table_new(g_direct_hash, g_direct_equal);
-        ids[pageno] = g_list_sort(ids[pageno], compare_int);
+        ids[pageno] = g_list_sort(ids[pageno], compare_int_direct);
         for (l = ids[pageno]; l; l = g_list_next(l)) {
             last++;
             g_hash_table_insert(map[pageno], l->data, GINT_TO_POINTER(last));
@@ -9001,13 +9007,8 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data);
-    if (!proxy) {
-        g_warning("Nothing is known about Container %p", data);
-        /* Returning NULL would likely make the caller crash, avoid that. */
-        ids = g_new(gint, 1);
-        ids[0] = -1;
-        return ids;
-    }
+    if (!proxy)
+        return NULL;
 
     if (titleglob)
         pattern = g_pattern_spec_new(titleglob);
@@ -9027,6 +9028,14 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
                     const gchar *title
                         = gwy_app_data_browser_figure_out_channel_title(data,
                                                                         ids[n]);
+                    ok = g_pattern_match_string(pattern, title);
+                }
+                else if (pageno == PAGE_VOLUMES) {
+                    const gchar *title = gwy_app_get_brick_title(data, ids[n]);
+                    ok = g_pattern_match_string(pattern, title);
+                }
+                else if (pageno == PAGE_XYZS) {
+                    const gchar *title = gwy_app_get_surface_title(data, ids[n]);
                     ok = g_pattern_match_string(pattern, title);
                 }
                 else if (pageno == PAGE_GRAPHS || pageno == PAGE_SPECTRA) {
@@ -9055,6 +9064,62 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
     return ids;
 }
 
+static void
+gather_ids_for_unmanaged(gpointer key,
+                         gpointer value,
+                         gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GValue *gvalue = (GValue*)value;
+    GwyAppFindIdsData *fidata = (GwyAppFindIdsData*)user_data;
+    GwyAppKeyType keytype;
+    GObject *object;
+    gint id;
+
+    if (!G_VALUE_HOLDS_OBJECT(value))
+        return;
+
+    object = g_value_get_object(gvalue);
+    if (!g_type_is_a(G_OBJECT_TYPE(object), fidata->gtype))
+        return;
+
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &keytype, NULL);
+    if (keytype != fidata->keytype)
+        return;
+
+    g_array_append_val(fidata->ids, id);
+}
+
+static gint
+compare_int(gconstpointer a,
+            gconstpointer b)
+{
+    gint ia = *(const gint*)a, ib = *(const gint*)b;
+
+    if (ia < ib)
+        return -1;
+    if (ia > ib)
+        return 1;
+    return 0;
+}
+
+static gint*
+find_ids_for_unmanaged_data(GwyContainer *data,
+                            GwyAppKeyType keytype, GType gtype)
+{
+    GwyAppFindIdsData fidata;
+    gint none = -1;
+
+    fidata.keytype = keytype;
+    fidata.gtype = gtype;
+    fidata.ids = g_array_new(FALSE, FALSE, sizeof(gint));
+    gwy_container_foreach(data, NULL, &gather_ids_for_unmanaged, &fidata);
+    g_array_sort(fidata.ids, compare_int);
+    g_array_append_val(fidata.ids, none);
+
+    return (gint*)g_array_free(fidata.ids, FALSE);
+}
+
 /**
  * gwy_app_data_browser_get_data_ids:
  * @data: A data container managed by the data-browser.
@@ -9066,7 +9131,11 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
 gint*
 gwy_app_data_browser_get_data_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, NULL);
+    gint *ids;
+
+    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, NULL)))
+        return ids;
+    return find_ids_for_unmanaged_data(data, KEY_IS_DATA, GWY_TYPE_DATA_FIELD);
 }
 
 /**
@@ -9080,7 +9149,12 @@ gwy_app_data_browser_get_data_ids(GwyContainer *data)
 gint*
 gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, NULL);
+    gint *ids;
+
+    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, NULL)))
+        return ids;
+    return find_ids_for_unmanaged_data(data,
+                                       KEY_IS_GRAPH, GWY_TYPE_GRAPH_MODEL);
 }
 
 /**
@@ -9096,7 +9170,11 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 gint*
 gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, NULL);
+    gint *ids;
+
+    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, NULL)))
+        return ids;
+    return find_ids_for_unmanaged_data(data, KEY_IS_SPECTRA, GWY_TYPE_SPECTRA);
 }
 
 /**
@@ -9112,7 +9190,31 @@ gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
 gint*
 gwy_app_data_browser_get_volume_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_VOLUMES, NULL);
+    gint *ids;
+
+    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_VOLUMES, NULL)))
+        return ids;
+    return find_ids_for_unmanaged_data(data, KEY_IS_BRICK, GWY_TYPE_BRICK);
+}
+
+/**
+ * gwy_app_data_browser_get_xyz_ids:
+ * @data: A data container managed by the data-browser.
+ *
+ * Gets the list of all XYZ data in a data container.
+ *
+ * Returns: A newly allocated array with XYZ data ids, -1 terminated.
+ *
+ * Since: 2.45
+ **/
+gint*
+gwy_app_data_browser_get_xyz_ids(GwyContainer *data)
+{
+    gint *ids;
+
+    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_XYZS, NULL)))
+        return ids;
+    return find_ids_for_unmanaged_data(data, KEY_IS_SURFACE, GWY_TYPE_SURFACE);
 }
 
 static GtkWindow*
