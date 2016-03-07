@@ -211,21 +211,22 @@ main(int argc, char *argv[])
     }
 #endif
 
-    open_command_line_files(argc - 1, argv + 1);
     if (has_settings && !settings_ok) {
         warn_broken_settings_file(toolbox,
                                   settings_file, settings_err->message);
         g_clear_error(&settings_err);
     }
-    debug_time(timer, "open commandline files");
 
     /* Move focus to toolbox */
     gtk_window_present(GTK_WINDOW(toolbox));
     debug_time(timer, "show toolbox");
+
+    open_command_line_files(argc - 1, argv + 1);
+    gwy_osx_open_files();
+    debug_time(timer, "open commandline files");
+
     g_timer_destroy(timer);
     debug_time(NULL, "STARTUP");
-
-    gwy_osx_open_files();
 
     gtk_main();
 
