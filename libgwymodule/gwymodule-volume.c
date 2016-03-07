@@ -145,6 +145,7 @@ gwy_volume_func_run(const gchar *name,
     GwyVolumeFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(volume_funcs, name);
+    g_return_if_fail(func_info);
     g_return_if_fail(run & func_info->run);
     g_ptr_array_add(call_stack, func_info);
     func_info->func(data, run, name);
