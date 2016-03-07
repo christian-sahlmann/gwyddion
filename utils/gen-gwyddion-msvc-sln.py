@@ -983,7 +983,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     SubSystem.text = "Windows"
     if(name == 'gwyddion'):
         AdditionalOptions = SubElement(Link, "AdditionalOptions")
-        AdditionalOptions.text = "/ENTRY:mainCRTStartup %(AdditionalOptions)"
+        AdditionalOptions.text = "/ENTRY:mainCRTStartup /link setargv.obj %(AdditionalOptions)"
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_win32_string
@@ -1009,7 +1009,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     SubSystem.text = "Windows"
     if(name == 'gwyddion'):
         AdditionalOptions = SubElement(Link, "AdditionalOptions")
-        AdditionalOptions.text = "/ENTRY:mainCRTStartup %(AdditionalOptions)"
+        AdditionalOptions.text = "/ENTRY:mainCRTStartup /link setargv.obj %(AdditionalOptions)"
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_x64_string
@@ -1033,7 +1033,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     SubSystem.text = "Windows"
     if(name == 'gwyddion'):
         AdditionalOptions = SubElement(Link, "AdditionalOptions")
-        AdditionalOptions.text = "/ENTRY:mainCRTStartup %(AdditionalOptions)"
+        AdditionalOptions.text = "/ENTRY:mainCRTStartup /link setargv.obj %(AdditionalOptions)"
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_win32_string
@@ -1057,7 +1057,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
     SubSystem.text = "Windows"
     if(name == 'gwyddion'):
         AdditionalOptions = SubElement(Link, "AdditionalOptions")
-        AdditionalOptions.text = "/ENTRY:mainCRTStartup %(AdditionalOptions)"
+        AdditionalOptions.text = "/ENTRY:mainCRTStartup /link setargv.obj %(AdditionalOptions)"
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_x64_string
