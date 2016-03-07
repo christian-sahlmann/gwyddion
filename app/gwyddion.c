@@ -85,6 +85,10 @@ static GwyAppOptions app_options = {
     GWY_APP_REMOTE_NONE,
 };
 
+# ifdef __MINGW64__
+int _dowildcard = -1;  /* Enable wildcard expansion for Win64. */
+# endif
+
 int
 main(int argc, char *argv[])
 {
@@ -94,10 +98,6 @@ main(int argc, char *argv[])
     gboolean has_settings, settings_ok = FALSE;
     GError *settings_err = NULL;
     GTimer *timer;
-
-# ifdef __MINGW64__
-    int _dowildcard = -1;  /* Enable wildcard expansion for Win64. */
-# endif
 
     sneaking_thread_init();
     g_unsetenv("UBUNTU_MENUPROXY");
