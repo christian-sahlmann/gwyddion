@@ -1241,26 +1241,35 @@ gwy_recent_file_find_some_volume(GwyContainer *data)
     return find_lowest_id(gwy_app_data_browser_get_volume_ids(data), 0);
 }
 
+static gint
+gwy_recent_file_find_some_xyz(GwyContainer *data)
+{
+    return find_lowest_id(gwy_app_data_browser_get_xyz_ids(data), 0);
+}
+
 static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                  GwyContainer *data,
                                  gint hint,
                                  GdkPixbuf *use_this_pixbuf)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield = NULL;
+    GwyBrick *brick = NULL;
+    GwySurface *surface = NULL;
     GdkPixbuf *pixbuf;
     GStatBuf st;
-    gchar *fnm, *s;
+    gchar *fnm;
     GwySIUnit *siunit;
-    GwySIValueFormat *vf;
-    gdouble xreal, yreal;
+    GwySIValueFormat *vf, *vf2;
+    gdouble xreal, yreal, zreal, xmin, ymin;
     gchar str_mtime[22];
     gchar str_size[22];
     gchar str_width[22];
     gchar str_height[22];
     GError *err = NULL;
-    GQuark quark, volquark;
-    gint channel_id = G_MAXINT, volume_id = G_MAXINT;
+    GQuark quark;
+    gint channel_id = G_MAXINT, volume_id = G_MAXINT, xyz_id = G_MAXINT;
+    GPtrArray *option_keys, *option_values;
 
     g_return_if_fail(GWY_CONTAINER(data));
 
@@ -1275,16 +1284,18 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         pixbuf = NULL;
         channel_id = gwy_recent_file_find_some_channel(data, hint);
         volume_id = gwy_recent_file_find_some_volume(data);
+        xyz_id = gwy_recent_file_find_some_xyz(data);
 
         if (rf->file_state == FILE_STATE_UNKNOWN)
             gwy_app_recent_file_try_load_thumbnail(rf);
     }
-    gwy_debug("hint %d, channel_id %d, volume_id %d",
-              hint, channel_id, volume_id);
+    gwy_debug("hint %d, channel_id %d, volume_id %d, xyz_id %d",
+              hint, channel_id, volume_id, xyz_id);
 
     /* Find channel with the lowest id not smaller than hint */
-    if (channel_id == G_MAXINT && volume_id == G_MAXINT) {
-        gwy_debug("There is no channel in the file, cannot make thumbnail.");
+    if (channel_id == G_MAXINT && volume_id == G_MAXINT && xyz_id == G_MAXINT) {
+        gwy_debug("There is no previewable data in the file, "
+                  "cannot make thumbnail.");
         return;
     }
 
@@ -1298,49 +1309,79 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     if ((gulong)rf->file_mtime == (gulong)st.st_mtime)
         return;
 
-    if (channel_id == G_MAXINT) {
-        volquark = gwy_app_get_brick_key_for_id(volume_id);
-        s = g_strconcat(g_quark_to_string(volquark), "/preview", NULL);
-        quark = g_quark_from_string(s);
-        g_free(s);
-    }
-    else
-        quark = gwy_app_get_data_key_for_id(channel_id);
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    rf->image_width = rf->image_height = 0;
     rf->file_mtime = st.st_mtime;
     rf->file_size = st.st_size;
-    rf->image_width = gwy_data_field_get_xres(dfield);
-    rf->image_height = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    siunit = gwy_data_field_get_si_unit_xy(dfield);
-    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                sqrt(xreal*yreal), NULL);
     g_free(rf->image_real_size);
-    rf->image_real_size
-        = g_strdup_printf("%.*f×%.*f%s%s",
-                          vf->precision, xreal/vf->magnitude,
-                          vf->precision, yreal/vf->magnitude,
-                          (vf->units && *vf->units) ? " " : "", vf->units);
-    if (channel_id == G_MAXINT) {
-        GwyBrick *brick = gwy_container_get_object(data, volquark);
-        gdouble zreal = gwy_brick_get_zreal(brick);
-        GwySIValueFormat *vf2;
-
+    rf->image_real_size = NULL;
+    /* Prioritise XYZ data over images because if both images and XYZ are in
+     * the same file most likely XYZ are the primary data.  The same for
+     * volume data; if there are both then images are often derived data. */
+    if (xyz_id != G_MAXINT) {
+        quark = gwy_app_get_surface_key_for_id(xyz_id);
+        surface = GWY_SURFACE(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_SURFACE(surface));
+        gwy_surface_get_xrange(surface, &xmin, &xreal);
+        gwy_surface_get_yrange(surface, &ymin, &yreal);
+        xreal -= xmin;
+        yreal -= ymin;
+        siunit = gwy_surface_get_si_unit_xy(surface);
+        vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    sqrt(xreal*yreal), NULL);
+        rf->image_real_size
+            = g_strdup_printf("%.*f×%.*f%s%s",
+                              vf->precision, xreal/vf->magnitude,
+                              vf->precision, yreal/vf->magnitude,
+                              (vf->units && *vf->units) ? " " : "", vf->units);
+    }
+    else if (volume_id != G_MAXINT) {
+        quark = gwy_app_get_brick_key_for_id(volume_id);
+        brick = GWY_BRICK(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_BRICK(brick));
+        rf->image_width = gwy_brick_get_xres(brick);
+        rf->image_height = gwy_brick_get_yres(brick);
+        xreal = gwy_brick_get_xreal(brick);
+        yreal = gwy_brick_get_yreal(brick);
+        zreal = gwy_brick_get_zreal(brick);
+        siunit = gwy_brick_get_si_unit_x(brick);
+        vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    sqrt(xreal*yreal), NULL);
         vf2 = gwy_brick_get_value_format_z(brick, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                            NULL);
-        s = g_strdup_printf("%s × %.*f%s%s",
-                            rf->image_real_size,
-                            vf2->precision, zreal/vf->magnitude,
-                            (vf2->units && *vf2->units) ? " " : "", vf2->units);
-        g_free(rf->image_real_size);
-        rf->image_real_size = s;
+        rf->image_real_size
+            = g_strdup_printf("%.*f×%.*f%s%s × %.*f%s%s",
+                              vf->precision, xreal/vf->magnitude,
+                              vf->precision, yreal/vf->magnitude,
+                              (vf->units && *vf->units) ? " " : "",
+                              vf->units,
+                              vf2->precision, zreal/vf->magnitude,
+                              (vf2->units && *vf2->units) ? " " : "",
+                              vf2->units);
         gwy_si_unit_value_format_free(vf2);
     }
-    rf->file_state = FILE_STATE_OK;
+    else if (channel_id != G_MAXINT) {
+        quark = gwy_app_get_data_key_for_id(channel_id);
+        dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+        rf->image_width = gwy_data_field_get_xres(dfield);
+        rf->image_height = gwy_data_field_get_yres(dfield);
+        xreal = gwy_data_field_get_xreal(dfield);
+        yreal = gwy_data_field_get_yreal(dfield);
+        siunit = gwy_data_field_get_si_unit_xy(dfield);
+        vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    sqrt(xreal*yreal), NULL);
+        rf->image_real_size
+            = g_strdup_printf("%.*f×%.*f%s%s",
+                              vf->precision, xreal/vf->magnitude,
+                              vf->precision, yreal/vf->magnitude,
+                              (vf->units && *vf->units) ? " " : "", vf->units);
+    }
+    else {
+        g_return_if_reached();
+    }
     gwy_si_unit_value_format_free(vf);
+
+    rf->file_state = FILE_STATE_OK;
 
     if (g_str_has_prefix(rf->file_sys, gwy_recent_file_thumbnail_dir())) {
         gchar c;
@@ -1351,33 +1392,65 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     }
 
     if (!pixbuf) {
-        if (channel_id == G_MAXINT)
+        if (xyz_id != G_MAXINT) {
+            pixbuf = gwy_app_get_xyz_thumbnail(data, xyz_id,
+                                               TMS_NORMAL_THUMB_SIZE,
+                                               TMS_NORMAL_THUMB_SIZE);
+        }
+        else if (volume_id != G_MAXINT) {
             pixbuf = gwy_app_get_volume_thumbnail(data, volume_id,
                                                   TMS_NORMAL_THUMB_SIZE,
                                                   TMS_NORMAL_THUMB_SIZE);
-        else
+        }
+        else {
             pixbuf = gwy_app_get_channel_thumbnail(data, channel_id,
                                                    TMS_NORMAL_THUMB_SIZE,
                                                    TMS_NORMAL_THUMB_SIZE);
+        }
     }
 
+    option_keys = g_ptr_array_new();
+    option_values = g_ptr_array_new();
+
+    g_ptr_array_add(option_keys, (gpointer)KEY_SOFTWARE);
+    g_ptr_array_add(option_values, (gpointer)PACKAGE_NAME);
+
+    g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_URI);
+    g_ptr_array_add(option_values, rf->file_uri);
+
     g_snprintf(str_mtime, sizeof(str_mtime), "%lu", rf->file_mtime);
+    g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_MTIME);
+    g_ptr_array_add(option_values, str_mtime);
+
     g_snprintf(str_size, sizeof(str_size), "%lu", rf->file_size);
-    g_snprintf(str_width, sizeof(str_width), "%d", rf->image_width);
-    g_snprintf(str_height, sizeof(str_height), "%d", rf->image_height);
+    g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_FILESIZE);
+    g_ptr_array_add(option_values, str_size);
+
+    if (rf->image_width) {
+        g_snprintf(str_width, sizeof(str_width), "%d", rf->image_width);
+        g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_IMAGE_WIDTH);
+        g_ptr_array_add(option_values, str_width);
+    }
+
+    if (rf->image_height) {
+        g_snprintf(str_height, sizeof(str_height), "%d", rf->image_height);
+        g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_IMAGE_HEIGHT);
+        g_ptr_array_add(option_values, str_height);
+    }
+
+    g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_GWY_REAL_SIZE);
+    g_ptr_array_add(option_values, rf->image_real_size);
+
+    g_ptr_array_add(option_keys, NULL);
+    g_ptr_array_add(option_values, NULL);
 
     /* invent an unique temporary name for atomic save
      * FIXME: rough, but works on Win32 */
     fnm = g_strdup_printf("%s.%u", rf->thumb_sys, getpid());
-    if (!gdk_pixbuf_save(pixbuf, fnm, "png", &err,
-                         KEY_SOFTWARE, PACKAGE_NAME,
-                         KEY_THUMB_URI, rf->file_uri,
-                         KEY_THUMB_MTIME, str_mtime,
-                         KEY_THUMB_FILESIZE, str_size,
-                         KEY_THUMB_IMAGE_WIDTH, str_width,
-                         KEY_THUMB_IMAGE_HEIGHT, str_height,
-                         KEY_THUMB_GWY_REAL_SIZE, rf->image_real_size,
-                         NULL)) {
+    if (!gdk_pixbuf_savev(pixbuf, fnm, "png",
+                          (char**)option_keys->pdata,
+                          (char**)option_values->pdata,
+                          &err)) {
         g_clear_error(&err);
         rf->thumb_state = FILE_STATE_FAILED;
     }
@@ -1398,6 +1471,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 
     gwy_object_unref(rf->pixbuf);
     g_object_unref(pixbuf);
+    g_ptr_array_free(option_values, TRUE);
+    g_ptr_array_free(option_keys, TRUE);
 }
 
 static gchar*
