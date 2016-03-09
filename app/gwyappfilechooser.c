@@ -971,6 +971,85 @@ add_graph_thumbnails(GwyAppFileChooser *chooser,
     }
 }
 
+static void
+describe_volume(GwyContainer *container, gint id, GString *str)
+{
+    GwyBrick *brick;
+    GwySIUnit *siunit;
+    GwySIValueFormat *vf = NULL;
+    GQuark quark;
+    gint xres, yres, zres;
+    gdouble real;
+    gchar *s;
+
+    g_string_truncate(str, 0);
+
+    quark = gwy_app_get_brick_key_for_id(id);
+    brick = GWY_BRICK(gwy_container_get_object(container, quark));
+    g_return_if_fail(GWY_IS_BRICK(brick));
+
+    s = gwy_app_get_brick_title(container, id);
+    g_string_append(str, s);
+    g_free(s);
+
+    siunit = gwy_brick_get_si_unit_w(brick);
+    s = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_string_append_printf(str, " [%s]\n", s);
+    g_free(s);
+
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    zres = gwy_brick_get_zres(brick);
+    g_string_append_printf(str, "%d×%dx%d px\n", xres, yres, zres);
+
+    real = gwy_brick_get_xreal(brick);
+    siunit = gwy_brick_get_si_unit_x(brick);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, real, vf);
+    g_string_append_printf(str, "%.*f%s%s",
+                           vf->precision, real/vf->magnitude,
+                           (vf->units && *vf->units) ? " " : "", vf->units);
+
+    real = gwy_brick_get_yreal(brick);
+    siunit = gwy_brick_get_si_unit_y(brick);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, real, vf);
+    g_string_append_printf(str, "×%.*f%s%s",
+                           vf->precision, real/vf->magnitude,
+                           (vf->units && *vf->units) ? " " : "", vf->units);
+
+    real = gwy_brick_get_zreal(brick);
+    siunit = gwy_brick_get_si_unit_z(brick);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, real, vf);
+    g_string_append_printf(str, "×%.*f%s%s",
+                           vf->precision, real/vf->magnitude,
+                           (vf->units && *vf->units) ? " " : "", vf->units);
+
+    gwy_si_unit_value_format_free(vf);
+}
+
+static void
+add_volume_thumbnails(GwyAppFileChooser *chooser,
+                      GwyContainer *data, gint *ids,
+                      GString *str)
+{
+    GdkPixbuf *pixbuf;
+    guint i;
+    gint id;
+
+    for (i = 0; ids[i] != -1; i++) {
+        id = ids[i];
+        pixbuf = gwy_app_get_volume_thumbnail(data, id,
+                                              TMS_NORMAL_THUMB_SIZE,
+                                              TMS_NORMAL_THUMB_SIZE);
+        if (!pixbuf) {
+            g_warning("Cannot make a pixbuf of volume data %d", id);
+            continue;
+        }
+        describe_volume(data, id, str);
+        insert_thumbnail_row(chooser, data, GWY_PAGE_VOLUMES, id,
+                             pixbuf, str->str);
+    }
+}
+
 static gboolean
 gwy_app_file_chooser_do_full_preview(gpointer user_data)
 {
@@ -1048,6 +1127,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                  "wrap-width", -1,
                  NULL);
 
+    add_volume_thumbnails(chooser, data, volume_ids, str);
     add_channel_thumbnails(chooser, data, channel_ids, str);
     add_graph_thumbnails(chooser, data, graph_ids, str);
 
