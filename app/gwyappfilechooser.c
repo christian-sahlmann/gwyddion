@@ -842,7 +842,7 @@ describe_channel(GwyContainer *container, gint id, GString *str)
 {
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    GwySIValueFormat *vf;
+    GwySIValueFormat *vf = NULL;
     GQuark quark;
     gint xres, yres;
     gdouble xreal, yreal;
@@ -871,7 +871,7 @@ describe_channel(GwyContainer *container, gint id, GString *str)
     yreal = gwy_data_field_get_yreal(dfield);
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                sqrt(xreal*yreal), NULL);
+                                sqrt(xreal*yreal), vf);
     g_string_append_printf(str, "%.*f×%.*f%s%s",
                           vf->precision, xreal/vf->magnitude,
                           vf->precision, yreal/vf->magnitude,
@@ -1050,6 +1050,70 @@ add_volume_thumbnails(GwyAppFileChooser *chooser,
     }
 }
 
+static void
+describe_xyz(GwyContainer *container, gint id, GString *str)
+{
+    GwySurface *surface;
+    GwySIUnit *siunit;
+    GwySIValueFormat *vf = NULL;
+    GQuark quark;
+    gdouble xmin, xmax, ymin, ymax;
+    gchar *s;
+
+    g_string_truncate(str, 0);
+
+    quark = gwy_app_get_surface_key_for_id(id);
+    surface = GWY_SURFACE(gwy_container_get_object(container, quark));
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+
+    s = gwy_app_get_surface_title(container, id);
+    g_string_append(str, s);
+    g_free(s);
+
+    siunit = gwy_surface_get_si_unit_z(surface);
+    s = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_string_append_printf(str, " [%s]\n", s);
+    g_free(s);
+
+    gwy_surface_get_xrange(surface, &xmin, &xmax);
+    gwy_surface_get_yrange(surface, &ymin, &ymax);
+    xmax -= xmin;
+    ymax -= ymin;
+    siunit = gwy_surface_get_si_unit_xy(surface);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                sqrt(xmax*ymax), vf);
+    g_string_append_printf(str, "%.*f×%.*f%s%s",
+                           vf->precision, xmax/vf->magnitude,
+                           vf->precision, ymax/vf->magnitude,
+                           (vf->units && *vf->units) ? " " : "", vf->units);
+
+    gwy_si_unit_value_format_free(vf);
+}
+
+static void
+add_xyz_thumbnails(GwyAppFileChooser *chooser,
+                   GwyContainer *data, gint *ids,
+                   GString *str)
+{
+    GdkPixbuf *pixbuf;
+    guint i;
+    gint id;
+
+    for (i = 0; ids[i] != -1; i++) {
+        id = ids[i];
+        pixbuf = gwy_app_get_xyz_thumbnail(data, id,
+                                           TMS_NORMAL_THUMB_SIZE,
+                                           TMS_NORMAL_THUMB_SIZE);
+        if (!pixbuf) {
+            g_warning("Cannot make a pixbuf of xyz data %d", id);
+            continue;
+        }
+        describe_xyz(data, id, str);
+        insert_thumbnail_row(chooser, data, GWY_PAGE_XYZS, id,
+                             pixbuf, str->str);
+    }
+}
+
 static gboolean
 gwy_app_file_chooser_do_full_preview(gpointer user_data)
 {
@@ -1127,6 +1191,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                  "wrap-width", -1,
                  NULL);
 
+    add_xyz_thumbnails(chooser, data, xyz_ids, str);
     add_volume_thumbnails(chooser, data, volume_ids, str);
     add_channel_thumbnails(chooser, data, channel_ids, str);
     add_graph_thumbnails(chooser, data, graph_ids, str);
