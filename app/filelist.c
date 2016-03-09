@@ -1240,6 +1240,12 @@ gwy_recent_file_find_some_channel(GwyContainer *data,
 }
 
 static gint
+gwy_recent_file_find_some_graph(GwyContainer *data)
+{
+    return find_lowest_id(gwy_app_data_browser_get_graph_ids(data), 0);
+}
+
+static gint
 gwy_recent_file_find_some_volume(GwyContainer *data)
 {
     return find_lowest_id(gwy_app_data_browser_get_volume_ids(data), 0);
@@ -1258,6 +1264,13 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                  gint hint,
                                  GdkPixbuf *use_this_pixbuf)
 {
+    /* Prioritise volume and XYZ data over images because if both images and
+     * some strange data are in the same file most likely the strange data are
+     * the primary data.  */
+    static const GwyAppPage pages_priority[] = {
+        GWY_PAGE_XYZS, GWY_PAGE_VOLUMES, GWY_PAGE_CHANNELS, GWY_PAGE_GRAPHS,
+    };
+
     GwyDataField *dfield = NULL;
     GwyBrick *brick = NULL;
     GwySurface *surface = NULL;
@@ -1295,26 +1308,23 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         pixbuf = NULL;
         /* Find channel with the lowest id not smaller than hint */
         ids[GWY_PAGE_CHANNELS] = gwy_recent_file_find_some_channel(data, hint);
+        ids[GWY_PAGE_GRAPHS] = gwy_recent_file_find_some_graph(data);
         ids[GWY_PAGE_VOLUMES] = gwy_recent_file_find_some_volume(data);
         ids[GWY_PAGE_XYZS] = gwy_recent_file_find_some_xyz(data);
-        /* TODO: Graphs. */
+        if (pageno >= GWY_NPAGES || ids[pageno] == -1) {
+            for (i = 0; i < G_N_ELEMENTS(pages_priority); i++) {
+                if (ids[i] != -1) {
+                    pageno = i;
+                    break;
+                }
+            }
+        }
 
         if (rf->file_state == FILE_STATE_UNKNOWN)
             gwy_app_recent_file_try_load_thumbnail(rf);
     }
 
-    /* Prioritise volume and XYZ data over images because if both images and
-     * some strange data are in the same file most likely the strange data are
-     * the primary data.  */
-    if (ids[GWY_PAGE_XYZS] != -1)
-        pageno = GWY_PAGE_XYZS;
-    else if (ids[GWY_PAGE_VOLUMES] != -1)
-        pageno = GWY_PAGE_VOLUMES;
-    else if (ids[GWY_PAGE_CHANNELS] != -1)
-        pageno = GWY_PAGE_CHANNELS;
-    else if (ids[GWY_PAGE_GRAPHS] != -1)
-        pageno = GWY_PAGE_GRAPHS;
-    else {
+    if (pageno == GWY_PAGE_NOPAGE) {
         gwy_debug("There is no previewable data in the file, "
                   "cannot make thumbnail.");
         return;
@@ -1335,15 +1345,16 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->file_size = st.st_size;
     g_free(rf->image_real_size);
     rf->image_real_size = NULL;
-    if (pageno == GWY_PAGE_XYZS) {
-        quark = gwy_app_get_surface_key_for_id(ids[pageno]);
-        surface = GWY_SURFACE(gwy_container_get_object(data, quark));
-        g_return_if_fail(GWY_IS_SURFACE(surface));
-        gwy_surface_get_xrange(surface, &xmin, &xreal);
-        gwy_surface_get_yrange(surface, &ymin, &yreal);
-        xreal -= xmin;
-        yreal -= ymin;
-        siunit = gwy_surface_get_si_unit_xy(surface);
+
+    if (pageno == GWY_PAGE_CHANNELS) {
+        quark = gwy_app_get_data_key_for_id(ids[pageno]);
+        dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+        rf->image_width = gwy_data_field_get_xres(dfield);
+        rf->image_height = gwy_data_field_get_yres(dfield);
+        xreal = gwy_data_field_get_xreal(dfield);
+        yreal = gwy_data_field_get_yreal(dfield);
+        siunit = gwy_data_field_get_si_unit_xy(dfield);
         vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     sqrt(xreal*yreal), NULL);
         rf->image_real_size
@@ -1352,6 +1363,12 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                               vf->precision, yreal/vf->magnitude,
                               (vf->units && *vf->units) ? " " : "", vf->units);
         gwy_si_unit_value_format_free(vf);
+    }
+    else if (pageno == GWY_PAGE_GRAPHS) {
+        quark = gwy_app_get_graph_key_for_id(ids[pageno]);
+        gmodel = GWY_GRAPH_MODEL(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+        /* XXX: There is not much we can do with graphs. */
     }
     else if (pageno == GWY_PAGE_VOLUMES) {
         quark = gwy_app_get_brick_key_for_id(ids[pageno]);
@@ -1379,15 +1396,15 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         gwy_si_unit_value_format_free(vf2);
         gwy_si_unit_value_format_free(vf);
     }
-    else if (pageno == GWY_PAGE_CHANNELS) {
-        quark = gwy_app_get_data_key_for_id(ids[pageno]);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-        g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-        rf->image_width = gwy_data_field_get_xres(dfield);
-        rf->image_height = gwy_data_field_get_yres(dfield);
-        xreal = gwy_data_field_get_xreal(dfield);
-        yreal = gwy_data_field_get_yreal(dfield);
-        siunit = gwy_data_field_get_si_unit_xy(dfield);
+    else if (pageno == GWY_PAGE_XYZS) {
+        quark = gwy_app_get_surface_key_for_id(ids[pageno]);
+        surface = GWY_SURFACE(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_SURFACE(surface));
+        gwy_surface_get_xrange(surface, &xmin, &xreal);
+        gwy_surface_get_yrange(surface, &ymin, &yreal);
+        xreal -= xmin;
+        yreal -= ymin;
+        siunit = gwy_surface_get_si_unit_xy(surface);
         vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     sqrt(xreal*yreal), NULL);
         rf->image_real_size
@@ -1396,13 +1413,6 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                               vf->precision, yreal/vf->magnitude,
                               (vf->units && *vf->units) ? " " : "", vf->units);
         gwy_si_unit_value_format_free(vf);
-    }
-    else if (pageno == GWY_PAGE_GRAPHS) {
-        quark = gwy_app_get_graph_key_for_id(ids[pageno]);
-        gmodel = GWY_GRAPH_MODEL(gwy_container_get_object(data, quark));
-        g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
-        /* TODO TODO TODO */
-        rf->image_real_size = g_strdup("FIXME");
     }
     else {
         g_return_if_reached();
@@ -1471,8 +1481,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         g_ptr_array_add(option_values, str_height);
     }
 
-    g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_GWY_REAL_SIZE);
-    g_ptr_array_add(option_values, rf->image_real_size);
+    if (rf->image_real_size) {
+        g_ptr_array_add(option_keys, (gpointer)KEY_THUMB_GWY_REAL_SIZE);
+        g_ptr_array_add(option_values, rf->image_real_size);
+    }
 
     g_ptr_array_add(option_keys, NULL);
     g_ptr_array_add(option_values, NULL);
