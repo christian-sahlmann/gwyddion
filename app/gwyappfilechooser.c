@@ -53,15 +53,6 @@ typedef struct {
     gboolean only_nondetectable;
 } TypeListData;
 
-typedef struct {
-    GSList *channels;
-    guint nchannels;
-    GSList *graphs;
-    guint ngraphs;
-    GSList *spectra;
-    guint nspectra;
-} FileInfoData;
-
 static void       gwy_app_file_chooser_finalize       (GObject *object);
 static void       gwy_app_file_chooser_destroy        (GtkObject *object);
 static void       gwy_app_file_chooser_hide           (GtkWidget *widget);
@@ -810,61 +801,6 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
 }
 
 static void
-add_object_id(gpointer hkey,
-              gpointer hvalue,
-              gpointer user_data)
-{
-    GValue *value = (GValue*)hvalue;
-    FileInfoData *filedata = (FileInfoData*)user_data;
-    const gchar *strkey;
-    gchar *end;
-    gint id;
-
-    strkey = g_quark_to_string(GPOINTER_TO_UINT(hkey));
-    if (!strkey || strkey[0] != '/' || !G_VALUE_HOLDS_OBJECT(value))
-        return;
-
-    if ((id = strtol(strkey + 1, &end, 10)) >= 0
-        && gwy_strequal(end, "/data")
-        && GWY_IS_DATA_FIELD(g_value_get_object(value))) {
-        filedata->nchannels++;
-        filedata->channels = g_slist_prepend(filedata->channels,
-                                             GINT_TO_POINTER(id));
-        return;
-    }
-
-    if (g_str_has_prefix(strkey, "/0/graph/graph/")
-        && (id = strtol(strkey + 15, &end, 10)) >= 0
-        && !*end
-        && GWY_IS_GRAPH_MODEL(g_value_get_object(value))) {
-        filedata->ngraphs++;
-        filedata->graphs = g_slist_prepend(filedata->graphs,
-                                           GINT_TO_POINTER(id));
-        return;
-    }
-
-    if (g_str_has_prefix(strkey, "/sps/")
-        && (id = strtol(strkey + 5, &end, 10)) >= 0
-        && !*end
-        && GWY_IS_SPECTRA(g_value_get_object(value))) {
-        filedata->nspectra++;
-        filedata->spectra = g_slist_prepend(filedata->spectra,
-                                            GINT_TO_POINTER(id));
-        return;
-    }
-}
-
-static gint
-compare_ids(gconstpointer a, gconstpointer b)
-{
-    if (a < b)
-        return -1;
-    if (a > b)
-        return 1;
-    return 0;
-}
-
-static void
 gwy_app_file_chooser_describe_channel(GwyContainer *container,
                                       gint id,
                                       GString *str)
@@ -908,100 +844,31 @@ gwy_app_file_chooser_describe_channel(GwyContainer *container,
     gwy_si_unit_value_format_free(vf);
 }
 
-static gboolean
-gwy_app_file_chooser_do_full_preview(gpointer user_data)
+static void
+add_channel_thumbnails(GwyAppFileChooser *chooser,
+                       GwyContainer *data, gint *ids,
+                       GString *str)
 {
-    GtkFileChooser *fchooser;
+    gboolean row_level = FALSE, plane_level = FALSE;
+    GwyContainer *settings;
     GtkTreeModel *model;
     GtkListStore *store;
-    GwyAppFileChooser *chooser;
-    FileInfoData filedata;
-    GwyContainer *data, *settings;
     GdkPixbuf *pixbuf;
     GtkTreeIter iter;
-    const gchar *name;
-    gboolean row_level = FALSE, plane_level = FALSE;
-    GString *str;
-    GSList *l;
+    guint i;
     gint id;
-
-    chooser = GWY_APP_FILE_CHOOSER(user_data);
-    chooser->full_preview_id = 0;
-
-    /* Always no-op here? */
-    gwy_app_file_chooser_free_preview(chooser);
-
-    fchooser = GTK_FILE_CHOOSER(chooser);
-    chooser->preview_name_sys = gtk_file_chooser_get_preview_filename(fchooser);
-    /* We should not be called when gtk_file_chooser_get_preview_filename()
-     * returns NULL preview file name */
-    if (!chooser->preview_name_sys) {
-        g_warning("Full preview invoked with NULL preview file name");
-        return FALSE;
-    }
 
     model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
     store = GTK_LIST_STORE(model);
 
-    data = gwy_file_load(chooser->preview_name_sys,
-                         GWY_RUN_NONINTERACTIVE, NULL);
-    if (!data) {
-        gwy_app_file_chooser_free_preview(chooser);
-        gtk_list_store_clear(store);
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter,
-                           COLUMN_FILEINFO, _("Cannot preview"),
-                           -1);
-
-        return FALSE;
-    }
-
-    gwy_data_validate(data,
-                      GWY_DATA_VALIDATE_CORRECT | GWY_DATA_VALIDATE_NO_REPORT);
-
-    memset(&filedata, 0, sizeof(FileInfoData));
-    gwy_container_foreach(data, NULL, add_object_id, &filedata);
-    filedata.channels = g_slist_sort(filedata.channels, compare_ids);
-    filedata.graphs = g_slist_sort(filedata.graphs, compare_ids);
-    filedata.spectra = g_slist_sort(filedata.spectra, compare_ids);
-
-    str = g_string_new(NULL);
-    if (gwy_file_get_data_info(data, &name, NULL)) {
-        /* FIXME: Make this translatable */
-        g_string_printf(str, "<small>%s", name);
-        if (filedata.nchannels)
-            g_string_append_printf(str, ", %d ch", filedata.nchannels);
-        if (filedata.graphs)
-            g_string_append_printf(str, ", %d gr", filedata.ngraphs);
-        if (filedata.spectra)
-            g_string_append_printf(str, ", %d sps", filedata.nspectra);
-        g_string_append(str, "</small>");
-        gtk_label_set_markup(GTK_LABEL(chooser->preview_type), str->str);
-    }
-
-    if (!filedata.channels) {
-        g_string_free(str, TRUE);
-        g_slist_free(filedata.channels);
-        g_slist_free(filedata.graphs);
-        g_slist_free(filedata.spectra);
-        g_object_unref(data);
-        gwy_app_file_chooser_free_preview(chooser);
-        return FALSE;
-    }
-
-    g_object_set(chooser->renderer_fileinfo,
-                 "ellipsize", PANGO_ELLIPSIZE_END,
-                 "wrap-width", -1,
-                 NULL);
     settings = gwy_app_settings_get();
     gwy_container_gis_boolean_by_name(settings, "/app/file/preview/plane-level",
                                       &plane_level);
     gwy_container_gis_boolean_by_name(settings, "/app/file/preview/row-level",
                                       &row_level);
 
-    gtk_list_store_clear(store);
-    for (l = filedata.channels; l; l = g_slist_next(l)) {
-        id = GPOINTER_TO_INT(l->data);
+    for (i = 0; ids[i] != -1; i++) {
+        id = ids[i];
         modify_channel_for_preview(data, id, plane_level, row_level);
         pixbuf = gwy_app_get_channel_thumbnail(data, id,
                                                TMS_NORMAL_THUMB_SIZE,
@@ -1026,9 +893,103 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
         g_object_unref(pixbuf);
     }
 
-    g_slist_free(filedata.channels);
-    g_slist_free(filedata.graphs);
-    g_slist_free(filedata.spectra);
+}
+
+static guint
+count_ids(const gint *ids)
+{
+    guint n = 0;
+
+    while (ids[n] != -1)
+        n++;
+
+    return n;
+}
+
+static gboolean
+gwy_app_file_chooser_do_full_preview(gpointer user_data)
+{
+    GtkFileChooser *fchooser;
+    GtkTreeModel *model;
+    GtkListStore *store;
+    GwyAppFileChooser *chooser;
+    gint *channel_ids, *graph_ids, *sps_ids, *volume_ids, *xyz_ids;
+    GwyContainer *data;
+    const gchar *name;
+    GtkTreeIter iter;
+    GString *str;
+    guint n;
+
+    chooser = GWY_APP_FILE_CHOOSER(user_data);
+    chooser->full_preview_id = 0;
+
+    gwy_app_file_chooser_free_preview(chooser);
+
+    fchooser = GTK_FILE_CHOOSER(chooser);
+    chooser->preview_name_sys = gtk_file_chooser_get_preview_filename(fchooser);
+    /* We should not be called when gtk_file_chooser_get_preview_filename()
+     * returns NULL preview file name */
+    if (!chooser->preview_name_sys) {
+        g_warning("Full preview invoked with NULL preview file name");
+        return FALSE;
+    }
+
+    model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
+    store = GTK_LIST_STORE(model);
+    gtk_list_store_clear(store);
+
+    data = gwy_file_load(chooser->preview_name_sys,
+                         GWY_RUN_NONINTERACTIVE, NULL);
+    if (!data) {
+        gwy_app_file_chooser_free_preview(chooser);
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                           COLUMN_FILEINFO, _("Cannot preview"),
+                           -1);
+
+        return FALSE;
+    }
+
+    gwy_data_validate(data,
+                      GWY_DATA_VALIDATE_CORRECT | GWY_DATA_VALIDATE_NO_REPORT);
+
+    /* Since 2.45 data browser can provide the lists of unmanaged data. */
+    channel_ids = gwy_app_data_browser_get_data_ids(data);
+    graph_ids = gwy_app_data_browser_get_graph_ids(data);
+    sps_ids = gwy_app_data_browser_get_spectra_ids(data);
+    volume_ids = gwy_app_data_browser_get_volume_ids(data);
+    xyz_ids = gwy_app_data_browser_get_xyz_ids(data);
+
+    str = g_string_new(NULL);
+    if (gwy_file_get_data_info(data, &name, NULL)) {
+        /* FIXME: Make this translatable */
+        g_string_printf(str, "<small>%s", name);
+        if ((n = count_ids(volume_ids)))
+            g_string_append_printf(str, ", %d vol", n);
+        if ((n = count_ids(xyz_ids)))
+            g_string_append_printf(str, ", %d xyz", n);
+        if ((n = count_ids(channel_ids)))
+            g_string_append_printf(str, ", %d ch", n);
+        if ((n = count_ids(graph_ids)))
+            g_string_append_printf(str, ", %d gr", n);
+        if ((n = count_ids(sps_ids)))
+            g_string_append_printf(str, ", %d sp", n);
+        g_string_append(str, "</small>");
+        gtk_label_set_markup(GTK_LABEL(chooser->preview_type), str->str);
+    }
+
+    g_object_set(chooser->renderer_fileinfo,
+                 "ellipsize", PANGO_ELLIPSIZE_END,
+                 "wrap-width", -1,
+                 NULL);
+
+    add_channel_thumbnails(chooser, data, channel_ids, str);
+
+    g_free(channel_ids);
+    g_free(graph_ids);
+    g_free(sps_ids);
+    g_free(volume_ids);
+    g_free(xyz_ids);
     g_string_free(str, TRUE);
     g_object_unref(data);
 
