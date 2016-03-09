@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -176,6 +176,7 @@ static GwyRecentFile* gwy_app_recent_file_new         (gchar *filename_utf8,
 static gboolean gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf);
 static void     gwy_recent_file_update_thumbnail   (GwyRecentFile *rf,
                                                     GwyContainer *data,
+                                                    GwyAppPage pageno,
                                                     gint hint,
                                                     GdkPixbuf *use_this_pixbuf);
 static void     gwy_app_recent_file_free           (GwyRecentFile *rf);
@@ -908,8 +909,10 @@ gwy_app_recent_file_list_update(GwyContainer *data,
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
 
-        if (data)
-            gwy_recent_file_update_thumbnail(rf, data, hint, NULL);
+        if (data) {
+            gwy_recent_file_update_thumbnail(rf, data, GWY_PAGE_NOPAGE, hint,
+                                             NULL);
+        }
     }
 
     if (free_utf8)
@@ -1055,13 +1058,14 @@ _gwy_app_recent_file_try_thumbnail(const gchar *filename_sys)
 void
 _gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
                                      GwyContainer *data,
+                                     GwyAppPage pageno,
                                      gint id,
                                      GdkPixbuf *pixbuf)
 {
     GwyRecentFile *rf;
 
     rf = gwy_app_recent_file_new(NULL, gwy_canonicalize_path(filename_sys));
-    gwy_recent_file_update_thumbnail(rf, data, id, pixbuf);
+    gwy_recent_file_update_thumbnail(rf, data, pageno, id, pixbuf);
     gwy_app_recent_file_free(rf);
 }
 
@@ -1225,7 +1229,7 @@ find_lowest_id(gint *ids, gint hint)
     }
     g_free(ids);
 
-    return id;
+    return (id == G_MAXINT) ? -1 : id;
 }
 
 static gint
@@ -1250,12 +1254,14 @@ gwy_recent_file_find_some_xyz(GwyContainer *data)
 static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                  GwyContainer *data,
+                                 GwyAppPage pageno,
                                  gint hint,
                                  GdkPixbuf *use_this_pixbuf)
 {
     GwyDataField *dfield = NULL;
     GwyBrick *brick = NULL;
     GwySurface *surface = NULL;
+    GwyGraphModel *gmodel = NULL;
     GdkPixbuf *pixbuf;
     GStatBuf st;
     gchar *fnm;
@@ -1268,32 +1274,47 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     gchar str_height[22];
     GError *err = NULL;
     GQuark quark;
-    gint channel_id = G_MAXINT, volume_id = G_MAXINT, xyz_id = G_MAXINT;
+    gint ids[GWY_NPAGES];
     GPtrArray *option_keys, *option_values;
+    guint i;
 
     g_return_if_fail(GWY_CONTAINER(data));
+
+    for (i = 0; i < GWY_NPAGES; i++)
+        ids[i] = G_MAXINT;
 
     if (use_this_pixbuf) {
         /* If we are given a pixbuf, hint must be the ultimate channel id.
          * We also ignore the thnumbnail state then. */
         g_return_if_fail(GDK_IS_PIXBUF(use_this_pixbuf));
-        channel_id = hint;
+        g_return_if_fail(pageno >= 0 && pageno < GWY_NPAGES);
+        ids[pageno] = hint;
         pixbuf = g_object_ref(use_this_pixbuf);
     }
     else {
         pixbuf = NULL;
-        channel_id = gwy_recent_file_find_some_channel(data, hint);
-        volume_id = gwy_recent_file_find_some_volume(data);
-        xyz_id = gwy_recent_file_find_some_xyz(data);
+        /* Find channel with the lowest id not smaller than hint */
+        ids[GWY_PAGE_CHANNELS] = gwy_recent_file_find_some_channel(data, hint);
+        ids[GWY_PAGE_VOLUMES] = gwy_recent_file_find_some_volume(data);
+        ids[GWY_PAGE_XYZS] = gwy_recent_file_find_some_xyz(data);
+        /* TODO: Graphs. */
 
         if (rf->file_state == FILE_STATE_UNKNOWN)
             gwy_app_recent_file_try_load_thumbnail(rf);
     }
-    gwy_debug("hint %d, channel_id %d, volume_id %d, xyz_id %d",
-              hint, channel_id, volume_id, xyz_id);
 
-    /* Find channel with the lowest id not smaller than hint */
-    if (channel_id == G_MAXINT && volume_id == G_MAXINT && xyz_id == G_MAXINT) {
+    /* Prioritise volume and XYZ data over images because if both images and
+     * some strange data are in the same file most likely the strange data are
+     * the primary data.  */
+    if (ids[GWY_PAGE_XYZS] != -1)
+        pageno = GWY_PAGE_XYZS;
+    else if (ids[GWY_PAGE_VOLUMES] != -1)
+        pageno = GWY_PAGE_VOLUMES;
+    else if (ids[GWY_PAGE_CHANNELS] != -1)
+        pageno = GWY_PAGE_CHANNELS;
+    else if (ids[GWY_PAGE_GRAPHS] != -1)
+        pageno = GWY_PAGE_GRAPHS;
+    else {
         gwy_debug("There is no previewable data in the file, "
                   "cannot make thumbnail.");
         return;
@@ -1314,11 +1335,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->file_size = st.st_size;
     g_free(rf->image_real_size);
     rf->image_real_size = NULL;
-    /* Prioritise XYZ data over images because if both images and XYZ are in
-     * the same file most likely XYZ are the primary data.  The same for
-     * volume data; if there are both then images are often derived data. */
-    if (xyz_id != G_MAXINT) {
-        quark = gwy_app_get_surface_key_for_id(xyz_id);
+    if (pageno == GWY_PAGE_XYZS) {
+        quark = gwy_app_get_surface_key_for_id(ids[pageno]);
         surface = GWY_SURFACE(gwy_container_get_object(data, quark));
         g_return_if_fail(GWY_IS_SURFACE(surface));
         gwy_surface_get_xrange(surface, &xmin, &xreal);
@@ -1333,9 +1351,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                               vf->precision, xreal/vf->magnitude,
                               vf->precision, yreal/vf->magnitude,
                               (vf->units && *vf->units) ? " " : "", vf->units);
+        gwy_si_unit_value_format_free(vf);
     }
-    else if (volume_id != G_MAXINT) {
-        quark = gwy_app_get_brick_key_for_id(volume_id);
+    else if (pageno == GWY_PAGE_VOLUMES) {
+        quark = gwy_app_get_brick_key_for_id(ids[pageno]);
         brick = GWY_BRICK(gwy_container_get_object(data, quark));
         g_return_if_fail(GWY_IS_BRICK(brick));
         rf->image_width = gwy_brick_get_xres(brick);
@@ -1358,9 +1377,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                               (vf2->units && *vf2->units) ? " " : "",
                               vf2->units);
         gwy_si_unit_value_format_free(vf2);
+        gwy_si_unit_value_format_free(vf);
     }
-    else if (channel_id != G_MAXINT) {
-        quark = gwy_app_get_data_key_for_id(channel_id);
+    else if (pageno == GWY_PAGE_CHANNELS) {
+        quark = gwy_app_get_data_key_for_id(ids[pageno]);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
         g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
         rf->image_width = gwy_data_field_get_xres(dfield);
@@ -1375,11 +1395,18 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                               vf->precision, xreal/vf->magnitude,
                               vf->precision, yreal/vf->magnitude,
                               (vf->units && *vf->units) ? " " : "", vf->units);
+        gwy_si_unit_value_format_free(vf);
+    }
+    else if (pageno == GWY_PAGE_GRAPHS) {
+        quark = gwy_app_get_graph_key_for_id(ids[pageno]);
+        gmodel = GWY_GRAPH_MODEL(gwy_container_get_object(data, quark));
+        g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+        /* TODO TODO TODO */
+        rf->image_real_size = g_strdup("FIXME");
     }
     else {
         g_return_if_reached();
     }
-    gwy_si_unit_value_format_free(vf);
 
     rf->file_state = FILE_STATE_OK;
 
@@ -1392,18 +1419,24 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     }
 
     if (!pixbuf) {
-        if (xyz_id != G_MAXINT) {
-            pixbuf = gwy_app_get_xyz_thumbnail(data, xyz_id,
+        if (pageno == GWY_PAGE_XYZS) {
+            pixbuf = gwy_app_get_xyz_thumbnail(data, ids[pageno],
                                                TMS_NORMAL_THUMB_SIZE,
                                                TMS_NORMAL_THUMB_SIZE);
         }
-        else if (volume_id != G_MAXINT) {
-            pixbuf = gwy_app_get_volume_thumbnail(data, volume_id,
+        else if (pageno == GWY_PAGE_VOLUMES) {
+            pixbuf = gwy_app_get_volume_thumbnail(data, ids[pageno],
                                                   TMS_NORMAL_THUMB_SIZE,
                                                   TMS_NORMAL_THUMB_SIZE);
         }
-        else {
-            pixbuf = gwy_app_get_channel_thumbnail(data, channel_id,
+        else if (pageno == GWY_PAGE_GRAPHS) {
+            /* This can return NULL if GUI is not running. */
+            pixbuf = gwy_app_get_graph_thumbnail(data, ids[pageno],
+                                                 TMS_NORMAL_THUMB_SIZE,
+                                                 TMS_NORMAL_THUMB_SIZE);
+        }
+        else if (pageno == GWY_PAGE_CHANNELS) {
+            pixbuf = gwy_app_get_channel_thumbnail(data, ids[pageno],
                                                    TMS_NORMAL_THUMB_SIZE,
                                                    TMS_NORMAL_THUMB_SIZE);
         }
@@ -1447,10 +1480,12 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     /* invent an unique temporary name for atomic save
      * FIXME: rough, but works on Win32 */
     fnm = g_strdup_printf("%s.%u", rf->thumb_sys, getpid());
-    if (!gdk_pixbuf_savev(pixbuf, fnm, "png",
-                          (char**)option_keys->pdata,
-                          (char**)option_values->pdata,
-                          &err)) {
+    if (!pixbuf)
+        rf->thumb_state = FILE_STATE_FAILED;
+    else if (!gdk_pixbuf_savev(pixbuf, fnm, "png",
+                              (char**)option_keys->pdata,
+                              (char**)option_values->pdata,
+                              &err)) {
         g_clear_error(&err);
         rf->thumb_state = FILE_STATE_FAILED;
     }
@@ -1470,7 +1505,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     g_free(fnm);
 
     gwy_object_unref(rf->pixbuf);
-    g_object_unref(pixbuf);
+    gwy_object_unref(pixbuf);
     g_ptr_array_free(option_values, TRUE);
     g_ptr_array_free(option_keys, TRUE);
 }

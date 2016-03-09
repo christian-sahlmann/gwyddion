@@ -37,6 +37,19 @@
 
 G_BEGIN_DECLS
 
+/* Data browser notebook pages.  Also serves for general data kind
+ * identification. */
+typedef enum {
+    GWY_PAGE_CHANNELS,
+    GWY_PAGE_GRAPHS,
+    GWY_PAGE_SPECTRA,
+    GWY_PAGE_VOLUMES,
+    GWY_PAGE_XYZS,
+    GWY_NPAGES,
+    /* -1 is for some quirky object qdata storage... */
+    GWY_PAGE_NOPAGE = G_MAXINT-1,
+} GwyAppPage;
+
 /* Data types interesting keys can correspond to */
 typedef enum {
     KEY_IS_NONE = 0,
@@ -128,6 +141,7 @@ GdkPixbuf* _gwy_app_recent_file_try_thumbnail  (const gchar *filename_sys);
 G_GNUC_INTERNAL
 void       _gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
                                                 GwyContainer *data,
+                                                GwyAppPage pageno,
                                                 gint id,
                                                 GdkPixbuf *pixbuf);
 

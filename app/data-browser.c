@@ -63,17 +63,6 @@ enum {
     SURFACE_PREVIEW_SIZE = 512,
 };
 
-/* Notebook pages */
-enum {
-    PAGE_CHANNELS,
-    PAGE_GRAPHS,
-    PAGE_SPECTRA,
-    PAGE_VOLUMES,
-    PAGE_XYZS,
-    NPAGES,
-    PAGE_NOPAGE = G_MAXINT-1,
-};
-
 /* Sensitivity flags */
 enum {
     SENS_OBJECT = 1 << 0,
@@ -142,7 +131,7 @@ typedef struct {
 struct _GwyAppDataBrowser {
     GList *proxy_list;
     struct _GwyAppDataProxy *current;
-    gint active_page;
+    GwyAppPage active_page;
     gint untitled_counter;
     gdouble edit_timestamp;
     GwySensitivityGroup *sensgroup;
@@ -150,7 +139,7 @@ struct _GwyAppDataBrowser {
     GtkWidget *filename;
     GtkWidget *messages_button;
     GtkWidget *notebook;
-    GtkWidget *lists[NPAGES];
+    GtkWidget *lists[GWY_NPAGES];
 };
 
 /* The proxy associated with each Container (this is non-GUI object) */
@@ -162,7 +151,7 @@ struct _GwyAppDataProxy {
     gboolean resetting_visibility;
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
-    GwyAppDataList lists[NPAGES];
+    GwyAppDataList lists[GWY_NPAGES];
     GList *associated_3d;       /* of a channel (crude) */
     GList *associated_mask;     /* of a channel */
     GList *associated_preview;  /* of a volume */
@@ -235,7 +224,7 @@ static void   gwy_app_data_proxy_destroy_messages(GwyAppDataProxy *proxy);
 static void   gwy_app_data_browser_show_hide_messages(GtkToggleButton *toggle,
                                                       GwyAppDataBrowser *browser);
 static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
-                                                 guint pageno,
+                                                 GwyAppPage pageno,
                                                  GtkTreeModel *model,
                                                  GtkTreeIter *iter,
                                                  GwyAppDataProxy *destproxy);
@@ -256,10 +245,6 @@ static GwyDataField* create_simple_brick_preview_field(GwyBrick *brick);
 static GwyDataField* create_simple_surface_preview_field(GwySurface *surface,
                                                          gint max_xres,
                                                          gint max_yres);
-static GdkPixbuf* gwy_app_get_graph_thumbnail      (GwyContainer *data,
-                                                    gint id,
-                                                    gint max_width,
-                                                    gint max_height);
 static void       gwy_app_data_browser_notify_watch(GList *watchers,
                                                     GwyContainer *container,
                                                     gint id,
@@ -735,11 +720,11 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
     g_return_if_fail(quark);
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_CHANNELS].store, id,
                                         &iter))
         return;
 
-    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
     gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
@@ -764,7 +749,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], id, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_CHANNELS], id, iter,
                                   object);
     g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
@@ -793,7 +778,7 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &object,
                        MODEL_ID, &id,
                        -1);
@@ -804,7 +789,7 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_CHANNELS].store, iter);
+    gtk_list_store_remove(proxy->lists[GWY_PAGE_CHANNELS].store, iter);
     gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
                                       GWY_DATA_WATCH_EVENT_REMOVED);
 }
@@ -826,7 +811,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     GObject *old;
     gint id;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &old,
                        MODEL_ID, &id,
                        -1);
@@ -834,7 +819,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_channel_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_CHANNELS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -859,10 +844,10 @@ gwy_app_data_proxy_mask_changed(GObject *mask,
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0 && type == KEY_IS_MASK);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_CHANNELS].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
     gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
@@ -893,10 +878,10 @@ gwy_app_data_proxy_connect_mask(GwyAppDataProxy *proxy,
     assoc->id = id;
     proxy->associated_mask = g_list_prepend(proxy->associated_mask, assoc);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_CHANNELS].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
     gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
@@ -927,10 +912,10 @@ gwy_app_data_proxy_disconnect_mask(GwyAppDataProxy *proxy,
     g_list_free_1(item);
     g_object_unref(object);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_CHANNELS].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
     gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
@@ -976,10 +961,10 @@ graph_changed_common(GwyGraphModel *gmodel, GwyAppDataProxy *proxy)
         return -1;
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_val_if_fail(type == KEY_IS_GRAPH, -1);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_GRAPHS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_GRAPHS].store, id,
                                         &iter))
         return -1;
-    gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_GRAPHS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
     return id;
@@ -1068,7 +1053,7 @@ gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
 {
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], id, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_GRAPHS], id, iter,
                                   object);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
     quark = gwy_app_get_graph_key_for_id(id);
@@ -1100,7 +1085,7 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_GRAPHS].store), iter,
                        MODEL_ID, &id,
                        MODEL_OBJECT, &object,
                        -1);
@@ -1117,7 +1102,7 @@ gwy_app_data_proxy_disconnect_graph(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_graph_curve_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_GRAPHS].store, iter);
+    gtk_list_store_remove(proxy->lists[GWY_PAGE_GRAPHS].store, iter);
     gwy_app_data_browser_notify_watch(graph_watchers, proxy->container, id,
                                       GWY_DATA_WATCH_EVENT_REMOVED);
 }
@@ -1140,7 +1125,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
     GObject *old;
     gint id;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_GRAPHS].store), iter,
                        MODEL_OBJECT, &old,
                        MODEL_WIDGET, &graph,
                        MODEL_ID, &id,
@@ -1155,7 +1140,7 @@ gwy_app_data_proxy_reconnect_graph(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_graph_curve_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_GRAPHS].store, iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_GRAPHS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "notify",
@@ -1196,10 +1181,10 @@ gwy_app_data_proxy_spectra_changed(GwySpectra *spectra,
         return;
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(type == KEY_IS_SPECTRA);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_SPECTRA].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_SPECTRA].store, id,
                                         &iter))
         return;
-    gwy_list_store_row_changed(proxy->lists[PAGE_SPECTRA].store,
+    gwy_list_store_row_changed(proxy->lists[GWY_PAGE_SPECTRA].store,
                                &iter, NULL, -1);
 }
 
@@ -1220,7 +1205,7 @@ gwy_app_data_proxy_connect_spectra(GwyAppDataProxy *proxy,
 {
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_SPECTRA], i, iter, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_SPECTRA], i, iter, object);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = gwy_app_get_spectra_key_for_id(i);
     g_object_set_qdata(object, container_quark, proxy->container);
@@ -1244,7 +1229,7 @@ gwy_app_data_proxy_disconnect_spectra(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_SPECTRA].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
@@ -1254,7 +1239,7 @@ gwy_app_data_proxy_disconnect_spectra(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_spectra_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_SPECTRA].store, iter);
+    gtk_list_store_remove(proxy->lists[GWY_PAGE_SPECTRA].store, iter);
 }
 
 /**
@@ -1273,14 +1258,14 @@ gwy_app_data_proxy_reconnect_spectra(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_SPECTRA].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_spectra_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_SPECTRA].store, iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_SPECTRA].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -1310,10 +1295,10 @@ gwy_app_data_proxy_brick_changed(GwyDataField *brick,
     g_return_if_fail(quark);
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_VOLUMES].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_VOLUMES].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1336,7 +1321,7 @@ gwy_app_data_proxy_connect_brick(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_VOLUMES], id, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_VOLUMES], id, iter,
                                   object);
     g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
@@ -1362,7 +1347,7 @@ gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_VOLUMES].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
@@ -1372,7 +1357,7 @@ gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_brick_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_VOLUMES].store, iter);
+    gtk_list_store_remove(proxy->lists[GWY_PAGE_VOLUMES].store, iter);
 }
 
 /**
@@ -1391,14 +1376,14 @@ gwy_app_data_proxy_reconnect_brick(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_VOLUMES].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_brick_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_VOLUMES].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -1421,10 +1406,10 @@ gwy_app_data_proxy_preview_changed(GObject *preview,
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0 && type == KEY_IS_BRICK_PREVIEW);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_VOLUMES].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_VOLUMES].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1454,10 +1439,10 @@ gwy_app_data_proxy_connect_preview(GwyAppDataProxy *proxy,
     proxy->associated_preview = g_list_prepend(proxy->associated_preview,
                                                assoc);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_VOLUMES].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_VOLUMES].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1487,10 +1472,10 @@ gwy_app_data_proxy_disconnect_preview(GwyAppDataProxy *proxy,
     g_list_free_1(item);
     g_object_unref(object);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_VOLUMES].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_VOLUMES].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_VOLUMES].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_VOLUMES].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1540,10 +1525,10 @@ gwy_app_data_proxy_surface_changed(GwyDataField *surface,
     g_return_if_fail(quark);
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_XYZS].store, id,
                                         &iter))
         return;
-    gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
 }
@@ -1566,7 +1551,7 @@ gwy_app_data_proxy_connect_surface(GwyAppDataProxy *proxy,
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_XYZS], id, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_XYZS], id, iter,
                                   object);
     g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
@@ -1592,7 +1577,7 @@ gwy_app_data_proxy_disconnect_surface(GwyAppDataProxy *proxy,
 {
     GObject *object;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_XYZS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_XYZS].store), iter,
                        MODEL_OBJECT, &object,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
@@ -1602,7 +1587,7 @@ gwy_app_data_proxy_disconnect_surface(GwyAppDataProxy *proxy,
                                          gwy_app_data_proxy_surface_changed,
                                          proxy);
     g_object_unref(object);
-    gtk_list_store_remove(proxy->lists[PAGE_XYZS].store, iter);
+    gtk_list_store_remove(proxy->lists[GWY_PAGE_XYZS].store, iter);
 }
 
 /**
@@ -1621,14 +1606,14 @@ gwy_app_data_proxy_reconnect_surface(GwyAppDataProxy *proxy,
 {
     GObject *old;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_XYZS].store), iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[GWY_PAGE_XYZS].store), iter,
                        MODEL_OBJECT, &old,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_surface_changed,
                                          proxy);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
-    gtk_list_store_set(proxy->lists[PAGE_XYZS].store, iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, iter,
                        MODEL_OBJECT, object,
                        -1);
     g_signal_connect(object, "data-changed",
@@ -1651,14 +1636,14 @@ gwy_app_data_proxy_raster_changed(GObject *raster,
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0 && type == KEY_IS_SURFACE_PREVIEW);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_XYZS].store, id,
                                         &iter))
         return;
 
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
     /*
-    gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
                        */
@@ -1688,13 +1673,13 @@ gwy_app_data_proxy_connect_raster(GwyAppDataProxy *proxy,
     assoc->id = id;
     proxy->associated_raster = g_list_prepend(proxy->associated_raster, assoc);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_XYZS].store, id,
                                         &iter))
         return;
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
     /*
-    gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
                        */
@@ -1725,13 +1710,13 @@ gwy_app_data_proxy_disconnect_raster(GwyAppDataProxy *proxy,
     g_list_free_1(item);
     g_object_unref(object);
 
-    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_XYZS].store, id,
+    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_XYZS].store, id,
                                         &iter))
         return;
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
     /*
-    gtk_list_store_set(proxy->lists[PAGE_XYZS].store, &iter,
+    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
                        */
@@ -1880,7 +1865,7 @@ gwy_app_data_proxy_visible_count(GwyAppDataProxy *proxy)
 {
     gint i, n = 0;
 
-    for (i = 0; i < NPAGES; i++) {
+    for (i = 0; i < GWY_NPAGES; i++) {
         n += proxy->lists[i].visible_count;
     }
 
@@ -1977,7 +1962,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     GwyDataView *data_view = NULL;
     gboolean found;
     GList *item;
-    gint id, pageno = -1;
+    gint id;
+    GwyAppPage pageno = GWY_PAGE_NOPAGE;
 
     strkey = g_quark_to_string(quark);
     id = _gwy_app_analyse_data_key(strkey, &type, NULL);
@@ -1994,7 +1980,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     switch (type) {
         case KEY_IS_DATA:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Channel <%s>: %s in container, %s in list store",
@@ -2012,12 +1998,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         /* Prevent thumbnail update */
         if (!object)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_GRAPH:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_GRAPHS;
+        pageno = GWY_PAGE_GRAPHS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Graph <%s>: %s in container, %s in list store",
@@ -2035,12 +2021,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         /* Prevent thumbnail update */
         if (!object)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_SPECTRA:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_SPECTRA;
+        pageno = GWY_PAGE_SPECTRA;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Spectra <%s>: %s in container, %s in list store",
@@ -2058,12 +2044,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         /* Prevent thumbnail update */
         if (!object)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_MASK:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = !!gwy_app_data_assoc_get(&proxy->associated_mask, id);
         if (object && !found)
@@ -2080,7 +2066,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                                -1);
         }
         else
-            pageno = -1;  /* Prevent thumbnail update */
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
@@ -2091,25 +2077,24 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
 
         case KEY_IS_CALDATA:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
-            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
+            gwy_list_store_row_changed(proxy->lists[GWY_PAGE_CHANNELS].store,
                                        &iter, NULL, -1);
         }
-        /* Prevent thumbnail update */
         if (!found)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_SHOW:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
-            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
+            gwy_list_store_row_changed(proxy->lists[GWY_PAGE_CHANNELS].store,
                                        &iter, NULL, -1);
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
@@ -2122,14 +2107,13 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_update_data_range_type(data_view, id);
             g_object_unref(data_view);
         }
-        /* Prevent thumbnail update */
         if (!found)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_BRICK:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_VOLUMES;
+        pageno = GWY_PAGE_VOLUMES;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Brick <%s>: %s in container, %s in list store",
@@ -2157,12 +2141,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             }
         }
         /* Prevent thumbnail update, it depends on the preview field */
-        pageno = -1;
+        pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_SURFACE:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_XYZS;
+        pageno = GWY_PAGE_XYZS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Surface <%s>: %s in container, %s in list store",
@@ -2190,11 +2174,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             }
         }
         /* Prevent thumbnail update, it depends on the preview field */
-        pageno = -1;
+        pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_TITLE:
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
@@ -2215,12 +2199,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             GwyAppDataAssociation *assoc = (GwyAppDataAssociation*)item->data;
             gwy_app_update_3d_window_title(GWY_3D_WINDOW(assoc->object), id);
         }
-        /* Prevent thumbnail update */
-        pageno = -1;
+        pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_RANGE_TYPE:
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
@@ -2237,16 +2220,15 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_update_data_range_type(data_view, id);
             g_object_unref(data_view);
         }
-        /* Prevent thumbnail update */
         if (!found)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_PALETTE:
         case KEY_IS_RANGE:
         case KEY_IS_MASK_COLOR:
         case KEY_IS_REAL_SQUARE:
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
@@ -2255,13 +2237,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                                               GWY_DATA_WATCH_EVENT_CHANGED);
         }
         else {
-            /* Prevent thumbnail update */
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         }
         break;
 
         case KEY_IS_BRICK_TITLE:
-        pageno = PAGE_VOLUMES;
+        pageno = GWY_PAGE_VOLUMES;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
@@ -2275,13 +2256,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_update_brick_window_title(data_view, id);
             g_object_unref(data_view);
         }
-        /* Prevent thumbnail update */
-        pageno = -1;
+        pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_BRICK_PREVIEW:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_VOLUMES;
+        pageno = GWY_PAGE_VOLUMES;
         list = &proxy->lists[pageno];
         found = !!gwy_app_data_assoc_get(&proxy->associated_preview, id);
         if (object && !found)
@@ -2291,23 +2271,22 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         else if (object && found)
             gwy_app_data_proxy_reconnect_preview(proxy, id, object);
         if (!found || !object)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_BRICK_PREVIEW_PALETTE:
-        pageno = PAGE_VOLUMES;
+        pageno = GWY_PAGE_VOLUMES;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
-        /* Prevent thumbnail update */
         if (!found)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_DATA_VISIBLE:
         if (!proxy->resetting_visibility && !gui_disabled) {
-            pageno = PAGE_CHANNELS;
+            pageno = GWY_PAGE_CHANNELS;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
@@ -2315,12 +2294,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_channel_set_visible(proxy, &iter, visible);
             }
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         }
         break;
 
         case KEY_IS_SURFACE_TITLE:
-        pageno = PAGE_XYZS;
+        pageno = GWY_PAGE_XYZS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
@@ -2334,13 +2313,12 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_update_surface_window_title(data_view, id);
             g_object_unref(data_view);
         }
-        /* Prevent thumbnail update */
-        pageno = -1;
+        pageno = GWY_PAGE_NOPAGE; /* Prevent thumbnail update */
         break;
 
         case KEY_IS_SURFACE_PREVIEW:
         gwy_container_gis_object(data, quark, &object);
-        pageno = PAGE_XYZS;
+        pageno = GWY_PAGE_XYZS;
         list = &proxy->lists[pageno];
         found = !!gwy_app_data_assoc_get(&proxy->associated_raster, id);
         if (object && !found)
@@ -2350,23 +2328,22 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         else if (object && found)
             gwy_app_data_proxy_reconnect_raster(proxy, id, object);
         if (!found || !object)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_SURFACE_PREVIEW_PALETTE:
-        pageno = PAGE_XYZS;
+        pageno = GWY_PAGE_XYZS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
-        /* Prevent thumbnail update */
         if (!found)
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_GRAPH_VISIBLE:
         if (!proxy->resetting_visibility && !gui_disabled) {
-            pageno = PAGE_GRAPHS;
+            pageno = GWY_PAGE_GRAPHS;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
@@ -2374,13 +2351,13 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_graph_set_visible(proxy, &iter, visible);
             }
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         }
         break;
 
         case KEY_IS_BRICK_VISIBLE:
         if (!proxy->resetting_visibility && !gui_disabled) {
-            pageno = PAGE_VOLUMES;
+            pageno = GWY_PAGE_VOLUMES;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
@@ -2388,13 +2365,13 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_brick_set_visible(proxy, &iter, visible);
             }
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         }
         break;
 
         case KEY_IS_SURFACE_VISIBLE:
         if (!proxy->resetting_visibility && !gui_disabled) {
-            pageno = PAGE_XYZS;
+            pageno = GWY_PAGE_XYZS;
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
@@ -2402,7 +2379,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_surface_set_visible(proxy, &iter, visible);
             }
-            pageno = -1;
+            pageno = GWY_PAGE_NOPAGE;
         }
         break;
 
@@ -2410,7 +2387,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
     }
 
-    if (pageno == -1)
+    if (pageno == GWY_PAGE_NOPAGE)
         return;
 
     /* XXX: This code asserts list and iter was set above. */
@@ -2476,8 +2453,8 @@ gwy_app_data_proxy_finalize(gpointer user_data)
 
     proxy->finalize_id = 0;
 
-    gwy_app_data_proxy_watch_remove_all(channel_watchers, PAGE_CHANNELS, proxy);
-    gwy_app_data_proxy_watch_remove_all(graph_watchers, PAGE_GRAPHS, proxy);
+    gwy_app_data_proxy_watch_remove_all(channel_watchers, GWY_PAGE_CHANNELS, proxy);
+    gwy_app_data_proxy_watch_remove_all(graph_watchers, GWY_PAGE_GRAPHS, proxy);
 
     if (gwy_app_data_proxy_visible_count(proxy)) {
         g_assert(gwy_app_data_browser_get_proxy(gwy_app_data_browser,
@@ -2502,19 +2479,19 @@ gwy_app_data_proxy_finalize(gpointer user_data)
                                          gwy_app_data_proxy_item_changed,
                                          proxy);
     gwy_app_data_proxy_finalize_list
-        (GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store),
+        (GTK_TREE_MODEL(proxy->lists[GWY_PAGE_CHANNELS].store),
          MODEL_OBJECT, &gwy_app_data_proxy_channel_changed, proxy);
     gwy_app_data_proxy_finalize_list
-        (GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store),
+        (GTK_TREE_MODEL(proxy->lists[GWY_PAGE_GRAPHS].store),
          MODEL_OBJECT, &gwy_app_data_proxy_graph_changed, proxy);
     gwy_app_data_proxy_finalize_list
-        (GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store),
+        (GTK_TREE_MODEL(proxy->lists[GWY_PAGE_SPECTRA].store),
          MODEL_OBJECT, &gwy_app_data_proxy_spectra_changed, proxy);
     gwy_app_data_proxy_finalize_list
-        (GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store),
+        (GTK_TREE_MODEL(proxy->lists[GWY_PAGE_VOLUMES].store),
          MODEL_OBJECT, &gwy_app_data_proxy_brick_changed, proxy);
     gwy_app_data_proxy_finalize_list
-        (GTK_TREE_MODEL(proxy->lists[PAGE_XYZS].store),
+        (GTK_TREE_MODEL(proxy->lists[GWY_PAGE_XYZS].store),
          MODEL_OBJECT, &gwy_app_data_proxy_surface_changed, proxy);
 
     g_object_unref(proxy->container);
@@ -2701,13 +2678,13 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     g_signal_connect_after(data, "item-changed",
                            G_CALLBACK(gwy_app_data_proxy_item_changed), proxy);
 
-    for (i = 0; i < NPAGES; i++) {
+    for (i = 0; i < GWY_NPAGES; i++) {
         gwy_app_data_proxy_list_setup(&proxy->lists[i]);
         g_object_set_qdata(G_OBJECT(proxy->lists[i].store),
                            page_id_quark, GUINT_TO_POINTER(i + 1));
     }
     /* For historical reasons, graphs are numbered from 1 */
-    proxy->lists[PAGE_GRAPHS].last = 0;
+    proxy->lists[GWY_PAGE_GRAPHS].last = 0;
 
     gwy_container_foreach(data, NULL, gwy_app_data_proxy_scan_data, proxy);
 
@@ -2847,7 +2824,7 @@ static void
 gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                        GwyAppDataBrowser *browser)
 {
-    gint pageno;
+    GwyAppPage pageno;
     gboolean any;
 
     pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(selection),
@@ -3032,7 +3009,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data);
-    list = &proxy->lists[PAGE_CHANNELS];
+    list = &proxy->lists[GWY_PAGE_CHANNELS];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find data field %p (%d)", object, i);
         return TRUE;
@@ -3097,7 +3074,7 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     GtkTreeModel *model;
     GtkTreePath *path;
     GtkTreeIter iter;
-    guint pageno;
+    GwyAppPage pageno;
 
     if (!gtk_tree_get_row_drag_data(data, &model, &path)) {
         g_warning("Cannot get row drag data");
@@ -3144,7 +3121,7 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     }
 
     /* Foreign tree models */
-    if (pageno == PAGE_NOPAGE) {
+    if (pageno == GWY_PAGE_NOPAGE) {
         gwy_app_data_browser_copy_other(model, &iter, window, container);
     }
     else if (container) {
@@ -3457,7 +3434,7 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
     GList *item;
     gint id;
 
-    list = &proxy->lists[PAGE_CHANNELS];
+    list = &proxy->lists[GWY_PAGE_CHANNELS];
     model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
@@ -3478,7 +3455,7 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    list = &proxy->lists[PAGE_VOLUMES];
+    list = &proxy->lists[GWY_PAGE_VOLUMES];
     model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
@@ -3493,7 +3470,7 @@ gwy_app_data_proxy_update_window_titles(GwyAppDataProxy *proxy)
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    list = &proxy->lists[PAGE_XYZS];
+    list = &proxy->lists[GWY_PAGE_XYZS];
     model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
@@ -3520,7 +3497,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    list = &proxy->lists[PAGE_CHANNELS];
+    list = &proxy->lists[GWY_PAGE_CHANNELS];
     model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get(model, iter,
@@ -3572,7 +3549,7 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_CHANNELS].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -3600,7 +3577,7 @@ gwy_app_data_browser_channel_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_CHANNELS].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -3692,7 +3669,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_CHANNELS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_CHANNELS + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4133,7 +4110,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data);
-    list = &proxy->lists[PAGE_GRAPHS];
+    list = &proxy->lists[GWY_PAGE_GRAPHS];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find graph model %p (%d)", object, i);
         return TRUE;
@@ -4227,7 +4204,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    list = &proxy->lists[PAGE_GRAPHS];
+    list = &proxy->lists[GWY_PAGE_GRAPHS];
     model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get(model, iter,
@@ -4278,7 +4255,7 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_GRAPHS].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -4307,7 +4284,7 @@ gwy_app_data_browser_graph_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_GRAPHS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_GRAPHS].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -4397,7 +4374,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_GRAPHS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_GRAPHS + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4442,7 +4419,7 @@ gwy_app_data_browser_spectra_toggled(G_GNUC_UNUSED GtkCellRendererToggle *render
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_SPECTRA].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -4466,7 +4443,7 @@ gwy_app_data_browser_spectra_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_SPECTRA].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_SPECTRA].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -4538,7 +4515,7 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         strkey = g_quark_to_string(quark);
         id = _gwy_app_analyse_data_key(strkey, &type, NULL);
         g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
-        browser->current->lists[PAGE_SPECTRA].active = id;
+        browser->current->lists[GWY_PAGE_SPECTRA].active = id;
     }
     else {
         id = -1;
@@ -4660,7 +4637,7 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_SPECTRA + 1));
+                       GINT_TO_POINTER(GWY_PAGE_SPECTRA + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4702,7 +4679,7 @@ gwy_app_data_browser_brick_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_VOLUMES].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -4730,7 +4707,7 @@ gwy_app_data_browser_brick_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_VOLUMES].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_VOLUMES].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -4881,7 +4858,7 @@ gwy_app_data_browser_volume_deleted(GwyDataWindow *data_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data);
-    list = &proxy->lists[PAGE_VOLUMES];
+    list = &proxy->lists[GWY_PAGE_VOLUMES];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find brick %p (%d)", object, i);
         return TRUE;
@@ -5013,7 +4990,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    list = &proxy->lists[PAGE_VOLUMES];
+    list = &proxy->lists[GWY_PAGE_VOLUMES];
     model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get(model, iter,
@@ -5118,7 +5095,7 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_VOLUMES + 1));
+                       GINT_TO_POINTER(GWY_PAGE_VOLUMES + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -5192,7 +5169,7 @@ gwy_app_data_browser_surface_toggled(G_GNUC_UNUSED GtkCellRendererToggle *render
     g_return_if_fail(proxy);
 
     path = gtk_tree_path_new_from_string(path_str);
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_XYZS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_XYZS].store);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
@@ -5220,7 +5197,7 @@ gwy_app_data_browser_surface_name_edited(GtkCellRenderer *renderer,
 
     g_return_if_fail(browser->current);
     proxy = browser->current;
-    model = GTK_TREE_MODEL(proxy->lists[PAGE_XYZS].store);
+    model = GTK_TREE_MODEL(proxy->lists[GWY_PAGE_XYZS].store);
 
     path = gtk_tree_path_new_from_string(strpath);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -5368,7 +5345,7 @@ gwy_app_data_browser_xyz_deleted(GwyDataWindow *data_window)
 
     browser = gwy_app_get_data_browser();
     proxy = gwy_app_data_browser_get_proxy(browser, data);
-    list = &proxy->lists[PAGE_XYZS];
+    list = &proxy->lists[GWY_PAGE_XYZS];
     if (!gwy_app_data_proxy_find_object(list->store, i, &iter)) {
         g_critical("Cannot find surface %p (%d)", object, i);
         return TRUE;
@@ -5504,7 +5481,7 @@ gwy_app_data_proxy_surface_set_visible(GwyAppDataProxy *proxy,
     GObject *object;
     gint id;
 
-    list = &proxy->lists[PAGE_XYZS];
+    list = &proxy->lists[GWY_PAGE_XYZS];
     model = GTK_TREE_MODEL(list->store);
 
     gtk_tree_model_get(model, iter,
@@ -5609,7 +5586,7 @@ gwy_app_data_browser_construct_surfaces(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(PAGE_XYZS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_XYZS + 1));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -5670,7 +5647,7 @@ gwy_app_update_surface_window_title(GwyDataView *data_view,
 /* GUI only */
 static void
 gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
-                                   guint pageno,
+                                   GwyAppPage pageno,
                                    GtkTreeModel *model,
                                    GtkTreeIter *iter)
 {
@@ -5689,38 +5666,42 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
 
     /* Get rid of widget displaying this object.  This may invoke complete
      * destruction later in idle handler. */
-    if (pageno == PAGE_CHANNELS)
+    if (pageno == GWY_PAGE_CHANNELS)
         gwy_app_data_proxy_channel_destroy_3d(proxy, i);
 
     if (widget) {
         g_object_unref(widget);
         switch (pageno) {
-            case PAGE_CHANNELS:
+            case GWY_PAGE_CHANNELS:
             proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_channel_set_visible(proxy, iter, FALSE);
             proxy->resetting_visibility = FALSE;
             break;
 
-            case PAGE_GRAPHS:
+            case GWY_PAGE_GRAPHS:
             proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_graph_set_visible(proxy, iter, FALSE);
             proxy->resetting_visibility = FALSE;
             break;
 
-            case PAGE_SPECTRA:
+            case GWY_PAGE_SPECTRA:
             /* FIXME */
             break;
 
-            case PAGE_VOLUMES:
+            case GWY_PAGE_VOLUMES:
             proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_brick_set_visible(proxy, iter, FALSE);
             proxy->resetting_visibility = FALSE;
             break;
 
-            case PAGE_XYZS:
+            case GWY_PAGE_XYZS:
             proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_surface_set_visible(proxy, iter, FALSE);
             proxy->resetting_visibility = FALSE;
+            break;
+
+            default:
+            g_return_if_reached();
             break;
         }
         gwy_app_data_proxy_maybe_finalize(proxy);
@@ -5729,7 +5710,7 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
     /* Remove object from container, this causes of removal from tree model
      * too */
     switch (pageno) {
-        case PAGE_CHANNELS:
+        case GWY_PAGE_CHANNELS:
         g_snprintf(key, sizeof(key), "/%d/data", i);
         gwy_container_remove_by_name(data, key);
         /* XXX: Cannot just remove /0, because all graphs are under
@@ -5773,30 +5754,34 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         }
         break;
 
-        case PAGE_GRAPHS:
+        case GWY_PAGE_GRAPHS:
         g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
 
-        case PAGE_SPECTRA:
+        case GWY_PAGE_SPECTRA:
         g_snprintf(key, sizeof(key), "%s/%d", SPECTRA_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
 
-        case PAGE_VOLUMES:
+        case GWY_PAGE_VOLUMES:
         g_snprintf(key, sizeof(key), "%s/%d", BRICK_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
         break;
 
-        case PAGE_XYZS:
+        case GWY_PAGE_XYZS:
         g_snprintf(key, sizeof(key), "%s/%d", SURFACE_PREFIX, i);
         gwy_container_remove_by_prefix(data, key);
+        break;
+
+        default:
+        g_return_if_reached();
         break;
     }
     g_object_unref(object);
 
     /* Graph numbers start from 1 for historical reasons. */
-    if (pageno == PAGE_GRAPHS)
+    if (pageno == GWY_PAGE_GRAPHS)
         gwy_app_data_list_update_last(&proxy->lists[pageno], 0);
     else
         gwy_app_data_list_update_last(&proxy->lists[pageno], -1);
@@ -5804,7 +5789,7 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
 
 static void
 gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
-                                 guint pageno,
+                                 GwyAppPage pageno,
                                  GtkTreeModel *model,
                                  GtkTreeIter *iter,
                                  GwyAppDataProxy *destproxy)
@@ -5825,11 +5810,11 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
     }
 
     switch (pageno) {
-        case PAGE_CHANNELS:
+        case GWY_PAGE_CHANNELS:
         gwy_app_data_browser_copy_channel(srcproxy->container, id, container);
         break;
 
-        case PAGE_GRAPHS:
+        case GWY_PAGE_GRAPHS:
         {
             GwyGraphModel *gmodel, *gmodel2;
 
@@ -5840,7 +5825,7 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
         }
         break;
 
-        case PAGE_SPECTRA:
+        case GWY_PAGE_SPECTRA:
         {
             GwySpectra *spectra, *spectra2;
 
@@ -5851,12 +5836,16 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
         }
         break;
 
-        case PAGE_VOLUMES:
+        case GWY_PAGE_VOLUMES:
         gwy_app_data_browser_copy_volume(srcproxy->container, id, container);
         break;
 
-        case PAGE_XYZS:
+        case GWY_PAGE_XYZS:
         gwy_app_data_browser_copy_xyz(srcproxy->container, id, container);
+        break;
+
+        default:
+        g_return_if_reached();
         break;
     }
 
@@ -5989,7 +5978,7 @@ gwy_app_data_browser_close_file(GwyAppDataBrowser *browser)
 static void
 gwy_app_data_browser_page_changed(GwyAppDataBrowser *browser,
                                   G_GNUC_UNUSED GtkNotebookPage *useless_crap,
-                                  gint pageno)
+                                  GwyAppPage pageno)
 {
     GtkTreeSelection *selection;
 
@@ -6031,7 +6020,7 @@ gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
     browser->sensgroup = NULL;
     browser->filename = NULL;
     browser->notebook = NULL;
-    for (i = 0; i < NPAGES; i++)
+    for (i = 0; i < GWY_NPAGES; i++)
         browser->lists[i] = NULL;
 }
 
@@ -6044,7 +6033,7 @@ gwy_app_data_browser_shoot_object(GObject *button,
     GtkTreeSelection *selection;
     GtkTreeIter iter;
     GtkTreeModel *model;
-    guint pageno;
+    GwyAppPage pageno;
     const gchar *action;
 
     g_return_if_fail(browser->current);
@@ -6186,9 +6175,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_CHANNELS]
+    browser->lists[GWY_PAGE_CHANNELS]
         = gwy_app_data_browser_construct_channels(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_CHANNELS]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[GWY_PAGE_CHANNELS]);
 
     /* Graphs tab */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -6200,9 +6189,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_GRAPHS]
+    browser->lists[GWY_PAGE_GRAPHS]
         = gwy_app_data_browser_construct_graphs(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_GRAPHS]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[GWY_PAGE_GRAPHS]);
 
     /* Single point spectra */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -6214,9 +6203,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_SPECTRA]
+    browser->lists[GWY_PAGE_SPECTRA]
         = gwy_app_data_browser_construct_spectra(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_SPECTRA]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[GWY_PAGE_SPECTRA]);
 
     /* Bricks (volume data) */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -6228,9 +6217,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_VOLUMES]
+    browser->lists[GWY_PAGE_VOLUMES]
         = gwy_app_data_browser_construct_bricks(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_VOLUMES]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[GWY_PAGE_VOLUMES]);
 
     /* Surfaces (XYZ data) */
     box_page = gtk_vbox_new(FALSE, 0);
@@ -6242,9 +6231,9 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(box_page), scwin, TRUE, TRUE, 0);
 
-    browser->lists[PAGE_XYZS]
+    browser->lists[GWY_PAGE_XYZS]
         = gwy_app_data_browser_construct_surfaces(browser);
-    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[PAGE_XYZS]);
+    gtk_container_add(GTK_CONTAINER(scwin), browser->lists[GWY_PAGE_XYZS]);
 
     /* Buttons */
     hbox = gwy_app_data_browser_construct_buttons(browser);
@@ -6332,7 +6321,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
         if (browser->window) {
             GtkTooltips *tips;
 
-            for (i = 0; i < NPAGES; i++)
+            for (i = 0; i < GWY_NPAGES; i++)
                 gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
             gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
             tips = gwy_app_get_tooltips();
@@ -6358,7 +6347,7 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
 
     gwy_app_data_browser_update_filename(proxy);
     if (browser->window) {
-        for (i = 0; i < NPAGES; i++)
+        for (i = 0; i < GWY_NPAGES; i++)
             gwy_app_data_browser_restore_active
                           (GTK_TREE_VIEW(browser->lists[i]), &proxy->lists[i]);
         gwy_app_data_browser_set_file_present(browser, TRUE);
@@ -6378,7 +6367,7 @@ update_all_sens(void)
 static void
 gwy_app_data_browser_select_object(GwyAppDataBrowser *browser,
                                    GwyAppDataProxy *proxy,
-                                   guint pageno)
+                                   GwyAppPage pageno)
 {
     GtkTreeView *treeview;
     GtkTreeIter iter;
@@ -6424,9 +6413,9 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_DATA);
-    proxy->lists[PAGE_CHANNELS].active = i;
+    proxy->lists[GWY_PAGE_CHANNELS].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_CHANNELS);
+    gwy_app_data_browser_select_object(browser, proxy, GWY_PAGE_CHANNELS);
     _gwy_app_data_view_set_current(data_view);
     update_channel_sens();
 
@@ -6456,7 +6445,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
          * active (or none). */
         if (!selected) {
             if (data != olddata) {
-                GwyAppDataList *list = &proxy->lists[PAGE_SPECTRA];
+                GwyAppDataList *list = &proxy->lists[GWY_PAGE_SPECTRA];
                 GtkTreeModel *model;
                 GtkTreeIter iter;
 
@@ -6518,9 +6507,9 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     strkey = g_quark_to_string(quark);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_GRAPH);
-    proxy->lists[PAGE_GRAPHS].active = i;
+    proxy->lists[GWY_PAGE_GRAPHS].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_GRAPHS);
+    gwy_app_data_browser_select_object(browser, proxy, GWY_PAGE_GRAPHS);
     update_graph_sens();
 }
 
@@ -6568,9 +6557,9 @@ gwy_app_data_browser_select_spectra(GwySpectra *spectra)
     strkey = g_quark_to_string(quark);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
-    proxy->lists[PAGE_SPECTRA].active = i;
+    proxy->lists[GWY_PAGE_SPECTRA].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_SPECTRA);
+    gwy_app_data_browser_select_object(browser, proxy, GWY_PAGE_SPECTRA);
     _gwy_app_spectra_set_current(spectra);
 }
 
@@ -6606,9 +6595,9 @@ gwy_app_data_browser_select_volume(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_BRICK_PREVIEW);
-    proxy->lists[PAGE_VOLUMES].active = i;
+    proxy->lists[GWY_PAGE_VOLUMES].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_VOLUMES);
+    gwy_app_data_browser_select_object(browser, proxy, GWY_PAGE_VOLUMES);
     update_brick_sens();
 }
 
@@ -6651,9 +6640,9 @@ gwy_app_data_browser_select_xyz(GwyDataView *data_view)
     strkey = gwy_pixmap_layer_get_data_key(layer);
     i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_SURFACE_PREVIEW);
-    proxy->lists[PAGE_XYZS].active = i;
+    proxy->lists[GWY_PAGE_XYZS].active = i;
 
-    gwy_app_data_browser_select_object(browser, proxy, PAGE_XYZS);
+    gwy_app_data_browser_select_object(browser, proxy, GWY_PAGE_XYZS);
     update_surface_sens();
 }
 
@@ -6667,7 +6656,7 @@ gwy_app_data_browser_select_xyz2(GwyDataView *data_view)
 static GwyAppDataProxy*
 gwy_app_data_browser_select(GwyContainer *data,
                             gint id,
-                            gint pageno,
+                            GwyAppPage pageno,
                             GtkTreeIter *iter)
 {
     GwyAppDataBrowser *browser;
@@ -6706,7 +6695,7 @@ gwy_app_data_browser_select_data_field(GwyContainer *data,
                                        gint id)
 {
     GtkTreeIter iter;
-    gwy_app_data_browser_select(data, id, PAGE_CHANNELS, &iter);
+    gwy_app_data_browser_select(data, id, GWY_PAGE_CHANNELS, &iter);
 }
 
 /**
@@ -6726,7 +6715,7 @@ gwy_app_data_browser_select_graph_model(GwyContainer *data,
                                         gint id)
 {
     GtkTreeIter iter;
-    gwy_app_data_browser_select(data, id, PAGE_GRAPHS, &iter);
+    gwy_app_data_browser_select(data, id, GWY_PAGE_GRAPHS, &iter);
 }
 
 static void
@@ -6789,7 +6778,7 @@ gboolean
 gwy_app_data_browser_reset_visibility(GwyContainer *data,
                                       GwyVisibilityResetType reset_type)
 {
-    static const SetVisibleFunc set_visible[NPAGES] = {
+    static const SetVisibleFunc set_visible[GWY_NPAGES] = {
         &gwy_app_data_proxy_channel_set_visible,
         &gwy_app_data_proxy_graph_set_visible,
         NULL,
@@ -6818,7 +6807,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
 
     if (reset_type == GWY_VISIBILITY_RESET_RESTORE
         || reset_type == GWY_VISIBILITY_RESET_DEFAULT) {
-        for (i = 0; i < NPAGES; i++) {
+        for (i = 0; i < GWY_NPAGES; i++) {
             if (set_visible[i])
                 gwy_app_data_list_reconstruct_visibility(proxy,
                                                          &proxy->lists[i],
@@ -6832,7 +6821,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
             return FALSE;
 
         /* Attempt to show something. FIXME: Crude. */
-        for (i = 0; i < NPAGES; i++) {
+        for (i = 0; i < GWY_NPAGES; i++) {
             GtkTreeModel *model;
             GtkTreeIter iter;
 
@@ -6862,7 +6851,7 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
     }
 
     proxy->resetting_visibility = TRUE;
-    for (i = 0; i < NPAGES; i++) {
+    for (i = 0; i < GWY_NPAGES; i++) {
         if (set_visible[i])
             gwy_app_data_list_reset_visibility(proxy, &proxy->lists[i],
                                                set_visible[i], visible);
@@ -6932,23 +6921,23 @@ gwy_app_data_merge_gather(gpointer key,
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     switch (type) {
         case KEY_IS_DATA:
-        pageno = PAGE_CHANNELS;
+        pageno = GWY_PAGE_CHANNELS;
         break;
 
         case KEY_IS_GRAPH:
-        pageno = PAGE_GRAPHS;
+        pageno = GWY_PAGE_GRAPHS;
         break;
 
         case KEY_IS_SPECTRA:
-        pageno = PAGE_SPECTRA;
+        pageno = GWY_PAGE_SPECTRA;
         break;
 
         case KEY_IS_BRICK:
-        pageno = PAGE_VOLUMES;
+        pageno = GWY_PAGE_VOLUMES;
         break;
 
         case KEY_IS_SURFACE:
-        pageno = PAGE_XYZS;
+        pageno = GWY_PAGE_XYZS;
         break;
 
         default:
@@ -6975,31 +6964,31 @@ gwy_app_data_merge_copy_1(gpointer key,
     idp = GINT_TO_POINTER(id);
     switch (type) {
         case KEY_IS_DATA:
-        if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_data_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_GRAPH:
-        if (!g_hash_table_lookup_extended(map[PAGE_GRAPHS], idp, NULL, &id2p))
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_GRAPHS], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_graph_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_SPECTRA:
-        if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p))
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_SPECTRA], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_BRICK:
-        if (!g_hash_table_lookup_extended(map[PAGE_VOLUMES], idp, NULL, &id2p))
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_brick_key_for_id(GPOINTER_TO_INT(id2p));
         break;
 
         case KEY_IS_SURFACE:
-        if (!g_hash_table_lookup_extended(map[PAGE_XYZS], idp, NULL, &id2p))
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL, &id2p))
             goto fail;
         quark = gwy_app_get_surface_key_for_id(GPOINTER_TO_INT(id2p));
         break;
@@ -7009,7 +6998,7 @@ gwy_app_data_merge_copy_1(gpointer key,
         return;
         break;
     }
-    gwy_container_set_object((GwyContainer*)map[NPAGES], quark,
+    gwy_container_set_object((GwyContainer*)map[GWY_NPAGES], quark,
                              g_value_get_object(gvalue));
     return;
 
@@ -7057,13 +7046,13 @@ gwy_app_data_merge_copy_2(gpointer key,
         goto fail;
 
     idp = GINT_TO_POINTER(id);
-    dest = (GwyContainer*)map[NPAGES];
+    dest = (GwyContainer*)map[GWY_NPAGES];
 
     /* Visibilty */
     switch (type) {
         case KEY_IS_DATA:
         if (visibility) {
-            if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL,
+            if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_data_key_for_id(GPOINTER_TO_INT(id2p));
@@ -7077,7 +7066,7 @@ gwy_app_data_merge_copy_2(gpointer key,
 
         case KEY_IS_GRAPH:
         if (visibility) {
-            if (!g_hash_table_lookup_extended(map[PAGE_GRAPHS], idp, NULL,
+            if (!g_hash_table_lookup_extended(map[GWY_PAGE_GRAPHS], idp, NULL,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_graph_key_for_id(GPOINTER_TO_INT(id2p));
@@ -7091,7 +7080,7 @@ gwy_app_data_merge_copy_2(gpointer key,
 
         case KEY_IS_SPECTRA:
         if (visibility) {
-            if (!g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL,
+            if (!g_hash_table_lookup_extended(map[GWY_PAGE_SPECTRA], idp, NULL,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_spectra_key_for_id(GPOINTER_TO_INT(id2p));
@@ -7105,7 +7094,7 @@ gwy_app_data_merge_copy_2(gpointer key,
 
         case KEY_IS_BRICK:
         if (visibility) {
-            if (!g_hash_table_lookup_extended(map[PAGE_VOLUMES], idp, NULL,
+            if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_brick_key_for_id(GPOINTER_TO_INT(id2p));
@@ -7119,7 +7108,7 @@ gwy_app_data_merge_copy_2(gpointer key,
 
         case KEY_IS_SURFACE:
         if (visibility) {
-            if (!g_hash_table_lookup_extended(map[PAGE_XYZS], idp, NULL,
+            if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
                                               &id2p))
                 goto fail;
             quark = gwy_app_get_surface_key_for_id(GPOINTER_TO_INT(id2p));
@@ -7136,7 +7125,7 @@ gwy_app_data_merge_copy_2(gpointer key,
         break;
     }
 
-    if (!g_hash_table_lookup_extended(map[PAGE_CHANNELS], idp, NULL, &id2p))
+    if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL, &id2p))
         goto fail;
     id2 = GPOINTER_TO_INT(id2p);
 
@@ -7155,7 +7144,7 @@ gwy_app_data_merge_copy_2(gpointer key,
         id = g_value_get_int(gvalue);
         idp = GINT_TO_POINTER(id);
         /* Ignore references to nonexistent sps ids silently */
-        if (g_hash_table_lookup_extended(map[PAGE_SPECTRA], idp, NULL, &id2p)) {
+        if (g_hash_table_lookup_extended(map[GWY_PAGE_SPECTRA], idp, NULL, &id2p)) {
             g_snprintf(buf, sizeof(buf), "/%d/data/sps-is", id2);
             id2 = GPOINTER_TO_INT(id2p);
             gwy_container_set_int32_by_name(dest, buf, id2);
@@ -7318,9 +7307,10 @@ gwy_app_data_browser_merge(GwyContainer *container)
 {
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
-    GList *ids[NPAGES], *l;
-    GHashTable *map[NPAGES+1];
-    gint last, pageno;
+    GList *ids[GWY_NPAGES], *l;
+    GHashTable *map[GWY_NPAGES+1];
+    GwyAppPage pageno;
+    gint last;
 
     g_return_if_fail(GWY_IS_CONTAINER(container));
     browser = gwy_app_get_data_browser();
@@ -7338,9 +7328,9 @@ gwy_app_data_browser_merge(GwyContainer *container)
     }
 
     /* Build a map from container ids to destination ids */
-    memset(&ids[0], 0, NPAGES*sizeof(GList*));
+    memset(&ids[0], 0, GWY_NPAGES*sizeof(GList*));
     gwy_container_foreach(container, NULL, gwy_app_data_merge_gather, &ids[0]);
-    for (pageno = 0; pageno < NPAGES; pageno++) {
+    for (pageno = 0; pageno < GWY_NPAGES; pageno++) {
         gwy_debug("page %d", pageno);
         last = proxy->lists[pageno].last;
         map[pageno] = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -7354,7 +7344,7 @@ gwy_app_data_browser_merge(GwyContainer *container)
     }
 
     /* Perform the transfer */
-    map[NPAGES] = (GHashTable*)proxy->container;
+    map[GWY_NPAGES] = (GHashTable*)proxy->container;
     proxy->resetting_visibility = TRUE;
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_1, &map[0]);
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_2, &map[0]);
@@ -7728,10 +7718,10 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
         return -1;
     }
 
-    list = &proxy->lists[PAGE_CHANNELS];
+    list = &proxy->lists[GWY_PAGE_CHANNELS];
     g_snprintf(key, sizeof(key), "/%d/data", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_CHANNELS].last. */
+     * Among other things, it will update proxy->lists[GWY_PAGE_CHANNELS].last. */
     gwy_container_set_object_by_name(proxy->container, key, dfield);
 
     if (showit && !gui_disabled) {
@@ -7783,10 +7773,10 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
         return -1;
     }
 
-    list = &proxy->lists[PAGE_GRAPHS];
+    list = &proxy->lists[GWY_PAGE_GRAPHS];
     quark = gwy_app_get_graph_key_for_id(list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_GRAPHS].last. */
+     * Among other things, it will update proxy->lists[GWY_PAGE_GRAPHS].last. */
     gwy_container_set_object(proxy->container, quark, gmodel);
 
     if (showit && !gui_disabled) {
@@ -7840,10 +7830,10 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
         return -1;
     }
 
-    list = &proxy->lists[PAGE_SPECTRA];
+    list = &proxy->lists[GWY_PAGE_SPECTRA];
     g_snprintf(key, sizeof(key), "%s/%d", SPECTRA_PREFIX, list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_SPECTRA].last. */
+     * Among other things, it will update proxy->lists[GWY_PAGE_SPECTRA].last. */
     gwy_container_set_object_by_name(proxy->container, key, spectra);
 
     if (showit && !gui_disabled) {
@@ -7923,10 +7913,10 @@ gwy_app_data_browser_add_brick(GwyBrick *brick,
         must_free_preview = TRUE;
     }
 
-    list = &proxy->lists[PAGE_VOLUMES];
+    list = &proxy->lists[GWY_PAGE_VOLUMES];
     g_snprintf(key, sizeof(key), "/brick/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_VOLUMES].last. */
+     * Among other things, it will update proxy->lists[GWY_PAGE_VOLUMES].last. */
     gwy_container_set_object_by_name(proxy->container, key, brick);
 
     g_snprintf(key, sizeof(key), "/brick/%d/preview", list->last);
@@ -7986,10 +7976,10 @@ gwy_app_data_browser_add_surface(GwySurface *surface,
         return -1;
     }
 
-    list = &proxy->lists[PAGE_XYZS];
+    list = &proxy->lists[GWY_PAGE_XYZS];
     g_snprintf(key, sizeof(key), "/surface/%d", list->last + 1);
     /* This invokes "item-changed" callback that will finish the work.
-     * Among other things, it will update proxy->lists[PAGE_XYZS].last. */
+     * Among other things, it will update proxy->lists[GWY_PAGE_XYZS].last. */
     gwy_container_set_object_by_name(proxy->container, key, surface);
 
     raster = create_simple_surface_preview_field(surface,
@@ -8682,11 +8672,11 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
     if (browser) {
         current = browser->current;
         if (current) {
-            channels = &current->lists[PAGE_CHANNELS];
-            graphs = &current->lists[PAGE_GRAPHS];
-            spectras = &current->lists[PAGE_SPECTRA];
-            volumes = &current->lists[PAGE_VOLUMES];
-            xyzs = &current->lists[PAGE_XYZS];
+            channels = &current->lists[GWY_PAGE_CHANNELS];
+            graphs = &current->lists[GWY_PAGE_GRAPHS];
+            spectras = &current->lists[GWY_PAGE_SPECTRA];
+            volumes = &current->lists[GWY_PAGE_VOLUMES];
+            xyzs = &current->lists[GWY_PAGE_XYZS];
         }
     }
 
@@ -8994,7 +8984,7 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
 static gint*
 gwy_app_data_list_get_object_ids(GwyContainer *data,
-                                 guint pageno,
+                                 GwyAppPage pageno,
                                  const gchar *titleglob)
 {
     GPatternSpec *pattern = NULL;
@@ -9024,21 +9014,22 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
 
             gtk_tree_model_get(model, &iter, MODEL_ID, ids + n, -1);
             if (pattern) {
-                if (pageno == PAGE_CHANNELS) {
+                if (pageno == GWY_PAGE_CHANNELS) {
                     const gchar *title
                         = gwy_app_data_browser_figure_out_channel_title(data,
                                                                         ids[n]);
                     ok = g_pattern_match_string(pattern, title);
                 }
-                else if (pageno == PAGE_VOLUMES) {
+                else if (pageno == GWY_PAGE_VOLUMES) {
                     const gchar *title = gwy_app_get_brick_title(data, ids[n]);
                     ok = g_pattern_match_string(pattern, title);
                 }
-                else if (pageno == PAGE_XYZS) {
+                else if (pageno == GWY_PAGE_XYZS) {
                     const gchar *title = gwy_app_get_surface_title(data, ids[n]);
                     ok = g_pattern_match_string(pattern, title);
                 }
-                else if (pageno == PAGE_GRAPHS || pageno == PAGE_SPECTRA) {
+                else if (pageno == GWY_PAGE_GRAPHS
+                         || pageno == GWY_PAGE_SPECTRA) {
                     GObject *object;
                     gchar *title;
 
@@ -9133,7 +9124,7 @@ gwy_app_data_browser_get_data_ids(GwyContainer *data)
 {
     gint *ids;
 
-    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, NULL)))
+    if ((ids = gwy_app_data_list_get_object_ids(data, GWY_PAGE_CHANNELS, NULL)))
         return ids;
     return find_ids_for_unmanaged_data(data, KEY_IS_DATA, GWY_TYPE_DATA_FIELD);
 }
@@ -9151,7 +9142,7 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
     gint *ids;
 
-    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, NULL)))
+    if ((ids = gwy_app_data_list_get_object_ids(data, GWY_PAGE_GRAPHS, NULL)))
         return ids;
     return find_ids_for_unmanaged_data(data,
                                        KEY_IS_GRAPH, GWY_TYPE_GRAPH_MODEL);
@@ -9172,7 +9163,7 @@ gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
 {
     gint *ids;
 
-    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, NULL)))
+    if ((ids = gwy_app_data_list_get_object_ids(data, GWY_PAGE_SPECTRA, NULL)))
         return ids;
     return find_ids_for_unmanaged_data(data, KEY_IS_SPECTRA, GWY_TYPE_SPECTRA);
 }
@@ -9192,7 +9183,7 @@ gwy_app_data_browser_get_volume_ids(GwyContainer *data)
 {
     gint *ids;
 
-    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_VOLUMES, NULL)))
+    if ((ids = gwy_app_data_list_get_object_ids(data, GWY_PAGE_VOLUMES, NULL)))
         return ids;
     return find_ids_for_unmanaged_data(data, KEY_IS_BRICK, GWY_TYPE_BRICK);
 }
@@ -9212,14 +9203,14 @@ gwy_app_data_browser_get_xyz_ids(GwyContainer *data)
 {
     gint *ids;
 
-    if ((ids = gwy_app_data_list_get_object_ids(data, PAGE_XYZS, NULL)))
+    if ((ids = gwy_app_data_list_get_object_ids(data, GWY_PAGE_XYZS, NULL)))
         return ids;
     return find_ids_for_unmanaged_data(data, KEY_IS_SURFACE, GWY_TYPE_SURFACE);
 }
 
 static GtkWindow*
 find_window_for_id(GwyContainer *data,
-                   guint pageno,
+                   GwyAppPage pageno,
                    gint id)
 {
     GtkWidget *data_view = NULL, *data_window;
@@ -9281,7 +9272,7 @@ GtkWindow*
 gwy_app_find_window_for_channel(GwyContainer *data,
                                 gint id)
 {
-    return find_window_for_id(data, PAGE_CHANNELS, id);
+    return find_window_for_id(data, GWY_PAGE_CHANNELS, id);
 }
 
 /**
@@ -9301,7 +9292,7 @@ GtkWindow*
 gwy_app_find_window_for_volume(GwyContainer *data,
                                gint id)
 {
-    return find_window_for_id(data, PAGE_VOLUMES, id);
+    return find_window_for_id(data, GWY_PAGE_VOLUMES, id);
 }
 
 static void
@@ -10008,7 +9999,7 @@ gwy_app_data_browser_shut_down(void)
     }
 
     if (browser->window) {
-        for (i = 0; i < NPAGES; i++)
+        for (i = 0; i < GWY_NPAGES; i++)
             gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
     }
 }
@@ -10404,14 +10395,32 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
     return pixbuf;
 }
 
-static GdkPixbuf*
+/**
+ * gwy_app_get_graph_thumbnail:
+ * @data: A data container.
+ * @id: Graph model data id.
+ * @max_width: Maximum width of the created pixbuf, it must be at least 2.
+ * @max_height: Maximum height of the created pixbuf, it must be at least 2.
+ *
+ * Creates a graph thumbnail.
+ *
+ * Note this function needs the GUI running (unlike the other thumbnail
+ * functions).  It cannot be used in a console program.
+ *
+ * Returns: A newly created pixbuf with graph thumbnail.  Since graphs do not
+ *          have natural width and height, its size will normally be exactly
+ *          @max_width and @max_height.
+ *
+ * Since: 2.45
+ **/
+GdkPixbuf*
 gwy_app_get_graph_thumbnail(GwyContainer *data,
                             gint id,
                             gint max_width,
                             gint max_height)
 {
     GdkColor color = { 0, 65535, 65535, 65535 };
-    gint width = 150, height = 150;
+    gint width = 160, height = 120;
     GdkPixbuf *big_pixbuf, *pixbuf;
     GdkColormap *cmap;
     GdkGC *gc;
@@ -10431,13 +10440,22 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
                                   &gmodel))
         return NULL;
 
-    visual = gdk_visual_get_best();
-    cmap = gdk_colormap_new(visual, FALSE);
+    g_printerr("%u\n", gtk_main_level());
+    if (!gtk_main_level())
+        return NULL;
 
+    visual = gdk_visual_get_best();
+    g_return_val_if_fail(visual, NULL);
+    cmap = gdk_colormap_new(visual, FALSE);
+    g_return_val_if_fail(cmap, NULL);
+
+    width = MAX(width, max_width);
+    height = MAX(height, max_height);
     pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
     gdk_drawable_set_colormap(pixmap, cmap);
 
     gc = gdk_gc_new(pixmap);
+    g_return_val_if_fail(gc, NULL);
     gdk_gc_set_colormap(gc, cmap);
 
     gdk_gc_set_rgb_fg_color(gc, &color);
@@ -10492,9 +10510,13 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     g_object_unref(gc);
     g_object_unref(cmap);
 
-    pixbuf = gdk_pixbuf_scale_simple(big_pixbuf, max_width, max_height,
-                                     GDK_INTERP_BILINEAR);
-    g_object_unref(big_pixbuf);
+    if (width == max_width && height == max_height)
+        pixbuf = big_pixbuf;
+    else {
+        pixbuf = gdk_pixbuf_scale_simple(big_pixbuf, max_width, max_height,
+                                         GDK_INTERP_BILINEAR);
+        g_object_unref(big_pixbuf);
+    }
 
     return pixbuf;
 }
@@ -10568,7 +10590,7 @@ gint*
 gwy_app_data_browser_find_data_by_title(GwyContainer *data,
                                         const gchar *titleglob)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, titleglob);
+    return gwy_app_data_list_get_object_ids(data, GWY_PAGE_CHANNELS, titleglob);
 }
 
 /**
@@ -10588,7 +10610,7 @@ gint*
 gwy_app_data_browser_find_graphs_by_title(GwyContainer *data,
                                           const gchar *titleglob)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, titleglob);
+    return gwy_app_data_list_get_object_ids(data, GWY_PAGE_GRAPHS, titleglob);
 }
 
 /**
@@ -10608,7 +10630,7 @@ gint*
 gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
                                            const gchar *titleglob)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, titleglob);
+    return gwy_app_data_list_get_object_ids(data, GWY_PAGE_SPECTRA, titleglob);
 }
 
 static void

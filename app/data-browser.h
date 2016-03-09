@@ -211,6 +211,10 @@ GdkPixbuf* gwy_app_get_channel_thumbnail(GwyContainer *data,
                                          gint id,
                                          gint max_width,
                                          gint max_height);
+GdkPixbuf* gwy_app_get_graph_thumbnail  (GwyContainer *data,
+                                         gint id,
+                                         gint max_width,
+                                         gint max_height);
 GdkPixbuf* gwy_app_get_volume_thumbnail (GwyContainer *data,
                                          gint id,
                                          gint max_width,

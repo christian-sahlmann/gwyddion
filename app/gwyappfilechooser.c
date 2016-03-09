@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -800,10 +800,45 @@ gwy_app_file_chooser_update_preview(GwyAppFileChooser *chooser)
                              NULL);
 }
 
+static guint
+count_ids(const gint *ids)
+{
+    guint n = 0;
+
+    while (ids[n] != -1)
+        n++;
+
+    return n;
+}
+
+/* NB: Consumes the pixbuf. */
 static void
-gwy_app_file_chooser_describe_channel(GwyContainer *container,
-                                      gint id,
-                                      GString *str)
+insert_thumbnail_row(GwyAppFileChooser *chooser,
+                     GwyContainer *data, GwyAppPage pageno, gint id,
+                     GdkPixbuf *pixbuf, const gchar *description)
+{
+    GtkTreeModel *model;
+    GtkListStore *store;
+    GtkTreeIter iter;
+
+    model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
+    store = GTK_LIST_STORE(model);
+
+    if (chooser->make_thumbnail) {
+        _gwy_app_recent_file_write_thumbnail(chooser->preview_name_sys,
+                                             data, pageno, id, pixbuf);
+        chooser->make_thumbnail = FALSE;
+    }
+
+    gtk_list_store_insert_with_values(store, &iter, -1,
+                                      COLUMN_PIXBUF, pixbuf,
+                                      COLUMN_FILEINFO, description,
+                                      -1);
+    g_object_unref(pixbuf);
+}
+
+static void
+describe_channel(GwyContainer *container, gint id, GString *str)
 {
     GwyDataField *dfield;
     GwySIUnit *siunit;
@@ -851,15 +886,9 @@ add_channel_thumbnails(GwyAppFileChooser *chooser,
 {
     gboolean row_level = FALSE, plane_level = FALSE;
     GwyContainer *settings;
-    GtkTreeModel *model;
-    GtkListStore *store;
     GdkPixbuf *pixbuf;
-    GtkTreeIter iter;
     guint i;
     gint id;
-
-    model = gtk_icon_view_get_model(GTK_ICON_VIEW(chooser->preview));
-    store = GTK_LIST_STORE(model);
 
     settings = gwy_app_settings_get();
     gwy_container_gis_boolean_by_name(settings, "/app/file/preview/plane-level",
@@ -877,33 +906,69 @@ add_channel_thumbnails(GwyAppFileChooser *chooser,
             g_warning("Cannot make a pixbuf of channel %d", id);
             continue;
         }
-
-        if (chooser->make_thumbnail) {
-            _gwy_app_recent_file_write_thumbnail(chooser->preview_name_sys,
-                                                 data,
-                                                 id, pixbuf);
-            chooser->make_thumbnail = FALSE;
-        }
-
-        gwy_app_file_chooser_describe_channel(data, id, str);
-        gtk_list_store_insert_with_values(store, &iter, -1,
-                                          COLUMN_PIXBUF, pixbuf,
-                                          COLUMN_FILEINFO, str->str,
-                                          -1);
-        g_object_unref(pixbuf);
+        describe_channel(data, id, str);
+        insert_thumbnail_row(chooser, data, GWY_PAGE_CHANNELS, id,
+                             pixbuf, str->str);
     }
-
 }
 
-static guint
-count_ids(const gint *ids)
+static void
+describe_graph(GwyContainer *container, gint id, GString *str)
 {
-    guint n = 0;
+    GwyGraphModel *gmodel;
+    GwySIUnit *xunit, *yunit;
+    GQuark quark;
+    gint n;
+    gchar *s;
 
-    while (ids[n] != -1)
-        n++;
+    g_string_truncate(str, 0);
 
-    return n;
+    quark = gwy_app_get_graph_key_for_id(id);
+    gmodel = GWY_GRAPH_MODEL(gwy_container_get_object(container, quark));
+    g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+
+    g_object_get(gmodel,
+                 "n-curves", &n,
+                 "title", &s,
+                 "si-unit-x", &xunit,
+                 "si-unit-y", &yunit,
+                 NULL);
+    g_string_append_printf(str, "%s (%d)\n", s, n);
+    g_free(s);
+
+    s = gwy_si_unit_get_string(xunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_string_append_printf(str, "[%s] ", s);
+    g_object_unref(xunit);
+    g_free(s);
+
+    s = gwy_si_unit_get_string(yunit, GWY_SI_UNIT_FORMAT_MARKUP);
+    g_string_append_printf(str, "[%s]\n", s);
+    g_object_unref(yunit);
+    g_free(s);
+}
+
+static void
+add_graph_thumbnails(GwyAppFileChooser *chooser,
+                     GwyContainer *data, gint *ids,
+                     GString *str)
+{
+    GdkPixbuf *pixbuf;
+    guint i;
+    gint id;
+
+    for (i = 0; ids[i] != -1; i++) {
+        id = ids[i];
+        pixbuf = gwy_app_get_graph_thumbnail(data, id,
+                                             TMS_NORMAL_THUMB_SIZE,
+                                             3*TMS_NORMAL_THUMB_SIZE/4);
+        if (!pixbuf) {
+            g_warning("Cannot make a pixbuf of graph %d", id);
+            continue;
+        }
+        describe_graph(data, id, str);
+        insert_thumbnail_row(chooser, data, GWY_PAGE_GRAPHS, id,
+                             pixbuf, str->str);
+    }
 }
 
 static gboolean
@@ -984,6 +1049,7 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                  NULL);
 
     add_channel_thumbnails(chooser, data, channel_ids, str);
+    add_graph_thumbnails(chooser, data, graph_ids, str);
 
     g_free(channel_ids);
     g_free(graph_ids);
