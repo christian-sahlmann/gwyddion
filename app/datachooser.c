@@ -1046,6 +1046,30 @@ gwy_data_chooser_graphs_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
 }
 
 static void
+gwy_data_chooser_graphs_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
+                                    GtkCellRenderer *renderer,
+                                    GtkTreeModel *model,
+                                    GtkTreeIter *iter,
+                                    G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    gint id;
+    Proxy *proxy;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->thumb) {
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        proxy->thumb = gwy_app_get_graph_thumbnail(container, id,
+                                                   ICON_SIZE, 3*ICON_SIZE/4);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
+}
+
+static void
 gwy_data_chooser_graphs_setup_watcher(GwyDataChooser *chooser)
 {
     gint id;
@@ -1076,6 +1100,12 @@ gwy_data_chooser_new_graphs(void)
     chooser->kind = GWY_PAGE_GRAPHS;
     gwy_app_data_browser_foreach(gwy_data_chooser_graphs_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_graphs_render_icon,
+                                       chooser, NULL);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer, "xalign", 0.0, "style-set", TRUE, NULL);
