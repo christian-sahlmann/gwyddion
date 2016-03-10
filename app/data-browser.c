@@ -10419,6 +10419,7 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
                             gint max_width,
                             gint max_height)
 {
+    static GwyGraph *graph = NULL;
     GdkColor color = { 0, 65535, 65535, 65535 };
     gint width = 160, height = 120;
     GdkPixbuf *big_pixbuf, *pixbuf;
@@ -10427,7 +10428,6 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     GdkVisual *visual;
     GdkPixmap *pixmap;
     GwyGraphModel *gmodel;
-    GwyGraph *graph;
     GwyGraphArea *area;
     gdouble min, max, d;
     gboolean is_logscale = FALSE;
@@ -10460,7 +10460,11 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
     gdk_gc_set_rgb_fg_color(gc, &color);
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
 
-    graph = GWY_GRAPH(gwy_graph_new(gmodel));
+    if (!graph)
+        graph = GWY_GRAPH(gwy_graph_new(gmodel));
+    else
+        gwy_graph_set_model(GWY_GRAPH(graph), gmodel);
+
     area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
 
     gwy_graph_model_get_x_range(gmodel, &min, &max);
