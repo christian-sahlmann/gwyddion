@@ -140,6 +140,10 @@ gint* gwy_app_data_browser_find_graphs_by_title (GwyContainer *data,
                                                  const gchar *titleglob);
 gint* gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
                                                  const gchar *titleglob);
+gint* gwy_app_data_browser_find_volume_by_title (GwyContainer *data,
+                                                 const gchar *titleglob);
+gint* gwy_app_data_browser_find_xyz_by_title    (GwyContainer *data,
+                                                 const gchar *titleglob);
 void   gwy_app_data_clear_selections        (GwyContainer *data,
                                              gint id);
 void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
@@ -232,7 +236,11 @@ void     gwy_app_data_browser_show_3d       (GwyContainer *data,
                                              gint id);
 GtkWindow* gwy_app_find_window_for_channel  (GwyContainer *data,
                                              gint id);
+GtkWindow* gwy_app_find_window_for_graph    (GwyContainer *data,
+                                             gint id);
 GtkWindow* gwy_app_find_window_for_volume   (GwyContainer *data,
+                                             gint id);
+GtkWindow* gwy_app_find_window_for_xyz      (GwyContainer *data,
                                              gint id);
 gboolean gwy_app_data_browser_get_gui_enabled(void);
 void     gwy_app_data_browser_set_gui_enabled(gboolean setting);

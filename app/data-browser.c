@@ -236,9 +236,8 @@ static gboolean gwy_app_data_browser_select_data_view2(GwyDataView *data_view);
 static gboolean gwy_app_data_browser_select_graph2    (GwyGraph *graph);
 static gboolean gwy_app_data_browser_select_volume2   (GwyDataView *data_view);
 static gboolean gwy_app_data_browser_select_xyz2      (GwyDataView *data_view);
-static const gchar*
-gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
-                                              gint channel);
+static gchar*   gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
+                                                              gint channel);
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
 static GwyDataField* create_simple_brick_preview_field(GwyBrick *brick);
@@ -2876,7 +2875,7 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
                                           gpointer userdata)
 {
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
-    const guchar *title;
+    gchar *title;
     GwyContainer *data;
     gint channel;
 
@@ -2885,6 +2884,7 @@ gwy_app_data_browser_channel_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
     gtk_tree_model_get(model, iter, MODEL_ID, &channel, -1);
     title = gwy_app_data_browser_figure_out_channel_title(data, channel);
     g_object_set(renderer, "text", title, NULL);
+    g_free(title);
 }
 
 static void
@@ -3393,9 +3393,8 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
 {
     GtkWidget *data_window;
     GwyContainer *data;
-    const gchar *ctitle;
     const guchar *filename;
-    gchar *title, *bname;
+    gchar *ctitle, *title, *bname;
 
     data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
                                           GWY_TYPE_DATA_WINDOW);
@@ -3422,6 +3421,7 @@ gwy_app_update_data_window_title(GwyDataView *data_view,
     }
     gwy_data_window_set_data_name(GWY_DATA_WINDOW(data_window), title);
     g_free(title);
+    g_free(ctitle);
 }
 
 static void
@@ -3774,8 +3774,7 @@ gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
 {
     GtkWidget *view3d;
     GwyContainer *data;
-    const gchar *ctitle;
-    gchar *title;
+    gchar *title, *ctitle;
 
     view3d = gwy_3d_window_get_3d_view(window3d);
     data = gwy_3d_view_get_data(GWY_3D_VIEW(view3d));
@@ -3783,6 +3782,7 @@ gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
     title = g_strconcat("3D ", ctitle, NULL);
     gtk_window_set_title(GTK_WINDOW(window3d), title);
     g_free(title);
+    g_free(ctitle);
 }
 
 static GList*
@@ -8440,12 +8440,12 @@ gwy_app_set_data_field_title(GwyContainer *data,
     gwy_container_set_string_by_name(data, key, title);
 }
 
-static const gchar*
+static gchar*
 gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel)
 {
     const guchar *title = NULL;
-    static gchar buf[128];
+    gchar buf[32];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(channel >= 0, NULL);
@@ -8461,10 +8461,9 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
         gwy_container_gis_string_by_name(data, "/filename/title", &title);
 
     if (title)
-        return title;
+        return g_strdup(title);
 
-    g_snprintf(buf, sizeof(buf), _("Unknown channel %d"), channel + 1);
-    return buf;
+    return g_strdup_printf(_("Unknown channel %d"), channel + 1);
 }
 
 /**
@@ -8483,7 +8482,7 @@ gchar*
 gwy_app_get_data_field_title(GwyContainer *data,
                              gint id)
 {
-    return g_strdup(gwy_app_data_browser_figure_out_channel_title(data, id));
+    return gwy_app_data_browser_figure_out_channel_title(data, id);
 }
 
 /**
@@ -8992,6 +8991,7 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
     GwyAppDataProxy *proxy;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    gchar *title;
     gint *ids;
     gint n;
 
@@ -9015,23 +9015,24 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
             gtk_tree_model_get(model, &iter, MODEL_ID, ids + n, -1);
             if (pattern) {
                 if (pageno == GWY_PAGE_CHANNELS) {
-                    const gchar *title
-                        = gwy_app_data_browser_figure_out_channel_title(data,
-                                                                        ids[n]);
+                    title = gwy_app_data_browser_figure_out_channel_title(data,
+                                                                          ids[n]);
                     ok = g_pattern_match_string(pattern, title);
+                    g_free(title);
                 }
                 else if (pageno == GWY_PAGE_VOLUMES) {
-                    const gchar *title = gwy_app_get_brick_title(data, ids[n]);
+                    title = gwy_app_get_brick_title(data, ids[n]);
                     ok = g_pattern_match_string(pattern, title);
+                    g_free(title);
                 }
                 else if (pageno == GWY_PAGE_XYZS) {
-                    const gchar *title = gwy_app_get_surface_title(data, ids[n]);
+                    title = gwy_app_get_surface_title(data, ids[n]);
                     ok = g_pattern_match_string(pattern, title);
+                    g_free(title);
                 }
                 else if (pageno == GWY_PAGE_GRAPHS
                          || pageno == GWY_PAGE_SPECTRA) {
                     GObject *object;
-                    gchar *title;
 
                     gtk_tree_model_get(model, &iter, MODEL_OBJECT, &object, -1);
                     g_object_get(object, "title", &title, NULL);
@@ -9213,7 +9214,7 @@ find_window_for_id(GwyContainer *data,
                    GwyAppPage pageno,
                    gint id)
 {
-    GtkWidget *data_view = NULL, *data_window;
+    GtkWidget *view = NULL, *window;
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GwyAppDataList *list;
@@ -9234,26 +9235,32 @@ find_window_for_id(GwyContainer *data,
         if (!gwy_app_data_proxy_find_object(list->store, id, &iter))
             return NULL;
 
-        gtk_tree_model_get(model, &iter, MODEL_WIDGET, &data_view, -1);
+        gtk_tree_model_get(model, &iter, MODEL_WIDGET, &view, -1);
     }
     else {
         if (!gtk_tree_model_get_iter_first(model, &iter))
             return NULL;
 
         do {
-            gtk_tree_model_get(model, &iter, MODEL_WIDGET, &data_view, -1);
-            if (data_view)
+            gtk_tree_model_get(model, &iter, MODEL_WIDGET, &view, -1);
+            if (view)
                 break;
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 
-    if (!data_view)
+    if (!view)
         return NULL;
 
-    data_window = gtk_widget_get_ancestor(data_view, GWY_TYPE_DATA_WINDOW);
-    g_object_unref(data_view);
+    if (pageno == GWY_PAGE_GRAPHS) {
+        window = gtk_widget_get_ancestor(view, GWY_TYPE_GRAPH_WINDOW);
+        g_object_unref(view);
+    }
+    else {
+        window = gtk_widget_get_ancestor(view, GWY_TYPE_DATA_WINDOW);
+        g_object_unref(view);
+    }
 
-    return data_window ? GTK_WINDOW(data_window) : NULL;
+    return window ? GTK_WINDOW(window) : NULL;
 }
 
 
@@ -9276,6 +9283,26 @@ gwy_app_find_window_for_channel(GwyContainer *data,
 }
 
 /**
+ * gwy_app_find_window_for_graph:
+ * @data: A data container to find window for.
+ * @id: Graph model id.  It can be -1 to find any graph window displaying
+ *      a graph model from @data.
+ *
+ * Finds the window displaying a graph model.
+ *
+ * Returns: The window if found, %NULL if no graph window displays the
+ *          requested channel.
+ *
+ * Since: 2.45
+ **/
+GtkWindow*
+gwy_app_find_window_for_graph(GwyContainer *data,
+                              gint id)
+{
+    return find_window_for_id(data, GWY_PAGE_GRAPHS, id);
+}
+
+/**
  * gwy_app_find_window_for_volume:
  * @data: A data container to find window for.
  * @id: Volume data id.  It can be -1 to find any data window displaying
@@ -9293,6 +9320,26 @@ gwy_app_find_window_for_volume(GwyContainer *data,
                                gint id)
 {
     return find_window_for_id(data, GWY_PAGE_VOLUMES, id);
+}
+
+/**
+ * gwy_app_find_window_for_xyz:
+ * @data: A data container to find window for.
+ * @id: XYZ data id.  It can be -1 to find any data window displaying
+ *      XYZ data from @data.
+ *
+ * Finds the window displaying given XYZ data.
+ *
+ * Returns: The window if found, %NULL if no data window displays the
+ *          requested XYZ data.
+ *
+ * Since: 2.45
+ **/
+GtkWindow*
+gwy_app_find_window_for_xyz(GwyContainer *data,
+                            gint id)
+{
+    return find_window_for_id(data, GWY_PAGE_XYZS, id);
 }
 
 static void
@@ -10634,6 +10681,46 @@ gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
                                            const gchar *titleglob)
 {
     return gwy_app_data_list_get_object_ids(data, GWY_PAGE_SPECTRA, titleglob);
+}
+
+/**
+ * gwy_app_data_browser_find_volume_by_title:
+ * @data: A data container managed by the data-browser.
+ * @titleglob: Pattern, as used by #GPatternSpec, to match the volume data
+ *             titles against.
+ *
+ * Gets the list of all volume data in a data container whose titles match the
+ * specified pattern.
+ *
+ * Returns: A newly allocated array with volume data ids, -1 terminated.
+ *
+ * Since: 2.45
+ **/
+gint*
+gwy_app_data_browser_find_volume_by_title(GwyContainer *data,
+                                          const gchar *titleglob)
+{
+    return gwy_app_data_list_get_object_ids(data, GWY_PAGE_VOLUMES, titleglob);
+}
+
+/**
+ * gwy_app_data_browser_find_xyz_by_title:
+ * @data: A data container managed by the data-browser.
+ * @titleglob: Pattern, as used by #GPatternSpec, to match the XYZ data
+ *             titles against.
+ *
+ * Gets the list of all XYZ data in a data container whose titles match the
+ * specified pattern.
+ *
+ * Returns: A newly allocated array with XYZ data ids, -1 terminated.
+ *
+ * Since: 2.45
+ **/
+gint*
+gwy_app_data_browser_find_xyz_by_title(GwyContainer *data,
+                                       const gchar *titleglob)
+{
+    return gwy_app_data_list_get_object_ids(data, GWY_PAGE_XYZS, titleglob);
 }
 
 static void
