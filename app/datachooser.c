@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,18 +26,17 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <app/data-browser.h>
 #include <app/datachooser.h>
+#include "gwyappinternal.h"
+
+enum {
+    ICON_SIZE = 20
+};
 
 /*****************************************************************************
  *
  * Declaration.  Do not make it public yet.
  *
  *****************************************************************************/
-
-typedef enum {
-    DATA_CHOOSER_CHANNEL = 0,
-    DATA_CHOOSER_VOLUME  = 1,
-    DATA_CHOOSER_GRAPH   = 2,
-} DataChooserKind;
 
 struct _GwyDataChooser {
     GtkComboBox parent_instance;
@@ -55,7 +54,7 @@ struct _GwyDataChooser {
     GList *events;
     gulong watcher_id;
     guint update_id;
-    DataChooserKind kind;
+    GwyAppPage kind;
 };
 
 struct _GwyDataChooserClass {
@@ -166,9 +165,9 @@ gwy_data_chooser_destroy(GtkObject *object)
         gwy_object_unref(chooser->store);
     }
     if (chooser->watcher_id) {
-        if (chooser->kind == DATA_CHOOSER_CHANNEL)
+        if (chooser->kind == GWY_PAGE_CHANNELS)
             gwy_app_data_browser_remove_channel_watch(chooser->watcher_id);
-        else if (chooser->kind == DATA_CHOOSER_GRAPH)
+        else if (chooser->kind == GWY_PAGE_GRAPHS)
             gwy_app_data_browser_remove_graph_watch(chooser->watcher_id);
         else {
             g_warning("Watcher removal function missing?");
@@ -789,11 +788,8 @@ gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
                                       G_GNUC_UNUSED gpointer data)
 {
     GwyContainer *container;
-    gint id, width, height;
+    gint id;
     Proxy *proxy;
-
-    /* FIXME */
-    width = height = 20;
 
     gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
     if (!proxy->thumb) {
@@ -802,7 +798,7 @@ gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
                            MODEL_COLUMN_ID, &id,
                            -1);
         proxy->thumb = gwy_app_get_channel_thumbnail(container, id,
-                                                     width, height);
+                                                     ICON_SIZE, ICON_SIZE);
         g_object_unref(container);
     }
     g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
@@ -834,7 +830,7 @@ gwy_data_chooser_new_channels(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
-    chooser->kind = DATA_CHOOSER_CHANNEL;
+    chooser->kind = GWY_PAGE_CHANNELS;
     gwy_app_data_browser_foreach(gwy_data_chooser_channels_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
@@ -922,11 +918,8 @@ gwy_data_chooser_volumes_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
                                      G_GNUC_UNUSED gpointer data)
 {
     GwyContainer *container;
-    gint id, width, height;
+    gint id;
     Proxy *proxy;
-
-    /* FIXME */
-    width = height = 20;
 
     gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
     if (!proxy->thumb) {
@@ -935,7 +928,7 @@ gwy_data_chooser_volumes_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
                            MODEL_COLUMN_ID, &id,
                            -1);
         proxy->thumb = gwy_app_get_volume_thumbnail(container, id,
-                                                    width, height);
+                                                    ICON_SIZE, ICON_SIZE);
         g_object_unref(container);
     }
     g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
@@ -959,7 +952,7 @@ gwy_data_chooser_new_volumes(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
-    chooser->kind = DATA_CHOOSER_VOLUME;
+    chooser->kind = GWY_PAGE_VOLUMES;
     gwy_app_data_browser_foreach(gwy_data_chooser_volumes_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
@@ -977,8 +970,8 @@ gwy_data_chooser_new_volumes(void)
                                        chooser, NULL);
 
     gwy_data_chooser_choose_whatever(chooser);
-    // FIXME: Needs data browser support.
-    //gwy_data_chooser_volumes_setup_watcher(chooser);
+    /* FIXME: Needs data browser support. */
+    /* gwy_data_chooser_volumes_setup_watcher(chooser); */
 
     return (GtkWidget*)chooser;
 }
@@ -1080,7 +1073,7 @@ gwy_data_chooser_new_graphs(void)
     GtkCellLayout *layout;
 
     chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
-    chooser->kind = DATA_CHOOSER_GRAPH;
+    chooser->kind = GWY_PAGE_GRAPHS;
     gwy_app_data_browser_foreach(gwy_data_chooser_graphs_fill, chooser);
     layout = GTK_CELL_LAYOUT(chooser);
 
@@ -1093,6 +1086,129 @@ gwy_data_chooser_new_graphs(void)
 
     gwy_data_chooser_choose_whatever(chooser);
     gwy_data_chooser_graphs_setup_watcher(chooser);
+
+    return (GtkWidget*)chooser;
+}
+
+/*****************************************************************************
+ *
+ * Surfaces.
+ *
+ *****************************************************************************/
+
+static void
+gwy_data_chooser_xyzs_fill(GwyContainer *data,
+                           gpointer user_data)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    Proxy *proxy;
+    gint *ids;
+    gint i;
+
+    store = GWY_DATA_CHOOSER(user_data)->store;
+    ids = gwy_app_data_browser_get_xyz_ids(data);
+    for (i = 0; ids[i] > 0; i++) {
+        gwy_debug("inserting %p %d", data, ids[i]);
+        proxy = g_new0(Proxy, 1);
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                          MODEL_COLUMN_CONTAINER, data,
+                                          MODEL_COLUMN_ID, ids[i],
+                                          MODEL_COLUMN_PROXY, proxy,
+                                          -1);
+    }
+    g_free(ids);
+}
+
+static void
+gwy_data_chooser_xyzs_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
+                                  GtkCellRenderer *renderer,
+                                  GtkTreeModel *model,
+                                  GtkTreeIter *iter,
+                                  G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    Proxy *proxy;
+    gint id;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->name) {
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        proxy->name = g_strdup(gwy_app_get_surface_title(container, id));
+        g_object_unref(container);
+    }
+    g_object_set(renderer,
+                 "text", proxy->name,
+                 "style",
+                 proxy->is_none ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL,
+                 NULL);
+}
+
+static void
+gwy_data_chooser_xyzs_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
+                                  GtkCellRenderer *renderer,
+                                  GtkTreeModel *model,
+                                  GtkTreeIter *iter,
+                                  G_GNUC_UNUSED gpointer data)
+{
+    GwyContainer *container;
+    gint id;
+    Proxy *proxy;
+
+    gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
+    if (!proxy->thumb) {
+        gtk_tree_model_get(model, iter,
+                           MODEL_COLUMN_CONTAINER, &container,
+                           MODEL_COLUMN_ID, &id,
+                           -1);
+        proxy->thumb = gwy_app_get_xyz_thumbnail(container, id,
+                                                 ICON_SIZE, ICON_SIZE);
+        g_object_unref(container);
+    }
+    g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
+}
+
+/**
+ * gwy_data_chooser_new_xyzs:
+ *
+ * Creates a data chooser for XYZ data.
+ *
+ * Returns: A new XYZ data chooser.  Nothing may be assumed about the type and
+ *          properties of the returned widget as they can change in the future.
+ *
+ * Since: 2.45
+ **/
+GtkWidget*
+gwy_data_chooser_new_xyzs(void)
+{
+    GwyDataChooser *chooser;
+    GtkCellRenderer *renderer;
+    GtkCellLayout *layout;
+
+    chooser = (GwyDataChooser*)g_object_new(GWY_TYPE_DATA_CHOOSER, NULL);
+    chooser->kind = GWY_PAGE_XYZS;
+    gwy_app_data_browser_foreach(gwy_data_chooser_xyzs_fill, chooser);
+    layout = GTK_CELL_LAYOUT(chooser);
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_xyzs_render_icon,
+                                       chooser, NULL);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 0.0, "style-set", TRUE, NULL);
+    gtk_cell_layout_pack_start(layout, renderer, TRUE);
+    gtk_cell_layout_set_cell_data_func(layout, renderer,
+                                       gwy_data_chooser_xyzs_render_name,
+                                       chooser, NULL);
+
+    gwy_data_chooser_choose_whatever(chooser);
+    /* FIXME: Needs data browser support. */
+    /* gwy_data_chooser_xyzs_setup_watcher(chooser); */
 
     return (GtkWidget*)chooser;
 }
