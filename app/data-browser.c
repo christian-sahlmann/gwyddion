@@ -10440,7 +10440,6 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
                                   &gmodel))
         return NULL;
 
-    g_printerr("%u\n", gtk_main_level());
     if (!gtk_main_level())
         return NULL;
 
