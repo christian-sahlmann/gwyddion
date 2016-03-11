@@ -185,7 +185,7 @@ gwy_app_settings_load(const gchar *filename,
 
     if (!size || !buffer) {
         g_set_error(error,
-                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CORRUPT,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_EMPTY,
                     _("File is empty."));
         g_free(buffer);
         return FALSE;
@@ -652,6 +652,11 @@ gwy_app_settings_error_quark(void)
  * @GWY_APP_SETTINGS_ERROR_CFGDIR: User configuration directory is not
  *                                 readable or writable or it does not exist
  *                                 and its creation failed.
+ * @GWY_APP_SETTINGS_ERROR_EMPTY: Settings file is empty (Since 2.45).  This
+ *                                was previously reported as
+ *                                %GWY_APP_SETTINGS_ERROR_CORRUPT but empty
+ *                                settings files can be overwritten without
+ *                                losing anything.
  *
  * Error codes returned by application settings functions.
  **/

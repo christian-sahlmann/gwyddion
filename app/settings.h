@@ -32,7 +32,8 @@ G_BEGIN_DECLS
 typedef enum {
     GWY_APP_SETTINGS_ERROR_FILE,
     GWY_APP_SETTINGS_ERROR_CORRUPT,
-    GWY_APP_SETTINGS_ERROR_CFGDIR
+    GWY_APP_SETTINGS_ERROR_CFGDIR,
+    GWY_APP_SETTINGS_ERROR_EMPTY,
 } GwyAppSettingsError;
 
 GQuark        gwy_app_settings_error_quark              (void);

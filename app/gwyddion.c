@@ -216,8 +216,11 @@ main(int argc, char *argv[])
 #endif
 
     if (has_settings && !settings_ok) {
-        warn_broken_settings_file(toolbox,
-                                  settings_file, settings_err->message);
+        if (!(settings_err->domain == GWY_APP_SETTINGS_ERROR
+              && settings_err->code == GWY_APP_SETTINGS_ERROR_EMPTY)) {
+            warn_broken_settings_file(toolbox,
+                                      settings_file, settings_err->message);
+        }
         g_clear_error(&settings_err);
     }
 
