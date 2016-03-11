@@ -59,25 +59,26 @@ typedef struct {
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
-static void open_command_line_files         (gint n,
-                                             gchar **args);
-static gint check_command_line_files        (gint n,
-                                             gchar **args);
-static void print_help                      (void);
-static void process_preinit_options         (int *argc,
-                                             char ***argv,
-                                             GwyAppOptions *options);
-static void debug_time                      (GTimer *timer,
-                                             const gchar *task);
-static void setup_locale_from_win32_registry(void);
-static void warn_broken_settings_file       (GtkWidget *parent,
-                                             const gchar *settings_file,
-                                             const gchar *reason);
-static void gwy_app_init                    (int *argc,
-                                             char ***argv);
-static void gwy_app_set_window_icon         (void);
-static void gwy_app_check_version           (void);
-static void sneaking_thread_init            (void);
+static void     open_command_line_files         (gint n,
+                                                 gchar **args);
+static gboolean open_directory_on_startup       (gpointer user_data);
+static gint     check_command_line_files        (gint n,
+                                                 gchar **args);
+static void     print_help                      (void);
+static void     process_preinit_options         (int *argc,
+                                                 char ***argv,
+                                                 GwyAppOptions *options);
+static void     debug_time                      (GTimer *timer,
+                                                 const gchar *task);
+static void     setup_locale_from_win32_registry(void);
+static void     warn_broken_settings_file       (GtkWidget *parent,
+                                                 const gchar *settings_file,
+                                                 const gchar *reason);
+static void     gwy_app_init                    (int *argc,
+                                                 char ***argv);
+static void     gwy_app_set_window_icon         (void);
+static void     gwy_app_check_version           (void);
+static void     sneaking_thread_init            (void);
 
 static GwyAppOptions app_options = {
     FALSE, FALSE, FALSE, FALSE, FALSE,
@@ -501,6 +502,7 @@ fix_win32_commandline_arg(gchar *p)
 static void
 open_command_line_files(gint n, gchar **args)
 {
+    gchar *dir_to_open = NULL;
     gchar **p;
     gchar *cwd, *filename, *q;
 
@@ -520,8 +522,10 @@ open_command_line_files(gint n, gchar **args)
             filename = g_build_filename(cwd, q, NULL);
 
         if (g_file_test(filename, G_FILE_TEST_IS_DIR)) {
-            gwy_app_set_current_directory(filename);
-            gwy_app_file_open();
+            /* Show the file open dialogue for the last directory given. */
+            if (dir_to_open)
+                g_free(dir_to_open);
+            dir_to_open = g_strdup(filename);
         }
         else {
 #ifdef DEBUG
@@ -533,6 +537,21 @@ open_command_line_files(gint n, gchar **args)
         g_free(filename);
     }
     g_free(cwd);
+
+    if (dir_to_open)
+        g_idle_add(open_directory_on_startup, dir_to_open);
+}
+
+static gboolean
+open_directory_on_startup(gpointer user_data)
+{
+    gchar *dir_to_open = (gchar*)user_data;
+
+    gwy_app_set_current_directory(dir_to_open);
+    gwy_app_file_open();
+    g_free(dir_to_open);
+
+    return FALSE;
 }
 
 static gint
