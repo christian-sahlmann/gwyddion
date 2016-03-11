@@ -47,7 +47,7 @@ struct _GwyAppFileChooser {
 
     GtkFileFilter *filter;
     GtkFileFilter *no_filter;
-    GtkWidget *filter_enable;
+    GtkWidget *loadable_filter;
     GtkWidget *type_list;
     GtkWidget *expander;
     GtkWidget *preview;

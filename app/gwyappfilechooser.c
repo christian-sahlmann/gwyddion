@@ -69,13 +69,15 @@ static void       gwy_app_file_chooser_add_type_list  (GwyAppFileChooser *choose
 static void       gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_type_changed   (GwyAppFileChooser *chooser,
                                                        GtkTreeSelection *selection);
-static void       gwy_app_file_chooser_filter_toggled (GwyAppFileChooser *chooser,
+static void       loadable_filter_toggled             (GwyAppFileChooser *chooser,
                                                        GtkToggleButton *check);
 static void       gwy_app_file_chooser_expanded       (GwyAppFileChooser *chooser,
                                                        GParamSpec *pspec,
                                                        GtkExpander *expander);
+static void       construct_loadable_filter           (GwyAppFileChooser *chooser,
+                                                       GtkBox *vbox);
 static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
-                                                       gpointer userdata);
+                                                       gpointer user_data);
 static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
 static void       plane_level_changed                 (GwyAppFileChooser *chooser,
                                                        GtkToggleButton *button);
@@ -396,8 +398,8 @@ gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser)
     else
         gtk_tree_model_get(model, &iter, COLUMN_LABEL, &name, -1);
 
-    if (chooser->filter_enable
-        && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->filter_enable)))
+    if (chooser->loadable_filter
+        && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->loadable_filter)))
         label = g_strdup_printf(_("File _type: %s, filtered"), name);
     else
         label = g_strdup_printf(_("File _type: %s"), name);
@@ -422,8 +424,8 @@ gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
 }
 
 static void
-gwy_app_file_chooser_filter_toggled(GwyAppFileChooser *chooser,
-                                    GtkToggleButton *check)
+loadable_filter_toggled(GwyAppFileChooser *chooser,
+                        GtkToggleButton *check)
 {
     gboolean active;
     gchar *key;
@@ -463,7 +465,6 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     GtkListStore *store;
     GtkTreeIter iter;
     gboolean expanded = FALSE;
-    gboolean filter = FALSE;
     gchar *key;
 
     g_object_get(chooser, "action", &action, NULL);
@@ -537,20 +538,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
                              chooser);
 
     if (action == GTK_FILE_CHOOSER_ACTION_OPEN) {
-        chooser->filter_enable
-            = gtk_check_button_new_with_mnemonic(_("Show only loadable files"));
-        key = g_strconcat(chooser->prefix, "/filter", NULL);
-        gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &filter);
-        g_free(key);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chooser->filter_enable),
-                                     filter);
-        gtk_box_pack_start(GTK_BOX(vbox), chooser->filter_enable,
-                           FALSE, FALSE, 0);
-        g_signal_connect_swapped(chooser->filter_enable, "toggled",
-                                 G_CALLBACK(gwy_app_file_chooser_filter_toggled),
-                                 chooser);
-        gwy_app_file_chooser_filter_toggled(chooser,
-                                            GTK_TOGGLE_BUTTON(chooser->filter_enable));
+        construct_loadable_filter(chooser, GTK_BOX(vbox));
     }
 
     /* Give it some reasonable size. FIXME: hack. */
@@ -562,17 +550,51 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     gwy_app_file_chooser_type_changed(chooser, selection);
 }
 
+/***** Filters *************************************************************/
+
+static void
+construct_loadable_filter(GwyAppFileChooser *chooser, GtkBox *vbox)
+{
+    gboolean enabled = FALSE;
+    gchar *key;
+
+    chooser->loadable_filter
+        = gtk_check_button_new_with_mnemonic(_("Show only loadable files"));
+    key = g_strconcat(chooser->prefix, "/filter", NULL);
+    gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &enabled);
+    g_free(key);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chooser->loadable_filter),
+                                 enabled);
+    gtk_box_pack_start(GTK_BOX(vbox), chooser->loadable_filter,
+                       FALSE, FALSE, 0);
+    g_signal_connect_swapped(chooser->loadable_filter, "toggled",
+                             G_CALLBACK(loadable_filter_toggled), chooser);
+    loadable_filter_toggled(chooser, GTK_TOGGLE_BUTTON(chooser->loadable_filter));
+}
+
 static gboolean
 gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
-                                 G_GNUC_UNUSED gpointer userdata)
+                                 gpointer user_data)
 {
-    const gchar *name;
-    gint score;
+    GwyAppFileChooser *chooser = (GwyAppFileChooser*)user_data;
+    gboolean ok = TRUE;
 
-    name = gwy_file_detect_with_score(filter_info->filename,
-                                      FALSE, GWY_FILE_OPERATION_LOAD, &score);
-    /* To filter out `fallback' importers like rawfile */
-    return name != NULL && score >= 5;
+    if (chooser->loadable_filter) {
+        GtkToggleButton *toggle = GTK_TOGGLE_BUTTON(chooser->loadable_filter);
+        const gchar *name;
+        gint score = 0;
+
+        if (gtk_toggle_button_get_active(toggle)) {
+            name = gwy_file_detect_with_score(filter_info->filename,
+                                              FALSE, GWY_FILE_OPERATION_LOAD,
+                                              &score);
+            /* To filter out `fallback' importers like rawfile */
+            if (name == NULL || score < 5)
+                ok = FALSE;
+        }
+    }
+
+    return ok;
 }
 
 /***** Preview *************************************************************/
