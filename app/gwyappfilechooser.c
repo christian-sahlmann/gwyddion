@@ -53,45 +53,54 @@ typedef struct {
     gboolean only_nondetectable;
 } TypeListData;
 
-static void       gwy_app_file_chooser_finalize       (GObject *object);
-static void       gwy_app_file_chooser_destroy        (GtkObject *object);
-static void       gwy_app_file_chooser_hide           (GtkWidget *widget);
-static void       gwy_app_file_chooser_setup_filter   (GwyAppFileChooser *chooser);
-static void       gwy_app_file_chooser_save_position  (GwyAppFileChooser *chooser);
-static void       gwy_app_file_chooser_add_type       (const gchar *name,
-                                                       TypeListData *data);
-static gint       gwy_app_file_chooser_type_compare   (gconstpointer a,
-                                                       gconstpointer b);
-static void       gwy_app_file_chooser_add_types      (GtkListStore *store,
-                                                       GwyFileOperationType fileop,
-                                                       gboolean only_nondetectable);
-static void       gwy_app_file_chooser_add_type_list  (GwyAppFileChooser *chooser);
-static void       gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser);
-static void       gwy_app_file_chooser_type_changed   (GwyAppFileChooser *chooser,
-                                                       GtkTreeSelection *selection);
-static void       loadable_filter_toggled             (GwyAppFileChooser *chooser,
-                                                       GtkToggleButton *check);
-static void       gwy_app_file_chooser_expanded       (GwyAppFileChooser *chooser,
-                                                       GParamSpec *pspec,
-                                                       GtkExpander *expander);
-static void       construct_loadable_filter           (GwyAppFileChooser *chooser,
-                                                       GtkBox *vbox);
-static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
-                                                       gpointer user_data);
-static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
-static void       plane_level_changed                 (GwyAppFileChooser *chooser,
-                                                       GtkToggleButton *button);
-static void       row_level_changed                   (GwyAppFileChooser *chooser,
-                                                       GtkToggleButton *button);
-static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
-static gboolean   gwy_app_file_chooser_do_full_preview(gpointer user_data);
-static void       modify_channel_for_preview          (GwyContainer *data,
-                                                       gint id,
-                                                       gboolean plane_level,
-                                                       gboolean row_level);
-static void       gwy_app_file_chooser_free_preview   (GwyAppFileChooser *chooser);
-static void       ensure_gtk_recently_used            (void);
+static void     gwy_app_file_chooser_finalize       (GObject *object);
+static void     gwy_app_file_chooser_destroy        (GtkObject *object);
+static void     gwy_app_file_chooser_hide           (GtkWidget *widget);
+static void     gwy_app_file_chooser_save_position  (GwyAppFileChooser *chooser);
+static void     gwy_app_file_chooser_add_type       (const gchar *name,
+                                                     TypeListData *data);
+static gint     gwy_app_file_chooser_type_compare   (gconstpointer a,
+                                                     gconstpointer b);
+static void     gwy_app_file_chooser_add_types      (GtkListStore *store,
+                                                     GwyFileOperationType fileop,
+                                                     gboolean only_nondetectable);
+static void     gwy_app_file_chooser_add_type_list  (GwyAppFileChooser *chooser);
+static void     gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser);
+static void     gwy_app_file_chooser_type_changed   (GwyAppFileChooser *chooser,
+                                                     GtkTreeSelection *selection);
+static void     loadable_filter_toggled             (GwyAppFileChooser *chooser,
+                                                     GtkToggleButton *check);
+static void     enforce_refilter                    (GwyAppFileChooser *chooser);
+static void     gwy_app_file_chooser_expanded       (GwyAppFileChooser *chooser,
+                                                     GParamSpec *pspec,
+                                                     GtkExpander *expander);
+static void     construct_loadable_filter           (GwyAppFileChooser *chooser,
+                                                     GtkBox *vbox);
+static void     construct_glob_filter               (GwyAppFileChooser *chooser,
+                                                     GtkBox *vbox);
+static void     glob_entry_clear                    (GtkWidget *button,
+                                                     GwyAppFileChooser *chooser);
+static void     glob_entry_updated                  (GtkEntry *entry,
+                                                     GwyAppFileChooser *chooser);
+static void     glob_case_changed                   (GtkToggleButton *check,
+                                                     GwyAppFileChooser *chooser);
+static gboolean gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
+                                                     gpointer user_data);
+static void     gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
+static void     plane_level_changed                 (GwyAppFileChooser *chooser,
+                                                     GtkToggleButton *button);
+static void     row_level_changed                   (GwyAppFileChooser *chooser,
+                                                     GtkToggleButton *button);
+static void     gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
+static gboolean gwy_app_file_chooser_do_full_preview(gpointer user_data);
+static void     modify_channel_for_preview          (GwyContainer *data,
+                                                     gint id,
+                                                     gboolean plane_level,
+                                                     gboolean row_level);
+static void     gwy_app_file_chooser_free_preview   (GwyAppFileChooser *chooser);
+static void     ensure_gtk_recently_used            (void);
 
+/* Enforce a get-type function that beings with underscore. */
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
 
@@ -113,16 +122,8 @@ _gwy_app_file_chooser_class_init(GwyAppFileChooserClass *klass)
 }
 
 static void
-_gwy_app_file_chooser_init(GwyAppFileChooser *chooser)
+_gwy_app_file_chooser_init(G_GNUC_UNUSED GwyAppFileChooser *chooser)
 {
-    chooser->filter = gtk_file_filter_new();
-    g_object_ref(chooser->filter);
-    gtk_object_sink(GTK_OBJECT(chooser->filter));
-
-    chooser->no_filter = gtk_file_filter_new();
-    gtk_file_filter_add_pattern(chooser->no_filter, "*");
-    g_object_ref(chooser->no_filter);
-    gtk_object_sink(GTK_OBJECT(chooser->no_filter));
 }
 
 static void
@@ -130,7 +131,12 @@ gwy_app_file_chooser_finalize(GObject *object)
 {
     GwyAppFileChooser *chooser = GWY_APP_FILE_CHOOSER(object);
 
-    g_object_unref(chooser->filter);
+    gwy_object_unref(chooser->filter);
+    gwy_object_unref(chooser->no_filter);
+    if (chooser->pattern)
+        g_pattern_spec_free(chooser->pattern);
+    if (chooser->glob)
+        g_string_free(chooser->glob, TRUE);
 
     G_OBJECT_CLASS(_gwy_app_file_chooser_parent_class)->finalize(object);
 }
@@ -262,7 +268,6 @@ _gwy_app_file_chooser_get(GtkFileChooserAction action)
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
 
-    gwy_app_file_chooser_setup_filter(chooser);
     gwy_app_file_chooser_add_type_list(chooser);
     gwy_app_file_chooser_add_preview(chooser);
 
@@ -271,34 +276,6 @@ _gwy_app_file_chooser_get(GtkFileChooserAction action)
     gwy_app_restore_window_position(GTK_WINDOW(chooser), chooser->prefix, TRUE);
 
     return *instance;
-}
-
-/* FIXME: This fails in init() with
- * g_object_get_property: assertion `G_IS_OBJECT (object)'
- * It seems the object is not initialized enough yet there */
-static void
-gwy_app_file_chooser_setup_filter(GwyAppFileChooser *chooser)
-{
-    GtkFileChooserAction action;
-
-    g_object_get(chooser, "action", &action, NULL);
-    switch (action) {
-        case GTK_FILE_CHOOSER_ACTION_OPEN:
-        gtk_file_filter_add_custom(chooser->filter,
-                                   GTK_FILE_FILTER_FILENAME,
-                                   gwy_app_file_chooser_open_filter,
-                                   chooser,
-                                   NULL);
-        break;
-
-        case GTK_FILE_CHOOSER_ACTION_SAVE:
-        /* Nothing? */
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
 }
 
 static void
@@ -390,7 +367,9 @@ gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser)
     GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    gchar *name, *label;
+    gchar *name;
+    GString *label;
+    GtkFileChooserAction action;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(chooser->type_list));
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
@@ -398,15 +377,24 @@ gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser)
     else
         gtk_tree_model_get(model, &iter, COLUMN_LABEL, &name, -1);
 
-    if (chooser->loadable_filter
-        && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chooser->loadable_filter)))
-        label = g_strdup_printf(_("File _type: %s, filtered"), name);
-    else
-        label = g_strdup_printf(_("File _type: %s"), name);
+    label = g_string_new(NULL);
+    g_string_printf(label, _("File _type: %s"), name);
     g_free(name);
 
-    gtk_expander_set_label(GTK_EXPANDER(chooser->expander), label);
-    g_free(label);
+    g_object_get(chooser, "action", &action, NULL);
+    if (action == GTK_FILE_CHOOSER_ACTION_OPEN) {
+        if (chooser->only_loadable) {
+            g_string_append(label, ", ");
+            g_string_append(label, _("Only loadable shown"));
+        }
+        if (chooser->glob->len) {
+            g_string_append(label, ", ");
+            g_string_append_printf(label, _("Filter: %s"), chooser->glob->str);
+        }
+    }
+
+    gtk_expander_set_label(GTK_EXPANDER(chooser->expander), label->str);
+    g_string_free(label, TRUE);
 }
 
 static void
@@ -420,22 +408,7 @@ gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
         return;
     g_free(chooser->filetype);
     gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &chooser->filetype, -1);
-    gwy_app_file_chooser_update_expander(chooser);
-}
 
-static void
-loadable_filter_toggled(GwyAppFileChooser *chooser,
-                        GtkToggleButton *check)
-{
-    gboolean active;
-    gchar *key;
-
-    active = gtk_toggle_button_get_active(check);
-    gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
-                                active ? chooser->filter : chooser->no_filter);
-    key = g_strconcat(chooser->prefix, "/filter", NULL);
-    gwy_container_set_boolean_by_name(gwy_app_settings_get(), key, active);
-    g_free(key);
     gwy_app_file_chooser_update_expander(chooser);
 }
 
@@ -466,6 +439,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     GtkTreeIter iter;
     gboolean expanded = FALSE;
     gchar *key;
+    gint extraheight;
 
     g_object_get(chooser, "action", &action, NULL);
 
@@ -538,13 +512,37 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
                              chooser);
 
     if (action == GTK_FILE_CHOOSER_ACTION_OPEN) {
+        /* Gtk+ file chooser filter model is completely antagonistic to any
+         * parametric filter mechanism.  Also we cannot set the filter to NULL
+         * because it assumes we always choose a filter from some list.  So (1)
+         * we need an explicit no_filter object that does nothing (2) we cannot
+         * combine filters, we need a single monster-filter function that does
+         * everything (3) despite this, there is no ‘refilter’ function, so we
+         * must set filter to no_filter and then back to filter to refilter. */
+        chooser->filter = gtk_file_filter_new();
+        g_object_ref_sink(chooser->filter);
+
+        chooser->no_filter = gtk_file_filter_new();
+        gtk_file_filter_add_pattern(chooser->no_filter, "*");
+        g_object_ref_sink(chooser->no_filter);
+
+        construct_glob_filter(chooser, GTK_BOX(vbox));
         construct_loadable_filter(chooser, GTK_BOX(vbox));
+
+        gtk_file_filter_add_custom(chooser->filter,
+                                   GTK_FILE_FILTER_FILENAME,
+                                   gwy_app_file_chooser_open_filter,
+                                   chooser,
+                                   NULL);
     }
 
     /* Give it some reasonable size. FIXME: hack. */
     gtk_widget_show_all(vbox);
     gtk_widget_size_request(scwin, &req);
-    gtk_widget_set_size_request(scwin, -1, req.height + 100);
+    extraheight = 40;
+    if (action == GTK_FILE_CHOOSER_ACTION_SAVE)
+        extraheight = 5*extraheight/3;
+    gtk_widget_set_size_request(scwin, -1, req.height + extraheight);
 
     gwy_app_file_chooser_select_type(chooser);
     gwy_app_file_chooser_type_changed(chooser, selection);
@@ -555,21 +553,138 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
 static void
 construct_loadable_filter(GwyAppFileChooser *chooser, GtkBox *vbox)
 {
-    gboolean enabled = FALSE;
+    GwyContainer *settings = gwy_app_settings_get();
+    GtkToggleButton *toggle;
     gchar *key;
 
-    chooser->loadable_filter
+    chooser->only_loadable = FALSE;
+    chooser->loadable_check
         = gtk_check_button_new_with_mnemonic(_("Show only loadable files"));
+    toggle = GTK_TOGGLE_BUTTON(chooser->loadable_check);
     key = g_strconcat(chooser->prefix, "/filter", NULL);
-    gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &enabled);
+    gwy_container_gis_boolean_by_name(settings, key, &chooser->only_loadable);
     g_free(key);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chooser->loadable_filter),
-                                 enabled);
-    gtk_box_pack_start(GTK_BOX(vbox), chooser->loadable_filter,
-                       FALSE, FALSE, 0);
-    g_signal_connect_swapped(chooser->loadable_filter, "toggled",
+    gtk_toggle_button_set_active(toggle, chooser->only_loadable);
+    gtk_box_pack_start(vbox, chooser->loadable_check, FALSE, FALSE, 0);
+    g_signal_connect_swapped(chooser->loadable_check, "toggled",
                              G_CALLBACK(loadable_filter_toggled), chooser);
-    loadable_filter_toggled(chooser, GTK_TOGGLE_BUTTON(chooser->loadable_filter));
+}
+
+static void
+construct_glob_filter(GwyAppFileChooser *chooser, GtkBox *vbox)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    GtkWidget *hbox, *label, *entry, *check, *button, *image;
+    const guchar *glob;
+    gchar *key;
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(vbox, hbox, FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Filter:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 4);
+
+    if (!chooser->glob)
+        chooser->glob = g_string_new(NULL);
+
+    key = g_strconcat(chooser->prefix, "/glob/pattern", NULL);
+    if (gwy_container_gis_string_by_name(settings, key, &glob))
+        g_string_assign(chooser->glob, glob);
+    g_free(key);
+
+    entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(entry), chooser->glob->str);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
+    chooser->glob_entry = entry;
+    g_signal_connect(entry, "activate",
+                     G_CALLBACK(glob_entry_updated), chooser);
+
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(glob_entry_clear), chooser);
+
+    image = gtk_image_new_from_stock(GTK_STOCK_CLEAR,
+                                     GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_image(GTK_BUTTON(button), image);
+
+#ifdef G_OS_WIN32
+    chooser->glob_casesens = FALSE;
+#else
+    chooser->glob_casesens = TRUE;
+#endif
+    key = g_strconcat(chooser->prefix, "/glob/case-sensitive", NULL);
+    gwy_container_gis_boolean_by_name(settings, key, &chooser->glob_casesens);
+
+    check = gtk_check_button_new_with_mnemonic(_("Case _sensitive"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 chooser->glob_casesens);
+    gtk_box_pack_start(GTK_BOX(hbox), check, FALSE, FALSE, 4);
+    g_signal_connect(check, "toggled", G_CALLBACK(glob_case_changed), chooser);
+    chooser->glob_case_check = check;
+}
+
+static void
+glob_entry_clear(G_GNUC_UNUSED GtkWidget *button, GwyAppFileChooser *chooser)
+{
+    gtk_entry_set_text(GTK_ENTRY(chooser->glob_entry), "");
+    gtk_widget_activate(chooser->glob_entry);
+}
+
+static void
+glob_entry_updated(GtkEntry *entry, GwyAppFileChooser *chooser)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    GPatternSpec *oldpattern;
+    gchar *key, *s, *t;
+
+    g_string_assign(chooser->glob, gtk_entry_get_text(entry));
+    key = g_strconcat(chooser->prefix, "/glob/pattern", NULL);
+    gwy_container_set_const_string_by_name(settings, key, chooser->glob->str);
+    g_free(key);
+
+    oldpattern = chooser->pattern;
+
+    if (chooser->glob_casesens) {
+        if (!strchr(chooser->glob->str, '*')
+            && !strchr(chooser->glob->str, '?'))
+            s = g_strconcat("*", chooser->glob->str, "*", NULL);
+        else
+            s = g_strdup(chooser->glob->str);
+    }
+    else {
+        /* FIXME: This is crude. */
+        s = g_utf8_strdown(chooser->glob->str, chooser->glob->len);
+        if (!strchr(s, '*') && !strchr(s, '?')) {
+            t = s;
+            s = g_strconcat("*", t, "*", NULL);
+            g_free(t);
+        }
+    }
+    chooser->pattern = g_pattern_spec_new(s);
+    g_free(s);
+
+    if (oldpattern)
+        g_pattern_spec_free(oldpattern);
+
+    gwy_app_file_chooser_update_expander(chooser);
+    enforce_refilter(chooser);
+}
+
+static void
+glob_case_changed(GtkToggleButton *check, GwyAppFileChooser *chooser)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    gchar *key;
+
+    chooser->glob_casesens = gtk_toggle_button_get_active(check);
+    key = g_strconcat(chooser->prefix, "/glob/case-sensitive", NULL);
+    gwy_container_set_boolean_by_name(settings, key, chooser->glob_casesens);
+    g_free(key);
+
+    gwy_app_file_chooser_update_expander(chooser);
+    enforce_refilter(chooser);
 }
 
 static gboolean
@@ -577,24 +692,64 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
                                  gpointer user_data)
 {
     GwyAppFileChooser *chooser = (GwyAppFileChooser*)user_data;
+    const gchar *filename = filter_info->filename;
     gboolean ok = TRUE;
 
-    if (chooser->loadable_filter) {
-        GtkToggleButton *toggle = GTK_TOGGLE_BUTTON(chooser->loadable_filter);
-        const gchar *name;
-        gint score = 0;
+    if (ok && chooser->glob->len) {
+        gchar *filename_utf8 = g_filename_to_utf8(filename, -1,
+                                                  NULL, NULL, NULL);
 
-        if (gtk_toggle_button_get_active(toggle)) {
-            name = gwy_file_detect_with_score(filter_info->filename,
-                                              FALSE, GWY_FILE_OPERATION_LOAD,
-                                              &score);
-            /* To filter out `fallback' importers like rawfile */
-            if (name == NULL || score < 5)
-                ok = FALSE;
+        if (filename_utf8) {
+            if (chooser->glob_casesens)
+                ok = g_pattern_match_string(chooser->pattern, filename_utf8);
+            else {
+                gchar *filename_lc = g_utf8_strdown(filename_utf8, -1);
+                ok = g_pattern_match_string(chooser->pattern, filename_lc);
+                g_free(filename_lc);
+            }
+            g_free(filename_utf8);
         }
     }
 
+    if (ok && chooser->only_loadable) {
+        const gchar *name;
+        gint score = 0;
+
+        name = gwy_file_detect_with_score(filter_info->filename,
+                                          FALSE, GWY_FILE_OPERATION_LOAD,
+                                          &score);
+        /* To filter out `fallback' importers like rawfile */
+        ok = (name != NULL && score >= 5);
+    }
+
     return ok;
+}
+
+static void
+loadable_filter_toggled(GwyAppFileChooser *chooser,
+                        GtkToggleButton *check)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    gboolean active;
+    gchar *key;
+
+    active = gtk_toggle_button_get_active(check);
+    key = g_strconcat(chooser->prefix, "/filter", NULL);
+    gwy_container_set_boolean_by_name(settings, key, active);
+    g_free(key);
+    chooser->only_loadable = active;
+
+    gwy_app_file_chooser_update_expander(chooser);
+    enforce_refilter(chooser);
+}
+
+static void
+enforce_refilter(GwyAppFileChooser *chooser)
+{
+    gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                chooser->no_filter);
+    gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
+                                chooser->filter);
 }
 
 /***** Preview *************************************************************/

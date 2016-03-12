@@ -45,17 +45,26 @@ struct _GwyAppFileChooser {
     const gchar *prefix;
     gchar *filetype;
 
-    GtkFileFilter *filter;
-    GtkFileFilter *no_filter;
-    GtkWidget *loadable_filter;
     GtkWidget *type_list;
+
+    /* Filtering */
     GtkWidget *expander;
+    GtkFileFilter *no_filter;
+    GtkFileFilter *filter;
+    GtkWidget *loadable_check;
+    gboolean only_loadable;
+    GString *glob;
+    gboolean glob_casesens;
+    GtkWidget *glob_entry;
+    GtkWidget *glob_case_check;
+    GPatternSpec *pattern;
+
+    /* Preview */
     GtkWidget *preview;
     GtkWidget *preview_filename;
     GtkWidget *preview_type;
     GObject *renderer_fileinfo;
 
-    /* preview */
     guint full_preview_id;
     gboolean make_thumbnail;
     gchar *preview_name_sys;
