@@ -138,7 +138,7 @@ Function ChooseLocale
 
 # The following generated part is updated by running utils/update-langs.py
 # @@@ GENERATED LANG NSIS-MENU BEGIN @@@
-    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
+    !insertmacro GWY_LOCALE_CHOOSER "English (US)" "en_US.UTF-8" 12u
     !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
     !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 36u
     !insertmacro GWY_LOCALE_CHOOSER "English (UK)" "en_GB.UTF-8" 48u

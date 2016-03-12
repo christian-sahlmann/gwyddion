@@ -24,7 +24,7 @@ class Language:
 
 # The default language (English) must come first as it is treated specially
 languages = (
-    Language('en', 'en_US.UTF-8', 'English'),
+    Language('en', 'en_US.UTF-8', 'English (US)'),
     Language('cs', 'cs_CZ.UTF-8', 'Czech'),
     Language('de', 'de_DE.UTF-8', 'German'),
     Language('en_GB', 'en_GB.UTF-8', 'English (UK)'),
