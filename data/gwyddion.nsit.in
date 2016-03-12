@@ -113,10 +113,10 @@ FunctionEnd
 
 ; Create radio button with label LABEL and value LOCALE at position VPOS
 !macro GWY_LOCALE_CHOOSER LABEL LOCALE VPOS
-    ${NSD_CreateRadioButton} 0u ${VPOS} 100% 12u ${LABEL}
+    ${NSD_CreateRadioButton} 0u ${VPOS} 100% 12u "${LABEL}"
     Pop $RadioButton
-    nsDialogs::SetUserData $RadioButton ${LOCALE}
-    ${If} $Locale == ${LOCALE}
+    nsDialogs::SetUserData $RadioButton "${LOCALE}"
+    ${If} $Locale == "${LOCALE}"
         ${NSD_SetState} $RadioButton ${BST_CHECKED}
     ${EndIf}
     ${NSD_OnClick} $RadioButton LocaleOnClick
