@@ -22,7 +22,14 @@ Libraries:
   displayed in a text view.
 - libgwyapp: Data browser can show warnings and other messages ocurring during
   the opening or merging of specific files.
-- libgwyapp: Data browser displays thumbnails for graphs.
+- libgwyapp: Data browser displays thumbnails for graphs.  A new function for
+  graph thumbnail creation was added.
+- libgwyapp: Thumbnails are generated from any kind of data found in the image,
+  preferring volume, XYZ, channels and then graphs.
+- libgwyapp: File open dialogue previews almost all visual data types:
+  channels, graphs, volume and xyz.
+- libgwyapp: XYZ data support was added to validation, logging, metadata
+  browsing, data choosers, enumeration and other places.
 - libgwyprocess: Wrong estimated sizes for tip models were corrected.
 - libgwyprocess: Two new tip models were added: Parabola and Cone.
 - libgwyprocess: Function for filling missing valies in GwyDataLine using
@@ -46,6 +53,9 @@ Libraries:
 - libgwydgets: Editability of graph area selections can be controlled.
 - libgwydgets: Function for setting graph curve data from a single interleaved
   array was added.
+- libgwyapp: Functions for enumerating ids of data in a container now work
+  also for containers not managed by the data browser.
+- libgwyapp: GwyAppFileChooser open dialogue can filter files by name.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
