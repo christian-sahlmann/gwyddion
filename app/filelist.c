@@ -1313,8 +1313,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         ids[GWY_PAGE_XYZS] = gwy_recent_file_find_some_xyz(data);
         if (pageno >= GWY_NPAGES || ids[pageno] == -1) {
             for (i = 0; i < G_N_ELEMENTS(pages_priority); i++) {
-                if (ids[i] != -1) {
-                    pageno = i;
+                if (ids[pages_priority[i]] != -1) {
+                    pageno = pages_priority[i];
                     break;
                 }
             }
