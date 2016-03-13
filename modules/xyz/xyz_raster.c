@@ -110,6 +110,9 @@ static gboolean      xyzras_dialog          (XYZRasArgs *arg,
                                              XYZRasData *rdata,
                                              GwyContainer *data,
                                              gint id);
+static void          add_dfield_to_data     (GwyDataField *dfield,
+                                             GwyContainer *data,
+                                             gint id);
 static gint          construct_resolutions  (XYZRasControls *controls,
                                              GtkTable *table,
                                              gint row);
@@ -205,7 +208,7 @@ xyzras(GwyContainer *data, GwyRunType run)
     GwySurface *surface = NULL;
     GwyDataField *dfield;
     gboolean ok = TRUE;
-    gint id, newid;
+    gint id;
 
     g_return_if_fail(run & XYZRAS_RUN_MODES);
 
@@ -215,8 +218,7 @@ xyzras(GwyContainer *data, GwyRunType run)
     g_return_if_fail(GWY_IS_SURFACE(surface));
 
     if ((dfield = check_regular_grid(surface))) {
-        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-        gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
+        add_dfield_to_data(dfield, data, id);
         return;
     }
 
@@ -238,15 +240,7 @@ xyzras(GwyContainer *data, GwyRunType run)
         gchar *error = NULL;
         dfield = xyzras_do(&rdata, &args, NULL, &error);
         if (dfield) {
-            GQuark qsrc, qdest;
-            const guchar *s;
-
-            newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-            gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
-            qsrc = gwy_app_get_surface_palette_key_for_id(id);
-            qdest = gwy_app_get_data_palette_key_for_id(newid);
-            if (gwy_container_gis_string(data, qsrc, &s))
-                gwy_container_set_const_string(data, qdest, s);
+            add_dfield_to_data(dfield, data, id);
         }
         else if (run == GWY_RUN_INTERACTIVE) {
             GtkWidget *dialog;
@@ -266,6 +260,27 @@ xyzras(GwyContainer *data, GwyRunType run)
     }
 
     xyzras_free(&rdata);
+}
+
+static void
+add_dfield_to_data(GwyDataField *dfield, GwyContainer *data, gint id)
+{
+    GQuark qsrc, qdest;
+    const guchar *s;
+    gint newid;
+
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    gwy_app_channel_log_add(data, -1, newid, "xyz::xyz_raster", NULL);
+
+    qsrc = gwy_app_get_surface_palette_key_for_id(id);
+    qdest = gwy_app_get_data_palette_key_for_id(newid);
+    if (gwy_container_gis_string(data, qsrc, &s))
+        gwy_container_set_const_string(data, qdest, s);
+
+    qsrc = gwy_app_get_surface_title_key_for_id(id);
+    qdest = gwy_app_get_data_title_key_for_id(newid);
+    if (gwy_container_gis_string(data, qsrc, &s))
+        gwy_container_set_const_string(data, qdest, s);
 }
 
 static gboolean
