@@ -53,6 +53,11 @@ enum {
     GWY_INTERPOLATION_AVERAGE = -2,
 };
 
+enum {
+    LAST_UPDATED_X,
+    LAST_UPDATED_Y
+};
+
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
     GwyInterpolationType interpolation;
@@ -95,6 +100,7 @@ typedef struct {
     GtkWidget *error;
     gboolean in_update;
     gboolean in_selection_update;
+    gint last_updated;
 } XYZRasControls;
 
 typedef struct {
@@ -123,8 +129,7 @@ static gint          construct_physical_dims(XYZRasControls *controls,
 static gint          construct_options      (XYZRasControls *controls,
                                              GtkTable *table,
                                              gint row);
-static void          recalculate_xres       (XYZRasControls *controls);
-static void          recalculate_yres       (XYZRasControls *controls);
+static void          make_pixels_square     (XYZRasControls *controls);
 static void          xres_changed           (XYZRasControls *controls,
                                              GtkAdjustment *adj);
 static void          yres_changed           (XYZRasControls *controls,
@@ -146,6 +151,7 @@ static void          update_selection       (XYZRasControls *controls);
 static void          selection_changed      (XYZRasControls *controls,
                                              gint hint,
                                              GwySelection *selection);
+static void          clear_selection        (XYZRasControls *controls);
 static void          preview                (XYZRasControls *controls);
 static void          triangulation_info     (XYZRasControls *controls);
 static GwyDataField* xyzras_do              (XYZRasData *rdata,
@@ -315,6 +321,7 @@ xyzras_dialog(XYZRasArgs *args,
     controls.args = args;
     controls.rdata = rdata;
     controls.mydata = gwy_container_new();
+    controls.last_updated = LAST_UPDATED_X;
 
     dialog = gtk_dialog_new_with_buttons(_("Rasterize XYZ Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -339,6 +346,15 @@ xyzras_dialog(XYZRasArgs *args,
     row = 0;
 
     row = construct_resolutions(&controls, table, row);
+
+    button = gtk_button_new_with_mnemonic(_("Make Pixels S_quare"));
+    gtk_table_attach(table, button, 1, 4, row, row+1,
+                     GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(make_pixels_square), &controls);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
     row = construct_physical_dims(&controls, table, row);
 
     button = gtk_button_new_with_mnemonic(_("Reset Ran_ges"));
@@ -418,9 +434,7 @@ xyzras_dialog(XYZRasArgs *args,
                              G_CALLBACK(exterior_changed), &controls);
 
     controls.in_update = FALSE;
-
     reset_ranges(&controls);
-    recalculate_yres(&controls);
 
     gtk_widget_show_all(dialog);
 
@@ -641,55 +655,42 @@ set_physical_dimension(XYZRasControls *controls,
 }
 
 static void
-recalculate_xres(XYZRasControls *controls)
+make_pixels_square(XYZRasControls *controls)
 {
     XYZRasArgs *args = controls->args;
-    gint xres;
+    gdouble h;
+    gint res;
 
-    if (controls->in_update)
-        return;
-
-    xres = GWY_ROUND((args->xmax - args->xmin)/(args->ymax - args->ymin)
-                     *args->yres);
-    xres = CLAMP(xres, 2, 16384);
-    set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xres), xres);
-}
-
-static void
-recalculate_yres(XYZRasControls *controls)
-{
-    XYZRasArgs *args = controls->args;
-    gint yres;
-
-    if (controls->in_update)
-        return;
-
-    yres = GWY_ROUND((args->ymax - args->ymin)/(args->xmax - args->xmin)
-                     *args->xres);
-    yres = CLAMP(yres, 2, 16384);
-    set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->yres), yres);
+    if (controls->last_updated == LAST_UPDATED_X) {
+        h = (args->xmax - args->xmin)/args->xres;
+        res = GWY_ROUND((args->ymax - args->ymin)/h);
+        res = CLAMP(res, 2, 16384);
+        set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->yres), res);
+        controls->last_updated = LAST_UPDATED_X;
+    }
+    else {
+        h = (args->ymax - args->ymin)/args->yres;
+        res = GWY_ROUND((args->xmax - args->xmin)/h);
+        res = CLAMP(res, 2, 16384);
+        set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xres), res);
+        controls->last_updated = LAST_UPDATED_Y;
+    }
 }
 
 static void
 xres_changed(XYZRasControls *controls,
              GtkAdjustment *adj)
 {
-    XYZRasArgs *args = controls->args;
-
-    args->xres = gwy_adjustment_get_int(adj);
-    if (!controls->in_update)
-        recalculate_yres(controls);
+    controls->args->xres = gwy_adjustment_get_int(adj);
+    controls->last_updated = LAST_UPDATED_X;
 }
 
 static void
 yres_changed(XYZRasControls *controls,
              GtkAdjustment *adj)
 {
-    XYZRasArgs *args = controls->args;
-
-    args->yres = gwy_adjustment_get_int(adj);
-    if (!controls->in_update)
-        recalculate_xres(controls);
+    controls->args->yres = gwy_adjustment_get_int(adj);
+    controls->last_updated = LAST_UPDATED_Y;
 }
 
 static void
@@ -704,7 +705,6 @@ xmin_changed(XYZRasControls *controls,
         return;
 
     args->xmin = val;
-    recalculate_yres(controls);
     update_selection(controls);
 }
 
@@ -720,7 +720,6 @@ xmax_changed(XYZRasControls *controls,
         return;
 
     args->xmax = val;
-    recalculate_yres(controls);
     update_selection(controls);
 }
 
@@ -736,7 +735,6 @@ ymin_changed(XYZRasControls *controls,
         return;
 
     args->ymin = val;
-    recalculate_xres(controls);
     update_selection(controls);
 }
 
@@ -752,7 +750,6 @@ ymax_changed(XYZRasControls *controls,
         return;
 
     args->ymax = val;
-    recalculate_xres(controls);
     update_selection(controls);
 }
 
@@ -760,18 +757,14 @@ static void
 interpolation_changed(XYZRasControls *controls,
                       GtkComboBox *combo)
 {
-    XYZRasArgs *args = controls->args;
-
-    args->interpolation = gwy_enum_combo_box_get_active(combo);
+    controls->args->interpolation = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
 exterior_changed(XYZRasControls *controls,
                  GtkComboBox *combo)
 {
-    XYZRasArgs *args = controls->args;
-
-    args->exterior = gwy_enum_combo_box_get_active(combo);
+    controls->args->exterior = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
@@ -790,6 +783,7 @@ reset_ranges(XYZRasControls *controls)
 {
     initialize_ranges(controls->rdata, controls->args);
     set_all_physical_dimensions(controls);
+    clear_selection(controls);
 }
 
 static void
@@ -803,7 +797,7 @@ update_selection(XYZRasControls *controls)
     if (controls->in_selection_update)
         return;
 
-    controls->in_update = TRUE;
+    controls->in_selection_update = TRUE;
     xy[0] = args->xmin;
     xy[1] = args->ymin;
     xy[2] = args->xmax;
@@ -811,7 +805,7 @@ update_selection(XYZRasControls *controls)
     vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
     selection = gwy_vector_layer_ensure_selection(vlayer);
     gwy_selection_set_data(selection, 1, xy);
-    controls->in_update = FALSE;
+    controls->in_selection_update = FALSE;
 }
 
 static void
@@ -840,11 +834,20 @@ selection_changed(XYZRasControls *controls,
 }
 
 static void
+clear_selection(XYZRasControls *controls)
+{
+    GwyVectorLayer *vlayer;
+    GwySelection *selection;
+
+    vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    gwy_selection_clear(selection);
+}
+
+static void
 preview(XYZRasControls *controls)
 {
     XYZRasArgs *args = controls->args;
-    GwyVectorLayer *vlayer;
-    GwySelection *selection;
     GwyDataField *dfield;
     GtkWidget *entry;
     gint xres, yres;
@@ -877,9 +880,7 @@ preview(XYZRasControls *controls)
 
     /* After doing preview the selection always covers the full data and thus
      * is not useful. */
-    vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
-    selection = gwy_vector_layer_ensure_selection(vlayer);
-    gwy_selection_clear(selection);
+    clear_selection(controls);
 }
 
 static void
