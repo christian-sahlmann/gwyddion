@@ -237,8 +237,10 @@ xyzras(GwyContainer *data, GwyRunType run)
     xyzras_save_args(settings, &args);
 
     if (ok) {
+        GtkWindow *window = gwy_app_find_window_for_xyz(data, id);
         gchar *error = NULL;
-        dfield = xyzras_do(&rdata, &args, NULL, &error);
+
+        dfield = xyzras_do(&rdata, &args, window, &error);
         if (dfield) {
             add_dfield_to_data(dfield, data, id);
         }
