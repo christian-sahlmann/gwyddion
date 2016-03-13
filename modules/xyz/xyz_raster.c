@@ -94,6 +94,7 @@ typedef struct {
     GtkWidget *do_preview;
     GtkWidget *error;
     gboolean in_update;
+    gboolean in_selection_update;
 } XYZRasControls;
 
 typedef struct {
@@ -122,6 +123,8 @@ static gint          construct_physical_dims(XYZRasControls *controls,
 static gint          construct_options      (XYZRasControls *controls,
                                              GtkTable *table,
                                              gint row);
+static void          recalculate_xres       (XYZRasControls *controls);
+static void          recalculate_yres       (XYZRasControls *controls);
 static void          xres_changed           (XYZRasControls *controls,
                                              GtkAdjustment *adj);
 static void          yres_changed           (XYZRasControls *controls,
@@ -139,6 +142,10 @@ static void          interpolation_changed  (XYZRasControls *controls,
 static void          exterior_changed       (XYZRasControls *controls,
                                              GtkComboBox *combo);
 static void          reset_ranges           (XYZRasControls *controls);
+static void          update_selection       (XYZRasControls *controls);
+static void          selection_changed      (XYZRasControls *controls,
+                                             gint hint,
+                                             GwySelection *selection);
 static void          preview                (XYZRasControls *controls);
 static void          triangulation_info     (XYZRasControls *controls);
 static GwyDataField* xyzras_do              (XYZRasData *rdata,
@@ -211,6 +218,7 @@ xyzras(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & XYZRAS_RUN_MODES);
+    g_return_if_fail(g_type_from_name("GwyLayerRectangle"));
 
     gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
                                      GWY_APP_SURFACE_ID, &id,
@@ -292,14 +300,18 @@ xyzras_dialog(XYZRasArgs *args,
               gint id)
 {
     GtkWidget *dialog, *vbox, *align, *label, *hbox, *button;
-    GwyPixmapLayer *layer;
+    GwyPixmapLayer *player;
+    GwyVectorLayer *vlayer;
     GwyDataField *dfield;
     GtkTable *table;
     XYZRasControls controls;
     gint row, response;
     const guchar *gradient;
+    GwySelection *selection;
+    GType gtype;
     GQuark quark;
 
+    gwy_clear(&controls, 1);
     controls.args = args;
     controls.rdata = rdata;
     controls.mydata = gwy_container_new();
@@ -359,13 +371,22 @@ xyzras_dialog(XYZRasArgs *args,
     controls.view = gwy_data_view_new(controls.mydata);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    layer = gwy_layer_basic_new();
-    g_object_set(layer,
+    player = gwy_layer_basic_new();
+    g_object_set(player,
                  "data-key", "/0/data",
                  "gradient-key", "/0/base/palette",
                  NULL);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), player);
+
+    gtype = g_type_from_name("GwyLayerRectangle");
+    vlayer = GWY_VECTOR_LAYER(g_object_newv(gtype, 0, NULL));
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/rectangle");
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    g_object_set(selection, "max-objects", 1, NULL);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(selection_changed), &controls);
 
     controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
@@ -399,6 +420,7 @@ xyzras_dialog(XYZRasArgs *args,
     controls.in_update = FALSE;
 
     reset_ranges(&controls);
+    recalculate_yres(&controls);
 
     gtk_widget_show_all(dialog);
 
@@ -605,21 +627,17 @@ set_adjustment_in_update(XYZRasControls *controls,
 static void
 set_physical_dimension(XYZRasControls *controls,
                        GtkEntry *entry,
-                       gdouble value,
-                       gboolean in_update)
+                       gdouble value)
 {
     gchar buf[24];
 
-    if (in_update) {
-        g_assert(!controls->in_update);
-        controls->in_update = TRUE;
-    }
+    g_return_if_fail(!controls->in_update);
+    controls->in_update = TRUE;
 
     g_snprintf(buf, sizeof(buf), "%g", value/controls->rdata->xymag);
     gtk_entry_set_text(entry, buf);
 
-    if (in_update)
-        controls->in_update = FALSE;
+    controls->in_update = FALSE;
 }
 
 static void
@@ -687,6 +705,7 @@ xmin_changed(XYZRasControls *controls,
 
     args->xmin = val;
     recalculate_yres(controls);
+    update_selection(controls);
 }
 
 static void
@@ -702,6 +721,7 @@ xmax_changed(XYZRasControls *controls,
 
     args->xmax = val;
     recalculate_yres(controls);
+    update_selection(controls);
 }
 
 static void
@@ -717,6 +737,7 @@ ymin_changed(XYZRasControls *controls,
 
     args->ymin = val;
     recalculate_xres(controls);
+    update_selection(controls);
 }
 
 static void
@@ -732,6 +753,7 @@ ymax_changed(XYZRasControls *controls,
 
     args->ymax = val;
     recalculate_xres(controls);
+    update_selection(controls);
 }
 
 static void
@@ -753,25 +775,76 @@ exterior_changed(XYZRasControls *controls,
 }
 
 static void
+set_all_physical_dimensions(XYZRasControls *controls)
+{
+    XYZRasArgs *args = controls->args;
+
+    set_physical_dimension(controls, GTK_ENTRY(controls->ymin), args->ymin);
+    set_physical_dimension(controls, GTK_ENTRY(controls->ymax), args->ymax);
+    set_physical_dimension(controls, GTK_ENTRY(controls->xmin), args->xmin);
+    set_physical_dimension(controls, GTK_ENTRY(controls->xmax), args->xmax);
+}
+
+static void
 reset_ranges(XYZRasControls *controls)
 {
-    XYZRasArgs myargs = *controls->args;
+    initialize_ranges(controls->rdata, controls->args);
+    set_all_physical_dimensions(controls);
+}
 
-    initialize_ranges(controls->rdata, &myargs);
-    set_physical_dimension(controls, GTK_ENTRY(controls->ymin), myargs.ymin,
-                           TRUE);
-    set_physical_dimension(controls, GTK_ENTRY(controls->ymax), myargs.ymax,
-                           TRUE);
-    set_physical_dimension(controls, GTK_ENTRY(controls->xmin), myargs.xmin,
-                           TRUE);
-    set_physical_dimension(controls, GTK_ENTRY(controls->xmax), myargs.xmax,
-                           TRUE);
+static void
+update_selection(XYZRasControls *controls)
+{
+    XYZRasArgs *args = controls->args;
+    GwyVectorLayer *vlayer;
+    GwySelection *selection;
+    gdouble xy[4];
+
+    if (controls->in_selection_update)
+        return;
+
+    controls->in_update = TRUE;
+    xy[0] = args->xmin;
+    xy[1] = args->ymin;
+    xy[2] = args->xmax;
+    xy[3] = args->ymax;
+    vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    gwy_selection_set_data(selection, 1, xy);
+    controls->in_update = FALSE;
+}
+
+static void
+selection_changed(XYZRasControls *controls,
+                  G_GNUC_UNUSED gint hint, GwySelection *selection)
+{
+    XYZRasArgs *args = controls->args;
+    guint n;
+    gdouble xy[4];
+
+    if (controls->in_selection_update)
+        return;
+
+    n = gwy_selection_get_data(selection, NULL);
+    if (n != 1)
+        return;
+
+    controls->in_selection_update = TRUE;
+    gwy_selection_get_data(selection, xy);
+    args->xmin = xy[0];
+    args->ymin = xy[1];
+    args->xmax = xy[2];
+    args->ymax = xy[3];
+    set_all_physical_dimensions(controls);
+    controls->in_selection_update = FALSE;
 }
 
 static void
 preview(XYZRasControls *controls)
 {
     XYZRasArgs *args = controls->args;
+    GwyVectorLayer *vlayer;
+    GwySelection *selection;
     GwyDataField *dfield;
     GtkWidget *entry;
     gint xres, yres;
@@ -801,6 +874,12 @@ preview(XYZRasControls *controls)
 
     gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
     g_object_unref(dfield);
+
+    /* After doing preview the selection always covers the full data and thus
+     * is not useful. */
+    vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
+    selection = gwy_vector_layer_ensure_selection(vlayer);
+    gwy_selection_clear(selection);
 }
 
 static void
