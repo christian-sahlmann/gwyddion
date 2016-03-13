@@ -659,7 +659,8 @@ xres_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
 
     args->xres = gwy_adjustment_get_int(adj);
-    recalculate_yres(controls);
+    if (!controls->in_update)
+        recalculate_yres(controls);
 }
 
 static void
@@ -669,7 +670,8 @@ yres_changed(XYZRasControls *controls,
     XYZRasArgs *args = controls->args;
 
     args->yres = gwy_adjustment_get_int(adj);
-    recalculate_xres(controls);
+    if (!controls->in_update)
+        recalculate_xres(controls);
 }
 
 static void
@@ -684,12 +686,7 @@ xmin_changed(XYZRasControls *controls,
         return;
 
     args->xmin = val;
-    if (!controls->in_update) {
-        args->xmax = args->xmin + (args->ymax - args->ymin);
-        set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
-                               args->xmax, TRUE);
-    }
-    recalculate_xres(controls);
+    recalculate_yres(controls);
 }
 
 static void
@@ -704,12 +701,7 @@ xmax_changed(XYZRasControls *controls,
         return;
 
     args->xmax = val;
-    if (!controls->in_update) {
-        args->ymax = args->ymin + (args->xmax - args->xmin);
-        set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
-                               args->ymax, TRUE);
-    }
-    recalculate_xres(controls);
+    recalculate_yres(controls);
 }
 
 static void
@@ -724,12 +716,7 @@ ymin_changed(XYZRasControls *controls,
         return;
 
     args->ymin = val;
-    if (!controls->in_update) {
-        args->ymax = args->ymin + (args->xmax - args->xmin);
-        set_physical_dimension(controls, GTK_ENTRY(controls->ymax),
-                               args->ymax, TRUE);
-    }
-    recalculate_yres(controls);
+    recalculate_xres(controls);
 }
 
 static void
@@ -744,11 +731,6 @@ ymax_changed(XYZRasControls *controls,
         return;
 
     args->ymax = val;
-    if (!controls->in_update) {
-        args->xmax = args->xmin + (args->ymax - args->ymin);
-        set_physical_dimension(controls, GTK_ENTRY(controls->xmax),
-                               args->xmax, TRUE);
-    }
     recalculate_xres(controls);
 }
 
