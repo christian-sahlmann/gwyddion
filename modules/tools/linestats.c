@@ -127,6 +127,9 @@ static void     gwy_tool_line_stats_options_expanded      (GtkExpander *expander
                                                            GParamSpec *pspec,
                                                            GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_apply                 (GwyToolLineStats *tool);
+static void     calculate_avg_rms_for_rms                 (GwyDataLine *dline,
+                                                           gdouble *avg,
+                                                           gdouble *rms);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -134,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -565,6 +568,7 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     const gchar *title;
     GwySIUnit *siunit;
     GwySIValueFormat *format;
+    gdouble avg, rms;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
@@ -648,10 +652,14 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     siunit = gwy_data_line_get_si_unit_y(tool->line);
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_MARKUP,
                                     gwy_data_line_get_avg(tool->line), NULL);
+    if (tool->args.output_type == GWY_LINE_STAT_RMS)
+        calculate_avg_rms_for_rms(tool->line, &avg, &rms);
+    else {
+        avg = gwy_data_line_get_avg(tool->line);
+        rms = gwy_data_line_get_rms(tool->line);
+    }
     g_snprintf(result, sizeof(result), "(%.4g ± %.4g) %s",
-               gwy_data_line_get_avg(tool->line)/format->magnitude,
-               gwy_data_line_get_rms(tool->line)/format->magnitude,
-               format->units);
+               avg/format->magnitude, rms/format->magnitude, format->units);
     gtk_label_set_markup(GTK_LABEL(tool->average_label), result);
 }
 
@@ -763,6 +771,29 @@ gwy_tool_line_stats_apply(GwyToolLineStats *tool)
     gmodel = gwy_graph_model_duplicate(tool->gmodel);
     gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
     g_object_unref(gmodel);
+}
+
+static void
+calculate_avg_rms_for_rms(GwyDataLine *dline, gdouble *avg, gdouble *rms)
+{
+    const gdouble *d = gwy_data_line_get_data_const(dline);
+    gdouble z, s2 = 0.0, s4 = 0.0;
+    gint n, i;
+
+    n = gwy_data_line_get_res(dline);
+    for (i = 0; i < n; i++) {
+        z = d[i];
+        s2 += z*z;
+    }
+    s2 /= n;
+    for (i = 0; i < n; i++) {
+        z = d[i];
+        s4 += (z*z - s2)*(z*z - s2);
+    }
+    s4 /= n;
+
+    *avg = sqrt(s2);
+    *rms = 0.5*sqrt(s4)/(*avg);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
