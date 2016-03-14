@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask of values disconnected to the rest."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -157,6 +157,8 @@ mark_disconn(GwyContainer *data,
 
     if (!maskfield)
         return;
+
+    gwy_app_undo_qcheckpointv(data, 1, &mquark);
 
     if (!existing_mask && gwy_data_field_get_max(maskfield) <= 0.0) {
         g_object_unref(maskfield);
