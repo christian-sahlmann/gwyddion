@@ -1269,8 +1269,7 @@ matrix_scanimagefile(const guchar **fp,
 
         if (matrixdata->gridmode == 2) {
             // Constraint Point
-            dfield_tup = gwy_data_field_new(xres, yres,
-                                            width, height, FALSE);
+            dfield_tup = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_tup = gwy_data_field_get_data(dfield_tup);
             ind_tup     = xres*(yres-1);
             ind_retup   = ind_tdown = ind_retdown = 0;
@@ -1281,11 +1280,9 @@ matrix_scanimagefile(const guchar **fp,
         }
         else if (matrixdata->gridmode == 1) {
             // Constraint Line
-            dfield_tup = gwy_data_field_new(xres, yres,
-                                            width, height, FALSE);
+            dfield_tup = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_tup = gwy_data_field_get_data(dfield_tup);
-            dfield_retup = gwy_data_field_new(xres, yres,
-                                              width, height, FALSE);
+            dfield_retup = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_retup = gwy_data_field_get_data(dfield_retup);
             ind_tup     = xres*(yres-1);
             ind_retup   = xres*yres - 1;
@@ -1297,17 +1294,13 @@ matrix_scanimagefile(const guchar **fp,
         }
         else {
             // Constraint None
-            dfield_tup = gwy_data_field_new(xres, yres,
-                                            width, height, FALSE);
+            dfield_tup = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_tup = gwy_data_field_get_data(dfield_tup);
-            dfield_retup = gwy_data_field_new(xres, yres,
-                                              width, height, FALSE);
+            dfield_retup = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_retup = gwy_data_field_get_data(dfield_retup);
-            dfield_tdown = gwy_data_field_new(xres, yres,
-                                              width, height, FALSE);
+            dfield_tdown = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_tdown = gwy_data_field_get_data(dfield_tdown);
-            dfield_retdown = gwy_data_field_new(xres, yres,
-                                                width, height, FALSE);
+            dfield_retdown = gwy_data_field_new(xres, yres, width, height, TRUE);
             data_retdown = gwy_data_field_get_data(dfield_retdown);
             ind_tup     = xres*(yres-1);
             ind_retup   = xres*yres - 1;
@@ -1385,7 +1378,7 @@ matrix_scanimagefile(const guchar **fp,
         }
 
 
-        gwy_debug("omicronmatrix::matrix_loadimagefile %s", msg);
+        gwy_debug("omicronmatrix::matrix_loadimagefile");
         if (matrixdata->gridmode == 2) {
             // Constraint Point
             // parse data, data is encoded as Integer, 32Bit
