@@ -1690,8 +1690,8 @@ matrix_load(const gchar *filename,
     /* now check parameter file to get correct sizes */
     fsplit = g_strsplit(filename, "--", 2);
     if (g_strv_length(fsplit) != 2) {
-      // filename has unknown structure
-      useparamfile = FALSE;
+        // filename has unknown structure
+        useparamfile = FALSE;
     }
     else {
         paramfilename = g_strconcat(*fsplit, "_0001.mtrx", NULL);
@@ -1756,12 +1756,9 @@ matrix_load(const gchar *filename,
                               (guchar*)g_strdup(filename));
         gwy_debug("omicronmatrix::matrix_load Scanning parameterfile");
         while (fp < parbuffer + parsize &&
-               0 != matrix_scanparamfile(&fp, container, meta,
-                                         &matrixdata))
-        { // scan parameterfile
+               0 != matrix_scanparamfile(&fp, container, meta, &matrixdata)) {
+            /* scan parameterfile */
         }
-        gwy_file_abandon_contents(parbuffer, parsize, NULL);
-
     }
     else {
         // parameterfile is invalid, open the images with arb units
@@ -1774,7 +1771,6 @@ matrix_load(const gchar *filename,
         matrixdata.zoom = 1;
         // get xpoints, ypoints via scan_image!
         wrongscaling = TRUE;
-        gwy_file_abandon_contents(parbuffer, parsize, NULL);
     }
     if (wrongscaling) {
       // TODO: Popup dialog for user values for width, height, zscaling
@@ -1784,8 +1780,7 @@ matrix_load(const gchar *filename,
     fp = imgbuffer + FILEIDENT_SIZE;
 
     // scan the imagefile. Store to the container
-    gwy_debug("omicronmatrix::matrix_load:",
-              " starting the image scan loop..");
+    gwy_debug("omicronmatrix::matrix_load: starting the image scan loop..");
     matrix_scanimagefile(&fp,
                          filename,
                          container,
@@ -1794,6 +1789,8 @@ matrix_load(const gchar *filename,
                          useparamfile);
 
     gwy_debug("omicronmatrix::matrix_load Ending...");
+    if (parbuffer)
+        gwy_file_abandon_contents(parbuffer, parsize, NULL);
     gwy_file_abandon_contents(imgbuffer, imgsize, NULL);
     g_free(paramfilename);
     g_strfreev(fsplit);
