@@ -61,6 +61,7 @@ enum {
     THUMB_SIZE = 60,
     CACHED_IDS = 24,
     SURFACE_PREVIEW_SIZE = 512,
+    PAGENO_SHIFT = 16,
 };
 
 /* Sensitivity flags */
@@ -2680,7 +2681,7 @@ gwy_app_data_proxy_new(GwyAppDataBrowser *browser,
     for (i = 0; i < GWY_NPAGES; i++) {
         gwy_app_data_proxy_list_setup(&proxy->lists[i]);
         g_object_set_qdata(G_OBJECT(proxy->lists[i].store),
-                           page_id_quark, GUINT_TO_POINTER(i + 1));
+                           page_id_quark, GINT_TO_POINTER(i + PAGENO_SHIFT));
     }
     /* For historical reasons, graphs are numbered from 1 */
     proxy->lists[GWY_PAGE_GRAPHS].last = 0;
@@ -2827,7 +2828,7 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
     gboolean any;
 
     pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(selection),
-                                                page_id_quark)) - 1;
+                                                page_id_quark)) - PAGENO_SHIFT;
     if (pageno != browser->active_page)
         return;
 
@@ -3094,12 +3095,12 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     }
 
     srcproxy = browser->current;
-    if (!(pageno = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(model),
-                                                       page_id_quark)))) {
+    if (!(pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(model),
+                                                      page_id_quark)))) {
         gtk_drag_finish(context, FALSE, FALSE, time_);
         return;
     }
-    pageno--;
+    pageno -= PAGENO_SHIFT;
 
     if (!gtk_tree_model_get_iter(model, &iter, path)) {
         g_warning("Received data browser drop of a nonexistent path");
@@ -3669,7 +3670,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(GWY_PAGE_CHANNELS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_CHANNELS + PAGENO_SHIFT));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4374,7 +4375,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(GWY_PAGE_GRAPHS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_GRAPHS + PAGENO_SHIFT));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -4637,7 +4638,7 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(GWY_PAGE_SPECTRA + 1));
+                       GINT_TO_POINTER(GWY_PAGE_SPECTRA + PAGENO_SHIFT));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -5095,7 +5096,7 @@ gwy_app_data_browser_construct_bricks(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(GWY_PAGE_VOLUMES + 1));
+                       GINT_TO_POINTER(GWY_PAGE_VOLUMES + PAGENO_SHIFT));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);
@@ -5586,7 +5587,7 @@ gwy_app_data_browser_construct_surfaces(GwyAppDataBrowser *browser)
     /* Selection */
     selection = gtk_tree_view_get_selection(treeview);
     g_object_set_qdata(G_OBJECT(selection), page_id_quark,
-                       GINT_TO_POINTER(GWY_PAGE_XYZS + 1));
+                       GINT_TO_POINTER(GWY_PAGE_XYZS + PAGENO_SHIFT));
     g_signal_connect(selection, "changed",
                      G_CALLBACK(gwy_app_data_browser_selection_changed),
                      browser);

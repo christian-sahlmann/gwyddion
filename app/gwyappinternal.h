@@ -40,14 +40,13 @@ G_BEGIN_DECLS
 /* Data browser notebook pages.  Also serves for general data kind
  * identification. */
 typedef enum {
+    GWY_PAGE_NOPAGE = -1,
     GWY_PAGE_CHANNELS,
     GWY_PAGE_GRAPHS,
     GWY_PAGE_SPECTRA,
     GWY_PAGE_VOLUMES,
     GWY_PAGE_XYZS,
     GWY_NPAGES,
-    /* -1 is for some quirky object qdata storage... */
-    GWY_PAGE_NOPAGE = G_MAXINT-1,
 } GwyAppPage;
 
 /* Data types interesting keys can correspond to */
