@@ -1300,7 +1300,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         /* If we are given a pixbuf, hint must be the ultimate channel id.
          * We also ignore the thnumbnail state then. */
         g_return_if_fail(GDK_IS_PIXBUF(use_this_pixbuf));
-        g_return_if_fail(pageno >= 0 && pageno < GWY_NPAGES);
+        g_return_if_fail((gint)pageno >= 0 && (gint)pageno < GWY_NPAGES);
         ids[pageno] = hint;
         pixbuf = g_object_ref(use_this_pixbuf);
     }
@@ -1311,7 +1311,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         ids[GWY_PAGE_GRAPHS] = gwy_recent_file_find_some_graph(data);
         ids[GWY_PAGE_VOLUMES] = gwy_recent_file_find_some_volume(data);
         ids[GWY_PAGE_XYZS] = gwy_recent_file_find_some_xyz(data);
-        if (pageno >= GWY_NPAGES || ids[pageno] == -1) {
+        if (pageno == GWY_PAGE_NOPAGE || ids[pageno] == -1) {
             for (i = 0; i < G_N_ELEMENTS(pages_priority); i++) {
                 if (ids[pages_priority[i]] != -1) {
                     pageno = pages_priority[i];

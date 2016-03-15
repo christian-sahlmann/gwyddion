@@ -60,7 +60,17 @@ typedef enum {
     GWY_APP_SURFACE,
     GWY_APP_SURFACE_KEY,
     GWY_APP_SURFACE_ID,
+    GWY_APP_PAGE,
 } GwyAppWhat;
+
+typedef enum {
+    GWY_PAGE_NOPAGE = -1,
+    GWY_PAGE_CHANNELS,
+    GWY_PAGE_GRAPHS,
+    GWY_PAGE_SPECTRA,
+    GWY_PAGE_VOLUMES,
+    GWY_PAGE_XYZS,
+} GwyAppPage;
 
 typedef enum {
     GWY_DATA_ITEM_GRADIENT = 1,

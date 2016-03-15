@@ -6017,7 +6017,7 @@ gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
     guint i;
 
     browser->window = NULL;
-    browser->active_page = 0;
+    browser->active_page = GWY_PAGE_NOPAGE;
     browser->sensgroup = NULL;
     browser->filename = NULL;
     browser->notebook = NULL;
@@ -7331,7 +7331,7 @@ gwy_app_data_browser_merge(GwyContainer *container)
     /* Build a map from container ids to destination ids */
     memset(&ids[0], 0, GWY_NPAGES*sizeof(GList*));
     gwy_container_foreach(container, NULL, gwy_app_data_merge_gather, &ids[0]);
-    for (pageno = 0; pageno < GWY_NPAGES; pageno++) {
+    for (pageno = 0; pageno < (GwyAppPage)GWY_NPAGES; pageno++) {
         gwy_debug("page %d", pageno);
         last = proxy->lists[pageno].last;
         map[pageno] = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -8690,6 +8690,12 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
             case GWY_APP_CONTAINER_ID:
             itarget = va_arg(ap, gint*);
             *itarget = current ? current->data_no : 0;
+            break;
+
+            case GWY_APP_PAGE:
+            /* Return NOPAGE when we have no data. */
+            itarget = va_arg(ap, GwyAppPage*);
+            *itarget = current ? browser->active_page : GWY_PAGE_NOPAGE;
             break;
 
             case GWY_APP_DATA_VIEW:
@@ -10937,9 +10943,26 @@ gwy_app_data_browser_remove_graph_watch(gulong id)
  * @GWY_APP_SURFACE_ID: Number (id) of the the surface data in its container
  *                      (Since 2.45).
  * @GWY_APP_CONTAINER_ID: Numeric id of data container (Since 2.41).
+ * @GWY_APP_PAGE: Currently selected data browser page as a #GwyAppPage
+ *                (Since 2.45).
  *
  * Types of current objects that can be requested with
  * gwy_app_data_browser_get_current().
+ **/
+
+/**
+ * GwyAppPage:
+ * @GWY_PAGE_NOPAGE: No page.  This value is returned when no data are active
+ *                   in the browser.
+ * @GWY_PAGE_CHANNELS: Channel (image data).
+ * @GWY_PAGE_GRAPHS: Graph.
+ * @GWY_PAGE_SPECTRA: Single point spectra.
+ * @GWY_PAGE_VOLUMES: Volume data.
+ * @GWY_PAGE_XYZS: XYZ data.
+ *
+ * Data browser page, corresponding to one of possible data types.
+ *
+ * Since: 2.45
  **/
 
 /**

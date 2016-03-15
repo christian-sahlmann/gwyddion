@@ -34,20 +34,13 @@
 #include <libgwydgets/gwysensitivitygroup.h>
 
 #include <app/gwyappfilechooser.h>
+#include <app/data-browser.h>
 
 G_BEGIN_DECLS
 
-/* Data browser notebook pages.  Also serves for general data kind
- * identification. */
-typedef enum {
-    GWY_PAGE_NOPAGE = -1,
-    GWY_PAGE_CHANNELS,
-    GWY_PAGE_GRAPHS,
-    GWY_PAGE_SPECTRA,
-    GWY_PAGE_VOLUMES,
-    GWY_PAGE_XYZS,
-    GWY_NPAGES,
-} GwyAppPage;
+enum {
+    GWY_NPAGES = GWY_PAGE_XYZS + 1,
+};
 
 /* Data types interesting keys can correspond to */
 typedef enum {
