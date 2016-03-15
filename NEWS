@@ -56,6 +56,8 @@ Libraries:
 - libgwyapp: Functions for enumerating ids of data in a container now work
   also for containers not managed by the data browser.
 - libgwyapp: GwyAppFileChooser open dialogue can filter files by name.
+- libgwyapp: It is possible to query the current data browser page using
+  gwy_app_data_browser_get_current().
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
@@ -88,6 +90,8 @@ Modules:
 - Statistical functions: Local range was added as a new quantity.
 - Object synthesis: Coverage parameter was fixed to actually mean what the
   documentation describes.  Multiply old values by 4 to get the same coverage.
+- Mark disconnected: The operation is undoable now.
+- XYZ export: Can export both channels and XYZ data.
 
 
 2.44 (2016-01-11)
