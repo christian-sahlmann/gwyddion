@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2015 David Necas (Yeti).
+ *  Copyright (C) 2015-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,20 +49,35 @@ typedef struct {
     GwyMaskingType masking;
 } XYZExportArgs;
 
-static gboolean module_register        (void);
-static gint     xyzexport_detect       (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static gboolean xyzexport_export       (GwyContainer *data,
-                                        const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static gboolean xyzexport_export_dialog(XYZExportArgs *args,
-                                        gboolean have_mask,
-                                        gboolean needs_decimal_dot);
-static void     xyzexport_load_args    (GwyContainer *settings,
-                                        XYZExportArgs *args);
-static void     xyzexport_save_args    (GwyContainer *settings,
-                                        XYZExportArgs *args);
+static gboolean module_register            (void);
+static gint     xyzexport_detect           (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static gboolean xyzexport_export           (GwyContainer *data,
+                                            const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static gboolean xyzexport_export_dialog    (XYZExportArgs *args,
+                                            gboolean have_mask,
+                                            gboolean needs_decimal_dot,
+                                            GwyAppPage pageno,
+                                            const gchar *title);
+static gboolean xyzexport_export_data_field(GwyDataField *dfield,
+                                            GwyDataField *mfield,
+                                            FILE *fh,
+                                            const XYZExportArgs *args,
+                                            gboolean needs_decimal_dot,
+                                            const gchar *decimal_dot,
+                                            guint decimal_dot_len);
+static gboolean xyzexport_export_surface   (GwySurface *surface,
+                                            FILE *fh,
+                                            const XYZExportArgs *args,
+                                            gboolean needs_decimal_dot,
+                                            const gchar *decimal_dot,
+                                            guint decimal_dot_len);
+static void     xyzexport_load_args        (GwyContainer *settings,
+                                            XYZExportArgs *args);
+static void     xyzexport_save_args        (GwyContainer *settings,
+                                            XYZExportArgs *args);
 
 static const XYZExportArgs xyzexport_defaults = {
     FALSE, TRUE, 5, GWY_MASK_IGNORE,
@@ -73,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple XYZ text file."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "2.0",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -135,23 +150,45 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
 {
     XYZExportArgs args;
     GwyDataField *dfield, *mfield;
-    gint xres, yres, i, j, id;
+    GwySurface *surface;
+    gint fid, sid;
     struct lconv *locale_data;
     const gchar *decimal_dot;
-    guint precision, decimal_dot_len;
+    guint decimal_dot_len;
     gboolean needs_decimal_dot;
-    gdouble dx, dy, xoff, yoff;
-    const gdouble *d, *m = NULL;
-    gchar buf[40];
+    const guchar *title = NULL;
+    GwyAppPage pageno;
     FILE *fh;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD_ID, &fid,
                                      GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &sid,
+                                     GWY_APP_PAGE, &pageno,
                                      0);
-    if (!dfield) {
+
+    /* Ensure at most one is set.  We produce an error if no exportable data
+     * type is available or both types are available but neither is active.
+     * When only one is available or one is active we assume that is what the
+     * user wants to export. */
+    if (dfield && surface) {
+        if (pageno != GWY_PAGE_CHANNELS)
+            dfield = NULL;
+        if (pageno != GWY_PAGE_XYZS)
+            surface = NULL;
+    }
+    if (!dfield && !surface) {
         err_NO_CHANNEL_EXPORT(error);
         return FALSE;
+    }
+
+    if (dfield) {
+        pageno = GWY_PAGE_CHANNELS;
+    }
+    if (surface) {
+        pageno = GWY_PAGE_XYZS;
+        mfield = NULL;
     }
 
     xyzexport_load_args(gwy_app_settings_get(), &args);
@@ -162,8 +199,19 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
     g_return_val_if_fail(decimal_dot_len, FALSE);
     needs_decimal_dot = !gwy_strequal(decimal_dot, ".");
 
+    if (dfield) {
+        gwy_container_gis_string(data, gwy_app_get_data_title_key_for_id(fid),
+                                 &title);
+    }
+    if (surface) {
+        gwy_container_gis_string(data,
+                                 gwy_app_get_surface_title_key_for_id(sid),
+                                 &title);
+    }
+
     if (mode == GWY_RUN_INTERACTIVE) {
-        if (!xyzexport_export_dialog(&args, !!mfield, needs_decimal_dot)) {
+        if (!xyzexport_export_dialog(&args, !!mfield, needs_decimal_dot,
+                                     pageno, title)) {
             err_CANCELLED(error);
             return FALSE;
         }
@@ -174,86 +222,43 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
         return FALSE;
     }
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    d = gwy_data_field_get_data_const(dfield);
-    if (mfield && args.masking != GWY_MASK_IGNORE)
-        m = gwy_data_field_get_data_const(mfield);
-
     if (args.add_comment) {
-        GwySIUnit *units;
-        const guchar *title = "Unknown channel";
+        GwySIUnit *xyunit = NULL, *zunit = NULL;
         gchar *s;
 
-        g_snprintf(buf, sizeof(buf), "/%d/data/title", id);
-        gwy_container_gis_string_by_name(data, buf, &title);
-        gwy_fprintf(fh, "# %s %s\n", _("Channel:"), title);
+        if (pageno == GWY_PAGE_CHANNELS) {
+            gwy_fprintf(fh, "# %s %s\n", _("Channel:"), title);
+            xyunit = gwy_data_field_get_si_unit_xy(dfield);
+            zunit = gwy_data_field_get_si_unit_z(dfield);
+        }
+        if (pageno == GWY_PAGE_XYZS) {
+            gwy_fprintf(fh, "# %s %s\n", _("XYZ data:"), title);
+            xyunit = gwy_surface_get_si_unit_xy(surface);
+            zunit = gwy_surface_get_si_unit_z(surface);
+        }
 
-        units = gwy_data_field_get_si_unit_xy(dfield);
-        s = gwy_si_unit_get_string(units, GWY_SI_UNIT_FORMAT_VFMARKUP);
+        s = gwy_si_unit_get_string(xyunit, GWY_SI_UNIT_FORMAT_VFMARKUP);
         gwy_fprintf(fh, "# %s %s\n", _("Lateral units:"), s);
         g_free(s);
 
-        units = gwy_data_field_get_si_unit_z(dfield);
-        s = gwy_si_unit_get_string(units, GWY_SI_UNIT_FORMAT_VFMARKUP);
+        s = gwy_si_unit_get_string(zunit, GWY_SI_UNIT_FORMAT_VFMARKUP);
         gwy_fprintf(fh, "# %s %s\n", _("Value units:"), s);
         g_free(s);
     }
 
-    dx = gwy_data_field_get_xmeasure(dfield);
-    dy = gwy_data_field_get_ymeasure(dfield);
-    xoff = gwy_data_field_get_xoffset(dfield);
-    yoff = gwy_data_field_get_yoffset(dfield);
-    precision = args.precision;
-    if (needs_decimal_dot && args.decimal_dot) {
-        for (i = 0; i < yres; i++) {
-            gdouble y = dy*(i + 0.5) + yoff;
-            for (j = 0; j < xres; j++) {
-                gdouble x = dx*(j + 0.5) + xoff;
-
-                if (m) {
-                    if (args.masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
-                        continue;
-                    if (args.masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
-                        continue;
-                }
-
-                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, x);
-                if (print_with_decimal_dot(fh, buf,
-                                           decimal_dot, decimal_dot_len) == EOF)
-                    goto fail;
-                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, y);
-                if (print_with_decimal_dot(fh, buf,
-                                           decimal_dot, decimal_dot_len) == EOF)
-                    goto fail;
-                g_snprintf(buf, sizeof(buf), "%.*g\n", precision, d[i*xres + j]);
-                if (print_with_decimal_dot(fh, buf,
-                                           decimal_dot, decimal_dot_len) == EOF)
-                    goto fail;
-            }
-        }
+    if (pageno == GWY_PAGE_CHANNELS) {
+        if (!xyzexport_export_data_field(dfield, mfield, fh, &args,
+                                         needs_decimal_dot,
+                                         decimal_dot, decimal_dot_len))
+            goto fail;
     }
-    else {
-        for (i = 0; i < yres; i++) {
-            gdouble y = dy*(i + 0.5) + yoff;
-            for (j = 0; j < xres; j++) {
-                gdouble x = dx*(j + 0.5) + xoff;
-
-                if (m) {
-                    if (args.masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
-                        continue;
-                    if (args.masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
-                        continue;
-                }
-
-                if (gwy_fprintf(fh, "%.*g\t%.*g\t%.*g\n",
-                            precision, x,
-                            precision, y,
-                            precision, d[i*xres + j]) < 3)
-                    goto fail;
-            }
-        }
+    if (pageno == GWY_PAGE_XYZS) {
+        if (!xyzexport_export_surface(surface, fh, &args,
+                                      needs_decimal_dot,
+                                      decimal_dot, decimal_dot_len))
+            goto fail;
     }
+
     fclose(fh);
 
     return TRUE;
@@ -269,11 +274,14 @@ fail:
 static gboolean
 xyzexport_export_dialog(XYZExportArgs *args,
                         gboolean have_mask,
-                        gboolean needs_decimal_dot)
+                        gboolean needs_decimal_dot,
+                        GwyAppPage pageno,
+                        const gchar *title)
 {
     GtkWidget *dialog, *vbox, *hbox, *label, *decimal_dot, *add_comment,
               *precision;
     GSList *masking = NULL;
+    gchar *desc = NULL;
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(_("Export XYZ"), NULL, 0,
@@ -286,6 +294,16 @@ xyzexport_export_dialog(XYZExportArgs *args,
     vbox = gtk_vbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), vbox, TRUE, TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+
+    if (pageno == GWY_PAGE_CHANNELS)
+        desc = g_strdup_printf("%s %s", _("Channel:"), title);
+    else if (pageno == GWY_PAGE_XYZS)
+        desc = g_strdup_printf("%s %s", _("XYZ data:"), title);
+    label = gtk_label_new(desc);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
+    g_free(desc);
 
     gtk_box_pack_start(GTK_BOX(vbox), gwy_label_new_header(_("Options")),
                        FALSE, FALSE, 0);
@@ -345,6 +363,132 @@ xyzexport_export_dialog(XYZExportArgs *args,
     }
 
     return response == GTK_RESPONSE_OK;
+}
+
+static gboolean
+xyzexport_export_data_field(GwyDataField *dfield, GwyDataField *mfield,
+                            FILE *fh, const XYZExportArgs *args,
+                            gboolean needs_decimal_dot,
+                            const gchar *decimal_dot, guint decimal_dot_len)
+{
+    GwyMaskingType masking = args->masking;
+    guint precision = args->precision;
+    gdouble dx, dy, xoff, yoff;
+    const gdouble *d, *m = NULL;
+    gint xres, yres, i, j;
+    gchar buf[40];
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    dx = gwy_data_field_get_xmeasure(dfield);
+    dy = gwy_data_field_get_ymeasure(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+
+    d = gwy_data_field_get_data_const(dfield);
+    if (mfield && masking != GWY_MASK_IGNORE)
+        m = gwy_data_field_get_data_const(mfield);
+
+    if (needs_decimal_dot && args->decimal_dot) {
+        for (i = 0; i < yres; i++) {
+            gdouble y = dy*(i + 0.5) + yoff;
+            for (j = 0; j < xres; j++) {
+                gdouble x = dx*(j + 0.5) + xoff;
+                gdouble z = d[i*xres + j];
+
+                if (m) {
+                    if (masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
+                        continue;
+                    if (masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
+                        continue;
+                }
+
+                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, x);
+                if (print_with_decimal_dot(fh, buf,
+                                           decimal_dot, decimal_dot_len) == EOF)
+                    return FALSE;
+                g_snprintf(buf, sizeof(buf), "%.*g\t", precision, y);
+                if (print_with_decimal_dot(fh, buf,
+                                           decimal_dot, decimal_dot_len) == EOF)
+                    return FALSE;
+                g_snprintf(buf, sizeof(buf), "%.*g\n", precision, z);
+                if (print_with_decimal_dot(fh, buf,
+                                           decimal_dot, decimal_dot_len) == EOF)
+                    return FALSE;
+            }
+        }
+    }
+    else {
+        for (i = 0; i < yres; i++) {
+            gdouble y = dy*(i + 0.5) + yoff;
+            for (j = 0; j < xres; j++) {
+                gdouble x = dx*(j + 0.5) + xoff;
+                gdouble z = d[i*xres + j];
+
+                if (m) {
+                    if (masking == GWY_MASK_EXCLUDE && m[i*xres + j] > 0.5)
+                        continue;
+                    if (masking == GWY_MASK_INCLUDE && m[i*xres + j] < 0.5)
+                        continue;
+                }
+
+                if (gwy_fprintf(fh, "%.*g\t%.*g\t%.*g\n",
+                                precision, x, precision, y, precision, z) < 3)
+                    return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+static gboolean
+xyzexport_export_surface(GwySurface *surface,
+                         FILE *fh, const XYZExportArgs *args,
+                         gboolean needs_decimal_dot,
+                         const gchar *decimal_dot, guint decimal_dot_len)
+{
+    guint precision = args->precision;
+    const GwyXYZ *data;
+    guint n, i;
+    gchar buf[40];
+
+    data = surface->data;
+    n = surface->n;
+
+    if (needs_decimal_dot && args->decimal_dot) {
+        for (i = 0; i < n; i++) {
+            gdouble x = data[i].x;
+            gdouble y = data[i].y;
+            gdouble z = data[i].z;
+
+            g_snprintf(buf, sizeof(buf), "%.*g\t", precision, x);
+            if (print_with_decimal_dot(fh, buf,
+                                       decimal_dot, decimal_dot_len) == EOF)
+                return FALSE;
+            g_snprintf(buf, sizeof(buf), "%.*g\t", precision, y);
+            if (print_with_decimal_dot(fh, buf,
+                                       decimal_dot, decimal_dot_len) == EOF)
+                return FALSE;
+            g_snprintf(buf, sizeof(buf), "%.*g\n", precision, z);
+            if (print_with_decimal_dot(fh, buf,
+                                       decimal_dot, decimal_dot_len) == EOF)
+                return FALSE;
+        }
+    }
+    else {
+        for (i = 0; i < n; i++) {
+            gdouble x = data[i].x;
+            gdouble y = data[i].y;
+            gdouble z = data[i].z;
+
+            if (gwy_fprintf(fh, "%.*g\t%.*g\t%.*g\n",
+                            precision, x, precision, y, precision, z) < 3)
+                return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 static const gchar add_comment_key[] = "/module/xyzexport/add-comment";
