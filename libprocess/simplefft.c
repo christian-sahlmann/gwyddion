@@ -160,18 +160,10 @@ gwy_fft_find_nice_size(gint size)
 
 #define _GWY_SCRATCH_BUFFER_ALIGN(n, l) ((MAX((n), 1) + (l)-1)/(l)*(l))
 
-#if (GLIB_MAJOR_VERSION > 2 \
-     || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 10))
 #define _gwy_scratch_buffer_free_backend(b, l) \
     g_slice_free1((l)*sizeof(gdouble), (b))
 #define _gwy_scratch_buffer_alloc_backend(l) \
     g_slice_alloc((l)*sizeof(gdouble) + sizeof(_GwyScratchBufferHead))
-#else
-#define _gwy_scratch_buffer_free_backend(b, l) \
-    g_free(b)
-#define _gwy_scratch_buffer_alloc_backend(b, l) \
-    g_malloc((l)*sizeof(gdouble) + sizeof(_GwyScratchBufferHead))
-#endif
 
 typedef union {
     struct {
