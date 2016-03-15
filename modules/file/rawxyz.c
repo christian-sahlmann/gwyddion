@@ -459,12 +459,45 @@ zunits_changed(RawXYZControls *controls,
                         zmin, zmax, args->z_units);
 }
 
+static gchar
+figure_out_comma_fix_char(const gchar *line)
+{
+    gchar *comma, *end;
+
+    /* Not a number, try again. */
+    if (!g_ascii_strtod(line, &end) && end == line)
+        return 0;
+
+    /* There are decimal dots => POSIX. */
+    if (strchr(line, '.'))
+        return ' ';
+
+    /* There are no commas => POSIX. */
+    comma = strchr(line, ',');
+    if (!comma)
+        return ' ';
+
+    /* There are spaces after commas => POSIX. */
+    if (g_regex_match_simple(",[ \t]", line, G_REGEX_NO_AUTO_CAPTURE, 0))
+        return ' ';
+
+    /* There is a contiguous block of digits and commas => POSIX. */
+    if (g_regex_match_simple("[0-9],[0-9]+,[0-9]", line,
+                             G_REGEX_NO_AUTO_CAPTURE, 0))
+        return ' ';
+
+    /* There are commas and may actually be inside numbers.  Assume the decimal
+     * separator is coma. */
+    return '.';
+}
+
 static GwySurface*
 read_xyz_points(gchar *p)
 {
     GwySurface *surface;
     GArray *points;
     gchar *line, *end;
+    char comma_fix_char = 0;
 
     points = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
@@ -473,15 +506,28 @@ read_xyz_points(gchar *p)
         if (!line[0] || line[0] == '#')
             continue;
 
+        if (!comma_fix_char) {
+            comma_fix_char = figure_out_comma_fix_char(line);
+            if (comma_fix_char)
+                continue;
+        }
+
+        for (end = line; *end; end++) {
+            if (*end == ';')
+                *end = ' ';
+            else if (*end == ',')
+                *end = comma_fix_char;
+        }
+
         if (!(pt.x = g_ascii_strtod(line, &end)) && end == line)
             continue;
         line = end;
-        while (g_ascii_isspace(*line) || *line == ';' || *line == ',')
+        while (g_ascii_isspace(*line))
              line++;
         if (!(pt.y = g_ascii_strtod(line, &end)) && end == line)
             continue;
         line = end;
-        while (g_ascii_isspace(*line) || *line == ';' || *line == ',')
+        while (g_ascii_isspace(*line))
              line++;
         if (!(pt.z = g_ascii_strtod(line, &end)) && end == line)
             continue;
