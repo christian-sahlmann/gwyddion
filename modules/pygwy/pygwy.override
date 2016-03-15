@@ -184,6 +184,8 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
       case GWY_APP_GRAPH_MODEL_ID:
       case GWY_APP_SPECTRA_ID:
       case GWY_APP_BRICK_ID:
+      case GWY_APP_SURFACE_ID:
+      case GWY_APP_PAGE:
          // integer
          gwy_app_data_browser_get_current(obj_type, &iobj, NULL);
          return PyInt_FromLong(iobj);
@@ -194,19 +196,23 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
       case GWY_APP_GRAPH_MODEL_KEY:
       case GWY_APP_SPECTRA_KEY:
       case GWY_APP_BRICK_KEY:
+      case GWY_APP_SURFACE_KEY:
          // quark
          gwy_app_data_browser_get_current(obj_type, &qobj, NULL);
          return PyLong_FromLong(qobj);
          break;
       case GWY_APP_CONTAINER:
-      case GWY_APP_DATA_VIEW:
-      case GWY_APP_GRAPH:
       case GWY_APP_DATA_FIELD:
       case GWY_APP_MASK_FIELD:
       case GWY_APP_SHOW_FIELD:
       case GWY_APP_GRAPH_MODEL:
       case GWY_APP_SPECTRA:
       case GWY_APP_BRICK:
+      case GWY_APP_SURFACE:
+      case GWY_APP_DATA_VIEW:
+      case GWY_APP_GRAPH:
+      case GWY_APP_VOLUME_VIEW:
+      case GWY_APP_XYZ_VIEW:
          // gobject
          gwy_app_data_browser_get_current(obj_type, &gobj, NULL);
          return pygobject_new(gobj);
