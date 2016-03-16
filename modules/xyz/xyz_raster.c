@@ -314,6 +314,7 @@ xyzras_dialog(XYZRasArgs *args,
     gint row, response;
     const guchar *gradient;
     GwySelection *selection;
+    gdouble xmin, xmax, ymin, ymax;
     GType gtype;
     GQuark quark;
 
@@ -380,7 +381,12 @@ xyzras_dialog(XYZRasArgs *args,
         gwy_container_set_const_string_by_name(controls.mydata,
                                                "/0/base/palette", gradient);
     }
-    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 1.0, 1.0, TRUE);
+    gwy_surface_get_xrange(rdata->surface, &xmin, &xmax);
+    gwy_surface_get_yrange(rdata->surface, &ymin, &ymax);
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
+                                xmax - xmin, ymax - ymin, TRUE);
+    gwy_data_field_set_xoffset(dfield, xmin);
+    gwy_data_field_set_yoffset(dfield, ymin);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     g_object_unref(dfield);
 
@@ -792,16 +798,21 @@ update_selection(XYZRasControls *controls)
     XYZRasArgs *args = controls->args;
     GwyVectorLayer *vlayer;
     GwySelection *selection;
+    GwyDataField *dfield;
+    gdouble xoff, yoff;
     gdouble xy[4];
 
     if (controls->in_selection_update)
         return;
 
     controls->in_selection_update = TRUE;
-    xy[0] = args->xmin;
-    xy[1] = args->ymin;
-    xy[2] = args->xmax;
-    xy[3] = args->ymax;
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    xy[0] = args->xmin - xoff;
+    xy[1] = args->ymin - yoff;
+    xy[2] = args->xmax - xoff;
+    xy[3] = args->ymax - yoff;
     vlayer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(controls->view));
     selection = gwy_vector_layer_ensure_selection(vlayer);
     gwy_selection_set_data(selection, 1, xy);
@@ -813,6 +824,8 @@ selection_changed(XYZRasControls *controls,
                   G_GNUC_UNUSED gint hint, GwySelection *selection)
 {
     XYZRasArgs *args = controls->args;
+    GwyDataField *dfield;
+    gdouble xoff, yoff;
     guint n;
     gdouble xy[4];
 
@@ -824,11 +837,14 @@ selection_changed(XYZRasControls *controls,
         return;
 
     controls->in_selection_update = TRUE;
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     gwy_selection_get_data(selection, xy);
-    args->xmin = xy[0];
-    args->ymin = xy[1];
-    args->xmax = xy[2];
-    args->ymax = xy[3];
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    args->xmin = xy[0] + xoff;
+    args->ymin = xy[1] + yoff;
+    args->xmax = xy[2] + xoff;
+    args->ymax = xy[3] + yoff;
     set_all_physical_dimensions(controls);
     controls->in_selection_update = FALSE;
 }
