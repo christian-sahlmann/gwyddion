@@ -1739,6 +1739,51 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_VOLUME:
+ *
+ * The "Volume" stock icon.
+ * <inlinegraphic fileref="gwy_volume-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_CALIBRATE:
+ *
+ * The "Volume-Calibrate" stock icon.
+ * <inlinegraphic fileref="gwy_volume_calibrate-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_DIMENSIONS:
+ *
+ * The "Volume-Dimensions" stock icon.
+ * <inlinegraphic fileref="gwy_volume_dimensions-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_INVERT:
+ *
+ * The "Volume-Invert" stock icon.
+ * <inlinegraphic fileref="gwy_volume_invert-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_VOLUMIZE_LAYERS:
+ *
+ * The "Volumize-Layers" stock icon.
+ * <inlinegraphic fileref="gwy_volumize_layers-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
  * GWY_STOCK_ZOOM_1_1:
  *
  * The "Zoom-1:1" stock icon.
