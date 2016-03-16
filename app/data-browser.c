@@ -591,6 +591,7 @@ _gwy_app_analyse_data_key(const gchar *strkey,
     else if (gwy_strequal(s, "data/view/scale")
              || gwy_strequal(s, "data/view/relative-size")) {
         *type = KEY_IS_DATA_VIEW_SCALE;
+        n += strlen("data/");
     }
     else if (gwy_strequal(s, "mask/red")
              || gwy_strequal(s, "mask/blue")
@@ -7007,7 +7008,6 @@ fail:
     g_warning("%s does not map to any new location", g_quark_to_string(quark));
 }
 
-/* TODO TODO TODO: Add support for view scales and sizes. */
 static void
 gwy_app_data_merge_copy_2(gpointer key,
                           gpointer value,
@@ -7126,22 +7126,30 @@ gwy_app_data_merge_copy_2(gpointer key,
         break;
     }
 
-    if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL, &id2p))
-        goto fail;
-    id2 = GPOINTER_TO_INT(id2p);
-
     switch (type) {
         case KEY_IS_MASK:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         quark = gwy_app_get_mask_key_for_id(id2);
         gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SHOW:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         quark = gwy_app_get_show_key_for_id(id2);
         gwy_container_set_object(dest, quark, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SPS_REF:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         id = g_value_get_int(gvalue);
         idp = GINT_TO_POINTER(id);
         /* Ignore references to nonexistent sps ids silently */
@@ -7153,119 +7161,283 @@ gwy_app_data_merge_copy_2(gpointer key,
         break;
 
         case KEY_IS_TITLE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/title", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_PALETTE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/base/palette", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_MASK_COLOR:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/mask%s", id2, strkey + len);
         gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
         break;
 
         case KEY_IS_SELECT:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/select%s", id2, strkey + len);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_RANGE_TYPE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/base/range-type", id2);
         gwy_container_set_enum_by_name(dest, buf, g_value_get_int(gvalue));
         break;
 
         case KEY_IS_RANGE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/base%s", id2, strkey + len);
         gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
         break;
 
         case KEY_IS_REAL_SQUARE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/realsquare", id2);
         gwy_container_set_boolean_by_name(dest, buf,
                                           g_value_get_boolean(gvalue));
         break;
 
         case KEY_IS_CHANNEL_META:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/meta", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_CHANNEL_LOG:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/data/log", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
+        case KEY_IS_DATA_VIEW_SCALE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/data%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
         case KEY_IS_3D_SETUP:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/3d/setup", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_3D_LABEL:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/3d%s", id2, strkey + len);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_3D_PALETTE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/3d/palette", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_3D_MATERIAL:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/%d/3d/material", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
+        case KEY_IS_3D_VIEW_SCALE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
+        case KEY_IS_3D_VIEW_SIZE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_CHANNELS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/%d/%s", id2, strkey + len);
+        gwy_container_set_int32_by_name(dest, buf, g_value_get_int(gvalue));
+        break;
+
+        case KEY_IS_GRAPH_VIEW_SCALE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_GRAPHS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), GRAPH_PREFIX "/%d%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
+        case KEY_IS_GRAPH_VIEW_SIZE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_GRAPHS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), GRAPH_PREFIX "/%d%s", id2, strkey + len);
+        gwy_container_set_int32_by_name(dest, buf, g_value_get_int(gvalue));
+        break;
+
         case KEY_IS_BRICK_TITLE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/brick/%d/title", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_BRICK_PREVIEW:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/brick/%d/preview", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_BRICK_PREVIEW_PALETTE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/brick/%d/preview/palette", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_BRICK_META:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/brick/%d/meta", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_BRICK_LOG:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/brick/%d/log", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
+        case KEY_IS_BRICK_VIEW_SCALE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_VOLUMES], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/brick/%d%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
         case KEY_IS_SURFACE_TITLE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/surface/%d/title", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_SURFACE_PREVIEW:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/surface/%d/preview", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SURFACE_PREVIEW_PALETTE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/surface/%d/preview/palette", id2);
         gwy_container_set_string_by_name(dest, buf, g_value_dup_string(gvalue));
         break;
 
         case KEY_IS_SURFACE_META:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/surface/%d/meta", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
         break;
 
         case KEY_IS_SURFACE_LOG:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
         g_snprintf(buf, sizeof(buf), "/surface/%d/log", id2);
         gwy_container_set_object_by_name(dest, buf, g_value_get_object(gvalue));
+        break;
+
+        case KEY_IS_SURFACE_VIEW_SCALE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/surface/%d%s", id2, strkey + len);
+        gwy_container_set_double_by_name(dest, buf, g_value_get_double(gvalue));
+        break;
+
+        case KEY_IS_SURFACE_VIEW_SIZE:
+        if (!g_hash_table_lookup_extended(map[GWY_PAGE_XYZS], idp, NULL,
+                                          &id2p))
+            goto fail;
+        id2 = GPOINTER_TO_INT(id2p);
+        g_snprintf(buf, sizeof(buf), "/surface/%d%s", id2, strkey + len);
+        gwy_container_set_int32_by_name(dest, buf, g_value_get_int(gvalue));
         break;
 
         default:
@@ -7275,9 +7447,9 @@ gwy_app_data_merge_copy_2(gpointer key,
     return;
 
 fail:
-    g_warning("%s does not map to any new location, cannot map it "
+    g_warning("%s (%u) does not map to any new location, cannot map it "
               "generically because the current key organization is a mess",
-              strkey);
+              strkey, type);
 }
 
 static gint
