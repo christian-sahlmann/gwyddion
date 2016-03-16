@@ -725,20 +725,21 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
                              GwyDataField *iout,
                              GwyTransformDirection direction)
 {
+    gint xres = rin->xres, yres = rin->yres;
 #ifdef HAVE_FFTW3
     fftw_iodim dims[2], howmany_dims[1];
     fftw_plan plan;
     gint j, k;
 
-    dims[1].n = rin->xres;
+    dims[1].n = xres;
     dims[1].is = 1;
     dims[1].os = 1;
-    dims[0].n = rin->yres;
+    dims[0].n = yres;
     dims[0].is = dims[1].is * dims[1].n;
     dims[0].os = dims[1].os * dims[1].n;
     howmany_dims[0].n = 1;
-    howmany_dims[0].is = rin->xres*rin->yres;
-    howmany_dims[0].os = rin->xres*rin->yres;
+    howmany_dims[0].is = xres*yres;
+    howmany_dims[0].os = xres*yres;
     plan = fftw_plan_guru_split_dft_r2c(2, dims, 1, howmany_dims,
                                         ibuf->data, rout->data, iout->data,
                                         _GWY_FFTW_PATIENCE);
@@ -749,67 +750,69 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
     fftw_destroy_plan(plan);
 
     /* Complete the missing half of transform.  */
-    for (j = rin->xres/2 + 1; j < rin->xres; j++) {
-        rout->data[j] = rout->data[rin->xres - j];
-        iout->data[j] = -iout->data[rin->xres - j];
+    for (j = xres/2 + 1; j < xres; j++) {
+        rout->data[j] = rout->data[xres - j];
+        iout->data[j] = -iout->data[xres - j];
     }
-    for (k = 1; k < rin->yres; k++) {
+    for (k = 1; k < yres; k++) {
         gdouble *r0, *i0, *r1, *i1;
 
-        r0 = rout->data + k*rin->xres;
-        i0 = iout->data + k*rin->xres;
-        r1 = rout->data + (rin->yres - k)*rin->xres;
-        i1 = iout->data + (rin->yres - k)*rin->xres;
-        for (j = rin->xres/2 + 1; j < rin->xres; j++) {
-            r0[j] = r1[rin->xres - j];
-            i0[j] = -i1[rin->xres - j];
+        r0 = rout->data + k*xres;
+        i0 = iout->data + k*xres;
+        r1 = rout->data + (yres - k)*xres;
+        i1 = iout->data + (yres - k)*xres;
+        for (j = xres/2 + 1; j < xres; j++) {
+            r0[j] = r1[xres - j];
+            i0[j] = -i1[xres - j];
         }
     }
 
-    gwy_data_field_multiply(rout, 1.0/sqrt(rin->xres*rin->yres));
+    gwy_data_field_multiply(rout, 1.0/sqrt(xres*yres));
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
-        gwy_data_field_multiply(iout, 1.0/sqrt(rin->xres*rin->yres));
+        gwy_data_field_multiply(iout, 1.0/sqrt(xres*yres));
     else
-        gwy_data_field_multiply(iout, -1.0/sqrt(rin->xres*rin->yres));
+        gwy_data_field_multiply(iout, -1.0/sqrt(xres*yres));
 #else
+    GwyDataField *rbuf = gwy_data_field_duplicate(rin);
     gint k, j;
 
-    for (k = 0; k+1 < rin->yres; k += 2) {
+    for (k = 0; k+1 < yres; k += 2) {
         gdouble *re, *im, *r0, *r1, *i0, *i1;
 
-        re = rout->data + k*rin->xres;
-        im = rout->data + (k + 1)*rin->xres;
-        r0 = rin->data + k*rin->xres;
-        r1 = rin->data + (k + 1)*rin->xres;
-        i0 = ibuf->data + k*rin->xres;
-        i1 = ibuf->data + (k + 1)*rin->xres;
+        re = rout->data + k*xres;
+        im = rout->data + (k + 1)*xres;
+        r0 = rbuf->data + k*xres;
+        r1 = rbuf->data + (k + 1)*xres;
+        i0 = ibuf->data + k*xres;
+        i1 = ibuf->data + (k + 1)*xres;
 
-        gwy_fft_simple(direction, rin->xres, 1, r0, r1, 1, re, im);
+        gwy_fft_simple(direction, xres, 1, r0, r1, 1, re, im);
 
         /* Disentangle transforms of the row couples */
         r0[0] = re[0];
         i0[0] = 0.0;
         r1[0] = im[0];
         i1[0] = 0.0;
-        for (j = 1; j < rin->xres; j++) {
-            r0[j] = (re[j] + re[rin->xres - j])/2.0;
-            i0[j] = (im[j] - im[rin->xres - j])/2.0;
-            r1[j] = (im[j] + im[rin->xres - j])/2.0;
-            i1[j] = (-re[j] + re[rin->xres - j])/2.0;
+        for (j = 1; j < xres; j++) {
+            r0[j] = (re[j] + re[xres - j])/2.0;
+            i0[j] = (im[j] - im[xres - j])/2.0;
+            r1[j] = (im[j] + im[xres - j])/2.0;
+            i1[j] = (-re[j] + re[xres - j])/2.0;
         }
     }
-    if (rin->yres % 2) {
-        k = rin->xres * (rin->yres - 1);
-        gwy_clear(ibuf->data, rin->xres);
-        gwy_fft_simple(direction, rin->xres,
-                       1, rin->data + k, ibuf->data,
+    if (yres % 2) {
+        k = xres * (yres - 1);
+        gwy_clear(ibuf->data, xres);
+        gwy_fft_simple(direction, xres,
+                       1, rbuf->data + k, ibuf->data,
                        1, rout->data + k, iout->data + k);
 
     }
-    for (k = 0; k < rin->xres; k++)
-        gwy_fft_simple(direction, rin->yres,
-                       rin->xres, rin->data + k, ibuf->data + k,
-                       rin->xres, rout->data + k, iout->data + k);
+    for (k = 0; k < xres; k++)
+        gwy_fft_simple(direction, yres,
+                       xres, rbuf->data + k, ibuf->data + k,
+                       xres, rout->data + k, iout->data + k);
+    g_object_unref(rbuf);
 #endif
     gwy_data_field_invalidate(rout);
     gwy_data_field_invalidate(iout);
