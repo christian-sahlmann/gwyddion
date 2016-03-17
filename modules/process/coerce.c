@@ -25,7 +25,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyrandgenset.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -35,16 +38,31 @@
 
 typedef enum {
     COERCE_DISTRIBUTION_DATA     = 0,
-    COERCE_DISTRIBUTION_GAUSSIAN = 1,
-    COERCE_DISTRIBUTION_UNIFORM  = 2,
+    COERCE_DISTRIBUTION_UNIFORM  = 1,
+    COERCE_DISTRIBUTION_GAUSSIAN = 2,
     COERCE_NDISTRIBUTIONS
 } CoerceDistributionType;
 
+typedef enum {
+    COERCE_PROCESSING_FIELD   = 0,
+    COERCE_PROCESSING_ROWS    = 1,
+    COERCE_NPROCESSING
+} CoerceProcessingType;
+
 typedef struct {
     CoerceDistributionType distribution;
-    gboolean profiles;
+    CoerceProcessingType processing;
     GwyAppDataId template;
 } CoerceArgs;
+
+typedef struct {
+    CoerceArgs *args;
+    GwyDataField *dfield;
+    GtkWidget *dialogue;
+    GSList *distribution;
+    GSList *processing;
+    GtkWidget *template;
+} CoerceControls;
 
 typedef struct {
     gdouble z;
@@ -54,6 +72,18 @@ typedef struct {
 static gboolean      module_register       (void);
 static void          coerce                (GwyContainer *data,
                                             GwyRunType run);
+static gboolean      coerce_dialogue       (CoerceArgs *args,
+                                            GwyDataField *dfield);
+static void          distribution_changed  (GtkToggleButton *toggle,
+                                            CoerceControls *controls);
+static void          processing_changed    (GtkToggleButton *toggle,
+                                            CoerceControls *controls);
+static void          template_changed      (GwyDataChooser *chooser,
+                                            CoerceControls *controls);
+static void          update_sensitivity    (CoerceControls *controls);
+static gboolean      template_filter       (GwyContainer *data,
+                                            gint id,
+                                            gpointer user_data);
 static GwyDataField* coerce_do             (GwyDataField *dfield,
                                             const CoerceArgs *args);
 static void          build_values_uniform  (gdouble *z,
@@ -75,7 +105,7 @@ static void          save_args             (GwyContainer *container,
 
 static const CoerceArgs coerce_defaults = {
     COERCE_DISTRIBUTION_UNIFORM,
-    FALSE,
+    COERCE_PROCESSING_FIELD,
     GWY_APP_DATA_ID_NONE,
 };
 
@@ -122,16 +152,213 @@ coerce(GwyContainer *data, GwyRunType run)
 
     settings = gwy_app_settings_get();
     load_args(settings, &args);
-    result = coerce_do(dfield, &args);
-    save_args(settings, &args);
 
-    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    g_object_unref(result);
-    gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
-                            0);
-    gwy_app_set_data_field_title(data, newid, _("Coerced"));
-    gwy_app_channel_log_add_proc(data, id, newid);
+    if (args.distribution == COERCE_DISTRIBUTION_DATA
+        && !template_filter(gwy_app_data_browser_get(args.template.datano),
+                            args.template.id, dfield))
+        args.distribution = coerce_defaults.distribution;
+
+    if (run == GWY_RUN_IMMEDIATE
+        || (run == GWY_RUN_INTERACTIVE && coerce_dialogue(&args, dfield))) {
+        result = coerce_do(dfield, &args);
+
+        newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+        g_object_unref(result);
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                GWY_DATA_ITEM_PALETTE,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                0);
+        gwy_app_set_data_field_title(data, newid, _("Coerced"));
+        gwy_app_channel_log_add_proc(data, id, newid);
+    }
+
+    save_args(settings, &args);
+}
+
+static gboolean
+coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
+{
+    static const GwyEnum distributions[] = {
+        { N_("distribution|Uniform"),  COERCE_DISTRIBUTION_UNIFORM,  },
+        { N_("distribution|Gaussian"), COERCE_DISTRIBUTION_GAUSSIAN, },
+        { N_("As another data"),       COERCE_DISTRIBUTION_DATA,     },
+    };
+
+    static const GwyEnum processings[] = {
+        { N_("Entire image"),         COERCE_PROCESSING_FIELD, },
+        { N_("By row (identically)"), COERCE_PROCESSING_ROWS,  },
+    };
+
+    CoerceControls controls;
+    GtkWidget *dialogue, *table, *label;
+    GwyDataChooser *chooser;
+    gint row, response;
+
+    controls.args = args;
+    controls.dfield = dfield;
+
+    dialogue = gtk_dialog_new_with_buttons(_("Coerce Statistics"),
+                                           NULL, 0,
+                                           GTK_STOCK_CANCEL,
+                                           GTK_RESPONSE_CANCEL,
+                                           GTK_STOCK_OK,
+                                           GTK_RESPONSE_OK,
+                                           NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialogue), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
+    controls.dialogue = dialogue;
+
+    table = gtk_table_new(COERCE_NDISTRIBUTIONS + COERCE_NPROCESSING + 4,
+                          4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialogue)->vbox), table,
+                       TRUE, TRUE, 0);
+    row = 0;
+
+    label = gtk_label_new(_("Coerce value distribution to:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.distribution
+        = gwy_radio_buttons_create(distributions, G_N_ELEMENTS(distributions),
+                                   G_CALLBACK(distribution_changed), &controls,
+                                   args->distribution);
+    row = gwy_radio_buttons_attach_to_table(controls.distribution,
+                                            GTK_TABLE(table),
+                                            3, row);
+
+    controls.template = gwy_data_chooser_new_channels();
+    chooser = GWY_DATA_CHOOSER(controls.template);
+    gwy_data_chooser_set_active_id(chooser, &args->template);
+    gwy_data_chooser_set_filter(chooser, &template_filter, dfield, NULL);
+    gwy_data_chooser_set_active_id(chooser, &args->template);
+    gwy_data_chooser_get_active_id(chooser, &args->template);
+    gwy_table_attach_hscale(table, row, _("_Template:"), NULL,
+                            GTK_OBJECT(controls.template), GWY_HSCALE_WIDGET);
+    g_signal_connect(controls.template, "changed",
+                     G_CALLBACK(template_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    label = gtk_label_new(_("Data processing:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.processing
+        = gwy_radio_buttons_create(processings, G_N_ELEMENTS(processings),
+                                   G_CALLBACK(processing_changed), &controls,
+                                   args->processing);
+    row = gwy_radio_buttons_attach_to_table(controls.processing,
+                                            GTK_TABLE(table),
+                                            3, row);
+
+    update_sensitivity(&controls);
+
+    gtk_widget_show_all(dialogue);
+
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialogue));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialogue);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialogue);
+
+    return TRUE;
+}
+
+static void
+distribution_changed(GtkToggleButton *toggle,
+                     CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
+
+    args->distribution = gwy_radio_buttons_get_current(controls->distribution);
+    update_sensitivity(controls);
+}
+
+static void
+processing_changed(GtkToggleButton *toggle,
+                   CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
+
+    args->processing = gwy_radio_buttons_get_current(controls->processing);
+    update_sensitivity(controls);
+}
+
+static void
+template_changed(GwyDataChooser *chooser,
+                 CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    gwy_data_chooser_get_active_id(chooser, &args->template);
+}
+
+static void
+update_sensitivity(CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+    GtkWidget *widget;
+    gboolean has_template, is_data;
+
+    has_template
+        = !!gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->template),
+                                        NULL);
+    widget = gwy_radio_buttons_find(controls->distribution,
+                                    COERCE_DISTRIBUTION_DATA);
+    gtk_widget_set_sensitive(widget, has_template);
+
+    is_data = (args->distribution == COERCE_DISTRIBUTION_DATA);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->template), is_data);
+}
+
+static gboolean
+template_filter(GwyContainer *data,
+                gint id,
+                gpointer user_data)
+{
+    GwyDataField *template, *dfield = (GwyDataField*)user_data;
+    GQuark quark;
+
+    quark = gwy_app_get_data_key_for_id(id);
+    if (!gwy_container_gis_object(data, quark, &template))
+        return FALSE;
+
+    if (template == dfield)
+        return FALSE;
+
+    return !gwy_data_field_check_compatibility(dfield, template,
+                                               GWY_DATA_COMPATIBILITY_LATERAL
+                                               | GWY_DATA_COMPATIBILITY_VALUE);
 }
 
 static int
@@ -164,7 +391,6 @@ coerce_do(GwyDataField *dfield, const CoerceArgs *args)
     qsort(vpos, n, sizeof(ValuePos), compare_double);
 
     if (args->distribution == COERCE_DISTRIBUTION_DATA) {
-        /* FIXME: Must check if the field exists! */
         GQuark quark = gwy_app_get_data_key_for_id(args->template.id);
         GwyContainer *data = gwy_app_data_browser_get(args->template.datano);
         GwyDataField *src = gwy_container_get_object(data, quark);
@@ -250,10 +476,10 @@ build_values_from_data(gdouble *z, guint n, const gdouble *data, guint ndata)
 
     if (n < 3) {
         if (n == 1)
-            z[0] = data[ndata/2];
+            z[0] = sorted[ndata/2];
         else if (n == 2) {
-            z[0] = data[0];
-            z[1] = data[ndata-1];
+            z[0] = sorted[0];
+            z[1] = sorted[ndata-1];
         }
         g_free(sorted);
         return;
@@ -263,10 +489,12 @@ build_values_from_data(gdouble *z, guint n, const gdouble *data, guint ndata)
         gdouble x = (ndata - 1.0)*i/(n - 1.0);
         gint j = (gint)floor(x);
 
-        if (G_UNLIKELY(j >= n-1)) {
-            j = n-2;
+        if (G_UNLIKELY(j >= ndata-1)) {
+            j = ndata-2;
             x = 1.0;
         }
+        else
+            x -= j;
 
         z[i] = sorted[j]*(1.0 - x) + sorted[j+1]*x;
     }
@@ -275,14 +503,15 @@ build_values_from_data(gdouble *z, guint n, const gdouble *data, guint ndata)
 }
 
 static const gchar distribution_key[] = "/module/coerce/distribution";
-static const gchar profiles_key[]     = "/module/coerce/profiles";
+static const gchar processing_key[]   = "/module/coerce/processing";
 
 static void
 sanitize_args(CoerceArgs *args)
 {
     args->distribution = MIN(args->distribution, COERCE_NDISTRIBUTIONS-1);
-    args->profiles = !!args->profiles;
-    gwy_app_data_id_verify_channel(&args->template);
+    args->processing = MIN(args->processing, COERCE_NPROCESSING-1);
+    if (!gwy_app_data_id_verify_channel(&args->template))
+        args->distribution = coerce_defaults.distribution;
 }
 
 static void
@@ -293,7 +522,8 @@ load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, distribution_key,
                                    &args->distribution);
-    gwy_container_gis_boolean_by_name(container, profiles_key, &args->profiles);
+    gwy_container_gis_enum_by_name(container, processing_key,
+                                   &args->processing);
     args->template = template_id;
     sanitize_args(args);
 }
@@ -305,7 +535,8 @@ save_args(GwyContainer *container,
     template_id = args->template;
     gwy_container_set_enum_by_name(container, distribution_key,
                                    args->distribution);
-    gwy_container_set_boolean_by_name(container, profiles_key, args->profiles);
+    gwy_container_set_enum_by_name(container, processing_key,
+                                   args->processing);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
