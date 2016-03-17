@@ -37,7 +37,7 @@
 #define page_id_key "gwy-app-data-browser-page-id"
 #define container_key "gwy-app-data-browser-container"
 enum {
-    PAGE_NOPAGE = G_MAXINT-1
+    PAGENO_SHIFT = 16,
 };
 
 #define GWY_TYPE_TOOL_SELECTION_MANAGER            (gwy_tool_selection_manager_get_type())
@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -218,7 +218,7 @@ gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
     tool->model = gtk_list_store_new(MODEL_N_COLUMNS,
                                      G_TYPE_INT, G_TYPE_OBJECT);
     g_object_set_data(G_OBJECT(tool->model), page_id_key,
-                      GUINT_TO_POINTER(PAGE_NOPAGE+1));
+                      GUINT_TO_POINTER(GWY_PAGE_NOPAGE + PAGENO_SHIFT));
 
     gwy_tool_selection_manager_init_dialog(tool);
     tool->in_setup = FALSE;
