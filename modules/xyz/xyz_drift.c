@@ -1585,7 +1585,9 @@ preview(XYZDriftControls *controls)
     /*fill drift graph*/
     gwy_graph_model_remove_all_curves(controls->gmodel);
     gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(gcmodel, rdata->time, rdata->zdrift, rdata->npoints);
+    if (args->graph_type == GWY_XYZDRIFT_GRAPH_X) gwy_graph_curve_model_set_data(gcmodel, rdata->time, rdata->xdrift, rdata->npoints);
+    else if (args->graph_type == GWY_XYZDRIFT_GRAPH_Y) gwy_graph_curve_model_set_data(gcmodel, rdata->time, rdata->ydrift, rdata->npoints);
+    else gwy_graph_curve_model_set_data(gcmodel, rdata->time, rdata->zdrift, rdata->npoints);
     gwy_graph_model_add_curve(controls->gmodel, gcmodel);
 
     if (!dfield) {
