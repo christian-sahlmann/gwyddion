@@ -140,23 +140,20 @@ typedef struct {
     GtkWidget *ymax;
     GtkObject *xres;
     GtkObject *yres;
-    GtkObject *xdrift_a;
-    GtkObject *xdrift_b;
-    GtkObject *xdrift_c;
+    GtkWidget *xdrift_a;
+    GtkWidget *xdrift_b;
+    GtkWidget *xdrift_c;
     GtkWidget *xdrift_type;
 
-    GtkObject *ydrift_a;
-    GtkObject *ydrift_b;
-    GtkObject *ydrift_c;
+    GtkWidget *ydrift_a;
+    GtkWidget *ydrift_b;
+    GtkWidget *ydrift_c;
     GtkWidget *ydrift_type;
 
-    GtkObject *zdrift_a;
-    GtkObject *zdrift_b;
-    GtkObject *zdrift_c;
+    GtkWidget *zdrift_a;
+    GtkWidget *zdrift_b;
+    GtkWidget *zdrift_c;
     GtkObject *zdrift_average;
-    GtkWidget *zdrift_a_spin;
-    GtkWidget *zdrift_b_spin;
-    GtkWidget *zdrift_c_spin;
     GtkWidget *zdrift_average_spin;
     GtkWidget *zdrift_type;
 
@@ -346,6 +343,59 @@ xyzdrift(GwyContainer *data, GwyRunType run)
     xyzdrift_free(&rdata);
 }
 
+static void
+upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
+{
+    gchar buffer[20];
+
+    if (x) {
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_a);
+        gtk_entry_set_text(GTK_ENTRY(controls->xdrift_a), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_b);
+        gtk_entry_set_text(GTK_ENTRY(controls->xdrift_b), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_c);
+        gtk_entry_set_text(GTK_ENTRY(controls->xdrift_c), buffer);
+    }
+    if (y) {
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_a);
+        gtk_entry_set_text(GTK_ENTRY(controls->ydrift_a), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_b);
+        gtk_entry_set_text(GTK_ENTRY(controls->ydrift_b), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_c);
+        gtk_entry_set_text(GTK_ENTRY(controls->ydrift_c), buffer);
+    }
+
+    if (z) {
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_a); printf("buffer: %s\n", buffer);
+        gtk_entry_set_text(GTK_ENTRY(controls->zdrift_a), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_b); printf("buffer: %s\n", buffer);
+        gtk_entry_set_text(GTK_ENTRY(controls->zdrift_b), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_c); printf("buffer: %s\n", buffer);
+        gtk_entry_set_text(GTK_ENTRY(controls->zdrift_c), buffer);
+    }
+}
+
+static void
+x_to_inits_cb(G_GNUC_UNUSED GtkButton *button, XYZDriftControls *controls)
+{
+    upload_values(controls, TRUE, FALSE, FALSE);
+}
+
+static void
+y_to_inits_cb(G_GNUC_UNUSED GtkButton *button, XYZDriftControls *controls)
+{
+    upload_values(controls, FALSE, TRUE, FALSE);
+}
+
+static void
+z_to_inits_cb(G_GNUC_UNUSED GtkButton *button, XYZDriftControls *controls)
+{
+    upload_values(controls, FALSE, FALSE, TRUE);
+}
+
+
+
+
 static gboolean
 xyzdrift_dialog(XYZDriftArgs *args,
               XYZDriftData *rdata,
@@ -368,6 +418,8 @@ xyzdrift_dialog(XYZDriftArgs *args,
     controls.rdata->zdrift = NULL;
     controls.rdata->time = NULL;
     controls.rdata->corpoints = NULL;
+
+
     controls.mydata = gwy_container_new();
 
     dialog = gtk_dialog_new_with_buttons(_("Rasterize XYZ Data"), NULL, 0,
@@ -470,28 +522,28 @@ xyzdrift_dialog(XYZDriftArgs *args,
     g_signal_connect_swapped(controls.ymax, "activate",
                              G_CALLBACK(ymax_changed), &controls);
 
-    g_signal_connect_swapped(controls.xdrift_a, "value-changed",
-                             G_CALLBACK(xdrift_changed), &controls);
-    g_signal_connect_swapped(controls.xdrift_b, "value-changed",
-                             G_CALLBACK(xdrift_changed), &controls);
-    g_signal_connect_swapped(controls.xdrift_c, "value-changed",
-                             G_CALLBACK(xdrift_changed), &controls);
+    g_signal_connect_swapped(controls.xdrift_a, "activate",
+                     G_CALLBACK(xdrift_changed), &controls);
+    g_signal_connect_swapped(controls.xdrift_b, "activate",
+                     G_CALLBACK(xdrift_changed), &controls);
+    g_signal_connect_swapped(controls.xdrift_c, "activate",
+                     G_CALLBACK(xdrift_changed), &controls);
 
+    g_signal_connect_swapped(controls.ydrift_a, "activate",
+                     G_CALLBACK(ydrift_changed), &controls);
+    g_signal_connect_swapped(controls.ydrift_b, "activate",
+                     G_CALLBACK(ydrift_changed), &controls);
+    g_signal_connect_swapped(controls.ydrift_c, "activate",
+                     G_CALLBACK(ydrift_changed), &controls);
 
-    g_signal_connect_swapped(controls.ydrift_a, "value-changed",
-                             G_CALLBACK(ydrift_changed), &controls);
-    g_signal_connect_swapped(controls.ydrift_b, "value-changed",
-                             G_CALLBACK(ydrift_changed), &controls);
-    g_signal_connect_swapped(controls.ydrift_c, "value-changed",
-                             G_CALLBACK(ydrift_changed), &controls);
+    g_signal_connect_swapped(controls.zdrift_a, "activate",
+                     G_CALLBACK(zdrift_changed), &controls);
+    g_signal_connect_swapped(controls.zdrift_b, "activate",
+                     G_CALLBACK(zdrift_changed), &controls);
+    g_signal_connect_swapped(controls.zdrift_c, "activate",
+                     G_CALLBACK(zdrift_changed), &controls);
 
-    g_signal_connect_swapped(controls.zdrift_a, "value-changed",
-                             G_CALLBACK(zdrift_changed), &controls);
-    g_signal_connect_swapped(controls.zdrift_b, "value-changed",
-                             G_CALLBACK(zdrift_changed), &controls);
-    g_signal_connect_swapped(controls.zdrift_c, "value-changed",
-                             G_CALLBACK(zdrift_changed), &controls);
-     g_signal_connect_swapped(controls.zdrift_average, "value-changed",
+    g_signal_connect_swapped(controls.zdrift_average, "value-changed",
                              G_CALLBACK(zdrift_changed), &controls);
 
     g_signal_connect_swapped(controls.neighbors, "value-changed",
@@ -513,6 +565,7 @@ xyzdrift_dialog(XYZDriftArgs *args,
     reset_ranges(&controls);
     zdrift_type_changed(controls.zdrift_type, &controls);
     graph_changed(controls.graph_type, &controls);
+    upload_values(&controls, TRUE, TRUE, TRUE);
 
     gtk_widget_show_all(dialog);
 
@@ -659,7 +712,7 @@ construct_options(XYZDriftControls *controls,
                   gint row)
 {
     XYZDriftArgs *args = controls->args;
-    GtkWidget *label, *spin;
+    GtkWidget *label, *spin, *button;
     static const GwyEnum zdrifts[] = {
         { N_("2nd order polynom"),  GWY_XYZDRIFT_ZMETHOD_POLYNOM,  },
         { N_("Exponential"),  GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL,  },
@@ -699,11 +752,10 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
 
-    controls->xdrift_a = gtk_adjustment_new(args->xdrift_a, -1000, 1000, 0.001, 1, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xdrift_a), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
+    controls->xdrift_a = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->xdrift_a, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_a), 12);
+    gtk_table_attach(table, controls->xdrift_a, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("b = ");
@@ -711,11 +763,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->xdrift_b = gtk_adjustment_new(args->xdrift_b, -1000, 1000, 10, 1000, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xdrift_b), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
+    controls->xdrift_b = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->xdrift_b, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_b), 12);
+    gtk_table_attach(table, controls->xdrift_b, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
@@ -723,11 +774,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 4, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->xdrift_c = gtk_adjustment_new(args->xdrift_c, -1000, 1000, 10, 1000, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xdrift_c), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 5, 6, row, row+1,
+    controls->xdrift_c = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->xdrift_c, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_c), 12);
+    gtk_table_attach(table, controls->xdrift_c, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
 
@@ -753,12 +803,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-
-    controls->ydrift_a = gtk_adjustment_new(args->ydrift_a, -1000, 1000, 0.001, 1, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ydrift_a), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
+    controls->ydrift_a = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->ydrift_a, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_a), 12);
+    gtk_table_attach(table, controls->ydrift_a, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("b = ");
@@ -766,11 +814,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->ydrift_b = gtk_adjustment_new(args->ydrift_b, -1000, 1000, 10, 1000, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ydrift_b), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
+    controls->ydrift_b = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->ydrift_b, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_b), 12);
+    gtk_table_attach(table, controls->ydrift_b, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
@@ -778,12 +825,14 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 4, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->ydrift_c = gtk_adjustment_new(args->ydrift_c, -1000, 1000, 10, 1000, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ydrift_c), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 5, 6, row, row+1,
+    controls->ydrift_c = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->ydrift_c, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_c), 12);
+    gtk_table_attach(table, controls->ydrift_c, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+
+
 
 
     controls->fit_ydrift = gtk_check_button_new_with_mnemonic(_("_fit"));
@@ -811,12 +860,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-
-    controls->zdrift_a = gtk_adjustment_new(args->zdrift_a, -1000, 1000, 0.001, 1, 0);
-    controls->zdrift_a_spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->zdrift_a), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->zdrift_a_spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zdrift_a_spin);
-    gtk_table_attach(table, controls->zdrift_a_spin, 1, 2, row, row+1,
+    controls->zdrift_a = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->zdrift_a, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_a), 12);
+    gtk_table_attach(table, controls->zdrift_a, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("b = ");
@@ -824,11 +871,10 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->zdrift_b = gtk_adjustment_new(args->zdrift_b, -1000, 1000, 10, 1000, 0);
-    controls->zdrift_b_spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->zdrift_b), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->zdrift_b_spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zdrift_b_spin);
-    gtk_table_attach(table, controls->zdrift_b_spin, 3, 4, row, row+1,
+    controls->zdrift_b = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->zdrift_b, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_b), 12);
+    gtk_table_attach(table, controls->zdrift_b, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
@@ -836,12 +882,13 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 4, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls->zdrift_c = gtk_adjustment_new(args->zdrift_c, -1000, 1000, 10, 1000, 0);
-    controls->zdrift_c_spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->zdrift_c), 0, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->zdrift_c_spin), 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zdrift_c_spin);
-    gtk_table_attach(table, controls->zdrift_c_spin, 5, 6, row, row+1,
+    controls->zdrift_c = gtk_entry_new();
+    gwy_widget_set_activate_on_unfocus(controls->zdrift_c, TRUE);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_c), 12);
+    gtk_table_attach(table, controls->zdrift_c, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+
 
 
     controls->fit_zdrift = gtk_check_button_new_with_mnemonic(_("_fit"));
@@ -943,8 +990,15 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->result_x = gtk_label_new(_("N.A."));
     gtk_misc_set_alignment(GTK_MISC(controls->result_x), 0.0, 0.5);
-    gtk_table_attach(table, controls->result_x, 1, 6, row, row+1,
+    gtk_table_attach(table, controls->result_x, 1, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    button = gtk_button_new_with_label(_("to inits"));
+    gtk_table_attach(table, button, 5, 6, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(x_to_inits_cb), &controls);
+
+
  
     row++;
 
@@ -954,8 +1008,14 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->result_y = gtk_label_new(_("N.A."));
     gtk_misc_set_alignment(GTK_MISC(controls->result_y), 0.0, 0.5);
-    gtk_table_attach(table, controls->result_y, 1, 6, row, row+1,
+    gtk_table_attach(table, controls->result_y, 1, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    button = gtk_button_new_with_label(_("to inits"));
+    gtk_table_attach(table, button, 5, 6, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(y_to_inits_cb), &controls);
+
 
     row++;
 
@@ -965,8 +1025,14 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->result_z = gtk_label_new(_("N.A."));
     gtk_misc_set_alignment(GTK_MISC(controls->result_z), 0.0, 0.5);
-    gtk_table_attach(table, controls->result_z, 1, 6, row, row+1,
+    gtk_table_attach(table, controls->result_z, 1, 5, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    button = gtk_button_new_with_label(_("to inits"));
+    gtk_table_attach(table, button, 5, 6, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(z_to_inits_cb), &controls);
+
  
 
     return row;
@@ -1122,9 +1188,9 @@ xdrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->xdrift_a = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xdrift_a));
-    args->xdrift_b = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xdrift_b));
-    args->xdrift_c = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xdrift_c));
+    args->xdrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_a)));
+    args->xdrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_b)));
+    args->xdrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_c)));
 }
 
 static void
@@ -1133,9 +1199,9 @@ ydrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->ydrift_a = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->ydrift_a));
-    args->ydrift_b = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->ydrift_b));
-    args->ydrift_c = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->ydrift_c));
+    args->ydrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_a)));
+    args->ydrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_b)));
+    args->ydrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_c)));
 }
 
 static void
@@ -1144,9 +1210,9 @@ zdrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->zdrift_a = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_a));
-    args->zdrift_b = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_b));
-    args->zdrift_c = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_c));
+    args->zdrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_a)));
+    args->zdrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_b)));
+    args->zdrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_c)));
     args->zdrift_average = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_average));
 }
 
@@ -1161,14 +1227,14 @@ zdrift_type_changed(GtkWidget *combo, XYZDriftControls *controls)
 
 
     if (controls->args->zdrift_type == GWY_XYZDRIFT_ZMETHOD_AVERAGE) {
-        gtk_widget_set_sensitive(controls->zdrift_a_spin, FALSE);
-        gtk_widget_set_sensitive(controls->zdrift_b_spin, FALSE);
-        gtk_widget_set_sensitive(controls->zdrift_c_spin, FALSE);
+        gtk_widget_set_sensitive(controls->zdrift_a, FALSE);
+        gtk_widget_set_sensitive(controls->zdrift_b, FALSE);
+        gtk_widget_set_sensitive(controls->zdrift_c, FALSE);
         gtk_widget_set_sensitive(controls->zdrift_average_spin, TRUE);
     } else {
-        gtk_widget_set_sensitive(controls->zdrift_a_spin, TRUE);
-        gtk_widget_set_sensitive(controls->zdrift_b_spin, TRUE);
-        gtk_widget_set_sensitive(controls->zdrift_c_spin, TRUE);
+        gtk_widget_set_sensitive(controls->zdrift_a, TRUE);
+        gtk_widget_set_sensitive(controls->zdrift_b, TRUE);
+        gtk_widget_set_sensitive(controls->zdrift_c, TRUE);
         gtk_widget_set_sensitive(controls->zdrift_average_spin, FALSE);
     }
 
@@ -1339,7 +1405,17 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
 {
     gint i;
     gdouble *dtime, *drift;
+    gdouble params[3];
+    gdouble errors[3];
+    gboolean fixed[3];
+    gchar buffer[100];
+    GwyGraphCurveModel *gcmodel;
+
     FILE *fw = fopen("driftdata.txt", "w");
+
+
+    /*re-read for sure*/
+    zdrift_changed(controls, NULL);
 
     dtime = (gdouble *)malloc(nnbs*sizeof(gdouble));
     drift = (gdouble *)malloc(nnbs*sizeof(gdouble));
@@ -1349,13 +1425,33 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
         drift[i] = (points[nbto[i]].z - points[nbfrom[i]].z)/2;
         fprintf(fw, "%g %g\n", dtime[i], drift[i]);
     }    
-
-
-  
     fclose(fw);
+
+    params[0] = controls->args->zdrift_a;
+    params[1] = controls->args->zdrift_b;
+    params[2] = controls->args->zdrift_c;
+    fixed[0] = fixed[1] = fixed[2] = 0;
+
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(gcmodel, dtime, drift, nnbs);
+
+    if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM)
+        fit_func_to_curve(gcmodel, "Polynomial (order 2)", params, errors, fixed);
+    else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL)
+        fit_func_to_curve(gcmodel, "Exponential", params, errors, fixed);
+
+
+    //printf("Fitting completed: %g %g %g\n", params[0], params[1], params[2]);  
+    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", params[0], params[1], params[2]);
+    gtk_label_set_text(controls->result_x, buffer); 
+
+    controls->args->zdrift_a = params[0];
+    controls->args->zdrift_b = params[1];
+    controls->args->zdrift_c = params[2];
 
     g_free(dtime);
     g_free(drift);
+    //g_free(gcmodel);
 }
 
 static void
