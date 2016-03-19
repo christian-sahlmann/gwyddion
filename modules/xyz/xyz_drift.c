@@ -1310,7 +1310,6 @@ find_closest_point(GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble tt,
 
     return closest;
 }
-
 static gdouble
 get_error(GwyXYZ *points, gint npoints, gint *nbfrom, gint *nbto, gint nnbs, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
@@ -1332,14 +1331,148 @@ get_error(GwyXYZ *points, gint npoints, gint *nbfrom, gint *nbto, gint nnbs, gdo
 //we search for places that are closed by one pixel and that are far from each other by enough long time.
 //we might reduce their number by some skipping factor
 
-static gint 
-find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble timethreshold, gdouble posthreshold, gdouble *xdrift, gdouble *ydrift)
+
+#define NBIN 10.0
+
+static void
+get_bin(gdouble x, gdouble y, gint *bi, gint *bj, gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
-    gint i, nnbs = 0, closest;
+    gint i, j;
+    i = NBIN*(x-xoffset)/xreal;
+    j = NBIN*(y-yoffset)/yreal;
+
+    *bi = CLAMP(i, 0, NBIN-1);
+    *bj = CLAMP(j, 0, NBIN-1);
+
+}
+
+
+static void
+get_bining(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
+{
+    gint i, j, k;
+    gint bi, bj;
+
+    //clear nbins
+    for (i=0; i<NBIN; i++) {
+        for (j=0; j<NBIN; j++) {
+            nbin[i][j] = 0;
+        }
+    }
+
+
+    //eval how much space to allocate
+    for (k=0; k<npoints; k++) {
+        get_bin(points[k].x, points[k].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
+        nbin[bi][bj] = nbin[bi][bj]+1;
+    }
+
+    //allocate the bins
+    for (i=0; i<NBIN; i++) {
+        for (j=0; j<NBIN; j++) {
+            bin[i][j] = (gint *)g_malloc(nbin[i][j]*sizeof(gint));
+        }
+    }
+
+    //clear nbins
+    for (i=0; i<NBIN; i++) {
+        for (j=0; j<NBIN; j++) {
+            nbin[i][j] = 0;
+        }
+    }
+
+    //fill bins
+    for (k=0; k<npoints; k++) {
+        get_bin(points[k].x, points[k].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
+        bin[bi][bj][nbin[bi][bj]] = k;
+        nbin[bi][bj]++;
+    }
+
+}
+
+static gint
+find_closest_point_bining(GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble tt, gdouble pt, gint index, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, 
+                          gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
+{
+
+    gint bi, bj, i, j, k;
+
+    //get actual bin
+    get_bin(points[index].x, points[index].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
+
+    //search in surrounding bins
+    for (i=MAX(0, bi-1); i<MIN(bi+1, NBIN); i++)
+    {
+        for (j=MAX(0, bj-1); j<MIN(bj+1, NBIN); j++)
+        {
+            for (k=0; k<nbin[i][j]; k++) //go through bin
+            {
+            //    bin[i][j][k]
+/*
+                  if ((timepoints[index].z - timepoints[i].z)>tt) {
+
+                  sdist = (((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i]))*((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i])) +
+                      ((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i]))*((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i])));
+
+                  if (sdist<(pt*pt)) {
+                     if (sdist<mindist) {
+                        mindist = sdist;
+                        closest = i;
+                     }
+                   }
+*/
+            }
+        }
+    }
+    
+
+    return -1;
+
+}
+
+
+static gint 
+find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble timethreshold, gdouble posthreshold, gdouble *xdrift, gdouble *ydrift,
+               gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
+{
+    gint i, j, k, nnbs = 0, closest;
+    gint ***bin, **nbin;
     FILE *fw = fopen("nbs.txt", "w");
 
+
+
+
+    bin = (gint ***)g_malloc(NBIN*sizeof(gint **));
+    for (i=0; i<NBIN; i++) bin[i] = (gint **) g_malloc(NBIN*sizeof(gint *));
+
+    nbin = (gint **)g_malloc(NBIN*sizeof(gint *));
+    for (i=0; i<NBIN; i++) nbin[i] = (gint *) g_malloc(NBIN*sizeof(gint));
+
+    printf("bining\n");
+    get_bining(points, npoints, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
+    printf("done\n");
+
     nnbs = 0;
-    /*estimate where to search for drift: search for adjacent positions with large timestamp difference*/
+    fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
+
+    for (i=0; i<npoints; i++) {
+        closest = find_closest_point_bining(points, timepoints, npoints, timethreshold, posthreshold, i, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
+
+        if (closest>=0) {
+            fprintf(fw, "closest %d %d    %g %g    %g %g   %g %g   %g %g    %g\n", i, closest, points[i].x, points[i].y, points[closest].x, points[closest].y, points[i].z, points[closest].z, timepoints[i].z, timepoints[closest].z, timepoints[i].z-timepoints[closest].z);
+            nbfrom[nnbs] = closest;
+            nbto[nnbs] = i;
+            nnbs++;
+        }
+     }
+
+
+
+    fclose(fw);
+
+
+/*
+    nnbs = 0;
     fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
     for (i=0; i<npoints; i++) {
         closest = find_closest_point(points, timepoints, npoints, timethreshold, posthreshold, i, xdrift, ydrift);
@@ -1351,7 +1484,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, GwyXYZ *timepoints, gin
         }
     }
     fclose(fw);
-
+*/
 
     return nnbs;
 }
@@ -1473,7 +1606,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
     nbto = (gint *)malloc(npoints*sizeof(gint));
 
 
-    nnbs = find_neighbors(nbfrom, nbto, points, timepoints, npoints, timethreshold, posthreshold, xdrift, ydrift);
+    nnbs = find_neighbors(nbfrom, nbto, points, timepoints, npoints, timethreshold, posthreshold, xdrift, ydrift,
+                          controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin);
 
     get_zdrift(controls, points, npoints, time, zdrift, nbfrom, nbto, nnbs);
 
