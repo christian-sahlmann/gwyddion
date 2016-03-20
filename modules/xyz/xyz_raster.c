@@ -75,6 +75,7 @@ typedef struct {
 typedef struct {
     GwySurface *surface;
     GwyTriangulation *triangulation;
+    GwyDataField *raster;
     GArray *points;
     GArray *jpoints;
     guint norigpoints;
@@ -171,6 +172,7 @@ static gboolean      extend_borders         (XYZRasData *rdata,
 static void          xyzras_free            (XYZRasData *rdata);
 static void          initialize_ranges      (const XYZRasData *rdata,
                                              XYZRasArgs *args);
+static void          invalidate_raster      (XYZRasData *rdata);
 static void          analyse_points         (XYZRasData *rdata,
                                              double epsrel);
 static GwyDataField* check_regular_grid     (GwySurface *surface);
@@ -252,21 +254,26 @@ xyzras(GwyContainer *data, GwyRunType run)
     xyzras_save_args(settings, &args);
 
     if (ok) {
-        GtkWindow *window = gwy_app_find_window_for_xyz(data, id);
         gchar *error = NULL;
 
-        dfield = xyzras_do(&rdata, &args, window, &error);
+        if (rdata.raster)
+            dfield = g_object_ref(rdata.raster);
+        else {
+            GtkWindow *window = gwy_app_find_window_for_xyz(data, id);
+            dfield = xyzras_do(&rdata, &args, window, &error);
+        }
+
         if (dfield) {
             add_dfield_to_data(dfield, data, id);
         }
         else if (run == GWY_RUN_INTERACTIVE) {
             GtkWidget *dialog;
             dialog = gtk_message_dialog_new
-                                (gwy_app_find_window_for_channel(data, id),
-                                 GTK_DIALOG_DESTROY_WITH_PARENT,
-                                 GTK_MESSAGE_ERROR,
-                                 GTK_BUTTONS_OK,
-                                 "%s", error);
+                                    (gwy_app_find_window_for_channel(data, id),
+                                     GTK_DIALOG_DESTROY_WITH_PARENT,
+                                     GTK_MESSAGE_ERROR,
+                                     GTK_BUTTONS_OK,
+                                     "%s", error);
             gtk_dialog_run(GTK_DIALOG(dialog));
             gtk_widget_destroy(dialog);
             g_free(error);
@@ -682,6 +689,7 @@ make_pixels_square(XYZRasControls *controls)
         set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xres), res);
         controls->last_updated = LAST_UPDATED_Y;
     }
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -690,6 +698,7 @@ xres_changed(XYZRasControls *controls,
 {
     controls->args->xres = gwy_adjustment_get_int(adj);
     controls->last_updated = LAST_UPDATED_X;
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -698,6 +707,7 @@ yres_changed(XYZRasControls *controls,
 {
     controls->args->yres = gwy_adjustment_get_int(adj);
     controls->last_updated = LAST_UPDATED_Y;
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -713,6 +723,7 @@ xmin_changed(XYZRasControls *controls,
 
     args->xmin = val;
     update_selection(controls);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -728,6 +739,7 @@ xmax_changed(XYZRasControls *controls,
 
     args->xmax = val;
     update_selection(controls);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -743,6 +755,7 @@ ymin_changed(XYZRasControls *controls,
 
     args->ymin = val;
     update_selection(controls);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -758,6 +771,7 @@ ymax_changed(XYZRasControls *controls,
 
     args->ymax = val;
     update_selection(controls);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -765,6 +779,7 @@ interpolation_changed(XYZRasControls *controls,
                       GtkComboBox *combo)
 {
     controls->args->interpolation = gwy_enum_combo_box_get_active(combo);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -772,6 +787,7 @@ exterior_changed(XYZRasControls *controls,
                  GtkComboBox *combo)
 {
     controls->args->exterior = gwy_enum_combo_box_get_active(combo);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -783,6 +799,7 @@ set_all_physical_dimensions(XYZRasControls *controls)
     set_physical_dimension(controls, GTK_ENTRY(controls->ymax), args->ymax);
     set_physical_dimension(controls, GTK_ENTRY(controls->xmin), args->xmin);
     set_physical_dimension(controls, GTK_ENTRY(controls->xmax), args->xmax);
+    invalidate_raster(controls->rdata);
 }
 
 static void
@@ -873,10 +890,12 @@ preview(XYZRasControls *controls)
     if (entry && GTK_IS_ENTRY(entry))
         gtk_widget_activate(entry);
 
+    gwy_object_unref(controls->rdata->raster);
     dfield = xyzras_do(controls->rdata, args,
                        GTK_WINDOW(controls->dialog), &error);
     if (dfield) {
         triangulation_info(controls);
+        controls->rdata->raster = g_object_ref(dfield);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->error), error);
@@ -1232,6 +1251,7 @@ static void
 xyzras_free(XYZRasData *rdata)
 {
     gwy_object_unref(rdata->triangulation);
+    gwy_object_unref(rdata->raster);
     g_array_free(rdata->points, TRUE);
     g_array_free(rdata->jpoints, TRUE);
 }
@@ -1276,6 +1296,12 @@ initialize_ranges(const XYZRasData *rdata,
     round_to_nice(&args->ymin, &args->ymax);
 
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
+}
+
+static void
+invalidate_raster(XYZRasData *rdata)
+{
+    gwy_object_unref(rdata->raster);
 }
 
 static inline guint
