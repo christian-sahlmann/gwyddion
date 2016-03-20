@@ -58,6 +58,8 @@ Libraries:
 - libgwyapp: GwyAppFileChooser open dialogue can filter files by name.
 - libgwyapp: It is possible to query the current data browser page using
   gwy_app_data_browser_get_current().
+- libgwyprocess: Raw 2D FFT transform using the SimpleFFT backend (i.e. with
+  FFTW unavailable) overwriting the input data field was fixed.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
@@ -67,6 +69,8 @@ Modules:
   path selections as graph curves.
 - Find graph peaks (new): Simple location of peaks on graph curves.
 - Rasterize XYZ (new): Renders XYZ data to an image.
+- XYZ Correct Drift (new): Corrects drift in timestamped XYZ data.
+- Coerce (new): Transforms surfaces to have prescribed statistical properties.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
