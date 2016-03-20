@@ -366,11 +366,11 @@ upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
     }
 
     if (z) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_a); printf("buffer: %s\n", buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_a);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_a), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_b); printf("buffer: %s\n", buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_b);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_b), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_c); printf("buffer: %s\n", buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_c);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_c), buffer);
     }
 }
@@ -996,7 +996,7 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, button, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(button, "clicked",
-                     G_CALLBACK(x_to_inits_cb), &controls);
+                     G_CALLBACK(x_to_inits_cb), controls);
 
 
  
@@ -1014,7 +1014,7 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, button, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(button, "clicked",
-                     G_CALLBACK(y_to_inits_cb), &controls);
+                     G_CALLBACK(y_to_inits_cb), controls);
 
 
     row++;
@@ -1031,7 +1031,7 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, button, 5, 6, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(button, "clicked",
-                     G_CALLBACK(z_to_inits_cb), &controls);
+                     G_CALLBACK(z_to_inits_cb), controls);
 
  
 
@@ -1395,7 +1395,11 @@ find_closest_point_bining(GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdou
                           gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
 
-    gint bi, bj, i, j, k;
+    gint bi, bj, i, j, k, bindex;
+    int closest = -1;
+    double mindist = G_MAXDOUBLE;
+    double sdist;
+
 
     //get actual bin
     get_bin(points[index].x, points[index].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
@@ -1407,26 +1411,27 @@ find_closest_point_bining(GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdou
         {
             for (k=0; k<nbin[i][j]; k++) //go through bin
             {
-            //    bin[i][j][k]
-/*
-                  if ((timepoints[index].z - timepoints[i].z)>tt) {
+                  bindex = bin[i][j][k];
 
-                  sdist = (((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i]))*((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i])) +
-                      ((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i]))*((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i])));
+                  if ((timepoints[index].z - timepoints[bindex].z)>tt) {
 
-                  if (sdist<(pt*pt)) {
-                     if (sdist<mindist) {
-                        mindist = sdist;
-                        closest = i;
+                     sdist = (((timepoints[index].x + xdrift[index]) - (timepoints[bindex].x + xdrift[bindex]))*((timepoints[index].x + xdrift[index]) - (timepoints[bindex].x + xdrift[bindex])) +
+                         ((timepoints[index].y + ydrift[index]) - (timepoints[bindex].y + ydrift[bindex]))*((timepoints[index].y + ydrift[index]) - (timepoints[bindex].y + ydrift[bindex])));
+
+                     if (sdist<(pt*pt)) {
+                        if (sdist<mindist) {
+                           mindist = sdist;
+                            closest = i;
+                        }
                      }
-                   }
-*/
+                  }  
+
             }
         }
     }
     
 
-    return -1;
+    return closest;
 
 }
 
@@ -1452,6 +1457,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, GwyXYZ *timepoints, gin
     get_bining(points, npoints, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
     printf("done\n");
 
+    printf("neighbors\n");
     nnbs = 0;
     fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
 
@@ -1466,6 +1472,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, GwyXYZ *timepoints, gin
         }
      }
 
+    printf("done\n");
 
 
     fclose(fw);
@@ -1576,7 +1583,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
 
     //printf("Fitting completed: %g %g %g\n", params[0], params[1], params[2]);  
     g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", params[0], params[1], params[2]);
-    gtk_label_set_text(controls->result_x, buffer); 
+    gtk_label_set_text(controls->result_z, buffer); 
 
     controls->args->zdrift_a = params[0];
     controls->args->zdrift_b = params[1];
