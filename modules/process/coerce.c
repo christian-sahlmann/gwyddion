@@ -86,6 +86,12 @@ static gboolean      template_filter       (GwyContainer *data,
                                             gpointer user_data);
 static GwyDataField* coerce_do             (GwyDataField *dfield,
                                             const CoerceArgs *args);
+static void          coerce_do_field       (GwyDataField *dfield,
+                                            GwyDataField *result,
+                                            const CoerceArgs *args);
+static void          coerce_do_rows        (GwyDataField *dfield,
+                                            GwyDataField *result,
+                                            const CoerceArgs *args);
 static void          build_values_uniform  (gdouble *z,
                                             guint n,
                                             gdouble min,
@@ -378,17 +384,27 @@ static GwyDataField*
 coerce_do(GwyDataField *dfield, const CoerceArgs *args)
 {
     GwyDataField *result = gwy_data_field_new_alike(dfield, FALSE);
+
+    if (args->processing == COERCE_PROCESSING_FIELD)
+        coerce_do_field(dfield, result, args);
+    else if (args->processing == COERCE_PROCESSING_ROWS)
+        coerce_do_rows(dfield, result, args);
+    else {
+        g_assert_not_reached();
+    }
+
+    return result;
+}
+
+static void
+coerce_do_field(GwyDataField *dfield, GwyDataField *result,
+                const CoerceArgs *args)
+{
     guint n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
     ValuePos *vpos = g_new(ValuePos, n);
     const gdouble *d = gwy_data_field_get_data_const(dfield);
     gdouble *z = g_new(gdouble, n), *dr;
     guint k;
-
-    for (k = 0; k < n; k++) {
-        vpos[k].z = d[k];
-        vpos[k].k = k;
-    }
-    qsort(vpos, n, sizeof(ValuePos), compare_double);
 
     if (args->distribution == COERCE_DISTRIBUTION_DATA) {
         GQuark quark = gwy_app_get_data_key_for_id(args->template.id);
@@ -410,17 +426,69 @@ coerce_do(GwyDataField *dfield, const CoerceArgs *args)
         build_values_gaussian(z, n, avg, rms);
     }
     else {
-        g_return_val_if_reached(result);
+        g_return_if_reached();
     }
 
     dr = gwy_data_field_get_data(result);
+    for (k = 0; k < n; k++) {
+        vpos[k].z = d[k];
+        vpos[k].k = k;
+    }
+    qsort(vpos, n, sizeof(ValuePos), compare_double);
     for (k = 0; k < n; k++)
         dr[vpos[k].k] = z[k];
 
     g_free(z);
     g_free(vpos);
+}
 
-    return result;
+static void
+coerce_do_rows(GwyDataField *dfield, GwyDataField *result,
+               const CoerceArgs *args)
+{
+    guint xres = gwy_data_field_get_xres(dfield),
+          yres = gwy_data_field_get_yres(dfield);
+    ValuePos *vpos = g_new(ValuePos, xres);
+    const gdouble *d = gwy_data_field_get_data_const(dfield);
+    gdouble *z = g_new(gdouble, xres), *dr;
+    guint i, j;
+
+    if (args->distribution == COERCE_DISTRIBUTION_DATA) {
+        GQuark quark = gwy_app_get_data_key_for_id(args->template.id);
+        GwyContainer *data = gwy_app_data_browser_get(args->template.datano);
+        GwyDataField *src = gwy_container_get_object(data, quark);
+        guint nsrc = gwy_data_field_get_xres(src)*gwy_data_field_get_yres(src);
+        build_values_from_data(z, xres,
+                               gwy_data_field_get_data_const(src), nsrc);
+    }
+    else if (args->distribution == COERCE_DISTRIBUTION_UNIFORM) {
+        gdouble min, max;
+        gwy_data_field_get_min_max(dfield, &min, &max);
+        build_values_uniform(z, xres, min, max);
+    }
+    else if (args->distribution == COERCE_DISTRIBUTION_GAUSSIAN) {
+        gdouble avg, rms;
+        avg = gwy_data_field_get_avg(dfield);
+        rms = gwy_data_field_get_rms(dfield);
+        build_values_gaussian(z, xres, avg, rms);
+    }
+    else {
+        g_return_if_reached();
+    }
+
+    dr = gwy_data_field_get_data(result);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            vpos[j].z = d[i*xres + j];
+            vpos[j].k = j;
+        }
+        qsort(vpos, xres, sizeof(ValuePos), compare_double);
+        for (j = 0; j < xres; j++)
+            dr[i*xres + vpos[j].k] = z[j];
+    }
+
+    g_free(z);
+    g_free(vpos);
 }
 
 static void
