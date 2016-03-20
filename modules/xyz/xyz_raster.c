@@ -33,6 +33,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-xyz.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define XYZRAS_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
@@ -866,17 +867,12 @@ preview(XYZRasControls *controls)
     XYZRasArgs *args = controls->args;
     GwyDataField *dfield;
     GtkWidget *entry;
-    gint xres, yres;
     gchar *error = NULL;
 
     entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
     if (entry && GTK_IS_ENTRY(entry))
         gtk_widget_activate(entry);
 
-    xres = args->xres;
-    yres = args->yres;
-    args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
-    args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
     dfield = xyzras_do(controls->rdata, args,
                        GTK_WINDOW(controls->dialog), &error);
     if (dfield) {
@@ -888,10 +884,9 @@ preview(XYZRasControls *controls)
         dfield = gwy_data_field_new(args->xres, args->yres,
                                     args->xres, args->yres, TRUE);
     }
-    args->xres = xres;
-    args->yres = yres;
 
     gwy_container_set_object_by_name(controls->mydata, "/0/data", dfield);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
     g_object_unref(dfield);
 
     /* After doing preview the selection always covers the full data and thus
