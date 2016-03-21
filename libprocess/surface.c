@@ -509,6 +509,75 @@ copy_field_to_surface(GwyDataField *field,
 }
 
 /**
+ * gwy_surface_get_data:
+ * @surface: A surface.
+ *
+ * Gets the raw XYZ data array of a surface.
+ *
+ * The returned buffer is not guaranteed to be valid through whole data
+ * surface life time.
+ *
+ * This function invalidates any cached information, use
+ * gwy_surface_get_data_const() if you are not going to change the data.
+ *
+ * See gwy_surface_invalidate() for some discussion.
+ *
+ * Returns: The surface XYZ data as a pointer to an array of
+ *          gwy_surface_get_npoints() items.
+ *
+ * Since: 2.45
+ **/
+GwyXYZ*
+gwy_surface_get_data(GwySurface *surface)
+{
+    g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
+    gwy_surface_invalidate(surface);
+    return surface->data;
+}
+
+/**
+ * gwy_surface_get_data_const:
+ * @surface: A surface.
+ *
+ * Gets the raw XYZ data array of a surface, read-only.
+ *
+ * The returned buffer is not guaranteed to be valid through whole data
+ * field life time.
+ *
+ * Use gwy_surface_get_data() if you want to change the data.
+ *
+ * See gwy_surface_invalidate() for some discussion.
+ *
+ * Returns: The surface XYZ data as a pointer to an array of
+ *          gwy_surface_get_npoints() items.
+ *
+ * Since: 2.45
+ **/
+const GwyXYZ*
+gwy_surface_get_data_const(GwySurface *surface)
+{
+    g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
+    return surface->data;
+}
+
+/**
+ * gwy_surface_get_npoints:
+ * @surface: A surface.
+ *
+ * Gets the number of points in an XYZ surface.
+ *
+ * Returns: The number of points.
+ *
+ * Since: 2.45
+ **/
+guint
+gwy_surface_get_npoints(GwySurface *surface)
+{
+    g_return_val_if_fail(GWY_IS_SURFACE(surface), 0);
+    return surface->n;
+}
+
+/**
  * gwy_surface_data_changed:
  * @surface: A surface.
  *
@@ -552,6 +621,11 @@ gwy_surface_copy(GwySurface *src,
  * @surface: A surface.
  *
  * Invalidates cached surface statistics.
+ *
+ * Cached statistics include ranges returned by gwy_surface_get_xrange(),
+ * gwy_surface_get_yrange() and gwy_surface_get_min_max(), the fingerprint
+ * for gwy_surface_xy_is_compatible() and and possibly other characteristics
+ * in the future.
  *
  * See gwy_data_field_invalidate() for discussion of invalidation and examples.
  *

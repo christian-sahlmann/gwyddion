@@ -76,6 +76,9 @@ GwySurface*       gwy_surface_new_part           (GwySurface *surface,
                                                   gdouble xto,
                                                   gdouble yfrom,
                                                   gdouble yto);
+GwyXYZ*           gwy_surface_get_data           (GwySurface *surface);
+const GwyXYZ*     gwy_surface_get_data_const     (GwySurface *surface);
+guint             gwy_surface_get_npoints        (GwySurface *surface);
 void              gwy_surface_data_changed       (GwySurface *surface);
 void              gwy_surface_copy               (GwySurface *src,
                                                   GwySurface *dest);
