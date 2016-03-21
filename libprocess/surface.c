@@ -1085,7 +1085,7 @@ ensure_ranges(GwySurface *surface)
  * orders are <emphasis>not</emphasis> considered compatible.  This is because
  * the points at the same index in @data are different and thus calculations
  * involving data from the two surfaces are impossible.  It is necessary to
- * mathc the points order in the two surfaces to make this possible.
+ * match the points order in the two surfaces to make this possible.
  *
  * This information is cached.
  *
