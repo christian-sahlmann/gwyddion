@@ -74,9 +74,9 @@ static gboolean xyzexport_export_surface   (GwySurface *surface,
                                             gboolean needs_decimal_dot,
                                             const gchar *decimal_dot,
                                             guint decimal_dot_len);
-static void     xyzexport_load_args        (GwyContainer *settings,
+static void     load_args                  (GwyContainer *settings,
                                             XYZExportArgs *args);
-static void     xyzexport_save_args        (GwyContainer *settings,
+static void     save_args                  (GwyContainer *settings,
                                             XYZExportArgs *args);
 
 static const XYZExportArgs xyzexport_defaults = {
@@ -158,6 +158,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
     gboolean needs_decimal_dot;
     const guchar *title = NULL;
     GwyAppPage pageno;
+    gboolean ok;
     FILE *fh;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -191,7 +192,7 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
         mfield = NULL;
     }
 
-    xyzexport_load_args(gwy_app_settings_get(), &args);
+    load_args(gwy_app_settings_get(), &args);
     locale_data = localeconv();
     decimal_dot = locale_data->decimal_point;
     g_return_val_if_fail(decimal_dot, FALSE);
@@ -210,8 +211,10 @@ xyzexport_export(G_GNUC_UNUSED GwyContainer *data,
     }
 
     if (mode == GWY_RUN_INTERACTIVE) {
-        if (!xyzexport_export_dialog(&args, !!mfield, needs_decimal_dot,
-                                     pageno, title)) {
+        ok = xyzexport_export_dialog(&args, !!mfield, needs_decimal_dot,
+                                     pageno, title);
+        save_args(gwy_app_settings_get(), &args);
+        if (!ok) {
             err_CANCELLED(error);
             return FALSE;
         }
@@ -302,7 +305,7 @@ xyzexport_export_dialog(XYZExportArgs *args,
     label = gtk_label_new(desc);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 6);
     g_free(desc);
 
     gtk_box_pack_start(GTK_BOX(vbox), gwy_label_new_header(_("Options")),
@@ -358,7 +361,6 @@ xyzexport_export_dialog(XYZExportArgs *args,
             = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(precision));
         if (masking)
             args->masking = gwy_radio_buttons_get_current(masking);
-        xyzexport_save_args(gwy_app_settings_get(), args);
         gtk_widget_destroy(dialog);
     }
 
@@ -497,8 +499,8 @@ static const gchar masking_key[]     = "/module/xyzexport/masking";
 static const gchar precision_key[]   = "/module/xyzexport/precision";
 
 static void
-xyzexport_load_args(GwyContainer *settings,
-                    XYZExportArgs *args)
+load_args(GwyContainer *settings,
+          XYZExportArgs *args)
 {
     *args = xyzexport_defaults;
 
@@ -515,8 +517,8 @@ xyzexport_load_args(GwyContainer *settings,
 }
 
 static void
-xyzexport_save_args(GwyContainer *settings,
-                    XYZExportArgs *args)
+save_args(GwyContainer *settings,
+          XYZExportArgs *args)
 {
     gwy_container_set_boolean_by_name(settings, decimal_dot_key,
                                       args->decimal_dot);
