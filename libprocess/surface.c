@@ -1108,6 +1108,7 @@ gwy_surface_xy_is_compatible(GwySurface *surface,
         return FALSE;
 
     ensure_checksum(surface);
+    ensure_checksum(othersurface);
     return !memcmp(surface->priv->checksum, othersurface->priv->checksum,
                    sizeof(surface->priv->checksum));
 }
@@ -1115,12 +1116,23 @@ gwy_surface_xy_is_compatible(GwySurface *surface,
 static void
 ensure_checksum(GwySurface *surface)
 {
+    gdouble *xydata;
+    guint i, n, k;
+
     if (surface->priv->cached_checksum)
         return;
 
-    surface->priv->cached_checksum = TRUE;
-    gwy_md5_get_digest((gchar*)surface->data, 3*surface->n*sizeof(gdouble),
+    n = surface->n;
+    xydata = g_new(gdouble, 2*n);
+    for (i = k = 0; i < n; i++) {
+        xydata[k++] = surface->data[i].x;
+        xydata[k++] = surface->data[i].y;
+    }
+    gwy_md5_get_digest((gchar*)xydata, 2*n*sizeof(gdouble),
                        surface->priv->checksum);
+    g_free(xydata);
+
+    surface->priv->cached_checksum = TRUE;
 }
 
 /**
