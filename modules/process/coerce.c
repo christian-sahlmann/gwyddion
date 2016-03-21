@@ -503,22 +503,64 @@ build_values_uniform(gdouble *z, guint n, gdouble min, gdouble max)
     }
 }
 
-/* FIXME: It would be nice to do this deterministically, but for that we need
- * to invert the error function – or there is a better way? */
+static gdouble
+gwy_inverf(gdouble y)
+{
+    /* Coefficients in rational approximations. */
+    static const gdouble a[4] = {
+        0.886226899, -1.645349621, 0.914624893, -0.140543331
+    };
+    static const gdouble b[4] = {
+        -2.118377725, 1.442710462, -0.329097515, 0.012229801
+    };
+    static const gdouble c[4] = {
+        -1.970840454, -1.624906493, 3.429567803, 1.641345311
+    };
+    static const gdouble d[2] = {
+        3.543889200, 1.637067800
+    };
+    const gdouble y0 = 0.7;
+
+    gdouble x, z;
+
+    if (y <= -1.0)
+       return -G_MAXDOUBLE;
+    if (y >= 1.0)
+       return G_MAXDOUBLE;
+
+    if (y < -y0) {
+        z = sqrt(-log(0.5*(1.0 + y)));
+        x = -(((c[3]*z + c[2])*z + c[1])*z + c[0])/((d[1]*z + d[0])*z + 1.0);
+    }
+    else if (y > y0) {
+        z = sqrt(-log(0.5*(1.0 - y)));
+        x = (((c[3]*z + c[2])*z + c[1])*z + c[0])/((d[1]*z + d[0])*z + 1.0);
+    }
+    else {
+        z = y*y;
+        x = y*(((a[3]*z + a[2])*z + a[1])*z + a[0])
+              /((((b[3]*z + b[3])*z + b[1])*z + b[0])*z + 1.0);
+    }
+
+    /* Three steps of Newton method correction to full accuracy. */
+    x -= (erf(x) - y)/(2.0/GWY_SQRT_PI*exp(-x*x));
+    x -= (erf(x) - y)/(2.0/GWY_SQRT_PI*exp(-x*x));
+    x -= (erf(x) - y)/(2.0/GWY_SQRT_PI*exp(-x*x));
+
+    return x;
+}
+
 static void
 build_values_gaussian(gdouble *z, guint n, gdouble mean, gdouble rms)
 {
-    GwyRandGenSet *rngset = gwy_rand_gen_set_new(1);
+    gdouble x;
     guint i;
 
-    for (i = 0; i < n; i++)
-        z[i] = gwy_rand_gen_set_gaussian(rngset, 0, rms);
-
-    gwy_rand_gen_set_free(rngset);
-    gwy_math_sort(n, z);
-
-    for (i = 0; i < n; i++)
-        z[i] += mean;
+    rms *= sqrt(2.0);
+    for (i = 0; i < n; i++) {
+        x = (2.0*i + 1.0)/n - 1.0;
+        z[i] = mean + rms*gwy_inverf(x);
+    }
 }
 
 static void
@@ -578,7 +620,8 @@ sanitize_args(CoerceArgs *args)
 {
     args->distribution = MIN(args->distribution, COERCE_NDISTRIBUTIONS-1);
     args->processing = MIN(args->processing, COERCE_NPROCESSING-1);
-    if (!gwy_app_data_id_verify_channel(&args->template))
+    if (args->distribution == COERCE_DISTRIBUTION_DATA
+        && !gwy_app_data_id_verify_channel(&args->template))
         args->distribution = coerce_defaults.distribution;
 }
 
