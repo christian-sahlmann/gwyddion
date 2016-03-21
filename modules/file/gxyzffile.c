@@ -640,21 +640,15 @@ gather_compatible_surfaces(GwyContainer *container, GwySurface *surface,
                            guint *nchannels)
 {
     GwySurface *other;
-    GwySIUnit *xyunit, *otherunit;
     gint *ids;
     guint ci, n = 0;
     GQuark quark;
 
     ids = gwy_app_data_browser_get_xyz_ids(container);
-    xyunit = gwy_surface_get_si_unit_xy(surface);
     for (ci = 0; ids[ci] > -1; ci++) {
         quark = gwy_app_get_surface_key_for_id(ids[ci]);
         other = gwy_container_get_object(container, quark);
         if (!gwy_surface_xy_is_compatible(surface, other))
-            continue;
-
-        otherunit = gwy_surface_get_si_unit_xy(other);
-        if (!gwy_si_unit_equal(xyunit, otherunit))
             continue;
 
         ids[n] = ids[ci];
