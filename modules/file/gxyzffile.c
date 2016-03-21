@@ -49,10 +49,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libprocess/stats.h>
-#include <libprocess/triangulation.h>
+#include <libprocess/arithmetic.h>
+#include <libprocess/surface.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwymoduleutils-file.h>
-#include <app/data-browser.h>
+#include <app/gwyapp.h>
 
 #include "err.h"
 
@@ -60,16 +61,48 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define EXTENSION ".gxyzf"
 
-static gboolean      module_register    (void);
-static gint          gxyzf_detect       (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* gxyzf_load         (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static gboolean      gxyzf_export       (GwyContainer *container,
-                                         const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
+typedef struct {
+    gboolean all_channels;
+} GXYZExportArgs;
+
+static gboolean      module_register         (void);
+static gint          gxyzf_detect            (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* gxyzf_load              (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static gboolean      gxyzf_export            (GwyContainer *container,
+                                              const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static gboolean      gxyzf_export_dialog     (GXYZExportArgs *args,
+                                              GwyAppPage pageno,
+                                              const gchar *title);
+static gboolean      gxyzf_export_data_fields(const gchar *filename,
+                                              GwyContainer *container,
+                                              gint id,
+                                              const GXYZExportArgs *args,
+                                              GError **error);
+static gint*         gather_compatible_fields(GwyContainer *data,
+                                              GwyDataField *dfield,
+                                              guint *nchannels);
+static gboolean      write_header            (FILE *fh,
+                                              guint nchannels,
+                                              guint npoints,
+                                              gchar **titles,
+                                              GwySIUnit *xyunit,
+                                              GwySIUnit **zunits,
+                                              gint xres,
+                                              gint yres,
+                                              GError **error);
+static void          load_args               (GwyContainer *settings,
+                                              GXYZExportArgs *args);
+static void          save_args               (GwyContainer *settings,
+                                              const GXYZExportArgs *args);
+
+static const GXYZExportArgs gxyzf_defaults = {
+    FALSE,
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -258,43 +291,152 @@ fail:
     return container;
 }
 
-/* FIXME FIXME FIXME:
- * Once we have native XYZ data this is incorrect.  We can export either the
- * current image or the current XYZ data – and need to know which one.
- *
- * Furthermore, we only export the current channel even though the format can,
- * in principle, represent multiple channels at the same coordinates.
- * We probably have to add an export dialogue here. */
 static gboolean
-gxyzf_export(GwyContainer *container,
+gxyzf_export(G_GNUC_UNUSED GwyContainer *data,
              const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
+             GwyRunType mode,
              GError **error)
 {
-    static const gchar zeroes[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    GString *header = NULL;
-    gdouble *ddbl = NULL;
-    guint i, j, k, xres, yres, padding;
-    gint id;
+    GXYZExportArgs args;
     GwyDataField *dfield;
-    const gdouble *d;
-    gdouble xreal, yreal, xoff, yoff;
-    gchar *s;
-    GwySIUnit *unit, *emptyunit;
-    FILE *fh;
+    GwySurface *surface;
+    gint fid, sid;
+    const guchar *title = NULL;
+    GwyAppPage pageno;
+    gboolean ok;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD_ID, &fid,
+                                     GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &sid,
+                                     GWY_APP_PAGE, &pageno,
                                      0);
-    if (!dfield) {
+
+    /* Ensure at most one is set.  We produce an error if no exportable data
+     * type is available or both types are available but neither is active.
+     * When only one is available or one is active we assume that is what the
+     * user wants to export. */
+    if (dfield && surface) {
+        if (pageno != GWY_PAGE_CHANNELS)
+            dfield = NULL;
+        if (pageno != GWY_PAGE_XYZS)
+            surface = NULL;
+    }
+    if (!dfield && !surface) {
         err_NO_CHANNEL_EXPORT(error);
         return FALSE;
     }
+
+    if (dfield)
+        pageno = GWY_PAGE_CHANNELS;
+    if (surface)
+        pageno = GWY_PAGE_XYZS;
+
+    load_args(gwy_app_settings_get(), &args);
+
+    if (dfield) {
+        gwy_container_gis_string(data, gwy_app_get_data_title_key_for_id(fid),
+                                 &title);
+    }
+    if (surface) {
+        gwy_container_gis_string(data,
+                                 gwy_app_get_surface_title_key_for_id(sid),
+                                 &title);
+    }
+
+    if (mode == GWY_RUN_INTERACTIVE) {
+        ok = gxyzf_export_dialog(&args, pageno, title);
+        save_args(gwy_app_settings_get(), &args);
+        if (!ok) {
+            err_CANCELLED(error);
+            return FALSE;
+        }
+    }
+
+    if (dfield)
+        return gxyzf_export_data_fields(filename, data, fid, &args, error);
+
+    return TRUE;
+}
+
+static gboolean
+gxyzf_export_dialog(GXYZExportArgs *args,
+                    GwyAppPage pageno,
+                    const gchar *title)
+{
+    GtkWidget *dialog, *vbox, *label, *all_channels;
+    gchar *desc = NULL;
+    gint response;
+
+    dialog = gtk_dialog_new_with_buttons(_("Export GXYZF"), NULL, 0,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gwy_help_add_to_file_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+
+    vbox = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), vbox, TRUE, TRUE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+
+    if (pageno == GWY_PAGE_CHANNELS)
+        desc = g_strdup_printf("%s %s", _("Channel:"), title);
+    else if (pageno == GWY_PAGE_XYZS)
+        desc = g_strdup_printf("%s %s", _("XYZ data:"), title);
+    label = gtk_label_new(desc);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 6);
+    g_free(desc);
+
+    gtk_box_pack_start(GTK_BOX(vbox), gwy_label_new_header(_("Options")),
+                       FALSE, FALSE, 0);
+
+    all_channels = gtk_check_button_new_with_mnemonic(_("Multi-channel "
+                                                        "file with all "
+                                                        "compatible data"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(all_channels),
+                                 args->all_channels);
+    gtk_box_pack_start(GTK_BOX(vbox), all_channels, FALSE, FALSE, 0);
+
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (response != GTK_RESPONSE_NONE) {
+        args->all_channels
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(all_channels));
+        gtk_widget_destroy(dialog);
+    }
+
+    return response == GTK_RESPONSE_OK;
+}
+
+static gboolean
+gxyzf_export_data_fields(const gchar *filename,
+                         GwyContainer *container,
+                         gint id,
+                         const GXYZExportArgs *args,
+                         GError **error)
+{
+    gdouble *ddbl = NULL;
+    gint *ids = NULL;
+    guint nchannels, ci, i, j, k, xres, yres;
+    size_t npts;
+    GwyDataField *dfield, *other;
+    const gdouble **d;
+    gdouble xreal, yreal, xoff, yoff;
+    gchar **titles = NULL;
+    GwySIUnit *xyunit, **zunits = NULL;
+    GQuark quark;
+    FILE *fh;
 
     if (!(fh = gwy_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);
         return FALSE;
     }
+
+    quark = gwy_app_get_data_key_for_id(id);
+    dfield = gwy_container_get_object(container, quark);
+    g_return_val_if_fail(dfield, FALSE);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -302,58 +444,46 @@ gxyzf_export(GwyContainer *container,
     yreal = gwy_data_field_get_yreal(dfield);
     xoff = gwy_data_field_get_xoffset(dfield);
     yoff = gwy_data_field_get_yoffset(dfield);
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
 
-    header = g_string_new(MAGIC);
-    g_string_append_printf(header, "NChannels = %u\n", 1);
-    g_string_append_printf(header, "NPoints = %u\n", xres*yres);
-
-    emptyunit = gwy_si_unit_new(NULL);
-    unit = gwy_data_field_get_si_unit_xy(dfield);
-    if (!gwy_si_unit_equal(unit, emptyunit)) {
-        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
-        g_string_append_printf(header, "XYUnits = %s\n", s);
-        g_free(s);
+    if (args->all_channels)
+        ids = gather_compatible_fields(container, dfield, &nchannels);
+    else {
+        nchannels = 1;
+        ids = g_new(gint, 2);
+        ids[0] = id;
+        ids[1] = -1;
     }
-    unit = gwy_data_field_get_si_unit_z(dfield);
-    if (!gwy_si_unit_equal(unit, emptyunit)) {
-        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
-        g_string_append_printf(header, "ZUnits1 = %s\n", s);
-        g_free(s);
+    g_return_val_if_fail(nchannels, FALSE);
+
+    zunits = g_new0(GwySIUnit*, nchannels + 1);
+    titles = g_new0(gchar*, nchannels + 1);
+    d = g_new0(const gdouble*, nchannels + 1);
+    for (ci = 0; ci < nchannels; ci++) {
+        quark = gwy_app_get_data_key_for_id(ids[ci]);
+        other = gwy_container_get_object(container, quark);
+        zunits[ci] = gwy_data_field_get_si_unit_z(other);
+        d[ci] = gwy_data_field_get_data_const(other);
+        titles[ci] = gwy_app_get_data_field_title(container, ids[ci]);
     }
-    g_object_unref(emptyunit);
 
-    s = gwy_app_get_data_field_title(container, id);
-    g_string_append_printf(header, "Title1 = %s\n", s);
-    g_free(s);
-
-    g_string_append_printf(header, "XRes = %u\n", xres);
-    g_string_append_printf(header, "YRes = %u\n", yres);
-
-    if (fwrite(header->str, 1, header->len, fh) != header->len) {
-        err_WRITE(error);
+    if (!write_header(fh, nchannels, xres*yres, titles, xyunit, zunits,
+                      xres, yres, error))
         goto fail;
-    }
 
-    padding = 8 - (header->len % 8);
-    if (fwrite(zeroes, 1, padding, fh) != padding) {
-        err_WRITE(error);
-        goto fail;
-    }
-    g_string_free(header, TRUE);
-    header = NULL;
-
-    ddbl = g_new(gdouble, 3*xres*yres);
-    d = gwy_data_field_get_data_const(dfield);
+    npts = ((size_t)nchannels + 2)*xres*yres;
+    ddbl = g_new(gdouble, npts);
     k = 0;
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
             append_double(ddbl + k++, (j + 0.5)*xreal/xres + xoff);
             append_double(ddbl + k++, (i + 0.5)*yreal/yres + yoff);
-            append_double(ddbl + k++, *(d++));
+            for (ci = 0; ci < nchannels; ci++)
+                append_double(ddbl + k++, *(d[ci]++));
         }
     }
 
-    if (fwrite(ddbl, sizeof(gdouble), 3*xres*yres, fh) != 3*xres*yres) {
+    if (fwrite(ddbl, sizeof(gdouble), npts, fh) != npts) {
         err_WRITE(error);
         goto fail;
     }
@@ -366,11 +496,119 @@ fail:
     if (fh)
         fclose(fh);
     g_unlink(filename);
-    if (header)
-        g_string_free(header, TRUE);
+
+    if (titles)
+        g_strfreev(titles);
+    g_free(zunits);
+    g_free(d);
     g_free(ddbl);
+    g_free(ids);
 
     return FALSE;
+}
+
+static gint*
+gather_compatible_fields(GwyContainer *container, GwyDataField *dfield,
+                         guint *nchannels)
+{
+    GwyDataField *other;
+    gint *ids;
+    guint ci, n = 0;
+    GQuark quark;
+
+    ids = gwy_app_data_browser_get_data_ids(container);
+    for (ci = 0; ids[ci] > -1; ci++) {
+        quark = gwy_app_get_data_key_for_id(ids[ci]);
+        other = gwy_container_get_object(container, quark);
+        if (gwy_data_field_check_compatibility(dfield, other,
+                                               GWY_DATA_COMPATIBILITY_RES
+                                               | GWY_DATA_COMPATIBILITY_REAL
+                                               | GWY_DATA_COMPATIBILITY_LATERAL))
+            continue;
+        ids[n] = ids[ci];
+        n++;
+    }
+    ids[n] = -1;
+
+    *nchannels = n;
+    return ids;
+}
+
+static gboolean
+write_header(FILE *fh, guint nchannels, guint npoints,
+             gchar **titles, GwySIUnit *xyunit, GwySIUnit **zunits,
+             gint xres, gint yres,
+             GError **error)
+{
+    static const gchar zeros[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    GwySIUnit *emptyunit;
+    GString *header;
+    gchar *s;
+    guint i, padding;
+
+    header = g_string_new(MAGIC);
+    g_string_append_printf(header, "NChannels = %u\n", nchannels);
+    g_string_append_printf(header, "NPoints = %u\n", npoints);
+
+    emptyunit = gwy_si_unit_new(NULL);
+
+    if (!gwy_si_unit_equal(xyunit, emptyunit)) {
+        s = gwy_si_unit_get_string(xyunit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(header, "XYUnits = %s\n", s);
+        g_free(s);
+    }
+
+    for (i = 0; i < nchannels; i++) {
+        if (!gwy_si_unit_equal(zunits[i], emptyunit)) {
+            s = gwy_si_unit_get_string(zunits[i], GWY_SI_UNIT_FORMAT_PLAIN);
+            g_string_append_printf(header, "ZUnits%u = %s\n", i+1, s);
+            g_free(s);
+        }
+    }
+    g_object_unref(emptyunit);
+
+    for (i = 0; i < nchannels; i++)
+        g_string_append_printf(header, "Title%u = %s\n", i, titles[i]);
+
+    if (xres && yres) {
+        g_string_append_printf(header, "XRes = %u\n", xres);
+        g_string_append_printf(header, "YRes = %u\n", yres);
+    }
+
+    if (fwrite(header->str, 1, header->len, fh) != header->len) {
+        err_WRITE(error);
+        g_string_free(header, TRUE);
+        return FALSE;
+    }
+
+    padding = 8 - (header->len % 8);
+    g_string_free(header, TRUE);
+    if (fwrite(zeros, 1, padding, fh) != padding) {
+        err_WRITE(error);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static const gchar all_channels_key[] = "/module/gxyzfile/all-channels";
+
+static void
+load_args(GwyContainer *settings,
+          GXYZExportArgs *args)
+{
+    *args = gxyzf_defaults;
+
+    gwy_container_gis_boolean_by_name(settings, all_channels_key,
+                                      &args->all_channels);
+}
+
+static void
+save_args(GwyContainer *settings,
+          const GXYZExportArgs *args)
+{
+    gwy_container_set_boolean_by_name(settings, all_channels_key,
+                                      args->all_channels);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
