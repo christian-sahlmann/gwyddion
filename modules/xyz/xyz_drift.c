@@ -331,6 +331,13 @@ xyzdrift(GwyContainer *data, GwyRunType run)
 
     initialize_ranges(&rdata, &args);
 
+    /*analyse drift*/
+    rdata.xdrift = g_new0(gdouble, rdata.npoints);
+    rdata.ydrift = g_new0(gdouble, rdata.npoints);
+    rdata.zdrift = g_new0(gdouble, rdata.npoints);
+    rdata.corpoints = g_new(GwyXYZ, rdata.npoints);
+    rdata.time = g_new0(gdouble, rdata.npoints);
+
     ok = xyzdrift_dialog(&args, &rdata, data, id);
 
     xyzdrift_save_args(settings, &args);
@@ -421,12 +428,6 @@ xyzdrift_dialog(XYZDriftArgs *args,
 
     controls.args = args;
     controls.rdata = rdata;
-    controls.rdata->xdrift = NULL;
-    controls.rdata->ydrift = NULL;
-    controls.rdata->zdrift = NULL;
-    controls.rdata->time = NULL;
-    controls.rdata->corpoints = NULL;
-
 
     controls.mydata = gwy_container_new();
 
@@ -551,8 +552,8 @@ xyzdrift_dialog(XYZDriftArgs *args,
     g_signal_connect_swapped(controls.zdrift_c, "activate",
                      G_CALLBACK(zdrift_changed), &controls);
 
-    g_signal_connect_swapped(controls.zdrift_average, "value-changed",
-                             G_CALLBACK(zdrift_changed), &controls);
+    //g_signal_connect_swapped(controls.zdrift_average, "value-changed",
+    //                         G_CALLBACK(zdrift_changed), &controls);
 
     g_signal_connect_swapped(controls.neighbors, "value-changed",
                              G_CALLBACK(neighbors_changed), &controls);
@@ -724,7 +725,7 @@ construct_options(XYZDriftControls *controls,
     static const GwyEnum zdrifts[] = {
         { N_("2nd order polynom"),  GWY_XYZDRIFT_ZMETHOD_POLYNOM,  },
         { N_("Exponential"),  GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL,  },
-        { N_("Moving average"),   GWY_XYZDRIFT_ZMETHOD_AVERAGE, },
+       // { N_("Moving average"),   GWY_XYZDRIFT_ZMETHOD_AVERAGE, },
     };
     static const GwyEnum drifts[] = {
         { N_("2nd order polynom"),  GWY_XYZDRIFT_METHOD_POLYNOM,  },
@@ -906,6 +907,7 @@ construct_options(XYZDriftControls *controls,
                      6, 7, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    /*
     label = gtk_label_new_with_mnemonic(_("_Moving average size:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
@@ -920,9 +922,8 @@ construct_options(XYZDriftControls *controls,
     gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-
-
     row++;
+    */
 
     gtk_table_attach(table, gwy_label_new_header(_("Search parameters")),
                      0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1221,7 +1222,7 @@ zdrift_changed(XYZDriftControls *controls,
     args->zdrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_a)));
     args->zdrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_b)));
     args->zdrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_c)));
-    args->zdrift_average = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_average));
+    //args->zdrift_average = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_average));
 }
 
 static void          
@@ -1238,12 +1239,12 @@ zdrift_type_changed(GtkWidget *combo, XYZDriftControls *controls)
         gtk_widget_set_sensitive(controls->zdrift_a, FALSE);
         gtk_widget_set_sensitive(controls->zdrift_b, FALSE);
         gtk_widget_set_sensitive(controls->zdrift_c, FALSE);
-        gtk_widget_set_sensitive(controls->zdrift_average_spin, TRUE);
+        //gtk_widget_set_sensitive(controls->zdrift_average_spin, TRUE);
     } else {
         gtk_widget_set_sensitive(controls->zdrift_a, TRUE);
         gtk_widget_set_sensitive(controls->zdrift_b, TRUE);
         gtk_widget_set_sensitive(controls->zdrift_c, TRUE);
-        gtk_widget_set_sensitive(controls->zdrift_average_spin, FALSE);
+        //gtk_widget_set_sensitive(controls->zdrift_average_spin, FALSE);
     }
 
 }
@@ -1251,11 +1252,23 @@ zdrift_type_changed(GtkWidget *combo, XYZDriftControls *controls)
 static void          
 graph_changed(GtkWidget *combo, XYZDriftControls *controls)
 {
+    GwyGraphCurveModel *gcmodel;
+    XYZDriftArgs *args = controls->args;
 
     controls->args->graph_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->graph_type));
 
     if (controls->in_update)
         return;
+
+    gwy_graph_model_remove_all_curves(controls->gmodel);
+    gcmodel = gwy_graph_curve_model_new();
+
+    if (args->graph_type == GWY_XYZDRIFT_GRAPH_X) gwy_graph_curve_model_set_data(gcmodel, controls->rdata->time, controls->rdata->xdrift, controls->rdata->npoints);
+    else if (args->graph_type == GWY_XYZDRIFT_GRAPH_Y) gwy_graph_curve_model_set_data(gcmodel, controls->rdata->time, controls->rdata->ydrift, controls->rdata->npoints);
+    else gwy_graph_curve_model_set_data(gcmodel, controls->rdata->time, controls->rdata->zdrift, controls->rdata->npoints);
+
+    gwy_graph_model_add_curve(controls->gmodel, gcmodel);
+
 }
 
 static void
@@ -1547,6 +1560,31 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     return ok;
 }
 
+static double
+get_xydrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
+{
+    gdouble rtime = time;
+
+    if (type==0) //polynom
+       return a + b*rtime + c*rtime*rtime;
+    else if (type==1) //exponential
+       return a + b*exp(rtime/c);
+    else return 0;
+}
+
+static double
+get_zdrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
+{
+    gdouble rtime = time;
+
+    if (type==0) //polynom
+       return a + b*rtime + c*rtime*rtime;
+    else if (type==1) //exponential
+       return a + b*exp(rtime/c);
+    else return 0; //ignore moving average drift type
+}
+
+
 
 //evaluate zdrift from actual corrected positions and previously found neighbors
 static void
@@ -1610,15 +1648,41 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
 }
 
 static void
+set_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
+          gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz)
+{
+    gint i;
+    XYZDriftArgs *args = controls->args;
+
+    for (i=0; i<npoints; i++) {
+       xdrift[i] = get_xydrift_val(args->xdrift_type, ax, bx, cx, time[i]);
+       ydrift[i] = get_xydrift_val(args->ydrift_type, ay, by, cy, time[i]);
+       zdrift[i] = get_zdrift_val(args->zdrift_type, az, bz, cz, time[i]);
+    }
+}
+
+static void
 estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
     gint i, closest;
     gint *nbfrom, *nbto, nnbs;
     gdouble timethreshold = 1e3, posthreshold = 1e-6;
-    gdouble xmdrift, xmmdrift, ymdrift, ymmdrift, zmdrift, zmmdrift;
+    gdouble ax, ay, az, bx, by, bz, cx, cy, cz;
     gdouble minxdrift, minxdrifts, minydrift, minydrifts;
     gdouble err, minerr, minzdrift, minzdrifts;
 
+
+    ax = controls->args->xdrift_a;
+    bx = controls->args->xdrift_b;
+    cx = controls->args->xdrift_c;
+
+    ay = controls->args->ydrift_a;
+    by = controls->args->ydrift_b;
+    cy = controls->args->ydrift_c;
+
+    az = controls->args->zdrift_a;
+    bz = controls->args->zdrift_b;
+    cz = controls->args->zdrift_c;
 
 
     printf("estimate drift called\n");
@@ -1627,15 +1691,43 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
     nbfrom = (gint *)malloc(npoints*sizeof(gint));
     nbto = (gint *)malloc(npoints*sizeof(gint));
 
+    minerr = G_MAXDOUBLE;    
+
+    /*iterate through x and y*/ 
+    
+
     /*correct data for actual drift in xy*/
+    set_drift(controls, points, timepoints, npoints, time, xdrift, ydrift, zdrift, 
+              ax, bx, cx, ay, by, cy, az, bz, cz);
     correct_drift(points, npoints, xdrift, ydrift, zdrift,
                   corpoints, FALSE);
+
+    //err = get_error(corpoints, npoints, nbfrom, nbto, nnbs, xdrift, ydrift, zdrift);
 
 
     nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
                           controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin);
 
+/*
+    for (bz = (0.5*controls->args->zdrift_b); bz <= (2*controls->args->zdrift_b); bz += (0.1*controls->args->zdrift_b))
+    {
+        //correct data for actual drift in xyz
+        set_drift(controls, points, timepoints, npoints, time, xdrift, ydrift, zdrift, 
+                  ax, bx, cx, ay, by, cy, az, bz, cz);
+
+        err = get_error(corpoints, npoints, nbfrom, nbto, nnbs, xdrift, ydrift, zdrift);
+
+        if (err<minerr) {
+            minerr = err;
+            printf("error %g     params %g %g %g    %g %g %g    %g %g %g\n", err, ax, bx, cx, ay, by, cy, az, bz, cz);
+        }
+    }
+*/
+
+//    get z drift directly
     get_zdrift(controls, points, npoints, time, zdrift, nbfrom, nbto, nnbs);
+
+
 
 
 
@@ -1719,29 +1811,6 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
 
 }
 
-static double
-get_xydrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
-{
-    gdouble rtime = time;
-
-    if (type==0) //polynom
-       return a + b*rtime + c*rtime*rtime;
-    else if (type==1) //exponential
-       return a + b*exp(c*rtime);
-    else return 0;
-}
-
-static double
-get_zdrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
-{
-    gdouble rtime = time;
-
-    if (type==0) //polynom
-       return a + b*rtime + c*rtime*rtime;
-    else if (type==1) //exponential
-       return a + b*exp(c*rtime);
-    else return 0; //ignore moving average drift type
-}
 
 static void
 init_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
@@ -1769,7 +1838,7 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
     for (i=0; i<npoints; i++) {
        corpoints[i].x = points[i].x + xdrift[i];
        corpoints[i].y = points[i].y + ydrift[i];
-       if (correctz) corpoints[i].z = points[i].z + zdrift[i];
+       if (correctz) corpoints[i].z = points[i].z - zdrift[i];
     }
 }
 
@@ -1805,33 +1874,19 @@ preview(XYZDriftControls *controls)
                 args->neighbors, args->threshold_length, args->threshold_time);
 
 
-
-    /*analyse drift*/
-    if (rdata->xdrift) g_free(rdata->xdrift);
-    if (rdata->ydrift) g_free(rdata->ydrift);
-    if (rdata->zdrift) g_free(rdata->zdrift);
-    rdata->xdrift = (gdouble *)malloc(rdata->npoints*sizeof(gdouble));
-    rdata->ydrift = (gdouble *)malloc(rdata->npoints*sizeof(gdouble));
-    rdata->zdrift = (gdouble *)malloc(rdata->npoints*sizeof(gdouble));
-
-    if (rdata->corpoints) g_free(rdata->corpoints);
-    rdata->corpoints = (GwyXYZ *)malloc(rdata->npoints*sizeof(GwyXYZ));
-
-    if (rdata->time) g_free(rdata->time);
-    rdata->time = (gdouble *)malloc(rdata->npoints*sizeof(gdouble));
-
-
+    /*fill xdrift, ydrift and zdrift arrays from user/default values*/
     init_drift(controls, rdata->points, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
+    /*estimate the drift using some fitting routine, returning filled xdrift, ydrift and zdrift arrays*/
     if (args->fit_xdrift || args->fit_ydrift || args->fit_zdrift) 
         estimate_drift(controls, rdata->points, rdata->corpoints, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
-    /*correct data for drift*/
+    /*correct data for drift, creating corpoints from points*/
     correct_drift(rdata->points, rdata->npoints, rdata->xdrift, rdata->ydrift, rdata->zdrift,
                   rdata->corpoints, TRUE);
 
 
-    /*render in full resolution*/
+    /*render preview*/
     dfield = xyzdrift_do(controls->rdata, args,
                          GTK_WINDOW(controls->dialog), &error);
 
