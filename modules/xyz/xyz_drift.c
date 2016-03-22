@@ -1391,7 +1391,7 @@ get_bining(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gint 
     //allocate the bins
     for (i=0; i<NBIN; i++) {
         for (j=0; j<NBIN; j++) {
-            bin[i][j] = (gint *)g_malloc(nbin[i][j]*sizeof(gint));
+            bin[i][j] = g_new(gint, nbin[i][j]);
         }
     }
 
@@ -1468,11 +1468,11 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
 
 
 
-    bin = (gint ***)g_malloc(NBIN*sizeof(gint **));
-    for (i=0; i<NBIN; i++) bin[i] = (gint **) g_malloc(NBIN*sizeof(gint *));
+    bin = g_new(gint**, NBIN);
+    for (i=0; i<NBIN; i++) bin[i] = g_new(gint*, NBIN);
 
-    nbin = (gint **)g_malloc(NBIN*sizeof(gint *));
-    for (i=0; i<NBIN; i++) nbin[i] = (gint *) g_malloc(NBIN*sizeof(gint));
+    nbin = g_new(gint*, NBIN);
+    for (i=0; i<NBIN; i++) nbin[i] = g_new(gint, NBIN);
 
     printf("bining\n");
     get_bining(points, npoints, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
@@ -1605,8 +1605,8 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
     /*re-read for sure*/
     zdrift_changed(controls, NULL);
 
-    dtime = (gdouble *)malloc(nnbs*sizeof(gdouble));
-    drift = (gdouble *)malloc(nnbs*sizeof(gdouble));
+    dtime = g_new(gdouble, nnbs);
+    drift = g_new(gdouble, nnbs);
 
     for (i=0; i<nnbs; i++) {
         dtime[i] = (time[nbfrom[i]]+time[nbto[i]])/2;
@@ -1688,8 +1688,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
     printf("estimate drift called\n");
 
 
-    nbfrom = (gint *)malloc(npoints*sizeof(gint));
-    nbto = (gint *)malloc(npoints*sizeof(gint));
+    nbfrom = g_new(gint, npoints);
+    nbto = g_new(gint, npoints);
 
     minerr = G_MAXDOUBLE;    
 
@@ -1728,6 +1728,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
     get_zdrift(controls, points, npoints, time, zdrift, nbfrom, nbto, nnbs);
 
 
+    g_free(nbfrom);
+    g_free(nbto);
 
 
 
