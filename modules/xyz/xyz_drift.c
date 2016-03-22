@@ -286,6 +286,10 @@ xyzdrift(GwyContainer *data, GwyRunType run)
     GQuark key;
     gchar *title;
     int i, tsfound;
+    gchar *error = NULL;
+
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
 
     GwyContainer *settings;
     GwySurface *surface = NULL;
@@ -343,7 +347,71 @@ xyzdrift(GwyContainer *data, GwyRunType run)
     xyzdrift_save_args(settings, &args);
 
     if (ok) {
-        gchar *error = NULL;
+        //correct the original data
+        correct_drift(rdata.points, rdata.npoints, rdata.xdrift, rdata.ydrift, rdata.zdrift,
+                  rdata.points, TRUE);
+        gwy_surface_data_changed(surface);
+
+        //output graphs
+        gmodel = gwy_graph_model_new();
+        g_object_set(gmodel,
+                     "title", _("X drift"),
+                     "axis-label-left", _("drift"),
+                     "axis-label-bottom", "time",
+                     "si-unit-x", gwy_surface_get_si_unit_z(rdata.timesurface),
+                     "si-unit-y", gwy_surface_get_si_unit_xy(rdata.surface),
+                     NULL);
+
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodel, rdata.time, rdata.xdrift, 
+                                       rdata.npoints);
+
+        g_object_set(gcmodel, "description", _("x-axis drift"), NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        gwy_object_unref(gcmodel);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_object_unref(gmodel);
+
+        gmodel = gwy_graph_model_new();
+        g_object_set(gmodel,
+                     "title", _("Y drift"),
+                     "axis-label-left", _("drift"),
+                     "axis-label-bottom", "time",
+                     "si-unit-x", gwy_surface_get_si_unit_z(rdata.timesurface),
+                     "si-unit-y", gwy_surface_get_si_unit_xy(rdata.surface),
+                     NULL);
+
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodel, rdata.time, rdata.ydrift, 
+                                       rdata.npoints);
+
+        g_object_set(gcmodel, "description", _("y-axis drift"), NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        gwy_object_unref(gcmodel);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_object_unref(gmodel);
+
+        gmodel = gwy_graph_model_new();
+        g_object_set(gmodel,
+                     "title", _("Z drift"),
+                     "axis-label-left", _("drift"),
+                     "axis-label-bottom", "time",
+                     "si-unit-x", gwy_surface_get_si_unit_z(rdata.timesurface),
+                     "si-unit-y", gwy_surface_get_si_unit_z(rdata.surface),
+                     NULL);
+
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodel, rdata.time, rdata.zdrift, 
+                                       rdata.npoints);
+
+        g_object_set(gcmodel, "description", _("z-axis drift"), NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        gwy_object_unref(gcmodel);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_object_unref(gmodel);
+
+
+        //output the rasterized datafield
         dfield = xyzdrift_do(&rdata, &args, NULL, &error);
         if (dfield) {
             newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
