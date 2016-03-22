@@ -270,7 +270,9 @@ gwy_app_file_load_real(const gchar *filename_utf8,
             gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
     }
     else {
-        _gwy_app_log_discard_captured_messages();
+        if (do_add_loaded)
+            _gwy_app_log_discard_captured_messages();
+
         if (err && !g_error_matches(err,
                                     GWY_MODULE_FILE_ERROR,
                                     GWY_MODULE_FILE_ERROR_CANCELLED)) {
