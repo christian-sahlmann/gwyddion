@@ -290,12 +290,14 @@ xyzdrift(GwyContainer *data, GwyRunType run)
 
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
+    GtkWidget *dialog;
 
     GwyContainer *settings;
-    GwySurface *surface = NULL;
+    GwySurface *surface = NULL, *timesurface = NULL;
     GwyDataField *dfield;
+    GwySIUnit *siunit, *siunits;
     gboolean ok = TRUE;
-    gint id, newid;
+    gint id, *ids, newid;
 
     g_return_if_fail(run & XYZDRIFT_RUN_MODES);
 
@@ -315,14 +317,22 @@ xyzdrift(GwyContainer *data, GwyRunType run)
 
     //find timestamp
     tsfound = 0;
-    for (i=0; i<10; i++) {
-       key = gwy_app_get_surface_key_for_id(i);
+    siunits = gwy_si_unit_new("s");
+
+    ids = gwy_app_data_browser_get_xyz_ids(data);
+
+    i = 0;
+    while (ids[i] != -1)  {
+       key = gwy_app_get_surface_key_for_id(ids[i]);
        if (!key) continue;
 
        title = gwy_app_get_surface_title(data, i);
-       printf("title %d = %s, key \"%s\", \"%s\" %d\n", i, title, g_quark_to_string(key), "Timestamp", g_strcmp0(g_quark_to_string(key), "Timestamp"));
+       //printf("title %d = %s, key \"%s\", \"%s\" %d\n", i, title, g_quark_to_string(key), "Timestamp", g_strcmp0(g_quark_to_string(key), "Timestamp"));
 
-       if (g_strcmp0(title, "Timestamp")==0) {
+       timesurface = gwy_container_get_object(data, key);
+       siunit = gwy_surface_get_si_unit_z(timesurface);
+
+       if (gwy_si_unit_equal(siunit, siunits) || g_strcmp0(title, "Timestamp")==0) {
           rdata.timesurface = gwy_container_get_object(data, key);
           rdata.timepoints = rdata.timesurface->data;
           rdata.ntimepoints = rdata.timesurface->n;
@@ -330,8 +340,20 @@ xyzdrift(GwyContainer *data, GwyRunType run)
           printf("Timestamp found in channel %d\n", i);
           break;
        }
+       i++;
     }
-    if (!tsfound) printf("Error, no ts found!\n");
+    g_free(ids);
+    if (!tsfound) {
+       dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_find_window_for_channel(data, id)),
+                                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                                  GTK_MESSAGE_ERROR,
+                                  GTK_BUTTONS_CLOSE,
+                                  "No timestamp channel found, either called 'Timestamp' or having units in seconds.");
+       gtk_dialog_run (GTK_DIALOG (dialog));
+       gtk_widget_destroy (dialog);
+       return;
+    }
+    
 
     initialize_ranges(&rdata, &args);
 
@@ -1294,7 +1316,7 @@ zdrift_changed(XYZDriftControls *controls,
 }
 
 static void          
-zdrift_type_changed(GtkWidget *combo, XYZDriftControls *controls)
+zdrift_type_changed(G_GNUC_UNUSED GtkWidget *combo, XYZDriftControls *controls)
 {
 
     controls->args->zdrift_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->zdrift_type));
@@ -1318,7 +1340,7 @@ zdrift_type_changed(GtkWidget *combo, XYZDriftControls *controls)
 }
 
 static void          
-graph_changed(GtkWidget *combo, XYZDriftControls *controls)
+graph_changed(G_GNUC_UNUSED GtkWidget *combo, XYZDriftControls *controls)
 {
     GwyGraphCurveModel *gcmodel;
     XYZDriftArgs *args = controls->args;
@@ -1375,32 +1397,8 @@ reset_ranges(XYZDriftControls *controls)
                            TRUE);
 }
 
-static gint
-find_closest_point(GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble tt, gdouble pt, gint index, gdouble *xdrift, gdouble *ydrift)
-{
-    int i, closest = -1;
-    double mindist = G_MAXDOUBLE;
-    double sdist;
-
-    for (i=0; i<index; i++) {
-        if ((timepoints[index].z - timepoints[i].z)>tt) {
-
-            sdist = (((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i]))*((timepoints[index].x + xdrift[index]) - (timepoints[i].x + xdrift[i])) +
-                ((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i]))*((timepoints[index].y + ydrift[index]) - (timepoints[i].y + ydrift[i])));
-
-            if (sdist<(pt*pt)) {
-                if (sdist<mindist) {
-                    mindist = sdist;
-                    closest = i;
-                }
-            }
-        } 
-    }
-
-    return closest;
-}
 static gdouble
-get_error(GwyXYZ *points, gint npoints, gint *nbfrom, gint *nbto, gint nnbs, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
+get_error(GwyXYZ *points, gint *nbfrom, gint *nbto, gint nnbs, gdouble *zdrift)
 {
     gint i;
     gdouble sum = 0;
@@ -1437,7 +1435,7 @@ get_bin(gdouble x, gdouble y, gint *bi, gint *bj, gdouble xreal, gdouble yreal, 
 
 
 static void
-get_bining(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
+get_bining(GwyXYZ *points, gint npoints, gint ***bin, gint **nbin, gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
     gint i, j, k;
     gint bi, bj;
@@ -1480,7 +1478,7 @@ get_bining(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gint 
 }
 
 static gint
-find_closest_point_bining(GwyXYZ *points, gdouble *time, gint npoints, gdouble tt, gdouble pt, gint index, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, 
+find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt, gint index, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, 
                           gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
 
@@ -1529,7 +1527,7 @@ static gint
 find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npoints, gdouble timethreshold, gdouble posthreshold, gdouble *xdrift, gdouble *ydrift,
                gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
-    gint i, j, k, nnbs = 0, closest;
+    gint i, nnbs = 0, closest;
     gint ***bin, **nbin;
     FILE *fw = fopen("nbs.txt", "w");
 
@@ -1543,7 +1541,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
     for (i=0; i<NBIN; i++) nbin[i] = g_new(gint, NBIN);
 
     printf("bining\n");
-    get_bining(points, npoints, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
+    get_bining(points, npoints, bin, nbin, xreal, yreal, xoffset, yoffset);
     printf("done\n");
 
     printf("neighbors\n");
@@ -1551,7 +1549,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
     fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
 
     for (i=0; i<npoints; i++) {
-        closest = find_closest_point_bining(points, time, npoints, timethreshold, posthreshold, i, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
+        closest = find_closest_point_bining(points, time, timethreshold, posthreshold, i, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
 
         if (closest>=0) {
             fprintf(fw, "closest %d %d    %g %g    %g %g   %g %g   %g %g    %g\n", i, closest, points[i].x, points[i].y, points[closest].x, points[closest].y, points[i].z, points[closest].z, time[i], time[closest], time[i]-time[closest]);
@@ -1656,7 +1654,7 @@ get_zdrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
 
 //evaluate zdrift from actual corrected positions and previously found neighbors
 static void
-get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *time, gdouble *zdrift, gint *nbfrom, gint *nbto, gint nnbs) 
+get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gdouble *time, G_GNUC_UNUSED gdouble *zdrift, gint *nbfrom, gint *nbto, gint nnbs) 
 {
     gint i;
     gdouble *dtime, *drift;
@@ -1699,7 +1697,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
 
     printf("Fitting completed with %d: %g %g %g\n", ok, params[0], params[1], params[2]);  
     g_snprintf(buffer, sizeof(buffer), "a = %g +- %g,  b = %g +- %g,  c = %g +- %g", params[0], errors[0], params[1], errors[1], params[2], errors[2]);
-    gtk_label_set_text(controls->result_z, buffer); 
+    gtk_label_set_text(GTK_LABEL(controls->result_z), buffer); 
 
     controls->args->zdrift_a = params[0];
     controls->args->zdrift_b = params[1];
@@ -1716,7 +1714,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gint npoints, gdouble *ti
 }
 
 static void
-set_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
+set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
           gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz)
 {
     gint i;
@@ -1730,7 +1728,7 @@ set_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *timepoints, gint n
 }
 
 static void
-estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
+estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
     gint i, closest;
     gint *nbfrom, *nbto, nnbs;
@@ -1765,7 +1763,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
     
 
     /*correct data for actual drift in xy*/
-    set_drift(controls, points, timepoints, npoints, time, xdrift, ydrift, zdrift, 
+    set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
               ax, bx, cx, ay, by, cy, az, bz, cz);
     correct_drift(points, npoints, xdrift, ydrift, zdrift,
                   corpoints, FALSE);
@@ -1793,7 +1791,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
 */
 
 //    get z drift directly
-    get_zdrift(controls, points, npoints, time, zdrift, nbfrom, nbto, nnbs);
+    get_zdrift(controls, points, time, zdrift, nbfrom, nbto, nnbs);
 
 
     g_free(nbfrom);
@@ -1883,11 +1881,10 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, Gw
 
 
 static void
-init_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
+init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
     gint i;
     XYZDriftArgs *args = controls->args;
-    gdouble div = 1e9;
 
     for (i=0; i<npoints; i++) {
        time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this
@@ -1945,11 +1942,11 @@ preview(XYZDriftControls *controls)
 
 
     /*fill xdrift, ydrift and zdrift arrays from user/default values*/
-    init_drift(controls, rdata->points, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
+    init_drift(controls, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
     /*estimate the drift using some fitting routine, returning filled xdrift, ydrift and zdrift arrays*/
     if (args->fit_xdrift || args->fit_ydrift || args->fit_zdrift) 
-        estimate_drift(controls, rdata->points, rdata->corpoints, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
+        estimate_drift(controls, rdata->points, rdata->corpoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
     /*correct data for drift, creating corpoints from points*/
     correct_drift(rdata->points, rdata->npoints, rdata->xdrift, rdata->ydrift, rdata->zdrift,
@@ -1989,7 +1986,7 @@ preview(XYZDriftControls *controls)
 static GwyDataField*
 xyzdrift_do(XYZDriftData *rdata,
           const XYZDriftArgs *args,
-          GtkWindow *window,
+          G_GNUC_UNUSED GtkWindow *window,
           gchar **error)
 {
     GwyDataField *dfield;
@@ -2024,6 +2021,11 @@ xyzdrift_do(XYZDriftData *rdata,
 static void
 xyzdrift_free(XYZDriftData *rdata)
 {
+    g_free(rdata->xdrift);
+    g_free(rdata->ydrift);
+    g_free(rdata->zdrift);
+    g_free(rdata->corpoints);
+    g_free(rdata->time);
 }
 
 static gdouble
