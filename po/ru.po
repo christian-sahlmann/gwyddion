@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-03-20 10:06+0300\n"
-"PO-Revision-Date: 2016-03-20 10:22+0300\n"
+"POT-Creation-Date: 2016-03-25 09:50+0300\n"
+"PO-Revision-Date: 2016-03-25 09:51+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -146,22 +146,22 @@ msgstr "Гауссиана (ФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1528
 msgid "Gaussian (ACF)"
-msgstr "Гауссиана (ACF)"
+msgstr "Гауссиана (АКФ)"
 
 #: libgwyddion/gwynlfitpreset.c:1542
 msgid "Gaussian (HHCF)"
-msgstr "Гауссиана (HHCF)"
+msgstr "Гауссиана (ФКВВ)"
 
 #: libgwyddion/gwynlfitpreset.c:1556
 msgid "Gaussian (RPSDF)"
-msgstr "Гауссиана (RPSDF)"
+msgstr "Гауссиана (РФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1570
 msgid "Two Gaussians (PSDF)"
 msgstr "Две гауссианы (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:718
-#: modules/xyz/xyz_drift.c:723
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:817
+#: modules/xyz/xyz_drift.c:822
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
@@ -175,11 +175,11 @@ msgstr "Экспоненциальная (АКФ)"
 
 #: libgwyddion/gwynlfitpreset.c:1626
 msgid "Exponential (HHCF)"
-msgstr "Экспоненциальная (HHCF)"
+msgstr "Экспоненциальная (ФКВВ)"
 
 #: libgwyddion/gwynlfitpreset.c:1640
 msgid "Exponential (RPSDF)"
-msgstr "Экспоненциальная (RPSDF)"
+msgstr "Экспоненциальная (РФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1655
 msgid "Polynomial (order 0)"
@@ -211,7 +211,7 @@ msgstr "Гладкая наклонная ступень"
 
 #: libgwyddion/gwynlfitpreset.c:1758
 msgid "Smooth bent step"
-msgstr "Гладкая наклонная ступень"
+msgstr "Гладкая ступень с изгибом"
 
 #: libgwyddion/gwynlfitpreset.c:1775
 msgid "Power"
@@ -573,12 +573,12 @@ msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3529
-#: modules/xyz/xyz_raster.c:604
+#: modules/xyz/xyz_raster.c:612
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3530
-#: modules/xyz/xyz_raster.c:605
+#: modules/xyz/xyz_raster.c:613
 msgid "Linear"
 msgstr "Линейная"
 
@@ -1331,7 +1331,7 @@ msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:464 modules/xyz/xyz_raster.c:375
+#: modules/xyz/xyz_drift.c:563 modules/xyz/xyz_raster.c:383
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -1604,8 +1604,8 @@ msgstr "Положение максимума"
 msgid "RMS"
 msgstr "Ср. квадр."
 
-#: app/app.c:1594 modules/file/asciiexport.c:187 modules/file/xyzexport.c:230
-#: modules/file/xyzexport.c:299
+#: app/app.c:1594 modules/file/asciiexport.c:187 modules/file/gxyzffile.c:393
+#: modules/file/xyzexport.c:233 modules/file/xyzexport.c:302
 msgid "Channel:"
 msgstr "Канал:"
 
@@ -1725,45 +1725,45 @@ msgstr ""
 "\n"
 "%s"
 
-#: app/file.c:283
+#: app/file.c:285
 #, c-format
 msgid "Opening of `%s' failed"
 msgstr "Не удалось открыть '%s'"
 
-#: app/file.c:289 app/file.c:525
+#: app/file.c:291 app/file.c:527
 #, c-format
 msgid "Full file path: %s."
 msgstr "Полный путь к файлу: %s."
 
-#: app/file.c:292
+#: app/file.c:294
 #, c-format
 msgid "Loaded using: %s."
 msgstr "Загружено используя: %s."
 
-#: app/file.c:379
+#: app/file.c:381
 msgid "Merge File"
 msgstr "Объединить файлы"
 
-#: app/file.c:381 app/gwyappfilechooser.c:222
+#: app/file.c:383 app/gwyappfilechooser.c:222
 msgid "Open File"
 msgstr "Открыть файл"
 
-#: app/file.c:519 app/gwymoduleutils.c:193
+#: app/file.c:521 app/gwymoduleutils.c:193
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Сохранение `%s' не выполнено"
 
-#: app/file.c:528
+#: app/file.c:530
 #, c-format
 msgid "Saved using: %s."
 msgstr "Сохранено используя: %s."
 
-#: app/file.c:688
+#: app/file.c:690
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Файл `%s' уже существует. Заменить?"
 
-#: app/file.c:692
+#: app/file.c:694
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
@@ -1771,7 +1771,7 @@ msgstr ""
 "Файл уже существует в `%s'. Если его заменить, то его содержимое будет "
 "перезаписано."
 
-#: app/file.c:695
+#: app/file.c:697
 msgid "Replace File?"
 msgstr "Заменить существующий файл?"
 
@@ -3060,7 +3060,7 @@ msgstr "Значение тега заголовка ‘%s’ не выровн�
 
 #: modules/file/alicona.c:665 modules/file/gdeffile.c:175
 #: modules/file/gdeffile.c:199 modules/file/gsffile.c:159
-#: modules/file/gxyzffile.c:158 modules/file/iso28600.c:1038
+#: modules/file/gxyzffile.c:199 modules/file/iso28600.c:1038
 #: modules/file/pt3file.c:489 modules/file/pt3file.c:591
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
@@ -3141,7 +3141,7 @@ msgstr "Ширина:"
 msgid "Height:"
 msgstr "Высота:"
 
-#: modules/file/asciiexport.c:220 modules/file/xyzexport.c:245
+#: modules/file/asciiexport.c:220 modules/file/xyzexport.c:248
 msgid "Value units:"
 msgstr "Единицы измерения:"
 
@@ -3149,30 +3149,30 @@ msgstr "Единицы измерения:"
 msgid "Export Text"
 msgstr "Экспортировать текст"
 
-#: modules/file/asciiexport.c:275 modules/file/imgexport.c:3922
-#: modules/file/rawfile.c:758 modules/file/xyzexport.c:308
-#: modules/process/calibrate.c:607 modules/process/col_synth.c:505
-#: modules/process/correct_affine.c:471 modules/process/extend.c:259
-#: modules/process/fft_filter_1d.c:266 modules/process/grain_dist.c:306
-#: modules/process/grain_edge.c:260 modules/process/grain_mark.c:343
-#: modules/process/grain_wshed.c:256 modules/process/linematch.c:854
-#: modules/process/mark_disconn.c:285 modules/process/slope_dist.c:368
-#: modules/process/tip_blind.c:361 modules/process/wpour_mark.c:359
-#: modules/tools/spotremove.c:322 modules/tools/stats.c:403
-#: modules/xyz/xyz_raster.c:592
+#: modules/file/asciiexport.c:275 modules/file/gxyzffile.c:402
+#: modules/file/imgexport.c:3922 modules/file/rawfile.c:758
+#: modules/file/xyzexport.c:311 modules/process/calibrate.c:607
+#: modules/process/col_synth.c:505 modules/process/correct_affine.c:471
+#: modules/process/extend.c:259 modules/process/fft_filter_1d.c:266
+#: modules/process/grain_dist.c:306 modules/process/grain_edge.c:260
+#: modules/process/grain_mark.c:343 modules/process/grain_wshed.c:256
+#: modules/process/linematch.c:854 modules/process/mark_disconn.c:285
+#: modules/process/slope_dist.c:368 modules/process/tip_blind.c:361
+#: modules/process/wpour_mark.c:359 modules/tools/spotremove.c:322
+#: modules/tools/stats.c:403 modules/xyz/xyz_raster.c:600
 msgid "Options"
 msgstr "Параметры"
 
-#: modules/file/asciiexport.c:278 modules/file/xyzexport.c:311
+#: modules/file/asciiexport.c:278 modules/file/xyzexport.c:314
 msgid "Use _dot as decimal separator"
 msgstr "Использовать точку как _десятичный разделитель"
 
-#: modules/file/asciiexport.c:285 modules/file/xyzexport.c:318
+#: modules/file/asciiexport.c:285 modules/file/xyzexport.c:321
 #: modules/process/grain_dist.c:317
 msgid "Add _informational comment header"
 msgstr "Добавить _информационный заголовок-комментарий"
 
-#: modules/file/asciiexport.c:294 modules/file/xyzexport.c:327
+#: modules/file/asciiexport.c:294 modules/file/xyzexport.c:330
 msgid "_Precision:"
 msgstr "_Точность:"
 
@@ -3709,18 +3709,31 @@ msgstr "Не удаётся получить размер несжатого ф�
 msgid "Cannot read file contents."
 msgstr "Не удаётся прочитать содержимое файла."
 
-#: modules/file/gxyzffile.c:77
+#: modules/file/gxyzffile.c:118
 msgid "Imports Gwyddion XYZ field files."
 msgstr "Импортирует файлы Gwyddion XYZ-полей."
 
-#: modules/file/gxyzffile.c:90
+#: modules/file/gxyzffile.c:131
 msgid "GwyXYZ data files"
 msgstr "Файлы данных GwyXYZ"
 
-#: modules/file/gxyzffile.c:185
+#: modules/file/gxyzffile.c:226
 #, c-format
 msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Размер данных %lu не является кратным размеру точки  %u."
+
+#: modules/file/gxyzffile.c:381
+msgid "Export GXYZF"
+msgstr "Экспорт GXYZF"
+
+#: modules/file/gxyzffile.c:395 modules/file/xyzexport.c:238
+#: modules/file/xyzexport.c:304
+msgid "XYZ data:"
+msgstr "Данные XYZ:"
+
+#: modules/file/gxyzffile.c:405
+msgid "Multi-channel file with all compatible data"
+msgstr "Файл с несколькими каналами со всеми совместимыми данными"
 
 #: modules/file/hdf4file.c:339
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
@@ -3868,8 +3881,8 @@ msgstr "Страницы:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:655
-#: modules/xyz/xyz_raster.c:530
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:754
+#: modules/xyz/xyz_raster.c:538
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
@@ -4234,7 +4247,7 @@ msgstr "Изображение"
 #: modules/process/scale.c:253 modules/process/straighten_path.c:274
 #: modules/process/unrotate.c:278 modules/tools/linestats.c:416
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
-#: modules/tools/sfunctions.c:457 modules/xyz/xyz_raster.c:596
+#: modules/tools/sfunctions.c:457 modules/xyz/xyz_raster.c:604
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -5007,20 +5020,20 @@ msgid "Plot point density map"
 msgstr "Строить карту плотности точек"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:606
-#: modules/xyz/xyz_raster.c:481
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:705
+#: modules/xyz/xyz_raster.c:489
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:610
-#: modules/xyz/xyz_raster.c:485
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:709
+#: modules/xyz/xyz_raster.c:493
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:625
-#: modules/xyz/xyz_raster.c:500
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:724
+#: modules/xyz/xyz_raster.c:508
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
@@ -5589,8 +5602,8 @@ msgstr "Формат данных"
 #: modules/process/tip_model.c:166 modules/process/wpour_mark.c:278
 #: modules/tools/linestats.c:457 modules/tools/sfunctions.c:523
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:501
-#: modules/xyz/xyz_raster.c:413
+#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:600
+#: modules/xyz/xyz_raster.c:421
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -6437,19 +6450,15 @@ msgstr "Экспортирует данные как простой тексто
 msgid "XYZ text data (.xyz)"
 msgstr "Текстовые данные XYZ (.xyz)"
 
-#: modules/file/xyzexport.c:235 modules/file/xyzexport.c:301
-msgid "XYZ data:"
-msgstr "Данные XYZ:"
-
-#: modules/file/xyzexport.c:241
+#: modules/file/xyzexport.c:244
 msgid "Lateral units:"
 msgstr "Единицы горизонтальных размеров:"
 
-#: modules/file/xyzexport.c:287
+#: modules/file/xyzexport.c:290
 msgid "Export XYZ"
 msgstr "Экспорт XYZ"
 
-#: modules/file/xyzexport.c:337 modules/process/curvature.c:705
+#: modules/file/xyzexport.c:340 modules/process/curvature.c:705
 #: modules/process/entropy.c:217 modules/process/facet-level.c:207
 #: modules/process/level.c:259 modules/process/linematch.c:908
 #: modules/process/neural.c:596 modules/process/polylevel.c:492
@@ -6589,8 +6598,8 @@ msgstr ""
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:991
-#: modules/xyz/xyz_drift.c:1009 modules/xyz/xyz_drift.c:1026
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1090
+#: modules/xyz/xyz_drift.c:1108 modules/xyz/xyz_drift.c:1125
 msgid "N.A."
 msgstr "недоступно"
 
@@ -7280,7 +7289,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:785
 #: modules/process/tipops.c:320 modules/process/xydenoise.c:217
 #: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
-#: modules/xyz/xyz_raster.c:973 modules/xyz/xyz_raster.c:989
+#: modules/xyz/xyz_raster.c:987 modules/xyz/xyz_raster.c:1003
 msgid "Initializing..."
 msgstr "Инициализация..."
 
@@ -7816,58 +7825,58 @@ msgstr "Множитель калибровки по _Z:"
 msgid "Create new channel"
 msgstr "Создать новый канал"
 
-#: modules/process/coerce.c:117
+#: modules/process/coerce.c:123
 msgid "Transforms surfaces to have prescribed statistical properties."
 msgstr ""
 "Преобразовывает поверхности чтобы получить требуемые статистические свойства."
 
-#: modules/process/coerce.c:131
+#: modules/process/coerce.c:137
 msgid "/S_ynthetic/Co_erce..."
 msgstr "/Син_тез/_Задать..."
 
-#: modules/process/coerce.c:135
+#: modules/process/coerce.c:141
 msgid "Enforce prescribed statistical properties"
 msgstr "Обеспечить заданные статистические свойства"
 
-#: modules/process/coerce.c:172
+#: modules/process/coerce.c:178
 msgid "Coerced"
 msgstr "Заданное"
 
-#: modules/process/coerce.c:183 modules/process/fbm_synth.c:479
+#: modules/process/coerce.c:189 modules/process/fbm_synth.c:479
 #: modules/process/lno_synth.c:260 modules/process/noise_synth.c:187
 msgid "distribution|Uniform"
 msgstr "Равномерное"
 
-#: modules/process/coerce.c:184 modules/process/fbm_synth.c:480
+#: modules/process/coerce.c:190 modules/process/fbm_synth.c:480
 #: modules/process/lno_synth.c:250 modules/process/noise_synth.c:177
 msgid "distribution|Gaussian"
 msgstr "Гауссово"
 
-#: modules/process/coerce.c:185
+#: modules/process/coerce.c:191
 msgid "As another data"
 msgstr "Как другие данные"
 
-#: modules/process/coerce.c:189
+#: modules/process/coerce.c:195
 msgid "Entire image"
 msgstr "Всё изображение"
 
-#: modules/process/coerce.c:190
+#: modules/process/coerce.c:196
 msgid "By row (identically)"
 msgstr "По строкам (одинаково)"
 
-#: modules/process/coerce.c:201
+#: modules/process/coerce.c:207
 msgid "Coerce Statistics"
 msgstr "Заданная статистика"
 
-#: modules/process/coerce.c:221
+#: modules/process/coerce.c:227
 msgid "Coerce value distribution to:"
 msgstr "Задать распределение значений как:"
 
-#: modules/process/coerce.c:241
+#: modules/process/coerce.c:247
 msgid "_Template:"
 msgstr "_Шаблон:"
 
-#: modules/process/coerce.c:249
+#: modules/process/coerce.c:255
 msgid "Data processing:"
 msgstr "Обработка данных:"
 
@@ -8587,11 +8596,12 @@ msgstr "С исправленным дрейфом"
 msgid "Drift"
 msgstr "Дрейф"
 
-#: modules/process/drift.c:619
+#: modules/process/drift.c:619 modules/xyz/xyz_drift.c:381
+#: modules/xyz/xyz_drift.c:400 modules/xyz/xyz_drift.c:419
 msgid "drift"
 msgstr "дрейф"
 
-#: modules/process/drift.c:625
+#: modules/process/drift.c:625 modules/xyz/xyz_drift.c:391
 msgid "x-axis drift"
 msgstr "дрейф оси x"
 
@@ -8903,22 +8913,22 @@ msgid "Extend _symetrically"
 msgstr "Расширить си_мметрично"
 
 #: modules/process/extend.c:268 modules/process/polydistort.c:260
-#: modules/xyz/xyz_raster.c:622
+#: modules/xyz/xyz_raster.c:630
 msgid "exterior|Border"
 msgstr "Граница"
 
 #: modules/process/extend.c:270 modules/process/polydistort.c:262
-#: modules/xyz/xyz_raster.c:624
+#: modules/xyz/xyz_raster.c:632
 msgid "exterior|Mirror"
 msgstr "Зеркальная"
 
 #: modules/process/extend.c:272 modules/process/polydistort.c:264
-#: modules/xyz/xyz_raster.c:626
+#: modules/xyz/xyz_raster.c:634
 msgid "exterior|Periodic"
 msgstr "Периодический"
 
 #: modules/process/extend.c:275 modules/process/polydistort.c:267
-#: modules/xyz/xyz_raster.c:614
+#: modules/xyz/xyz_raster.c:622
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
@@ -11290,7 +11300,7 @@ msgstr "Первый операнд"
 msgid "Second operand"
 msgstr "Второй операнд."
 
-#: modules/process/merge.c:197 modules/xyz/xyz_raster.c:607
+#: modules/process/merge.c:197 modules/xyz/xyz_raster.c:615
 msgid "Average"
 msgstr "Среднее"
 
@@ -12308,8 +12318,8 @@ msgstr "Поиск макс. корреляции чтобы определит�
 msgid "Cross-correlation..."
 msgstr "Взаимная корреляция..."
 
-#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1023
-#: modules/xyz/xyz_raster.c:1063
+#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1037
+#: modules/xyz/xyz_raster.c:1077
 msgid "Interpolating..."
 msgstr "Интерполяция..."
 
@@ -13608,7 +13618,7 @@ msgstr "ООК"
 msgid "Peak Count"
 msgstr "Число пиков"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:982
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1081
 msgid "_Graph:"
 msgstr "_График:"
 
@@ -14384,141 +14394,141 @@ msgstr ""
 "Количество значений в файле данных %d\n"
 "отличается от числа плоскостей %d."
 
-#: modules/xyz/xyz_drift.c:250
+#: modules/xyz/xyz_drift.c:258
 msgid "Analyze drift in XYZ data."
 msgstr "Анализировать дрейф в данных XYZ."
 
-#: modules/xyz/xyz_drift.c:264
+#: modules/xyz/xyz_drift.c:272
 msgid "/Analyze _drift..."
 msgstr "/_Анализировать дрейф..."
 
-#: modules/xyz/xyz_drift.c:268
+#: modules/xyz/xyz_drift.c:276
 msgid "Analyze and/or remove the drift"
 msgstr "Анализировать и/или убрать дрейф"
 
-#: modules/xyz/xyz_drift.c:425 modules/xyz/xyz_raster.c:327
-msgid "Rasterize XYZ Data"
-msgstr "Растеризовать данные XYZ"
-
-#: modules/xyz/xyz_drift.c:450 modules/xyz/xyz_raster.c:361
-msgid "Reset Ran_ges"
-msgstr "Сбросить _диапазоны"
-
-#: modules/xyz/xyz_drift.c:659 modules/xyz/xyz_raster.c:534
-msgid "_X-range:"
-msgstr "Диапазон _X:"
-
-#: modules/xyz/xyz_drift.c:681 modules/xyz/xyz_raster.c:556
-msgid "_Y-range:"
-msgstr "Диапазон _Y:"
-
-#: modules/xyz/xyz_drift.c:717 modules/xyz/xyz_drift.c:722
-msgid "2nd order polynom"
-msgstr "Полином второго порядка"
-
-#: modules/xyz/xyz_drift.c:719
-msgid "Moving average"
-msgstr "Скользящее среднее"
-
-#: modules/xyz/xyz_drift.c:726
+#: modules/xyz/xyz_drift.c:380 modules/xyz/xyz_drift.c:825
 msgid "X drift"
 msgstr "Дрейф X"
 
-#: modules/xyz/xyz_drift.c:727
+#: modules/xyz/xyz_drift.c:399 modules/xyz/xyz_drift.c:826
 msgid "Y drift"
 msgstr "Дрейф Y"
 
-#: modules/xyz/xyz_drift.c:728
+#: modules/xyz/xyz_drift.c:410
+msgid "y-axis drift"
+msgstr "дрейф оси y"
+
+#: modules/xyz/xyz_drift.c:418 modules/xyz/xyz_drift.c:827
 msgid "Z drift"
 msgstr "Дрейф Z"
 
-#: modules/xyz/xyz_drift.c:736
+#: modules/xyz/xyz_drift.c:429
+msgid "z-axis drift"
+msgstr "дрейф оси z"
+
+#: modules/xyz/xyz_drift.c:524 modules/xyz/xyz_raster.c:335
+msgid "Rasterize XYZ Data"
+msgstr "Растеризовать данные XYZ"
+
+#: modules/xyz/xyz_drift.c:549 modules/xyz/xyz_raster.c:369
+msgid "Reset Ran_ges"
+msgstr "Сбросить _диапазоны"
+
+#: modules/xyz/xyz_drift.c:758 modules/xyz/xyz_raster.c:542
+msgid "_X-range:"
+msgstr "Диапазон _X:"
+
+#: modules/xyz/xyz_drift.c:780 modules/xyz/xyz_raster.c:564
+msgid "_Y-range:"
+msgstr "Диапазон _Y:"
+
+#: modules/xyz/xyz_drift.c:816 modules/xyz/xyz_drift.c:821
+msgid "2nd order polynom"
+msgstr "Полином второго порядка"
+
+#: modules/xyz/xyz_drift.c:835
 msgid "Initial values"
 msgstr "Начальные значения"
 
-#: modules/xyz/xyz_drift.c:744
+#: modules/xyz/xyz_drift.c:843
 msgid "_X drift:"
 msgstr "Дрейф по _X:"
 
-#: modules/xyz/xyz_drift.c:784 modules/xyz/xyz_drift.c:838
-#: modules/xyz/xyz_drift.c:894
+#: modules/xyz/xyz_drift.c:883 modules/xyz/xyz_drift.c:937
+#: modules/xyz/xyz_drift.c:993
 msgid "_fit"
 msgstr "_Аппрокс."
 
-#: modules/xyz/xyz_drift.c:796
+#: modules/xyz/xyz_drift.c:895
 msgid "_Y drift:"
 msgstr "Дрейф по _Y:"
 
-#: modules/xyz/xyz_drift.c:852
+#: modules/xyz/xyz_drift.c:951
 msgid "Z fit _type:"
 msgstr "_Тип аппрокс. Z:"
 
-#: modules/xyz/xyz_drift.c:901
-msgid "_Moving average size:"
-msgstr "Окно с_кользящего среднего:"
-
-#: modules/xyz/xyz_drift.c:919
+#: modules/xyz/xyz_drift.c:1018
 msgid "Search parameters"
 msgstr "Параметры поиска"
 
-#: modules/xyz/xyz_drift.c:924
+#: modules/xyz/xyz_drift.c:1023
 msgid "_Neighbors:"
 msgstr "_Соседи:"
 
-#: modules/xyz/xyz_drift.c:940
+#: modules/xyz/xyz_drift.c:1039
 msgid "_Length threshold:"
 msgstr "Порог _длины:"
 
-#: modules/xyz/xyz_drift.c:956
+#: modules/xyz/xyz_drift.c:1055
 msgid "_Time threshold:"
 msgstr "Порог _времени:"
 
-#: modules/xyz/xyz_drift.c:973
+#: modules/xyz/xyz_drift.c:1072
 msgid "Results"
 msgstr "Результаты"
 
-#: modules/xyz/xyz_drift.c:987
+#: modules/xyz/xyz_drift.c:1086
 msgid "X drift:"
 msgstr "Дрейф по X:"
 
-#: modules/xyz/xyz_drift.c:995 modules/xyz/xyz_drift.c:1013
-#: modules/xyz/xyz_drift.c:1030
+#: modules/xyz/xyz_drift.c:1094 modules/xyz/xyz_drift.c:1112
+#: modules/xyz/xyz_drift.c:1129
 msgid "to inits"
 msgstr "по отн. к начальному"
 
-#: modules/xyz/xyz_drift.c:1005
+#: modules/xyz/xyz_drift.c:1104
 msgid "Y drift:"
 msgstr "Дрейф по Y:"
 
-#: modules/xyz/xyz_drift.c:1022
+#: modules/xyz/xyz_drift.c:1121
 msgid "Z drift:"
 msgstr "Дрейф по Z:"
 
-#: modules/xyz/xyz_drift.c:1849 modules/xyz/xyz_raster.c:957
+#: modules/xyz/xyz_drift.c:1997 modules/xyz/xyz_raster.c:971
 msgid "Physical dimensions are invalid."
 msgstr "Физические размеры неверны."
 
-#: modules/xyz/xyz_raster.c:191
+#: modules/xyz/xyz_raster.c:194
 msgid "Rastrerizes XYZ data to images."
 msgstr "Растеризует данные XYZ в изображения."
 
-#: modules/xyz/xyz_raster.c:205
+#: modules/xyz/xyz_raster.c:208
 msgid "/_Rasterize..."
 msgstr "/_Растеризовать..."
 
-#: modules/xyz/xyz_raster.c:209
+#: modules/xyz/xyz_raster.c:212
 msgid "Rasterize to image"
 msgstr "Растеризовать в изображение"
 
-#: modules/xyz/xyz_raster.c:351
+#: modules/xyz/xyz_raster.c:359
 msgid "Make Pixels S_quare"
 msgstr "Сделать пиксели _квадратными"
 
-#: modules/xyz/xyz_raster.c:606
+#: modules/xyz/xyz_raster.c:614
 msgid "Field"
 msgstr "Поле"
 
-#: modules/xyz/xyz_raster.c:909
+#: modules/xyz/xyz_raster.c:923
 #, c-format
 msgid ""
 "Number of points: %u\n"
@@ -14529,13 +14539,19 @@ msgstr ""
 "Объединено слишком близких: %u\n"
 "Добавлено на границах: %u"
 
-#: modules/xyz/xyz_raster.c:1035
+#: modules/xyz/xyz_raster.c:1049
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "Moving average"
+#~ msgstr "Скользящее среднее"
+
+#~ msgid "_Moving average size:"
+#~ msgstr "Окно с_кользящего среднего:"
 
 #~ msgid "File _type: %s, filtered"
 #~ msgstr "_Тип файла: %s, отфильтровано"
