@@ -67,13 +67,11 @@ volumize(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield = NULL;
     GwyBrick *brick;
-    gint id, newid;
+    gint newid;
 
     g_return_if_fail(run & VOLUMIZE_RUN_MODES);
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
-                                     GWY_APP_DATA_FIELD_ID, &id,
-                                     0);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
 
     brick = create_brick_from_datafield(dfield);
     dfield = gwy_data_field_duplicate(dfield);
