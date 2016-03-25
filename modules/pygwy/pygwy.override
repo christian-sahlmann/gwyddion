@@ -872,6 +872,29 @@ _wrap_gwy_data_field_grains_get_values(PyGObject *self, PyObject *args, PyObject
    return valuetuple;
 }
 
+%%
+define GwyGraphCurveModel.set_color
+/**
+ * gwy_graph_curve_model_set_color:
+ * @color: The color to set.
+ *
+ * Sets the color of a graph curve.
+ **/
+static PyObject *
+_wrap_gwy_graph_curve_model_set_color(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "red", "green", "blue", "color", NULL };
+    double x;
+    GwyRGBA color;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"dddd:Gwy.GraphCurveModel.set_color", kwlist, &color.r, &color.g, &color.b, &color.a))
+        return NULL;
+    g_object_set(self->obj, "color", &color, NULL);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 // TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
 /* vim: set ft=c cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
