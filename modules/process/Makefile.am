@@ -111,7 +111,8 @@ process_LTLIBRARIES = \
 	volumize_layers.la \
 	wave_synth.la \
 	wpour_mark.la \
-	xydenoise.la
+	xydenoise.la \
+	xyzize.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -238,6 +239,7 @@ volumize_layers_la_SOURCES     = volumize_layers.c
 wave_synth_la_SOURCES          = wave_synth.c dimensions.h synth.h preview.h
 wpour_mark_la_SOURCES          = wpour_mark.c preview.h
 xydenoise_la_SOURCES           = xydenoise.c
+xyzize_la_SOURCES              = xyzize.c
 
 clean-local:
 	rm -f core.* *~

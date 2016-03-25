@@ -71,6 +71,7 @@ Modules:
 - Rasterize XYZ (new): Renders XYZ data to an image.
 - XYZ Correct Drift (new): Corrects drift in timestamped XYZ data.
 - Coerce (new): Transforms surfaces to have prescribed statistical properties.
+- XYZize (new): Creates XYZ data (with regular point grid) from an image.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
