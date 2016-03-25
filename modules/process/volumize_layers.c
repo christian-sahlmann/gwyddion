@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id: volumize_layers.c 14879 2013-04-15 21:04:16Z yeti-dn $
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2015 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,6 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
-#include <cairo.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
@@ -123,7 +122,8 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     volumize_layers_load_args(gwy_app_settings_get(), &args);
 
     nids = 1;
-    dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(ids[0]));
+    dfield = gwy_container_get_object(data,
+                                      gwy_app_get_data_key_for_id(ids[0]));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
@@ -132,12 +132,12 @@ volumize_layers(GwyContainer *data, GwyRunType run)
                                              GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
 
 
-    i=0;
-    while (ids[i]!=-1)
-    {
-        dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(ids[i]));
-        if (xres != gwy_data_field_get_xres(dfield) || yres != gwy_data_field_get_yres(dfield))
-        {
+    i = 0;
+    while (ids[i] != -1) {
+        dfield = gwy_container_get_object(data,
+                                          gwy_app_get_data_key_for_id(ids[i]));
+        if (xres != gwy_data_field_get_xres(dfield)
+            || yres != gwy_data_field_get_yres(dfield)) {
             ok = FALSE;
             break;
         }
@@ -150,35 +150,35 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     args.zres = nids-1;
 
     if (!ok) {
-        dialog = gtk_message_dialog_new(gwy_app_find_window_for_channel(data, ids[0]),
+        dialog = gtk_message_dialog_new(gwy_app_find_window_for_channel(data,
+                                                                        ids[0]),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_ERROR,
                                          GTK_BUTTONS_CLOSE,
                                          _("All datafields must have same "
                                            "resolution to make a volume from "
                                            "them."));
-        gtk_dialog_run(GTK_DIALOG (dialog));
+        gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         g_free(ids);
         return;
     }
 
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = volumize_layers_dialog(&args, xres, yres, nids-1, gwy_data_field_get_xreal(dfield));
+        ok = volumize_layers_dialog(&args, xres, yres, nids-1,
+                                    gwy_data_field_get_xreal(dfield));
         volumize_layers_save_args(gwy_app_settings_get(), &args);
     }
     gwy_si_unit_value_format_free(args.valform);
     if (!ok)
         return;
 
-
-
     brick = gwy_brick_new(xres, yres, nids-1, gwy_data_field_get_xreal(dfield),
                           gwy_data_field_get_yreal(dfield), args.zreal, FALSE);
     bdata = gwy_brick_get_data(brick);
-    for (i=0; i<(nids-1); i++)
-    {
-        dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(ids[i]));
+    for (i = 0; i < nids-1; i++) {
+        dfield = gwy_container_get_object(data,
+                                          gwy_app_get_data_key_for_id(ids[i]));
         ddata = gwy_data_field_get_data(dfield);
 
         for (row = 0; row < yres; row++) {
@@ -191,8 +191,10 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     }
 
 
-    gwy_brick_resample(brick, args.xres, args.yres, args.zres, GWY_INTERPOLATION_ROUND);
-    gwy_data_field_resample(dfield, args.xres, args.yres, GWY_INTERPOLATION_ROUND);
+    gwy_brick_resample(brick, args.xres, args.yres, args.zres,
+                       GWY_INTERPOLATION_ROUND);
+    gwy_data_field_resample(dfield, args.xres, args.yres,
+                            GWY_INTERPOLATION_ROUND);
 
     newid = gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
@@ -200,14 +202,14 @@ volumize_layers(GwyContainer *data, GwyRunType run)
     gwy_app_volume_log_add(data, -1, newid, "proc::volumize_layers", NULL);
 }
 
-
 static gboolean
-volumize_layers_dialog(VolumizeLayersArgs *args, gint xres, gint yres, gint zres, gdouble zreal)
+volumize_layers_dialog(VolumizeLayersArgs *args,
+                       gint xres, gint yres, gint zres, gdouble zreal)
 {
+    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table;
     VolumizeLayersControls controls;
-    enum { RESPONSE_RESET = 1 };
-    gint response, row=0;;
+    gint response, row = 0;
 
     dialog = gtk_dialog_new_with_buttons(_("Volumize layers"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -223,7 +225,6 @@ volumize_layers_dialog(VolumizeLayersArgs *args, gint xres, gint yres, gint zres
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
-
 
     args->xres = xres;
     args->yres = yres;
@@ -250,13 +251,12 @@ volumize_layers_dialog(VolumizeLayersArgs *args, gint xres, gint yres, gint zres
 
 
 
-    controls.zreal = gtk_adjustment_new(args->zreal/args->valform->magnitude, 0.0, 10000.0, 1, 10, 0);
+    controls.zreal = gtk_adjustment_new(args->zreal/args->valform->magnitude,
+                                        0.0, 10000.0, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Z _range:"), args->valform->units,
                             controls.zreal, GWY_HSCALE_DEFAULT);
     g_object_set_data(G_OBJECT(controls.zreal), "controls", &controls);
     row++;
-
-
 
     gtk_widget_show_all(dialog);
     do {
@@ -273,8 +273,7 @@ volumize_layers_dialog(VolumizeLayersArgs *args, gint xres, gint yres, gint zres
             break;
 
             case RESPONSE_RESET:
-            //*args = volumize_layers_defaults;
-            args->xres = xres;  //go back to initially detected resolution
+            args->xres = xres;  /* go back to initially detected resolution */
             args->yres = yres;
             args->zres = zres;
             args->zreal = zreal;
@@ -309,9 +308,7 @@ volumize_layers_dialog_update(VolumizeLayersControls *controls,
                              args->zres);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zreal),
                              args->zreal);
-
 }
-
 
 static const gchar xres_key[]  = "/module/volumize_layers/xres";
 static const gchar yres_key[]  = "/module/volumize_layers/yres";
