@@ -29,6 +29,7 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/simplefft.h \
 	$(top_srcdir)/libprocess/spectra.h \
 	$(top_srcdir)/libprocess/stats.h \
+	$(top_srcdir)/libprocess/surface.h \
 	$(top_srcdir)/libprocess/tip.h \
 	$(top_srcdir)/libgwyddion/gwycontainer.h \
 	$(top_srcdir)/libgwyddion/gwyddionenums.h \
