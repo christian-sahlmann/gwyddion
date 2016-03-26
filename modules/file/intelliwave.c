@@ -1,7 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2016 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-intelliwave-esd">
@@ -62,11 +62,21 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 enum {
-    HEADER_SIZE = 4048
+    HEADER_SIZE = 1024,
 };
 
+/* TNameType seems to be char[50] */
 typedef struct {
-    gchar program_name[6];
+    gchar name[50];
+    gchar version[50];
+    guint32 reserved1;
+    guint32 file_offsets[100];
+    guint n_data_sets;
+    gchar reserved2[516];
+} IntWaveFileHeader;
+
+typedef struct {
+    IntWaveFileHeader header;
 } IntWaveFile;
 
 static gboolean      module_register (void);
@@ -133,7 +143,7 @@ intw_load(const gchar *filename,
         return NULL;
     }
 
-    if (size < HEADER_SIZE + 2) {
+    if (size < HEADER_SIZE) {
         err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -143,6 +153,7 @@ intw_load(const gchar *filename,
 
 
     gwy_file_abandon_contents(buffer, size, NULL);
+    err_NO_DATA(error);
 
     //gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
@@ -153,7 +164,23 @@ static void
 intw_read_header(const guchar *p,
                  IntWaveFile *intwfile)
 {
-    get_CHARARRAY(intwfile->program_name, &p);
+    IntWaveFileHeader *header = &intwfile->header;
+    guint i;
+
+    get_CHARARRAY0(header->name, &p);
+    gwy_debug("name %s", header->name);
+    get_CHARARRAY0(header->version, &p);
+    gwy_debug("version %s", header->version);
+    header->reserved1 = gwy_get_guint32_le(&p);
+    for (i = 0; i < G_N_ELEMENTS(header->file_offsets); i++) {
+        header->file_offsets[i] = gwy_get_guint32_le(&p);
+        if (header->file_offsets[i]) {
+            gwy_debug("offset[%u] 0x%08x", i, header->file_offsets[i]);
+        }
+    }
+    header->n_data_sets = gwy_get_guint32_le(&p);
+    gwy_debug("n_data_sets %u", header->n_data_sets);
+    get_CHARARRAY(header->reserved2, &p);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
