@@ -180,6 +180,21 @@ typedef struct {
     gchar fo[20];                /* ordering of the interferograms */
 } IntWaveFileInfo;
 
+/*
+typedef struct {
+    gchar name[NAME_LEN];
+    gfloat fvalue;
+    gint units;
+    gint current;
+    gint nItems;
+    gint lvalue;
+    gdouble x,y,z;
+    gchar other1[24];
+    ITSampleInfoLine svalue;
+    ITSampleInfoLine other2;
+} ISSampleInfoLine; // maintain total size of 600 bytes
+*/
+
 typedef struct {
     IntWaveFileHeader header;
     IntWaveFileInfo info;
@@ -357,9 +372,12 @@ intw_read_info(const guchar *p,
     gwy_debug("nx %u, ny %u, nz %u", info->nx, info->ny, info->nz);
     info->nframes = gwy_get_guint32_le(&p);
     info->wavelength = gwy_get_gfloat_le(&p);
+    gwy_debug("wavelength %g", info->wavelength);
     info->waves_per_fringe = gwy_get_gfloat_le(&p);
     info->aspect_ratio = gwy_get_gfloat_le(&p);
+    gwy_debug("aspect_ratio %g", info->aspect_ratio);
     info->invalid_value = gwy_get_gfloat_le(&p);
+    gwy_debug("invalid_value %g", info->invalid_value);
     for (i = 0; i < G_N_ELEMENTS(info->is_valid); i++) {
         info->is_valid[i] = gwy_get_guint32_le(&p);
         if (info->is_valid[i]) {
@@ -412,8 +430,11 @@ read_data_field(IntWaveFile *intwfile, guint i,
     guint yres = intwfile->info.ny;
     guint n = intwfile->info.nz;
     guint maxbpp = size/n;
+    guint k;
     GwyRawDataType datatype = GWY_RAW_DATA_FLOAT;
     GwyDataField *dfield;
+    gdouble *d;
+    gdouble q = 1.0;
 
     gwy_debug("data[%u] must be at most %u bytes long", i, size);
     gwy_debug("that permits %d bytes per sample", maxbpp);
@@ -421,6 +442,8 @@ read_data_field(IntWaveFile *intwfile, guint i,
     if (i == INTWAVE_DATA_OPD) {
         if (maxbpp < 4)
             return NULL;
+
+        q = 1e-6 * intwfile->info.wavelength;
     }
     else {
         gwy_info("Unhandled data type %u.", i);
@@ -428,8 +451,9 @@ read_data_field(IntWaveFile *intwfile, guint i,
     }
 
     dfield = gwy_data_field_new(xres, yres, xres, yres, FALSE);
+    d = gwy_data_field_get_data(dfield);
     gwy_convert_raw_data(p, n, 1, datatype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                         gwy_data_field_get_data(dfield), 1.0, 0.0);
+                         d, 1.0, 0.0);
 
     return dfield;
 }
