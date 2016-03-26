@@ -52,6 +52,7 @@
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 #include "get.h"
@@ -155,22 +156,22 @@ typedef struct {
     gdouble waves_per_fringe;
     gdouble aspect_ratio;
     gdouble invalid_value;             /* invalid value for all data types */
-    gint32  is_valid[N_IS_VALID];      /* validation flags */
-    gint32  xmin, xmax, xrange, xo;    /* aperture area of valid data */
-    gint32  ymin, ymax, yrange, yo;    /* aperture area of valid data */
-    gchar  reserved1[476];
+    gint32 is_valid[N_IS_VALID];      /* validation flags */
+    gint32 xmin, xmax, xrange, xo;    /* aperture area of valid data */
+    gint32 ymin, ymax, yrange, yo;    /* aperture area of valid data */
+    gchar reserved1[476];
     gchar fringe_time[NAME_LEN];       /* time acquired */
     gchar surface_time[NAME_LEN];      /* time processed */
     gdouble phase_shift;    /* phase shift between interferograms in degrees */
     gint reserved2;
     gint reserved3;
     gint max_fringe_intensity; /* maximum fringe intensity for camera used */
-    gchar  wphase; /* wrapped phase map exists without interferogram data? */
-    gchar  fringe_background;    /* the intensity background was removed? */
-    gchar  fringe_type;     /* the interferograms are slope fringes? */
-    gchar  future1;
-    gchar  slope_dir;       /* 0 for horizontal slope, 1 for vertical slope */
-    gchar  slope_flag;      /* reserved */
+    gchar wphase; /* wrapped phase map exists without interferogram data? */
+    gchar fringe_background;    /* the intensity background was removed? */
+    gchar fringe_type;     /* the interferograms are slope fringes? */
+    gchar future1;
+    gchar slope_dir;       /* 0 for horizontal slope, 1 for vertical slope */
+    gchar slope_flag;      /* reserved */
     gdouble x_slope_scale;  /* scale factor for horizontal slope */
     gdouble y_slope_scale;  /* scale factor for vertical slope */
     gdouble shear_dist;     /* normalized percentage of aperture */
@@ -194,6 +195,10 @@ static const guchar* intw_read_header(const guchar *p,
                                       IntWaveFile *intwfile);
 static const guchar* intw_read_info  (const guchar *p,
                                       IntWaveFile *intwfile);
+static GwyDataField* read_data_field (IntWaveFile *intwfile,
+                                      guint i,
+                                      const guchar *p,
+                                      guint size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -245,6 +250,8 @@ intw_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     IntWaveFile intwfile;
+    gint id = 0;
+    guint i, j;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -263,10 +270,46 @@ intw_load(const gchar *filename,
     p = intw_read_info(p, &intwfile);
     g_assert(p - buffer == HEADER_SIZE + INFO_SIZE);
 
-    gwy_file_abandon_contents(buffer, size, NULL);
-    err_NO_DATA(error);
+    if (err_DIMENSION(error, intwfile.info.nx)
+        || err_DIMENSION(error, intwfile.info.nx)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
 
-    //gwy_file_channel_import_log_add(container, 0, NULL, filename);
+    if (intwfile.info.nz != intwfile.info.nx * intwfile.info.ny) {
+        err_INVALID(error, "nz");
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    container = gwy_container_new();
+    for (i = 0; i < N_IS_VALID; i++) {
+        guint offset = intwfile.header.file_offsets[i], maxsize = size - offset;
+        GwyDataField *dfield;
+
+        if (!offset || !intwfile.info.is_valid[i])
+            continue;
+
+        for (j = 0; j < N_IS_VALID; j++) {
+            guint other_offset = intwfile.header.file_offsets[j];
+            if (other_offset > offset && other_offset < offset + maxsize)
+                maxsize = other_offset - offset;
+        }
+        dfield = read_data_field(&intwfile, i, p + offset, maxsize);
+        if (!dfield)
+            continue;
+
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(id), dfield);
+        gwy_file_channel_import_log_add(container, id, NULL, filename);
+        id++;
+    }
+
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    if (!gwy_container_get_n_items(container))
+        err_NO_DATA(error);
+
 
     return container;
 }
@@ -327,10 +370,14 @@ intw_read_info(const guchar *p,
     info->xmax = gwy_get_guint32_le(&p);
     info->xrange = gwy_get_guint32_le(&p);
     info->xo = gwy_get_guint32_le(&p);
+    gwy_debug("xrange %u %u %u %u",
+              info->xmin, info->xmax, info->xrange, info->xo);
     info->ymin = gwy_get_guint32_le(&p);
     info->ymax = gwy_get_guint32_le(&p);
     info->yrange = gwy_get_guint32_le(&p);
     info->yo = gwy_get_guint32_le(&p);
+    gwy_debug("yrange %u %u %u %u",
+              info->ymin, info->ymax, info->yrange, info->yo);
     get_CHARARRAY(info->reserved1, &p);
     get_CHARARRAY0(info->fringe_time, &p);
     gwy_debug("fringe_time %s", info->fringe_time);
@@ -355,6 +402,36 @@ intw_read_info(const guchar *p,
     get_CHARARRAY(info->fo, &p);
 
     return p;
+}
+
+static GwyDataField*
+read_data_field(IntWaveFile *intwfile, guint i,
+                const guchar *p, guint size)
+{
+    guint xres = intwfile->info.nx;
+    guint yres = intwfile->info.ny;
+    guint n = intwfile->info.nz;
+    guint maxbpp = size/n;
+    GwyRawDataType datatype = GWY_RAW_DATA_FLOAT;
+    GwyDataField *dfield;
+
+    gwy_debug("data[%u] must be at most %u bytes long", i, size);
+    gwy_debug("that permits %d bytes per sample", maxbpp);
+
+    if (i == INTWAVE_DATA_OPD) {
+        if (maxbpp < 4)
+            return NULL;
+    }
+    else {
+        gwy_info("Unhandled data type %u.", i);
+        return NULL;
+    }
+
+    dfield = gwy_data_field_new(xres, yres, xres, yres, FALSE);
+    gwy_convert_raw_data(p, n, 1, datatype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield), 1.0, 0.0);
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
