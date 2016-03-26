@@ -116,6 +116,7 @@ file_LTLIBRARIES = \
 	hitachi-sem.la \
 	igorfile.la \
 	imgexport.la \
+	intelliwave.la \
 	intematix.la \
 	iso28600.la \
 	jeol.la \
@@ -261,6 +262,7 @@ hitachi_afm_la_SOURCES   = hitachi-afm.c
 hitachi_sem_la_SOURCES   = hitachi-sem.c
 igorfile_la_SOURCES      = igorfile.c
 imgexport_la_SOURCES     = imgexport.c imgexportpreset.h gwytiff.h image-keys.h
+intelliwave_la_SOURCES   = intelliwave.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
 iso28600_la_SOURCES      = iso28600.c
 jeol_la_SOURCES          = jeol.c
@@ -349,7 +351,7 @@ zip_cflags = @MINIZIP_CFLAGS@
 zip_libs = @MINIZIP_LIBS@
 endif
 
-# These compile also without.
+# These compile also without the libraries.
 createc_la_LIBADD        = @ZLIB@
 nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
 pixmap_la_LIBADD         = @PNG_LIBS@
@@ -362,7 +364,9 @@ hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
 jpkscan_la_CFLAGS        = $(AM_CFLAGS) $(zip_cflags)
 jpkscan_la_LIBADD        = $(zip_libs)
 
-# These require the respective libraries.
+# All the following require the respective libraries.
+# They must have corresponding foo_module variables set above (when enabled)
+# or be put to disabled_sources (when disabled).
 if HAVE_XML2
 if HAVE_ZLIB
 spml_la_SOURCES          = spml.c spml-utils.h
@@ -371,18 +375,12 @@ spml_la_LIBADD           = @XML2_LIBS@ @ZLIB@
 endif
 endif
 
-# These require the respective libraries.
 if HAVE_XML2
 if HAVE_ANY_ZIP
 apedaxfile_la_SOURCES    = apedaxfile.c gwyzip.h
 apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ $(zip_cflags)
 apedaxfile_la_LIBADD     = @XML2_LIBS@ $(zip_libs)
 endif
-endif
-
-if HAVE_ZLIB
-#matfile_la_SOURCES       = matfile.c
-#matfile_la_LIBADD        = @ZLIB@
 endif
 
 if HAVE_ANY_ZIP
@@ -415,6 +413,11 @@ endif
 
 if HAVE_CXX
 hdrimage_la_SOURCES  = hdrimage.cc gwytiff.h image-keys.h
+endif
+
+if HAVE_ZLIB
+#matfile_la_SOURCES       = matfile.c
+#matfile_la_LIBADD        = @ZLIB@
 endif
 
 clean-local:
