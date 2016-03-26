@@ -75,6 +75,7 @@ typedef struct {
 typedef struct {
     GwySurface *surface;
     GwyTriangulation *triangulation;
+    GwyDataField *regular;
     GwyDataField *raster;
     GArray *points;
     GArray *jpoints;
@@ -89,6 +90,7 @@ typedef struct {
     XYZRasData *rdata;
     GwyContainer *mydata;
     GtkWidget *dialog;
+    GtkWidget *directbox;
     GtkWidget *xmin;
     GtkWidget *xmax;
     GtkWidget *ymin;
@@ -156,6 +158,7 @@ static void          selection_changed      (XYZRasControls *controls,
 static void          clear_selection        (XYZRasControls *controls);
 static void          preview                (XYZRasControls *controls);
 static void          triangulation_info     (XYZRasControls *controls);
+static void          render_regular_directly(XYZRasControls *controls);
 static GwyDataField* xyzras_do              (XYZRasData *rdata,
                                              const XYZRasArgs *args,
                                              GtkWindow *dialog,
@@ -234,7 +237,8 @@ xyzras(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(GWY_IS_SURFACE(surface));
 
-    if ((dfield = check_regular_grid(surface))) {
+    dfield = check_regular_grid(surface);
+    if (dfield && run == GWY_RUN_IMMEDIATE) {
         add_dfield_to_data(dfield, data, id);
         return;
     }
@@ -243,6 +247,7 @@ xyzras(GwyContainer *data, GwyRunType run)
     xyzras_load_args(settings, &args);
     gwy_clear(&rdata, 1);
     rdata.surface = surface;
+    rdata.regular = dfield;
     rdata.points = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     rdata.jpoints = g_array_new(FALSE, FALSE, sizeof(GwyXYZ));
     analyse_points(&rdata, EPSREL);
@@ -339,6 +344,23 @@ xyzras_dialog(XYZRasArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_xyz_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
+
+    if (rdata->regular) {
+        hbox = controls.directbox = gtk_hbox_new(FALSE, 8);
+        gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                           FALSE, FALSE, 0);
+
+        button = gtk_button_new_with_mnemonic(_("Create Image _Directly"));
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(render_regular_directly),
+                                 &controls);
+
+        label = gtk_label_new(_("XY points form a regular grid "
+                                "so regularisation is not necessary."));
+        gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    }
 
     hbox = gtk_hbox_new(FALSE, 20);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
@@ -449,6 +471,12 @@ xyzras_dialog(XYZRasArgs *args,
 
     controls.in_update = FALSE;
     reset_ranges(&controls);
+
+    if (rdata->regular) {
+        gwy_container_set_object_by_name(controls.mydata, "/0/data",
+                                         rdata->regular);
+        gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+    }
 
     gtk_widget_show_all(dialog);
 
@@ -911,6 +939,10 @@ preview(XYZRasControls *controls)
     /* After doing preview the selection always covers the full data and thus
      * is not useful. */
     clear_selection(controls);
+
+    /* When user starts messing with the controls, remove the direct
+     * rendering option. */
+    gtk_widget_hide(controls->directbox);
 }
 
 static void
@@ -928,6 +960,14 @@ triangulation_info(XYZRasControls *controls)
                         rdata->points->len - rdata->nbasepoints);
     gtk_label_set_text(GTK_LABEL(controls->error), s);
     g_free(s);
+}
+
+static void
+render_regular_directly(XYZRasControls *controls)
+{
+    gwy_object_unref(controls->rdata->raster);
+    controls->rdata->raster = g_object_ref(controls->rdata->regular);
+    gtk_dialog_response(GTK_DIALOG(controls->dialog), GTK_RESPONSE_OK);
 }
 
 static void
@@ -1252,6 +1292,7 @@ xyzras_free(XYZRasData *rdata)
 {
     gwy_object_unref(rdata->triangulation);
     gwy_object_unref(rdata->raster);
+    gwy_object_unref(rdata->regular);
     g_array_free(rdata->points, TRUE);
     g_array_free(rdata->jpoints, TRUE);
 }
