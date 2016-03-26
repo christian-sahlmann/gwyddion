@@ -1,15 +1,19 @@
 # @(#) $Id$
 
-# Put sources that are for some reason disabled yet present in svn checkouts
-# here.  This makes them distributed and translations of their messages are
-# kept.  If we remove them completely, various bits can get lost.
+# For each optional module foo there is variable foo_module that should be set
+# to foo.la when the module is enabled.
+#
+# If the module is disabled add its source files to disabled_sources.  This
+# ensures they are still included in tarballs, preserve translations, etc.
 disabled_sources =
 
-# If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
-# them in make dist.
+# Modules requiring libXML2 and zlib to compile.
 if HAVE_XML2
 if HAVE_ZLIB
-spml_module = spml.la
+spml_module     = spml.la
+spml_la_SOURCES = spml.c spml-utils.h
+spml_la_CFLAGS  = $(AM_CFLAGS) @XML2_CFLAGS@
+spml_la_LIBADD  = @XML2_LIBS@ @ZLIB@
 else
 spml_module =
 disabled_sources += spml.c
@@ -19,11 +23,13 @@ spml_module =
 disabled_sources += spml.c
 endif
 
-# If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
-# them in make dist.
+# Modules requiring libXML2 and some ZIP library to compile.
 if HAVE_XML2
 if HAVE_ANY_ZIP
-apedaxfile_module = apedaxfile.la
+apedaxfile_module     = apedaxfile.la
+apedaxfile_la_SOURCES = apedaxfile.c gwyzip.h
+apedaxfile_la_CFLAGS  = $(AM_CFLAGS) @XML2_CFLAGS@ $(zip_cflags)
+apedaxfile_la_LIBADD  = @XML2_LIBS@ $(zip_libs)
 else
 apedaxfile_module =
 disabled_sources += apedaxfile.c
@@ -33,24 +39,43 @@ apedaxfile_module =
 disabled_sources += apedaxfile.c
 endif
 
-# If libz is disabled, put the dependent sources to EXTRA_DIST to include them
-# in make dist.
+# Modules requiring zlib to compile.
+# XXX: The matfile module does not work.  So do not include it for now.
 #if HAVE_ZLIB
-#matfile_module = matfile.la
-#matfile_sources =
+#matfile_module     = matfile.la
+#matfile_la_SOURCES = matfile.c
+#matfile_la_LIBADD  = @ZLIB@
 #else
 matfile_module =
 disabled_sources += matfile.c
 #endif
 
-# If minizip is disabled, put the dependent sources to EXTRA_DIST to include
-# them in make dist.
+# Modules requiring some ZIP library to compile.
 if HAVE_ANY_ZIP
-nanoobserver_module = nanoobserver.la
-nanoscantech_module = nanoscantech.la
-opengps_module = opengps.la
-sensofarx_module = sensofarx.la
-spmxfile_module = spmxfile.la
+nanoobserver_module     = nanoobserver.la
+nanoobserver_la_SOURCES = nanoobserver.c gwyzip.h
+nanoobserver_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+nanoobserver_la_LIBADD  = $(zip_libs)
+
+nanoscantech_module     = nanoscantech.la
+nanoscantech_la_SOURCES = nanoscantech.c gwyzip.h
+nanoscantech_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+nanoscantech_la_LIBADD  = $(zip_libs)
+
+opengps_module     = opengps.la
+opengps_la_SOURCES = opengps.c gwyzip.h
+opengps_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+opengps_la_LIBADD  = $(zip_libs)
+
+sensofarx_module     = sensofarx.la
+sensofarx_la_SOURCES = sensofarx.c
+sensofarx_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+sensofarx_la_LIBADD  = $(zip_libs)
+
+spmxfile_module     = spmxfile.la
+spmxfile_la_SOURCES = spmxfile.c gwyzip.h
+spmxfile_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
+spmxfile_la_LIBADD  = $(zip_libs)
 else
 nanoobserver_module =
 nanoscantech_module =
@@ -60,23 +85,50 @@ spmxfile_module =
 disabled_sources += nanoobserver.c nanoscantech.c opengps.c sensofarx.c spmxfile.c
 endif
 
-# If cfitsio is disabled, put the dependent sources to EXTRA_DIST to include
-# them in make dist.
+# Modules requiring cfitsio to compile.
 if HAVE_CFITSIO
-fitsfile_module = fitsfile.la
+fitsfile_module     = fitsfile.la
+fitsfile_la_SOURCES = fitsfile.c
+fitsfile_la_CFLAGS  = $(AM_CFLAGS) @CFITSIO_CFLAGS@
+fitsfile_la_LIBADD  = @CFITSIO_LIBS@
 else
 fitsfile_module =
 disabled_sources += fitsfile.c
 endif
 
-# If C++ is not available, put the dependent sources to EXTRA_DIST to include
-# them in make dist.
+# Modules requiring C++ to compile.
 if HAVE_CXX
-hdrimage_module = hdrimage.la
+hdrimage_module     = hdrimage.la
+hdrimage_la_SOURCES = hdrimage.cc gwytiff.h image-keys.h
 else
 hdrimage_module =
 disabled_sources += hdrimage.cc
 endif
+
+# Some modules require ‘any ZIP library’.  We must choose one.
+if HAVE_LIBZIP
+zip_cflags = @LIBZIP_CFLAGS@
+zip_libs = @LIBZIP_LIBS@
+endif
+
+if HAVE_MINIZIP
+zip_cflags = @MINIZIP_CFLAGS@
+zip_libs = @MINIZIP_LIBS@
+endif
+
+# These modules compile also without the respective libraries so just add the
+# flags if the libraries are available.
+createc_la_LIBADD    = @ZLIB@
+nrrdfile_la_LIBADD   = @ZLIB@ @BZIP2@
+pixmap_la_LIBADD     = @PNG_LIBS@
+pixmap_la_CFLAGS     = $(AM_CFLAGS) @PNG_CFLAGS@
+imgexport_la_LIBADD  = @PNG_LIBS@
+imgexport_la_CFLAGS  = $(AM_CFLAGS) @PNG_CFLAGS@
+rhk_sm4_la_LIBADD    = @ZLIB@
+hdrimage_la_LIBADD   = @EXR_LIBS@ @PNG_LIBS@
+hdrimage_la_CXXFLAGS = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
+jpkscan_la_CFLAGS    = $(AM_CFLAGS) $(zip_cflags)
+jpkscan_la_LIBADD    = $(zip_libs)
 
 filedir = $(pkglibdir)/modules/file
 
@@ -214,11 +266,6 @@ if OS_MSWIN
 no_undefined = -no-undefined
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
-AM_CFLAGS = @COMMON_CFLAGS@
-AM_CXXFLAGS = @COMMON_CXXFLAGS@
-AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
-
 if MODULE_DEPENDENCIES
 module_libadd = \
 	$(top_builddir)/app/libgwyapp2.la \
@@ -229,6 +276,11 @@ module_libadd = \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
 endif
+
+AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CXXFLAGS = @COMMON_CXXFLAGS@
+AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 accurexii_txt_la_SOURCES = accurexii-txt.c
 aistfile_la_SOURCES      = aistfile.c
@@ -340,85 +392,6 @@ wsxmfile_la_SOURCES      = wsxmfile.c
 xyzexport_la_SOURCES     = xyzexport.c
 zeiss_la_SOURCES         = zeiss.c
 zemax_la_SOURCES         = zemax.c
-
-if HAVE_LIBZIP
-zip_cflags = @LIBZIP_CFLAGS@
-zip_libs = @LIBZIP_LIBS@
-endif
-
-if HAVE_MINIZIP
-zip_cflags = @MINIZIP_CFLAGS@
-zip_libs = @MINIZIP_LIBS@
-endif
-
-# These compile also without the libraries.
-createc_la_LIBADD        = @ZLIB@
-nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
-pixmap_la_LIBADD         = @PNG_LIBS@
-pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
-imgexport_la_LIBADD      = @PNG_LIBS@
-imgexport_la_CFLAGS      = $(AM_CFLAGS) @PNG_CFLAGS@
-rhk_sm4_la_LIBADD        = @ZLIB@
-hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
-hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
-jpkscan_la_CFLAGS        = $(AM_CFLAGS) $(zip_cflags)
-jpkscan_la_LIBADD        = $(zip_libs)
-
-# All the following require the respective libraries.
-# They must have corresponding foo_module variables set above (when enabled)
-# or be put to disabled_sources (when disabled).
-if HAVE_XML2
-if HAVE_ZLIB
-spml_la_SOURCES          = spml.c spml-utils.h
-spml_la_CFLAGS           = $(AM_CFLAGS) @XML2_CFLAGS@
-spml_la_LIBADD           = @XML2_LIBS@ @ZLIB@
-endif
-endif
-
-if HAVE_XML2
-if HAVE_ANY_ZIP
-apedaxfile_la_SOURCES    = apedaxfile.c gwyzip.h
-apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ $(zip_cflags)
-apedaxfile_la_LIBADD     = @XML2_LIBS@ $(zip_libs)
-endif
-endif
-
-if HAVE_ANY_ZIP
-nanoobserver_la_SOURCES = nanoobserver.c gwyzip.h
-nanoobserver_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
-nanoobserver_la_LIBADD  = $(zip_libs)
-
-nanoscantech_la_SOURCES = nanoscantech.c gwyzip.h
-nanoscantech_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
-nanoscantech_la_LIBADD  = $(zip_libs)
-
-opengps_la_SOURCES = opengps.c gwyzip.h
-opengps_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
-opengps_la_LIBADD  = $(zip_libs)
-
-spmxfile_la_SOURCES = spmxfile.c gwyzip.h
-spmxfile_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
-spmxfile_la_LIBADD  = $(zip_libs)
-
-sensofarx_la_SOURCES = sensofarx.c
-sensofarx_la_CFLAGS  = $(AM_CFLAGS) $(zip_cflags)
-sensofarx_la_LIBADD  = $(zip_libs)
-endif
-
-if HAVE_CFITSIO
-fitsfile_la_SOURCES  = fitsfile.c
-fitsfile_la_CFLAGS   = $(AM_CFLAGS) @CFITSIO_CFLAGS@
-fitsfile_la_LIBADD   = @CFITSIO_LIBS@
-endif
-
-if HAVE_CXX
-hdrimage_la_SOURCES  = hdrimage.cc gwytiff.h image-keys.h
-endif
-
-if HAVE_ZLIB
-#matfile_la_SOURCES       = matfile.c
-#matfile_la_LIBADD        = @ZLIB@
-endif
 
 clean-local:
 	rm -f core.* *~
