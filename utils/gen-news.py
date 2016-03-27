@@ -15,71 +15,72 @@ in_list = False
 in_item = False
 in_para = False
 version_list = []
-text = []
-for line in sys.stdin.readlines():
-    line = line.rstrip()
-    # Version
-    m = re.match(r'^(?P<version>\d[0-9.]*)\s+'
-                 + r'\((?P<date>\d+-\d+-\d+)\)$', line)
-    if m:
-        ver = m.group('version')
-        if re.search(r'\.[0-9]{8}$', ver):
-            continue
-        text.append('\n<h2 id="v%s">Version %s</h2>' % (ver, ver))
-        text.append('<p>Released: %s.</p>' % format_date(m.group('date')))
-        version_list.append(ver)
-        continue
-    # Component
-    m = re.match(r'^(?P<component>[A-Z].*):$', line)
-    if m:
-        if in_para:
-            text.append('</p>')
-        in_para = False
-        text.append('<p><b>%s</b></p>\n<ul>' % m.group('component'))
-        in_list = True
-        continue
-    line = escape(line)
-    # End of list
-    if re.match(r'^\s*$', line):
-        if in_item:
-            text.append('</li>')
-        if in_list:
-            text.append('</ul>')
-        in_item = False
-        in_list = False
-        continue
-    # Begin of list/item
-    if line.startswith('- '):
-        if not in_list:
-            if in_para:
-                text.append('</p>')
-                in_para = False
-            text.append('<ul>')
-            in_list = True
-        if in_item:
-            text.append('</li>')
-        text.append('<li>%s' % line[2:])
-        in_item = True
-        continue
-    # Begin of paragraph
-    if not in_para and re.match(r'^[A-Z]', line):
-        in_para = True
-        text.append('<p>')
-        text.append(line)
-        continue
-    if in_para:
-        text.append(line)
-        continue
-    assert line.startswith('  ')
-    assert in_item
-    text.append(line[2:])
+out = []
 
-if in_item:
-    text.append('</li>')
-if in_list:
-    text.append('</ul>')
-if in_para:
-    text.append('</p>')
+version_block_re = re.compile(r'(?ms)^(?P<version>\d[0-9.]*)\s+'
+                              + r'\((?P<date>\d+-\d+-\d+)\)$'
+                              + r'(?P<news>.*?)\n{3,}')
+news_group_re = re.compile(r'(?ms)^(?P<header>[\w ]+):\n'
+                           + r'(?P<items>- .*?)\n{2,}')
+news_item_re = re.compile(r'(?m)^- (?P<item>.*\n(?:  .*\n)*)')
+colon_re = re.compile(r'[\w)]: ')
+
+text = sys.stdin.read().strip() + '\n\n\n'
+textpos = 0
+while textpos < len(text):
+    verblock = version_block_re.match(text, textpos)
+    if not verblock:
+        sys.stderr.write('Cannot parse "%.30s" as version header.\n'
+                         % text[textpos:])
+        sys.exit(1)
+
+    version = verblock.group('version')
+    date = verblock.group('date')
+    version_list.append(version)
+    out.append('')
+    out.append('<h2 id="v%s">Version %s</h2>' % (version, version))
+    out.append('<p>Released: %s.</p>' % format_date(date))
+
+    news = verblock.group('news').strip() + '\n\n'
+    newspos = 0
+    while newspos < len(news):
+        newsgroup = news_group_re.match(news, newspos)
+        if not newsgroup:
+            sys.stderr.write('Cannot parse "%.30s" as news group header.\n'
+                             % news[newspos:])
+            sys.exit(1)
+
+        header = newsgroup.group('header')
+        out.append('<p><b>%s</b></p>' % header)
+        out.append('<ul>')
+
+        items = newsgroup.group('items').strip() + '\n'
+        itempos = 0
+        while itempos < len(items):
+            newsitem = news_item_re.match(items, itempos)
+            if not newsitem:
+                sys.stderr.write('Cannot parse "%.30s" as news item.\n'
+                                 % items[itempos:])
+                sys.exit(1)
+
+            item = newsitem.group('item')
+            item = re.sub(r'(?s)\s{2,}', r' ', item)
+
+            colon = colon_re.search(item)
+            if not colon:
+                sys.stderr.write('Missing colon in news item "%.30s".\n' % item)
+                sys.exit(1)
+
+            label = item[:colon.start()+1]
+            content = item[colon.end():]
+            out.append('<li><i>%s</i>: %s</li>' % (label, content))
+
+            itempos = newsitem.end()
+
+        out.append('</ul>')
+        newspos = newsgroup.end()
+
+    textpos = verblock.end()
 
 # Split version list by major version, assuming there are two series
 # formed by N.x and N.99.x versions
@@ -103,4 +104,4 @@ for ver in version_lists:
     l.append(',\n'.join(['<a href="#v%s">%s</a>' % (x, x) for x in ver]))
 print '<br/>\n'.join(l)
 print '</p>'
-print '\n'.join(text)
+print '\n'.join(out)
