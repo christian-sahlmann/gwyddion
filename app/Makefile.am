@@ -117,6 +117,7 @@ libgwyapp2_la_LIBADD = $(libgwyapp_libadd)
 libgwyapp2_la_SOURCES = \
 	app.c \
 	data-browser.c \
+	data-browser-aux.c \
 	datachooser.c \
 	file.c \
 	filelist.c \

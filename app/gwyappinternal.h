@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004,2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,23 @@
 
 G_BEGIN_DECLS
 
+/* The GtkTargetEntry for tree model drags.
+ * FIXME: Is it Gtk+ private or what? */
+#define GTK_TREE_MODEL_ROW \
+    { "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_APP, 0 }
+
+/* The container prefix all graph reside in.  This is a bit silly but it does
+ * not worth to break file compatibility with 1.x. */
+#define GRAPH_PREFIX "/0/graph/graph"
+
+/* Thiese are sane and should remain so. */
+#define SPECTRA_PREFIX "/sps"
+#define BRICK_PREFIX "/brick"
+#define SURFACE_PREFIX "/surface"
+
 enum {
+    THUMB_SIZE = 60,
+    TMS_NORMAL_THUMB_SIZE = 128,
     GWY_NPAGES = GWY_PAGE_XYZS + 1,
 };
 
@@ -100,6 +116,10 @@ typedef struct {
     gchar *message;
 } GwyAppLogMessage;
 
+/* XXX: Bad name.  Cannot fix it because according to the rules it is now
+ * public API. */
+void     gwy_app_main_window_set              (GtkWidget *window);
+
 G_GNUC_INTERNAL
 gint     _gwy_app_get_n_recent_files          (void);
 
@@ -157,12 +177,65 @@ void              _gwy_app_log_add_message_to_textbuf   (GtkTextBuffer *textbuf,
                                                          const gchar *message,
                                                          GLogLevelFlags log_level);
 
-/* XXX */
-void     gwy_app_main_window_set              (GtkWidget *window);
+/* data-browser-aux functions */
+G_GNUC_INTERNAL
+void _gwy_app_data_merge_gather(gpointer key,
+                                gpointer value,
+                                gpointer user_data);
+G_GNUC_INTERNAL
+void _gwy_app_data_merge_copy_1(gpointer key,
+                                gpointer value,
+                                gpointer user_data);
+G_GNUC_INTERNAL
+void _gwy_app_data_merge_copy_2(gpointer key,
+                                gpointer value,
+                                gpointer user_data);
+G_GNUC_INTERNAL
+gint* _gwy_app_find_ids_unmanaged(GwyContainer *data,
+                                  GwyAppKeyType keytype,
+                                  GType gtype);
+G_GNUC_INTERNAL
+GwyDataField* _gwy_app_create_brick_preview_field  (GwyBrick *brick);
+G_GNUC_INTERNAL
+GwyDataField* _gwy_app_create_surface_preview_field(GwySurface *surface,
+                                                    gint max_xres,
+                                                    gint max_yres);
+G_GNUC_INTERNAL
+void _gwy_app_update_data_range_type(GwyDataView *data_view,
+                                     gint id);
+G_GNUC_INTERNAL
+void _gwy_app_sync_mask(GwyContainer *data,
+                        GQuark quark,
+                        GwyDataView *data_view);
+G_GNUC_INTERNAL
+void _gwy_app_sync_show(GwyContainer *data,
+                        GQuark quark,
+                        GwyDataView *data_view);
+G_GNUC_INTERNAL
+void _gwy_app_update_channel_sens(void);
+G_GNUC_INTERNAL
+void _gwy_app_update_graph_sens  (void);
+G_GNUC_INTERNAL
+void _gwy_app_update_brick_sens  (void);
+G_GNUC_INTERNAL
+void _gwy_app_update_surface_sens(void);
+G_GNUC_INTERNAL
+void _gwy_app_update_3d_window_title(Gwy3DWindow *window3d,
+                                     gint id);
+G_GNUC_INTERNAL
+void _gwy_app_update_brick_info(GwyContainer *data,
+                                gint id,
+                                GwyDataView *data_view);
+G_GNUC_INTERNAL
+void _gwy_app_update_surface_info(GwyContainer *data,
+                                  gint id,
+                                  GwyDataView *data_view);
+G_GNUC_INTERNAL
+gchar* _gwy_app_figure_out_channel_title(GwyContainer *data,
+                                         gint channel);
 
 G_END_DECLS
 
 #endif /* __GWY_APP_INTERNAL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

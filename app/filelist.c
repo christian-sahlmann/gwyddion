@@ -81,11 +81,6 @@
 #define GStatBuf struct stat
 #endif
 
-enum {
-    THUMB_SIZE = 60,
-    TMS_NORMAL_THUMB_SIZE = 128
-};
-
 typedef enum {
     FILE_STATE_UNKNOWN = 0,
     FILE_STATE_OLD,
