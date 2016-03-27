@@ -6362,6 +6362,7 @@ update_all_sens(void)
     update_graph_sens();
     update_channel_sens();
     update_brick_sens();
+    update_surface_sens();
     update_message_button();
 }
 
@@ -8786,7 +8787,7 @@ gwy_app_get_surface_title(GwyContainer *data,
     if (title)
         return g_strdup(title);
 
-    return g_strdup_printf(_("Unknown volume %d"), id + 1);
+    return g_strdup_printf(_("Unknown XYZ %d"), id + 1);
 }
 
 /**
