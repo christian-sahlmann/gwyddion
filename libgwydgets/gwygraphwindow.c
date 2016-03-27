@@ -34,6 +34,13 @@
 #include <libgwydgets/gwystatusbar.h>
 #include "gwygraphwindowmeasuredialog.h"
 
+#define ZOOM_FACTOR 1.3195
+
+enum {
+    DEFAULT_WIDTH = 550,
+    DEFAULT_HEIGHT = 390,
+};
+
 static void     gwy_graph_window_destroy         (GtkObject *object);
 static void     gwy_graph_window_finalize        (GObject *object);
 static void     gwy_graph_window_model_changed   (GwyGraphWindow *graph_window);
@@ -46,6 +53,8 @@ static void     gwy_graph_window_zoom_to_fit     (GwyGraphWindow *graphwindow);
 static void     gwy_graph_window_x_log           (GwyGraphWindow *graphwindow);
 static void     gwy_graph_window_y_log           (GwyGraphWindow *graphwindow);
 static void     gwy_graph_window_zoom_finished   (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_resize          (GwyGraphWindow *graphwindow,
+                                                  gint zoomtype);
 static void     gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow,
                                                   gint response);
 static void     gwy_graph_window_set_tooltip     (GtkWidget *widget,
@@ -134,7 +143,8 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow = (GwyGraphWindow*)g_object_new(GWY_TYPE_GRAPH_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(graphwindow), "data",
                            g_get_application_name());
-    gtk_window_set_default_size(GTK_WINDOW(graphwindow), 550, 390);
+    gtk_window_set_default_size(GTK_WINDOW(graphwindow),
+                                DEFAULT_WIDTH, DEFAULT_HEIGHT);
     gtk_window_set_resizable(GTK_WINDOW(graphwindow), TRUE);
 
     vbox = gtk_vbox_new(FALSE, 0);
@@ -445,16 +455,20 @@ gwy_graph_window_key_pressed(GtkWidget *widget,
     graph_window = GWY_GRAPH_WINDOW(widget);
     state = event->state & important_mods;
     key = event->keyval;
-    /* TODO: it would be nice to have these working too
-    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
-        gwy_graph_window_set_zoom(graph_window, -1);
+    if (!state && (key == GDK_minus || key == GDK_KP_Subtract)) {
+        gwy_graph_window_resize(graph_window, -1);
+        return TRUE;
+    }
     else if (!state && (key == GDK_equal || key == GDK_KP_Equal
-                        || key == GDK_plus || key == GDK_KP_Add))
-        gwy_graph_window_set_zoom(graph_window, 1);
-    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
-        gwy_graph_window_set_zoom(graph_window, 10000);
-    else */
-    if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
+                        || key == GDK_plus || key == GDK_KP_Add)) {
+        gwy_graph_window_resize(graph_window, 1);
+        return TRUE;
+    }
+    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide)) {
+        gwy_graph_window_resize(graph_window, 0);
+        return TRUE;
+    }
+    else if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
         gwy_graph_window_copy_to_clipboard(graph_window);
         return TRUE;
     }
@@ -618,6 +632,56 @@ gwy_graph_window_zoom_finished(GwyGraphWindow *graphwindow)
                                  FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph),
                          graphwindow->last_status);
+}
+
+static void
+gwy_graph_window_resize(GwyGraphWindow *graphwindow, gint zoomtype)
+{
+    GtkWindow *window = GTK_WINDOW(graphwindow);
+    GtkWidget *widget = GTK_WIDGET(graphwindow);
+    gint w, h;
+
+    gtk_window_get_size(window, &w, &h);
+    if (zoomtype > 0) {
+        GdkScreen *screen = gtk_widget_get_screen(widget);
+        gint scrwidth = gdk_screen_get_width(screen);
+        gint scrheight = gdk_screen_get_height(screen);
+
+        w = GWY_ROUND(ZOOM_FACTOR*w);
+        h = GWY_ROUND(ZOOM_FACTOR*h);
+        if (w > 0.9*scrwidth || h > 0.9*scrheight) {
+            if ((gdouble)w/scrwidth > (gdouble)h/scrheight) {
+                h = GWY_ROUND(0.9*scrwidth*h/w);
+                w = GWY_ROUND(0.9*scrwidth);
+            }
+            else {
+                w = GWY_ROUND(0.9*scrheight*w/h);
+                h = GWY_ROUND(0.9*scrheight);
+            }
+        }
+    }
+    else if (zoomtype < 0) {
+        GtkRequisition req = widget->requisition;
+
+        w = GWY_ROUND(w/ZOOM_FACTOR);
+        h = GWY_ROUND(h/ZOOM_FACTOR);
+        if (w < req.width || h < req.height) {
+            if ((gdouble)w/req.width < (gdouble)h/req.height) {
+                h = GWY_ROUND((gdouble)req.width*h/w);
+                w = req.width;
+            }
+            else {
+                w = GWY_ROUND((gdouble)req.height*w/h);
+                h = req.height;
+            }
+        }
+    }
+    else {
+        w = DEFAULT_WIDTH;
+        h = DEFAULT_HEIGHT;
+    }
+
+    gtk_window_resize(window, w, h);
 }
 
 static void
