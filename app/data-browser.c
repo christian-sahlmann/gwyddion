@@ -48,6 +48,10 @@ enum {
     PAGENO_SHIFT = 16,
 };
 
+enum {
+    important_mods = (GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK),
+};
+
 /* Sensitivity flags */
 enum {
     SENS_OBJECT = 1 << 0,
@@ -105,6 +109,7 @@ struct _GwyAppDataBrowser {
     GtkWidget *messages_button;
     GtkWidget *notebook;
     GtkWidget *lists[GWY_NPAGES];
+    GtkWidget **list_buttons;
 };
 
 /* The proxy associated with each Container (this is non-GUI object) */
@@ -177,6 +182,8 @@ static void     gwy_app_data_browser_copy_other(GtkTreeModel *model,
                                                 GtkTreeIter *iter,
                                                 GtkWidget *window,
                                                 GwyContainer *container);
+static void     gwy_app_data_browser_shoot_object(GObject *button,
+                                                  GwyAppDataBrowser *browser);
 static gboolean gwy_app_data_browser_select_data_view2(GwyDataView *data_view);
 static gboolean gwy_app_data_browser_select_graph2    (GwyGraph *graph);
 static gboolean gwy_app_data_browser_select_volume2   (GwyDataView *data_view);
@@ -2787,6 +2794,40 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
     gtk_drag_finish(context, TRUE, FALSE, time_);
 }
 
+static gboolean
+managed_window_key_press(GwyAppDataBrowser *browser,
+                         GdkEventKey *event)
+{
+    guint state = event->state & important_mods;
+    guint key = event->keyval;
+    const gchar *action, *want_action = NULL;
+    guint i;
+
+    /* This is quite PC-centric.  Dunno what Mac people would use... */
+    if (state == GDK_CONTROL_MASK && (key == GDK_d || key == GDK_D))
+        want_action = "duplicate";
+    if (state == GDK_CONTROL_MASK && key == GDK_Delete)
+        want_action = "delete";
+    if (state == GDK_CONTROL_MASK && key == GDK_Insert)
+        want_action = "extract";
+
+    if (!want_action)
+        return FALSE;
+
+    for (i = 0; browser->list_buttons[i]; i++) {
+        GObject *object = G_OBJECT(browser->list_buttons[i]);
+        action = g_object_get_data(object, "action");
+        g_return_val_if_fail(action, FALSE);
+        if (gwy_strequal(action, want_action)) {
+            gwy_app_data_browser_shoot_object(object, browser);
+            return TRUE;
+        }
+    }
+    g_warning("Cannot find button for action %s.", want_action);
+
+    return FALSE;
+}
+
 /**
  * gwy_app_data_browser_create_channel:
  * @browser: A data browser.
@@ -2842,6 +2883,8 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_data_view2),
                              data_view);
+    g_signal_connect_swapped(data_window, "key-press-event",
+                             G_CALLBACK(managed_window_key_press), browser);
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_channel_deleted), NULL);
     _gwy_app_data_window_setup(GWY_DATA_WINDOW(data_window));
@@ -3588,6 +3631,8 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     g_signal_connect_swapped(graph_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_graph2),
                              graph);
+    g_signal_connect_swapped(graph_window, "key-press-event",
+                             G_CALLBACK(managed_window_key_press), browser);
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window),
@@ -4338,6 +4383,8 @@ gwy_app_data_browser_create_volume(GwyAppDataBrowser *browser,
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_volume2),
                              data_view);
+    g_signal_connect_swapped(data_window, "key-press-event",
+                             G_CALLBACK(managed_window_key_press), browser);
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_volume_deleted), NULL);
 
@@ -4796,6 +4843,8 @@ gwy_app_data_browser_create_xyz(GwyAppDataBrowser *browser,
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_data_browser_select_xyz2),
                              data_view);
+    g_signal_connect_swapped(data_window, "key-press-event",
+                             G_CALLBACK(managed_window_key_press), browser);
     g_signal_connect(data_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_xyz_deleted), NULL);
 
@@ -5367,6 +5416,8 @@ gwy_app_data_browser_window_destroyed(GwyAppDataBrowser *browser)
     browser->sensgroup = NULL;
     browser->filename = NULL;
     browser->notebook = NULL;
+    g_free(browser->list_buttons);
+    browser->list_buttons = NULL;
     for (i = 0; i < GWY_NPAGES; i++)
         browser->lists[i] = NULL;
 }
@@ -5429,10 +5480,12 @@ gwy_app_data_browser_construct_buttons(GwyAppDataBrowser *browser)
     tips = gwy_app_get_tooltips();
     hbox = gtk_hbox_new(TRUE, 0);
 
+    browser->list_buttons = g_new0(GtkWidget*, G_N_ELEMENTS(actions)+1);
     for (i = 0; i < G_N_ELEMENTS(actions); i++) {
         image = gtk_image_new_from_stock(actions[i].stock_id,
                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
         button = gtk_button_new();
+        browser->list_buttons[i] = button;
         g_object_set_data(G_OBJECT(button), "action",
                           (gpointer)actions[i].action);
         gtk_tooltips_set_tip(tips, button, gwy_sgettext(actions[i].tooltip),
@@ -6524,8 +6577,7 @@ message_log_updated(GtkTextBuffer *textbuf, GtkTextView *textview)
 static gboolean
 message_log_key_pressed(GtkWidget *window, GdkEventKey *event)
 {
-    if (event->keyval != GDK_Escape
-        || (event->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)))
+    if (event->keyval != GDK_Escape || (event->state & important_mods))
         return FALSE;
 
     gtk_widget_hide(window);
