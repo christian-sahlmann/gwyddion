@@ -60,6 +60,8 @@ Libraries:
   gwy_app_data_browser_get_current().
 - libgwyprocess: Raw 2D FFT transform using the SimpleFFT backend (i.e. with
   FFTW unavailable) overwriting the input data field was fixed.
+- libgwydgets: Graph and 3D windows can be resized using keyboard, similarly
+  to other data windows.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
