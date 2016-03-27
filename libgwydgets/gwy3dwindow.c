@@ -47,7 +47,12 @@
 #include <libgwydgets/gwystock.h>
 #include <libprocess/gwyprocess.h>
 
-#define DEFAULT_SIZE 360
+#define ZOOM_FACTOR 1.3195
+
+enum {
+    DEFAULT_WIDTH = 550,
+    DEFAULT_HEIGHT = 360,
+};
 
 enum {
     N_BUTTONS = GWY_3D_MOVEMENT_LIGHT + 1
@@ -75,6 +80,8 @@ static gboolean gwy_3d_window_key_pressed          (GtkWidget *widget,
                                                     GdkEventKey *event);
 static gboolean gwy_3d_window_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
+static void     gwy_3d_window_resize               (Gwy3DWindow *gwy3dwindow,
+                                                    gint zoomtype);
 static void     gwy_3d_window_pack_buttons         (Gwy3DWindow *gwy3dwindow,
                                                     guint offset,
                                                     GtkBox *box);
@@ -385,15 +392,17 @@ gwy_3d_window_button_press(GtkWidget *widget,
         || event->window != gwy3dwindow->resize_grip)
         return FALSE;
 
-    if (event->button == 1)
+    if (event->button == 1) {
         gtk_window_begin_resize_drag(GTK_WINDOW(widget),
                                      gwy_3d_window_get_grip_edge(gwy3dwindow),
                                      event->button,
                                      event->x_root, event->y_root, event->time);
-    else if (event->button == 2)
+    }
+    else if (event->button == 2) {
         gtk_window_begin_move_drag(GTK_WINDOW(widget),
                                    event->button,
                                    event->x_root, event->y_root, event->time);
+    }
     else
         return FALSE;
 
@@ -431,15 +440,6 @@ gwy_3d_window_key_pressed(GtkWidget *widget,
     gwy3dwindow = GWY_3D_WINDOW(widget);
     state = event->state & important_mods;
     key = event->keyval;
-    /* TODO: it would be nice to have these working too
-    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
-        gwy_3d_view_window_set_zoom(3d_view_window, -1);
-    else if (!state && (key == GDK_equal || key == GDK_KP_Equal
-                        || key == GDK_plus || key == GDK_KP_Add))
-        gwy_3d_view_window_set_zoom(3d_view_window, 1);
-    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
-        gwy_3d_view_window_set_zoom(3d_view_window, 10000);
-    else */
     if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
         gwy_3d_window_copy_to_clipboard(gwy3dwindow);
         return TRUE;
@@ -459,6 +459,20 @@ gwy_3d_window_key_pressed(GtkWidget *widget,
 
         if (movement != GWY_3D_MOVEMENT_NONE) {
             gtk_button_clicked(GTK_BUTTON(gwy3dwindow->buttons[movement]));
+            return TRUE;
+        }
+
+        if (key == GDK_minus || key == GDK_KP_Subtract) {
+            gwy_3d_window_resize(gwy3dwindow, -1);
+            return TRUE;
+        }
+        else if (key == GDK_equal || key == GDK_KP_Equal
+                 || key == GDK_plus || key == GDK_KP_Add) {
+            gwy_3d_window_resize(gwy3dwindow, 1);
+            return TRUE;
+        }
+        else if (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide) {
+            gwy_3d_window_resize(gwy3dwindow, 0);
             return TRUE;
         }
     }
@@ -487,6 +501,57 @@ gwy_3d_window_expose(GtkWidget *widget,
 
     return FALSE;
 }
+
+static void
+gwy_3d_window_resize(Gwy3DWindow *gwy3dwindow, gint zoomtype)
+{
+    GtkWindow *window = GTK_WINDOW(gwy3dwindow);
+    GtkWidget *widget = GTK_WIDGET(gwy3dwindow);
+    gint w, h;
+
+    gtk_window_get_size(window, &w, &h);
+    if (zoomtype > 0) {
+        GdkScreen *screen = gtk_widget_get_screen(widget);
+        gint scrwidth = gdk_screen_get_width(screen);
+        gint scrheight = gdk_screen_get_height(screen);
+
+        w = GWY_ROUND(ZOOM_FACTOR*w);
+        h = GWY_ROUND(ZOOM_FACTOR*h);
+        if (w > 0.9*scrwidth || h > 0.9*scrheight) {
+            if ((gdouble)w/scrwidth > (gdouble)h/scrheight) {
+                h = GWY_ROUND(0.9*scrwidth*h/w);
+                w = GWY_ROUND(0.9*scrwidth);
+            }
+            else {
+                w = GWY_ROUND(0.9*scrheight*w/h);
+                h = GWY_ROUND(0.9*scrheight);
+            }
+        }
+    }
+    else if (zoomtype < 0) {
+        GtkRequisition req = widget->requisition;
+
+        w = GWY_ROUND(w/ZOOM_FACTOR);
+        h = GWY_ROUND(h/ZOOM_FACTOR);
+        if (w < req.width || h < req.height) {
+            if ((gdouble)w/req.width < (gdouble)h/req.height) {
+                h = GWY_ROUND((gdouble)req.width*h/w);
+                w = req.width;
+            }
+            else {
+                w = GWY_ROUND((gdouble)req.height*w/h);
+                h = req.height;
+            }
+        }
+    }
+    else {
+        w = DEFAULT_WIDTH;
+        h = DEFAULT_HEIGHT;
+    }
+
+    gtk_window_resize(window, w, h);
+}
+
 
 static void
 gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
@@ -554,7 +619,6 @@ GtkWidget*
 gwy_3d_window_new(Gwy3DView *gwy3dview)
 {
     Gwy3DWindow *gwy3dwindow;
-    GtkRequisition size_req;
     GtkWidget *vbox, *hbox, *hbox2, *button;
     GtkTextDirection direction;
 
@@ -656,12 +720,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     gtk_widget_show_all(hbox);
 
-    /* make the 3D view at least DEFAULT_SIZE x DEFAULT_SIZE */
-    gtk_widget_size_request(gwy3dwindow->vbox_large, &size_req);
-    size_req.height = MAX(size_req.height, DEFAULT_SIZE);
     gtk_window_set_default_size(GTK_WINDOW(gwy3dwindow),
-                                size_req.width/2 + size_req.height,
-                                size_req.height);
+                                DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
     return GTK_WIDGET(gwy3dwindow);
 }
