@@ -3,12 +3,13 @@ Application:
 - New translation: British English (accompanied with unification of the default
   language to US English).
 - Translations updated: French, Russian.
-- Program messages are written to the log file by default on all platforms,
-  on Unix in addition to the console.  New options --log-to-console and
-  --no-log-to-console permit controlling independently where the messages go
-  (and where they do not).
-- Program messages can be displayed in the GUI using Info → Program Messages.
-- The current file can be closed using Ctrl-W (or File → Close in the menu).
+- Program messages: Are written to the log file by default on all platforms,
+  on Unix in addition to the console.
+- Command line: New options --log-to-console and --no-log-to-console permit
+  controlling independently where the messages go (and where they do not).
+- Program messages: Can be displayed in the GUI using Info → Program Messages.
+- Files: The current file can be closed using Ctrl-W (or File → Close in the
+  menu).
 
 Libraries:
 - libgwyddion: GwyNLFitter fit returns -1 and NULLs the covariance matrix when
@@ -189,11 +190,11 @@ Modules:
 - Renishaw: Timestamps in metadata were corrected.
 
 Other:
-- MS Windows packages include OpenEXR support now.
-- Broken configure detection of libpython on Fedora 23 (and possibly elsewhere)
-  was fixed.
-- A script generating MS Visual Studio solution files (and other files) was
-  added as utils/gen-gwyddion-vs-sln.py.
+- MS Windows packages: Include OpenEXR support now.
+- Linux compilation: Broken configure detection of libpython on Fedora 23 (and
+  possibly elsewhere) was fixed.
+- MS Windows compilation: A script generating MS Visual Studio solution files
+  (and other files) was added as utils/gen-gwyddion-vs-sln.py.
 
 
 2.43 (2015-11-25)
@@ -290,11 +291,12 @@ Modules:
   was fixed.
 
 Other:
-- Gwyddion can use either minizip or libzip for opening of ZIP-compressed
-  file formats.  The former is used if both are found.
-- Configure checks for gtk-doc at least 1.10, required to build the
-  documentation (older versions were actually insufficient even before).
-- RPM requires rubypick only on RedHat-based distros.
+- Dependencies: Gwyddion can use either minizip or libzip for opening of
+  ZIP-compressed file formats.  The former is used if both are found.
+- Unix compilation: Configure checks for gtk-doc at least 1.10, required to
+  build the documentation (older versions were actually insufficient even
+  before).
+- Linux compilation: RPM requires rubypick only on RedHat-based distros.
 
 
 2.42 (2015-10-06)
@@ -377,8 +379,9 @@ Modules:
 - Grain distributions: Field separator in the header was fixed to tab.
 
 Other:
-- The code has been made MSVC-compatible.
-- Python linking on OS X is no longer tied to a specific library.
+- MS Windows compilation: The code has been made MSVC-compatible.
+- OS X compilation: Python linking on OS X is no longer tied to a specific
+  library.
 
 
 2.41 (2015-05-26)
@@ -460,8 +463,8 @@ Modules:
 - Nanonics: It should be possible to open incomplete scans.
 
 Other:
-- Standalone Python module gwy is now in the gwyddion-devel package instead
-  of the main package (it required the devel package to work anyway).
+- Python: Standalone Python module gwy is now in the gwyddion-devel package
+  instead of the main package (it required the devel package to work anyway).
 
 
 2.40 (2015-02-07)
@@ -512,13 +515,15 @@ Modules:
   non-ASCII names should work better on MS Windows.
 
 Other:
-- Does not attempt to build the hdrimage module with C++ compiler unavailable.
+- Unix compilation: Do not attempt to build the hdrimage module with C++
+  compiler unavailable.
 
 
 2.39 (2014-11-14)
 Application:
-- Pango 1.10 and Cairo 1.2 are now required.
-- The program should start with a saner working directory by default.
+- Dependencies: Pango 1.10 and Cairo 1.2 are now required.
+- MS Windows: The program should start with a saner working directory by
+  default.
 - Translations updated: Czech, French, Russian.
 - New translation: Korean.
 
@@ -566,9 +571,9 @@ Modules:
 
 2.38 (2014-09-18)
 Application:
-- Pressing F1 shows help, i.e. it points a web browser to the relevant part
-  of the user guide (in most program windows).  Most dialogs also have a Help
-  button now.
+- Help: Pressing F1 shows help, i.e. it points a web browser to the relevant
+  part of the user guide (in most program windows).  Most dialogs also have a
+  Help button now.
 - Translations updated: Czech, French, German, Russian, Spanish.
 
 Libraries:
@@ -681,8 +686,8 @@ Modules:
   all the results together.
 
 Other:
-- The standalone Python gwy module uses the correct extension for dlopening,
-  fixing the failure to load Gwyddion libraries on OS X.
+- Python: The standalone Python gwy module uses the correct extension for
+  dlopening, fixing the failure to load Gwyddion libraries on OS X.
 
 
 2.36 (2014-04-02)
@@ -728,16 +733,18 @@ Modules:
   powers instead of Pango markup.
 
 Other:
-- A false colour gradient mimicking the MetroPro rainbow palette was added.
-- Compatibility with Gtk+ 2.8, accidentally broken in 2.35, was restored.
+- Resources: A false colour gradient mimicking the MetroPro rainbow palette was
+  added.
+- Dependencies: Compatibility with Gtk+ 2.8, accidentally broken in 2.35, was
+  restored.
 
 
 2.35 (2014-03-02)
 Application:
-- A log of data modification operations is recorded for each channel and volume
-  data. A viewer of data processing operation log is available in the
-  right-click menus.  Logging can be enabled and disabled in the Edit menu.
-- A workaround for toolbox menus disapparing in Unity was implemented.
+- Logging: A log of data modification operations is recorded for each channel
+  and volume data. A viewer of data processing operation log is available in
+  the right-click menus.  Logging can be enabled and disabled in the Edit menu.
+- Unity: A workaround for toolbox menus disapparing in Unity was implemented.
 - Translations updated: Czech, French, Russian.
 
 Libraries:
@@ -775,13 +782,14 @@ Modules:
 
 2.34 (2013-12-15)
 Application:
-- It is no longer possible to tear off toolbox submenus.  The tear-off menus
-  were removed as they have been broken in Gtk+ for a long time.
-- Seldom used functions (Rotate and Unrotate) were replaced with Dimensions
-  & units and Arithmetic in the default toolbox.
-- Menu ‘Meta’ in the toolbox was renamed to ‘Info’.
-- Menu integration support in 64 bit OS X application.
-- Settings of 3D view labels are also stored when 3D defaults are saved.
+- Tear-off menus: It is no longer possible to tear off toolbox submenus.  The
+  tear-off menus were removed as they have been broken in Gtk+ for a long time.
+- Toolbox: Seldom used functions (Rotate and Unrotate) were replaced with
+  Dimensions & units and Arithmetic in the default toolbox.
+- Toolbox: Menu ‘Meta’ in the toolbox was renamed to ‘Info’.
+- OS X: Menu integration support in 64 bit OS X application.
+- 3D view: Settings of 3D view labels are also stored when 3D defaults are
+  saved.
 - Translations updated: Czech, French, Italian, Russian.
 
 Libraries:
@@ -817,8 +825,8 @@ Modules:
   should be read with correct value offsets (i.e. not just scale) now.
 
 Other:
-- Three new false colour gradients were added, RGB-Red, RGB-Green and RGB-Blue,
-  representing pure R, G and B channels.
+- Resources: Three new false colour gradients were added, RGB-Red, RGB-Green
+  and RGB-Blue, representing pure R, G and B channels.
 
 
 2.33 (2013-10-17)
@@ -856,10 +864,10 @@ Modules:
 
 2.32 (2013-09-08)
 Application:
-- GLib 2.14 is now required.
+- Dependencies: GLib 2.14 is now required.
 - Translations updated: Czech, French, Russian, Spanish.
-- Metadata browser is no longer present in Meta menu.  Access it via the
-  right-click (Shift-F10) context menu of data (and volume) windows.
+- Toolbox: Metadata browser is no longer present in Meta menu.  Access it via
+  the right-click (Shift-F10) context menu of data (and volume) windows.
 
 Libraries:
 - libgwyprocess: Summary statistical functions for bricks were added.
@@ -919,9 +927,9 @@ Modules:
 - OLD MDA: Data loading was implemented as volume data.
 
 Other:
-- The Win64 package uses correct set of registry keys, installation paths and
-  the shortcut name was differentiated, allowing parallel installation with
-  Win32.
+- MS Windows: The Win64 package uses correct set of registry keys, installation
+  paths and the shortcut name was differentiated, allowing parallel
+  installation with Win32.
 
 
 2.31 (2013-02-21)
@@ -993,21 +1001,22 @@ Modules:
   the dialog now.
 
 Other:
-- Crash on Win32 while loading TIFF images was hopefully fixed.
-- Compatibility with GLib older than 2.26, accidentaly broken in 2.30, was
-  restored.
-- Desktop files in correct locations are updated with
+- MS Windows: Crash on Win32 while loading TIFF images was hopefully fixed.
+- Dependencies: Compatibility with GLib older than 2.26, accidentaly broken in
+  2.30, was restored.
+- Unix compilation: Desktop files in correct locations are updated with
   --enable-home-installation configure option.
-- Standalone gwy python module on Win32 no nonger tries to load non-existent
-  Gwyddion libraries.
-- MS Windows executables are available also as 64bit.  They are still
+- Python: Standalone gwy python module on Win32 no nonger tries to load
+  non-existent Gwyddion libraries.
+- MS Windows: Executables are available also as 64bit.  They are still
   somewhat experimental and do not include Python scripting support.
 
 
 2.30 (2012-09-21)
 Application:
 - Translations updated: Czech, French, Russian.
-- Handling of files with non-ASCII characters in names on Win32 was improved.
+- MS Windows: Handling of files with non-ASCII characters in names on Win32 was
+  improved.
 
 Libraries:
 - libgwyprocess: A new function to remove grains touching image borders.
@@ -1034,9 +1043,10 @@ Modules:
 - Grain correlations: Really works when run non-interactively.
 
 Other:
-- Compatibility with newer version of GLib that deprecate various things was
-  improved.
-- Win32 executables are built using MinGW-W64 cross-compiler.
+- Dependencies: Compatibility with newer version of GLib that deprecate various
+  things was improved.
+- MS Windows compilation: Win32 executables are built using MinGW-W64
+  cross-compiler.
 
 
 2.29 (2012-07-20)
@@ -1066,10 +1076,10 @@ Modules:
   improvements.
 
 Other:
-- Pygwy is packaged in the Win32 installer (it requires separate Python and
-  PyGTK installation though).
-- Standalone python gwy module is available (experimental).
-- Several icons were improved.
+- Python: Pygwy is packaged in the Win32 installer (it requires separate Python
+  and PyGTK installation though).
+- Python: Standalone python gwy module is available (experimental).
+- Resources: Several icons were improved.
 
 
 2.28 (2012-05-18)
@@ -1090,11 +1100,11 @@ Modules:
 - Zeiss: Files without key-value pairs in tag 34118 are recognised and loaded.
 
 Other:
-- Compatibility with libpng 1.5 was corrected.
-- GNOME 3 thumbnailer file is installed, making gwyddion-thumbnailer work
-  automatically in GNOME 3.
-- configure has an option --enable-home-installation to ease desktop
-  integration if you compile from source code and install to your home.
+- Dependencies: Compatibility with libpng 1.5 was corrected.
+- Utils: GNOME 3 thumbnailer file is installed, making gwyddion-thumbnailer
+  work automatically in GNOME 3.
+- Unix compilation: configure has an option --enable-home-installation to ease
+  desktop integration if you compile from source code and install to your home.
 
 
 2.27 (2012-04-16)
@@ -1113,13 +1123,13 @@ Modules:
 - 2D FFT: An option to preserve RMS was added.
 
 Other:
-- Compatibility with GLib 2.32 was corrected.
+- Dependencies: Compatibility with GLib 2.32 was corrected.
 
 
 2.26 (2011-12-17)
 Application:
 - Translations updated: Czech, French, Italian, Russian, Spanish.
-- Keyboard shortucts can be modified by pointing to the menu item and pressing
+- Keyboard shortucts: Can be modified by pointing to the menu item and pressing
   the new shortcut (after enabling this in the Edit menu).
 
 Libraries:
@@ -1173,19 +1183,20 @@ Modules:
 - Pygwy: Load and save module functions can take an optional run mode argument.
 
 Other:
-- Compatibility with gcc 4.6 and autoconf 2.68 was improved.
-- The thumbnailer permits specifying the channel used to create the thumbnail
-  (if run manually).
-- Drag'n'drop should work on Win32 again.
-- Bzip2-compressed source code tarballs were replaced with xz-compressed.
+- Dependencies: Compatibility with gcc 4.6 and autoconf 2.68 was improved.
+- Utils: The thumbnailer permits specifying the channel used to create the
+  thumbnail (if run manually).
+- MS Windows: Drag'n'drop should work on Win32 again.
+- Source code packages: Bzip2-compressed source code tarballs were replaced
+  with xz-compressed.
 
 
 2.25 (2011-06-06)
 Application:
 - New translation: Spanish.
 - Translations updated: Czech, French, German, Italian, Russian.
-- Keyboard shortcut Ctrl-H invokes Document History.
-- Document history filter has a Clear button.
+- Keyboard shortcuts: Ctrl-H invokes Document History.
+- Document history: The filter has a Clear button.
 
 Libraries:
 - libgwyddion: SI unit arithmetic, sometimes giving incorrect results if one of
@@ -1230,8 +1241,9 @@ Modules:
   image data can be imported.
 
 Other:
-- The KDE4 thumbnailer is not built by default.
-- Line noise synthesis module, forgotten from the package, was reinstated.
+- Utils: The KDE4 thumbnailer is not built by default.
+- Source code packages: Line noise synthesis module, forgotten from the
+  package, was reinstated.
 
 
 2.24 (2011-04-08)
@@ -1259,15 +1271,15 @@ Modules:
 - Mask editor tool: Spurious drawing upon data/tool switch was corrected.
 
 Other:
-- The list of MIME types Gwyddion declares it can open (on Unix) was updated
-  and made to be updated automatically.
+- Desktop integration: The list of MIME types Gwyddion declares it can open (on
+  Unix) was updated and made to be updated automatically.
 
 
 2.23 (2011-03-05)
 Application:
 - Translations updated: Czech, French, Russian.
-- OpenGL can be completely disabled with --disable-gl to avoid provoking
-  buggy graphics drivers.
+- Command line: OpenGL can be completely disabled with --disable-gl to avoid
+  provoking buggy graphics drivers.
 
 Libraries:
 - libgwyprocess: New classes GwyCalibration and GwyCalData representing
@@ -1320,19 +1332,20 @@ Modules:
   fields was corrected.
 
 Other:
-- Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
-  MinGW32.  The recommended compilation method is cross-compilation on Linux.
-- Building of RPMs should work on any sufficiently RedHat-based distribution,
-  not just Fedora.
+- MS Windows compilation: Compilation with MSVC6 toolchain on MS Windows is no
+  longer supported, use MinGW32.  The recommended compilation method is
+  cross-compilation on Linux.
+- Linux compilation: Building of RPMs should work on any sufficiently
+  RedHat-based distribution, not just Fedora.
 
 
 2.22 (2010-12-06)
 Application:
 - Translations updated: Czech, French, Russian.
-- New command line option --no-log-to-file disables redirection of messages
-  to a log file (usefuly namely on Win32).
-- Gwyddion tries to initialise thread support as the very first thing if it
-  finds to be running with GLib 2.24 or newer.
+- Command line: Option --no-log-to-file disables redirection of messages to a
+  log file (usefuly namely on Win32).
+- Dependencies: Gwyddion tries to initialise thread support as the very first
+  thing if it finds to be running with GLib 2.24 or newer.
 
 Libraries:
 - libgwyddion: Portable isinf and insnan (gwy_isinf() and gwy_isnan()) were
@@ -1381,10 +1394,11 @@ Modules:
 - Pygwy console: It can be run also if no data is loaded.
 
 Other:
-- If compiled by gcc and it accepts option -fexcess-precision=fast it is passed
-  to the compile to be on the fast side.
-- It is possible to cross-compile Gwyddion for MS Windows using the MinGW32
-  cross-compiler.  The official executables are still made using MSVC6 though.
+- Unix compilation: If compiled by gcc and it accepts option
+  -fexcess-precision=fast it is passed to the compile to be on the fast side.
+- MS Windows compilation: It is possible to cross-compile Gwyddion for MS
+  Windows using the MinGW32 cross-compiler.  The official executables are still
+  made using MSVC6 though.
 
 
 2.21 (2010-10-26)
@@ -1420,8 +1434,8 @@ Modules:
 2.20 (2010-06-30)
 Application:
 - Translations updated: French, Russian.
-- It is possible to export 3D as image also to other support pixmap formats,
-  the format is determined by the extension.
+- 3D view: It is possible to export 3D as image also to other support pixmap
+  formats, the format is determined by the extension.
 
 Libraries:
 - libgwyprocess: Deserialization of spectra when there are selected curves
@@ -1455,10 +1469,11 @@ Modules:
 2.19 (2009-12-11)
 Application:
 - Translations updated: Czech, French, Russian.
-- Not starting a new instance of Gwyddion with --remote-new on X11 when none
-  is running (affecting most desktop launchers and menus) was fixed.
-- Thumbnails in recent file menu are shown even if menu icons are globally
-  disabled in Gtk+.
+- Remote control: Not starting a new instance of Gwyddion with --remote-new on
+  X11 when none is running (affecting most desktop launchers and menus) was
+  fixed.
+- Files: Thumbnails in recent file menu are shown even if menu icons are
+  globally disabled in Gtk+.
 
 Libraries:
 - libgwyddion: GwySIUnit parser ignores starting multiplication sign in units.
@@ -1483,9 +1498,9 @@ Modules:
 2.18 (2009-11-03)
 Application:
 - Translations updated: Czech, French, Russian.
-- Only file types that are not detected automaticaly are shown in the file
-  open dialog.
-- A new remote control backend was added: LibUnique.
+- Files: Only file types that are not detected automaticaly are shown in the
+  file open dialog.
+- Remote control: A new backend was added: LibUnique.
 
 Libraries:
 - libgwyddion: Gaussian fitting parameter b meaning was corrected to correspond
@@ -1521,15 +1536,18 @@ Modules:
   was fixed.
 
 Other:
-- Inclusion of wrong OpenGL header when building with Quartz backend was fixed.
-- Inclusion of gdkquartz headers when building for X11 on Mac was corrected.
+- OS X compilation: Inclusion of wrong OpenGL header when building with Quartz
+  backend was fixed.
+- OS X compilation: Inclusion of gdkquartz headers when building for X11 on Mac
+  was corrected.
 
 
 2.17 (2009-09-22)
 Application:
 - Translations updated: Czech, French, Russian.
 - OS X integration: menubar, language selection, opening files from Finder.
-- Language falls back to system langauge if gwy_locale is unset on Win32.
+- MS Windows: The language falls back to system langauge if gwy_locale is unset
+  on Win32.
 
 Libraries:
 - libgwyprocess: Real length of extracted profiles was corrected for very
@@ -1563,15 +1581,18 @@ Modules:
   explanatory error message is given.
 
 Other:
-- Forgotten @LIBTIFF@ was removed from gwyddion pkg-config file.
-- Building RPMs hopefully works on Mandriva again, including working around
-  the utterly broken enforcement of -Werror=format-security in 2009.1.
+- Source code packages: Forgotten @LIBTIFF@ was removed from gwyddion
+  pkg-config file.
+- Linux compilation: Building RPMs hopefully works on Mandriva again, including
+  working around the utterly broken enforcement of -Werror=format-security in
+  2009.1.
 
 
 2.16 (2009-06-25)
 Application:
 - Translations updated: Czech, French, Russian.
-- About dialog shows optional features compiled into the specific build.
+- Toolbox: About dialog shows optional features compiled into the specific
+  build.
 
 Libraries:
 - libgwyddion: Lorentzian fitting preset parameter estimator was corrected.
@@ -1603,9 +1624,9 @@ Modules:
   "draw-as-vector").
 
 Other:
-- Win32 installer offers to choose the language to use.
-- Gwyddion no longer directly uses libTIFF on any platform (it used to be
-  optionally linked with libTIFF).
+- MS Windows: Win32 installer offers to choose the language to use.
+- Dependencies: Gwyddion no longer directly uses libTIFF on any platform (it
+  used to be optionally linked with libTIFF).
 
 
 2.15 (2009-05-20)
@@ -1701,16 +1722,18 @@ Modules:
   coordinates were unified.
 
 Other:
-- File gwydion-thumbnailer.schemas is no longer distributed with paths from the
-  packager's system, it is created on the build system with the correct paths.
-- Outdated MSVC makefiles released in 2.12 were corrected.
+- Utils: File gwydion-thumbnailer.schemas is no longer distributed with paths
+  from the packager's system, it is created on the build system with the
+  correct paths.
+- MS Windows compilation: Outdated MSVC makefiles released in 2.12 were
+  corrected.
 
 
 2.12 (2009-01-04)
 Application:
 - New translations: Russian.
 - Translations updated: Czech.
-- Tips of the day were added, accessible in Meta → Tip of the Day.
+- Toolbox: Tips of the day were added, accessible in Meta → Tip of the Day.
 
 Libraries:
 - libgwyddion: New macro gwy_clear() zeroes memory in a sizeof-safe way.
@@ -1759,19 +1782,24 @@ Modules:
   automatic updates are enabled.
 
 Other:
-- New utility gwyddion-thumbnailer creates SPM file thumbnails for desktop
-  environments.  In this release, GNOME, XFce and KDE4 are fully supported with
-  thumbnails created on-the-fly.  In other TMS-conforming environments the
-  thumbnailer must be run manually to batch-create the thumbnails.
-- configure options --enable-python, --enable-perl, --enable-ruby and
-  --enable-pascal were canonicalized to the with-form: --with-python, etc.
-- Registered MIME types were updated, generic extensions such as *.dat or *.xml
-  are no longer used for file format recognition.
-- If ‘make install’ is run with nonempty DESTDIR, freedesktop databases are not
-  updated, i.e. configure --disable-desktop-file-update is no longer needed.
-- Flag -fno-strict-aliasing is no longer added to gcc compilation options.
-- Missing RPM dependencies on Mandriva were fixed.
-- Missing header gwyconfig.h was added to the Win32 packages.
+- Utils: New utility gwyddion-thumbnailer creates SPM file thumbnails for
+  desktop environments.  In this release, GNOME, XFce and KDE4 are fully
+  supported with thumbnails created on-the-fly.  In other TMS-conforming
+  environments the thumbnailer must be run manually to batch-create the
+  thumbnails.
+- Unix compilation: configure options --enable-python, --enable-perl,
+  --enable-ruby and --enable-pascal were canonicalized to the with-form:
+  --with-python, etc.
+- Desktop integration: Registered MIME types were updated, generic extensions
+  such as *.dat or *.xml are no longer used for file format recognition.
+- Unix compilation: If ‘make install’ is run with nonempty DESTDIR, freedesktop
+  databases are not updated, i.e. configure --disable-desktop-file-update is no
+  longer needed.
+- Unix compilation: Flag -fno-strict-aliasing is no longer added to gcc
+  compilation options.
+- Unix compilation: Missing RPM dependencies on Mandriva were fixed.
+- MS Windows compilation: Missing header gwyconfig.h was added to the Win32
+  packages.
 
 
 2.11 (2008-12-16)
@@ -1830,7 +1858,8 @@ Modules:
 
 2.9 (2007-10-19)
 Application:
-- Gtk+ 2.8 and Pango with Cairo rendering support is now required.
+- Dependencies: Gtk+ 2.8 and Pango with Cairo rendering support is now
+  required.
 - New translation: French.
 - Translations updated: Czech, Italian.
 
@@ -1875,14 +1904,15 @@ Modules:
 - Pixmap export: Can draw an inset scale bar.
 
 Other:
-- Compilation failure with GLib older than 2.10 (introduced in 2.8) was
+- Dependencies: Compilation failure with GLib older than 2.10 (introduced in
+  2.8) was fixed.
+- Dependencies: Compilation failure with FFTW3 in a non-standard location was
   fixed.
-- Compilation failure with FFTW3 in a non-standard location was fixed.
 
 
 2.8 (2007-08-31)
 Application:
-- Toolbox layout can be customized to certain extent by editing
+- Toolbox: Layout can be customized to certain extent by editing
   ~/.gwyddion/ui/toolbox.xml (manually, there is no GUI for this).
 
 Libraries:
@@ -1919,25 +1949,27 @@ Modules:
   threshold height next to the percentage.
 
 Other:
-- Autoconf 2.60 is required to build from svn checkout and/or for development.
-- It builds with builddir != srcdir.
-- libpython should be properly detected on FreeBSD now.
-- Configure option --enable-library-bloat, enforcing linking of libraries
-  (including modules) with all their dependencies, was added.
-- Configure option --enable-gtk-doc behaves as is usual in other packages
-  (enabling build documentation as a part of ‘all’ target).
-- Some more build system clean-ups.
+- Dependencies: Autoconf 2.60 is required to build from svn checkout and/or for
+  development.
+- Unix compilation: It builds with builddir != srcdir.
+- Unix compilation: libpython should be properly detected on FreeBSD now.
+- Unix compilation: Configure option --enable-library-bloat, enforcing linking
+  of libraries (including modules) with all their dependencies, was added.
+- Unix compilation: Configure option --enable-gtk-doc behaves as is usual in
+  other packages (enabling build documentation as a part of ‘all’ target).
+- Unix compilation: Some more build system clean-ups.
 
 
 2.7 (2007-06-26)
 Application:
 - Metadata browser:  It is possible to save the metadata.
-- Infinite startup notification after remote file opening was fixed.
-- The Tools toolbox was reorganized from a more or less chronological tool
-  order to functionality-based groups.
-- Crash in Metadata browser upon metadata edit when it was repeatedly closed
-  and reopened was fixed.
-- It is possible to merge data from other files into a loaded file.
+- Remote control: Infinite startup notification after remote file opening was
+  fixed.
+- Toolbox: The Tools toolbox was reorganized from a more or less chronological
+  tool order to functionality-based groups.
+- Metadata: Crash in Metadata browser upon metadata edit when it was repeatedly
+  closed and reopened was fixed.
+- Files: It is possible to merge data from other files into a loaded file.
 - Translations updated: German, Italian.
 
 Libraries:
@@ -2052,8 +2084,8 @@ Modules:
   on the zero plane.
 - Level3: New option to make the fitted plane the zero value plane.
 - Mask editor tool: Thin lines were added to the set of possible shapes.
-- Symbol of theta which often rendered wrong on Win32 was replaced with
-  another glyph.
+- User interface: Symbol of theta which often rendered wrong on Win32 was
+  replaced with another glyph.
 - Read Value: It no longer displays 123456 as the x pixel coordinate when no
   data is loaded.
 - Edge: Local Nonlinearity and Inclination output is less blocky as the
@@ -2074,25 +2106,27 @@ Modules:
   were corrected.
 
 Other:
-- Freedesktop MIME types conflicting with existing types were removed or
-  otherwise corrected.
-- RPM spec file removes .la files manually again as certain distros
-  aggressively re-generate all autotools files.
-- Distributed API documentation links to on-line versions of other
+- Desktop integration: Freedesktop MIME types conflicting with existing types
+  were removed or otherwise corrected.
+- Unix compilation: RPM spec file removes .la files manually again as certain
+  distros aggressively re-generate all autotools files.
+- Development: Distributed API documentation links to on-line versions of other
   documentation (Gtk+, GLib, ...) instead of random local locations.
   Packagers are recommended to rebuild the documentation to obtain local
   links appropriate for their systems.
-- API documentation look and feel matches gwyddion.net, more or less.
+- Development: API documentation look and feel matches gwyddion.net, more or
+  less.
 
 
 2.5 (2007-03-10)
 Application:
-- Options for opening files in an already running instance of Gwyddion were
-  added (--remote-new, --remote-existing).
-- It is possible to save a file with graphs only.
-- Drag'n'drop of files onto toolbox actually works now with modern file
-  managers and on Win32.
-- It's possible to copy (compatible) curves among graphs by Drag'n'drop from
+- Remote control: Options for opening files in an already running instance of
+  Gwyddion were added (--remote-new, --remote-existing).
+- Files: It is possible to save a file with graphs only.
+- Files: Drag'n'drop of files onto toolbox actually works now with modern
+  file managers and on Win32.
+- User interface: It's possible to copy (compatible) curves among graphs by
+  Drag'n'drop from
   graph Curves, and delete them by pressing Delete key in Curves.
 - Translations updated: Czech, German, Italian.
 
@@ -2138,20 +2172,22 @@ Modules:
 - Omicron: Imported images flipped upside down were fixed.
 
 Other:
-- Freedesktop file type associations were extended to many more file types.
-- File associations created now run ‘gwyddion --remote-new’ instead of just
-  ‘gwyddion’ therefore files are opened in running instances by default.
-- Gwyddion icon is now installed to the corresponding hicolor icon theme
-  directory instead to the top-level icon directory.
-- Flag -fno-strict-aliasing is now automatically added to CFLAGS when
-  compiled with gcc to prevent miscompilation.
-- Gtk-doc 1.8 or newer is required to rebuild the API reference.
+- Desktop integration: Freedesktop file type associations were extended to many
+  more file types.
+- Desktop integration: File associations created now run ‘gwyddion
+  --remote-new’ instead of just ‘gwyddion’ therefore files are opened in
+  running instances by default.
+- Desktop integration: Gwyddion icon is now installed to the corresponding
+  hicolor icon theme directory instead to the top-level icon directory.
+- Unix compilation: Flag -fno-strict-aliasing is now automatically added to
+  CFLAGS when compiled with gcc to prevent miscompilation.
+- Dependencies: Gtk-doc 1.8 or newer is required to rebuild the API reference.
 
 
 2.4 (2007-02-01)
 Application:
-- Build failure due to the missing #include <unistd.h> in gwymoduleutils.c
-  (from 2.3) was fixed.
+- Unix compilation: Build failure due to the missing #include <unistd.h> in
+  gwymoduleutils.c (from 2.3) was fixed.
 - Translations updated: Italian, Czech.
 
 Libraries:
@@ -2182,8 +2218,9 @@ Modules:
   quantities are denoted in the user guide.
 
 Other:
-- Confusion between AM_FOO and FOO variables in makefiles was resolved, user
-  variables such as CFLAGS, LIBS can be really used for overriding now.
+- Unix compilation: Confusion between AM_FOO and FOO variables in makefiles was
+  resolved, user variables such as CFLAGS, LIBS can be really used for
+  overriding now.
 
 
 2.3 (2007-01-21)
@@ -2260,14 +2297,14 @@ Modules:
 - Pixmap: Possible hang in preview was fixed.
 
 Other:
-- ./configure warning about too old FFTW3 version should be printed only on
-  really 64bit systems.
+- Unix compilation: ./configure warning about too old FFTW3 version should be
+  printed only on really 64bit systems now.
 
 
 2.2 (2006-12-15)
 Application:
-- File open dialogs have a preview (showing all channels in the file).
-- 3D view export uses the new Gtk+ file dialog (as everything else).
+- Files: File open dialogs have a preview (showing all channels in the file).
+- 3D view: Export uses the new Gtk+ file dialog (as everything else).
 - Translations updated: Italian, Czech.
 
 Libraries:
@@ -2321,13 +2358,13 @@ Modules:
 - Pixmap: Export honours data field coordinate origin offsets.
 
 Other:
-- Build errors on big-endian systems (from 2.1) were fixed.
+- Compilation: Build errors on big-endian systems (from 2.1) were fixed.
 
 
 2.1 (2006-11-05)
 Application:
 - Translations updated: Italian, Czech.
-- Toolbox style was modernized a bit.
+- Toolbox: Style was modernized a bit.
 
 Libraries:
 - libgwyddion: Function gwy_memcpy_byte_swap() to copy memory swapping bytes
@@ -2388,32 +2425,34 @@ Modules:
   dimensions.
 
 Other:
-- Missing file utils/genmarshal.mk was added to distribution.
-- Private header files installed by mistake are no longer installed.
-- Intermediate gtk-doc files are no longer distributed (the resulting HTML
-  API documentation is present in the source tarball as usual).
-- Building and portability problems were fixed (mainly on non-GNU/Linux and
-  from Subversion checkout).
-- Module tutorial was brought up to date and expanded.
+- Compilation: Missing file utils/genmarshal.mk was added to distribution.
+- Unix compensation: Private header files installed by mistake are no longer
+  installed.
+- Source code packages: Intermediate gtk-doc files are no longer distributed
+  (the resulting HTML API documentation is present in the source tarball as
+  usual).
+- Compilation: Building and portability problems were fixed (mainly on
+  non-GNU/Linux and from Subversion checkout).
+- Development: Module tutorial was brought up to date and expanded.
 
 
 2.0 (2006-09-30)
 Application:
-- Edit/Mask color menu item and similar right-click menu item are sensitive
-  only when a mask is present (fixing crashes when they were activated without
-  a mask).
-- Data browser window can be closed, Meta/Show Data Browser displays it again
-  and/or raises and deminimizes it.
-- Data browser UI was reorganized.
-- It is possible to copy channels and graphs to new or other open files
-  (using data browser buttons and/or drag'n'drop).
-- 3D window reflects channel title changes.
+- Toolbox: Edit/Mask color menu item and similar right-click menu item are
+  sensitive only when a mask is present (fixing crashes when they were
+  activated without a mask).
+- User interface: Data browser window can be closed, Meta/Show Data Browser
+  displays it again and/or raises and deminimizes it.
+- User interface: Data browser UI was reorganized.
+- User interface: It is possible to copy channels and graphs to new or other
+  open files (using data browser buttons and/or drag'n'drop).
+- 3D view: The 3D window reflects channel title changes.
 - Translations updated: Czech.
 
 Libraries:
-- Library base names was changed to libgwyfoo2 with versions starting
-  from 0 again. Unix shared library versioning was switched from hardcoded
-  versions back to normal.
+- all libraries: library base names was changed to libgwyfoo2 with versions
+  starting from 0 again. Unix shared library versioning was switched from
+  hardcoded versions back to normal.
 - libgwydgets: GwyColorAxis behaviour for bad ranges was improved.
 - libgwydgets: Set Curve Color dialog is updated properly upon switch to
   another curve.
@@ -2439,7 +2478,7 @@ Libraries:
 - libgwydgets: Graph vector export crash when on unimplemented point symbol
   types was fixed.
 - libgwydgets: Dashed line style really works in graphs.
-- There were miscellaneous changes in the graph API with bogus functions or
+- libgwydgets: Miscellaneous changes in the graph API with bogus functions or
   function arguments removed, misnamed functions renamed and argument
   handling sanitized.
 - libgwyapp: gwy_app_copy_data_items() was renamed to
@@ -2464,8 +2503,8 @@ Modules:
 - Remove Grain by Threshold: Instant updates option is available.
 
 Other:
-- Source files dependent on ./configure-set installation paths are properly
-  rebuilt when ./configure is re-run.
+- Unix compilation: Source files dependent on ./configure-set installation
+  paths are properly rebuilt when ./configure is re-run.
 
 
 1.99.9 (2006-09-07)
@@ -2488,13 +2527,14 @@ Modules:
 
 1.99.8 (2006-08-10)
 Application:
-- Crash on app exit when Document history is open was fixed.
-- Recent files menu items have thumbnails.
+- Files: Crash on app exit when Document history is open was fixed.
+- Files: Recent files menu items have thumbnails.
 - Data browser: Miscellaneous bugs were fixed.
 - Data browser: Channel and graph titles are editable.
-- Color axis does not display ticks/values when they are not applicable.
-- Metadata more or less work again (although most modules have their creation
-  still disabled).
+- User interface: Color axis does not display ticks/values when they are not
+  applicable.
+- Files: Metadata more or less work again (although most modules have their
+  creation still disabled).
 - Translations updated: Czech.  New translations started: German.
 
 Libraries:
@@ -2553,22 +2593,23 @@ Modules:
   the plug-in).
 
 Other:
-- MSC nmake compilation rules include proper dependencies.
-- Confusion of host and target systems in configure, breaking for example
-  FreeBSD ports build, was fixed.
-- Problem with installation of translations affecting for instance FreeBSD
-  was fixed.
+- MS Windows compilation: MSC nmake compilation rules include proper
+  dependencies.
+- Unix compilation: Confusion of host and target systems in configure, breaking
+  for example FreeBSD ports build, was fixed.
+- Unix compilation: Problem with installation of translations affecting for
+  instance FreeBSD was fixed.
 
 
 1.99.7 (2006-05-28)
 Application:
-- Gtk+ 2.8 is required on MS Windows.
-- Gwyddion now depends on libxml2 used for SPML import (optionally, if you
-  compile it from source code).
-- It is possible to switch between pixelwise-square and physically-square
-  display modes (via upper left data window corner menu).
-- There were some tool GUI behaviour changes, generally towards more explicit
-  control by the user.
+- Dependencies: Gtk+ 2.8 is required on MS Windows.
+- Dependencies: Gwyddion now depends on libxml2 used for SPML import
+  (optionally, if you compile it from source code).
+- User interface: It is possible to switch between pixelwise-square and
+  physically-square display modes (via upper left data window corner menu).
+- User interface: There were some tool GUI behaviour changes, generally towards
+  more explicit control by the user.
 
 Libraries:
 - libgwydddion: Memory corruption on big-endian machines in serialization and
@@ -2605,8 +2646,8 @@ Libraries:
 - libgwyapp: Miscellaneous deprecated functions were removed.
 
 Modules:
-- Several, namely multi-data related, processing modules were temporarily
-  disabled due to excessive brokeness.
+- Disabled modules: Several, namely multi-data related, processing modules were
+  temporarily disabled due to excessive brokeness.
 - Omicron (new): Omicron (Scala) file import.
 - SEIKO (new): Seiko XQD file import.
 - Burleigh (new): Burleigh IMG v2.1 file import.
@@ -2642,23 +2683,23 @@ Modules:
 - Filters: Instant apply was removed, it caused more troubles than it worths.
 
 Other:
-- gwyconfig.h no longer requires to include math.h first.
-- The sample C++ plug-in is not built (but still distributed) and the build
-  should no longer require a C++ compiler.
+- Compilation: gwyconfig.h no longer requires to include math.h first.
+- Unix compilation: The sample C++ plug-in is not built (but still distributed)
+  and the build should no longer require a C++ compiler.
 
 
 1.99.6 (2006-02-26)
 Application:
-- Support for more data channels in one file was added (not finished).
-- New file selection dialogs, with embedded file type options (replacing
+- Files: Support for more data channels in one file was added (not finished).
+- Files: New file selection dialogs, with embedded file type options (replacing
   File Export and Import menus) and possibility to select several files.
-- Toolboxes use larger, colorful icons.
-- File loading/saving errors are reported in the GUI instead of being printed
+- Toolbox: Icons are noew larger and colorful.
+- Files: Loading/saving errors are reported in the GUI instead of being printed
   to console.
-- When gwyddion is run with a directory argument, it opens a file selector
-  in this directory.
-- Metadata is editable.
-- Color Gradient Editor allows control point snapping
+- Files: When gwyddion is run with a directory argument, it opens a file
+  selector in this directory.
+- Files: Metadata is editable.
+- Resources: Color Gradient Editor allows control point snapping
 
 Libraries:
 - libgwyddion: gwy_container_rename() actually works.
@@ -2715,11 +2756,11 @@ Modules:
 
 1.99.5 (2005-12-20)
 Application:
-- Unix installations are relocatable via environment variables.
-- FFTW3 is recommended now.
-- Color gradient and GL material editors actually work.
+- Unix compilation: Installations are relocatable via environment variables.
+- Dependencies: FFTW3 is recommended now.
+- Resources: Color gradient and GL material editors actually work.
 - Translations updated: Italian, Czech.
-- Names of files drag-and-dropped onto toolbox are preserved.
+- Files: Names of files drag-and-dropped onto toolbox are preserved.
 
 Libraries:
 - libgwyddion: Serialization is two stage now (calculate size, then
@@ -2783,19 +2824,21 @@ Modules:
 - Grain distribution: Simple grain statistics (count, mean area, ...).
 
 Other:
-- Developer documentation was moved from tmpl files to source code.
+- Development: Developer documentation was moved from tmpl files to source
+  code.
 
 
 1.99.4 (2005-10-06)
 Application:
-- GLib and Gtk+ 2.6 is required now.
-- Can optionally use FFTW v3 library (currently only for a few operations).
-- It's possible to build Gwyddion without OpenGL support.
-- System chdir() is no longer used, so that e.g. core is always dumped to the
+- Dependencies: GLib and Gtk+ 2.6 is required now.
+- Dependencies: Can optionally use FFTW v3 library (currently only for a few
+  operations).
+- Dependencies: It's possible to build Gwyddion without OpenGL support.
+- System: chdir() is no longer used, so that e.g. core is always dumped to the
   directory where app was started, otherwise directory behaviour has not
   changed.
-- Color gradient and GL material editors, the only functionality that
-  actually works now is Set default.
+- Resources: Color gradient and GL material editors, the only functionality
+  that actually works now is Set default.
 
 Libraries:
 - libgwyddion: New GwyInventory uniform hash-and-array-like container class.
@@ -2865,8 +2908,8 @@ Modules:
   various other changes, all support selection setting now as a side effect.
 - Rectangular selection: Hold Shift to select exact squares.
 - Line selection: Hold Shift to select lines in ‘nice’ directions.
-- Elliptic (circular) selection layer (new).
-- Slope and grain distribution were ported to new graph API.
+- Ellipses layer (new): Elliptic (circular) selections.
+- Slope and grain distribution: Ported to the new graph API.
 - Distance: Displays value difference too.
 - Pixmap: The same unit selection/formatting is used for false color scale
   as on data windows (bug #63).
@@ -2875,21 +2918,22 @@ Modules:
 - Graph level: simple line leveling by 1st order polynome
 
 Other:
-- Modules are built with libtool, so it should be possible to build
-  Gwyddion on more systems, but it's impossible to run Gwyddion uninstalled
-  again.
-- Missing Italic stock icon was added.
-- MSVC makefile templates (.gwt) are distributed in source code tarball,
-  allowing to re-generate makefile.msc files.
-- A few new color gradients and GL materials were added.
+- Unix compilation: Modules are built with libtool, so it should be possible to
+  build Gwyddion on more systems, but it's impossible to run Gwyddion
+  uninstalled again.
+- MS Windows compilation: MSVC makefile templates (.gwt) are distributed in
+  source code tarball, allowing to re-generate makefile.msc files.
+- Resources: Missing Italic stock icon was added.
+- Resources: A few new color gradients and GL materials were added.
 
 
 1.99.3 (2005-07-11)
 Application:
-- Bugfixes were merged from 1.11 (bug #49, bug #54) and some from 1.12.
-- Running uninstalled is supported now (with caution).
-- Metadata browser closes with corresponding data window; if a browser for
-  some data already exists, it's presented instead of creating a second one.
+- Sync: Bugfixes were merged from 1.11 (bug #49, bug #54) and some from 1.12.
+- System: Running uninstalled is supported now (with caution).
+- User interface: Metadata browser closes with corresponding data window; if a
+  browser for some data already exists, it's presented instead of creating a
+  second one.
 
 Libraries:
 - all libraries: Bugfixes were merged from 1.11.
@@ -2955,19 +2999,20 @@ Modules:
 - Facet Analysis (new): Visualizes, marks and measures facet orientations
   (not fully forward-ported from 1.12).
 - All: Updated for data (view) notification changes.
-- File import modules use auto-range mode for preview, that should improve
-  preview of data with outliers.
-- IColorange supports auto-range mode.
+- Files: File import modules use auto-range mode for preview, that should
+  improve preview of data with outliers.
+- Color range tool: Supports auto-range mode.
 - Points layer: Supports set_selection(), if selection is one point it does
   not have to be dragged, click is enough to move it.
 - Pixmap: Import from TIFF images was enabled on MS Windows too.
-- Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
-- graph_points, graph_measure, graph_zoom, graph_unzoom removed as this
-  functionality is now in the GwyGraphWindow widget directly.
+- Sync: Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52,
+  others).
+- Graph points, measure, zoom, unzoom: Removed as this functionality is now in
+  the GwyGraphWindow widget directly.
 
 Other:
-- Bugfixes were merged from 1.11 (bug #51).
-- It should build on Win32 again.
+- Sync: Bugfixes were merged from 1.11 (bug #51).
+- MS Windows compilation: It should build on Win32 again.
 
 
 1.99.2 (2005-04-18)
@@ -2993,21 +3038,22 @@ Libraries:
   information instead of filename as first argument.
 
 Modules:
-- New file modules and improvements were forward-ported from 1.10 (apefile,
-  assing-afm, bcrfile, ezdfile, pixmap, rhk-spm32, spmlab, stpfile,
+- Sync: New file modules and improvements were forward-ported from 1.10
+  (apefile, assing-afm, bcrfile, ezdfile, pixmap, rhk-spm32, spmlab, stpfile,
   wsxmfile).
-- Nanoindentation modules were forward-ported from 1.10.
+- Sync: Nanoindentation modules were forward-ported from 1.10.
 - Pixmap: False color scale export is disabled when presentation is shown.
-- Rectangular select layer: Dot left on image after unselection was fixed.
-- Bugfixes were forward-ported from 1.10
+- Rectangular selection layer: Dot left on image after unselection was fixed.
+- Sync: Bugfixes were forward-ported from 1.10
 
 Other:
-- A platform info header gwyconfig.h was introduced, similar to glibconfig.h.
+- Unix compilation: A platform info header gwyconfig.h was introduced, similar
+  to glibconfig.h.
 
 
 1.99.1 (2005-03-22)
 Application:
-- Support for long deprecated binary settings file was removed
+- System: Support for long deprecated binary settings file was removed
 
 Libraries:
 - libgwyddion, libgwyprocess, libgwydgets: non-widget object constructors
@@ -3038,13 +3084,13 @@ Libraries:
   removed from module ABI.
 
 Modules:
-- Gwyfile saves new file format (can be read by version 1.7+), loads both.
+- Gwyfile: Saves the new file format (can be read by version 1.7+), loads both.
 
 
 1.16 (2006-04-18)
 Application:
-- Gwyddion now depends on libxml2 used for SPML import (optionally, if you
-  compile it from source code).
+- Dependencies: Gwyddion now depends on libxml2 used for SPML import
+  (optionally, if you compile it from source code).
 - Translations updated: Czech.
 
 Libraries:
@@ -3071,12 +3117,12 @@ Modules:
 - Nanoscope: No longer crashes when channel name is missing.
 
 Other:
-- JPK import module previously omitted in Win32 binaries was added.
+- MS Windows: JPK import module previously omitted in Win32 binaries was added.
 
 
 1.15 (2006-01-02)
 Application:
-- Compilation on Mac OS X was fixed (bug #64).
+- OS X compilation: Compilation on Mac OS X was fixed (bug #64).
 - Translations updated: Italian.
 
 Modules:
@@ -3091,7 +3137,7 @@ Modules:
 
 1.14 (2005-11-07)
 Application:
-- Unix installations are relocatable via environment variables.
+- System: Unix installations are relocatable via environment variables.
 - Translations updated: Czech.
 
 Libraries:
@@ -3134,14 +3180,15 @@ Modules:
 - Profile: Maximum profile width was increased to 100.
 
 Other:
-- Modules are built with libtool, fixing portability problems to Mac OS X.
-- Missing Italic stock icon was added.
+- Unix compilation: Modules are built with libtool, fixing portability problems
+  to Mac OS X.
+- Resources: Missing Italic stock icon was added.
 
 
 1.12 (2005-07-15)
 Application:
 - Translations updated: Italian, Czech.
-- Invisible keyboard focus in 3D windows was fixed.
+- 3D view: Invisible keyboard focus in 3D windows was fixed.
 
 Libraries:
 - libgwyddion: Possible crash in expression evaluation was fixed.
@@ -3152,7 +3199,7 @@ Libraries:
 
 Modules:
 - JPK Scan (new): JPK data file import (bug #57).
-- 2D FFT filtering (new).
+- 2D FFT filter (new): Filtering in the 2D frequency domain.
 - Facet Analysis (new): Visualizes, marks and measures facet orientations.
 - Assing AFM: Wrong z scale in import and export was fixed.
 - NT-MDT: Bogus data import when x and y resolution differs was fixed.
@@ -3167,8 +3214,8 @@ Modules:
 
 1.11 (2005-06-03)
 Application:
-- Markup works in metadata browser (bug #49).
-- Toolbox is not restored to off-screen position after quitting app minimized
+- User interface: Markup works in metadata browser (bug #49).
+- Toolbox: Is not restored to off-screen position after quitting app minimized
   (bug #54).
 - Translations updated: Italian, Czech.
 
@@ -3188,7 +3235,7 @@ Libraries:
 - libgwyprocess: Grain size distribution x-scale was corrected.
 
 Other:
-- Wrong libtool detection in autogen.sh was fixed (bug #51).
+- Unix compilation: Wrong libtool detection in autogen.sh was fixed (bug #51).
 
 
 1.10 (2005-04-07)
@@ -3203,7 +3250,7 @@ Modules:
 - EZDFile (new): Nanosurf EZD data file import.
 - Nanoident analyse (new): Analyses nanoindent structures (volume, surfaces,
   etc.).
-- Nanoindent adjust (new) Adjusts images of two indentor prints.
+- Nanoindent adjust (new): Adjusts images of two indentor prints.
 - Pixmap: False color scale is correct when explicite color range is set
   (bug #43).
 - Assing AFM: Supports also save.
@@ -3223,12 +3270,12 @@ Libraries:
 
 1.9 (2005-03-09)
 Application:
-- Startup time improved.
-- Italian translation added (partial).
+- System: Startup time was improved.
+- New translation: Italian (partial).
 
 Modules:
-- Assing AFM file import (new).
-- 1D FFT Filtering (new).
+- Assing AFM (new): Imports Assing AFM data files.
+- 1D FFT Filter (new): Filtering in the frequency space (1D).
 - Mark, remove scars: Can remove negative scars too.
 - Edge detection: Experimental RMS, RMS Edge, and Local Nonlinearity filters
   were added.
@@ -3250,26 +3297,26 @@ Libraries:
   information.
 
 Other:
-- Build system fixes and clean-up.
-- Compilation and run-time problems on AMD64 were fixed.
+- Unix compilation: Build system fixes and clean-up.
+- Compilation: Compilation and run-time problems on AMD64 were fixed.
 
 
 1.8 (2005-01-24)
 Application:
-- Option --no-splash recognized anywhere in command line, --debug-objects
-  added.
-- Document history now displays physical dimensions too, starts faster, and
-  rememberes more files.
+- Command line: Option --no-splash recognized anywhere in command line,
+  --debug-objects added.
+- Files: Document history now displays physical dimensions too, starts faster,
+  and rememberes more files.
 
 Modules:
-- NT-MDT file format import (new).
-- CreaTec STM file format import (new).
-- Omicron STMPRG file format import (new).
-- Spmlab R4 a R5 file format import (new).  Note the closed-source plug-in
+- NT-MDT (new): NT-MDT file format import.
+- CreaTec STM (new): CreaTec STM file format import.
+- Omicron STMPRG (new): Omicron STMPRG file format import.
+- Spmlab (new): Spmlab R4 and R5 data import.  Note the closed-source plug-in
   io_tm_common provides better support than this rudimentary reverse-engineered
   module.
-- Local contrast enhancement display module (new).
-- Fit sphere module (new).
+- Local contrast (new): Local contrast enhancement presentation.
+- Fit sphere (new): Fits sphere on the surface.
 - Blind tip estimate: Insensitive OK button when full estimate was run without
   partial estimate first was fixed.
 - DWT Anisotropy: Undo and data corruption were fixed.
@@ -3305,25 +3352,27 @@ Libraries:
   obsolete GwySphereCoords.
 
 Other:
-- Freedesktop compliance improvements, SPM data MIME type definitions.
-- Simple gwyddion(1) manual page.
+- Desktop integration: Freedesktop compliance improvements, SPM data MIME type
+  definitions.
+- Unix: Simple gwyddion(1) manual page was added.
 
 
 1.7 (2004-12-12)
 Application:
-- Graphs are associated with their data window, it's possible show/hide them
+- Graphs: Are associated with their data window, it's possible show/hide them
   and they are saved with data.  Note version 1.4 and older may fail to load
   files containing graphs due to forward compatibility bugs.
-- Crashing Metadata browser was fixed.
-- Translations work on Win32 too, Czech translation updated.
+- User interface: Crashing Metadata browser was fixed.
+- Translations: Work on Win32 too.
+- Translations updated: Czech.
 
 Modules:
-- Simple mask editor (new).
-- Background removal by arc revolution (new).
-- Median based background removal (new).
-- Discrete wavelet transform module (new)
-- Wavelet based denoising module (new)
-- Wavelet based anisotropy detection module (new)
+- Mask editor tool (new): Simple mask editor with basic operations.
+- Revolve arc (new): Background removal by arc revolution.
+- Median background (new): Median-based background removal.
+- DWT (new): Discrete wavelet transform.
+- Wavelet denoise (new): Wavelet-based denoising module)
+- Wavelet anisotropy (new): Wavelet-based anisotropy detection.
 - Nanoscope: Import was significantly improved, most files should be read
   with correct value ranges now (bug #16).
 - Pixmap: ‘Same resolution’ option really works and its value is remembered.
@@ -3349,25 +3398,26 @@ Libraries:
 - libgwydgets: Graph colors consistent between different visuals (bug #22)
 
 Other:
-- pkg-config file broken by 1.6 build system clean up was updated.
+- Unix source packages: pkg-config file broken by 1.6 build system clean up was
+  updated.
 
 
 1.6 (2004-10-26)
 Application:
-- Crash when a top-level menus is detached was fixed (bug #30).
-- Internationalization support (gettext) was added, currently works only on
-  Unix.
+- User interface: Crash when a top-level menus is detached was fixed (bug #30).
+- Translations: Internationalization support (gettext) was added, currently
+  works only on Unix.
 
 Modules:
-- Interactive color range change tool (new).
-- Distance and angle reading tool (new) (bug #32).
-- Polynomial background removal/extraction (new).
-- Tip convolution, deconvolution, modelling, blind tip estimation and
-  certainty map analysis modules added. All these modules are based on
-  algorithms published by J. Villarrubia.
-- Laplacian, Sobel, Prewitt were moved from Filters tool to separate display
-  modules, Canny edge detector added.
-- Wrong selection boundaries in Filters tool was fixed (bug #35).
+- Color range tool (new): Interactive color range adjustment.
+- Distance tool (new): Measure distances and angles in the data (bug #32).
+- Polynomial background (new): Subtraction and extraction of polynomial
+  background.
+- Tip convolution, erosion, modelling, blind tip estimation and certainty map
+  analysis (new): Tip modules based on algorithms published by J. Villarrubia.
+- Laplacian, Sobel, Prewitt: Moved from Filters tool to separate display
+  modules, Canny edge detector was added.
+- Filters tool: Wrong selection boundaries was fixed (bug #35).
 - Pointer and Level3: Units in table header are updated on data update
   (bug #37).
 - Plug-in proxy: Dump files are always written with POSIX real number format
@@ -3396,27 +3446,28 @@ Libraries:
 - libgwyapp: Bug #7, Filters confused by tools switch, was fixed.
 
 Other:
-- New sample plug-ins in Ruby: invert_ruby and invert_narray.
-- Various build time problems on FreeBSD were fixed.
-- Sample C++ plug-in mangling units was fixed (bug #36).
-- Installation paths of Gwyddion::dump, Gwyddion.dump, and gwyddion/dump were
-  fixed and their import unified via GWYPLUGINLIB environment variable
-  (bug #33).
-- gwyddion/dump Ruby module implementing plug-in proxy dump format.
+- Development: New sample plug-ins in Ruby: invert_ruby and invert_narray.
+- Unix compilation: Various build time problems on FreeBSD were fixed.
+- Development: Sample C++ plug-in mangling units was fixed (bug #36).
+- Development: Installation paths of Gwyddion::dump, Gwyddion.dump, and
+  gwyddion/dump were fixed and their import unified via GWYPLUGINLIB
+  environment variable (bug #33).
+- Development: gwyddion/dump Ruby module implementing plug-in proxy dump
+  format.
 
 
 1.5 (2004-09-21)
-This version requires GtkGLExt in addition to Gtk+ due to the new 3D data
-display capabilities (but it is still backward compatible with 1.4 and 1.3).
 Application:
-- Capable of displaying data in 3D.
-- Document history (File → Open Recent → Document History) with much more
-  remembered files, thumbnails, and additional information.  File thumbnails
-  are TMS-compliant and any TMS-aware file manager should display them too.
-- Position of main window is remembered between sessions.
-- Settings that cannot be parsed are no longer silently overwritten and user
-  is informed.
-- Toolbox GUI improvements.
+- Dependencies: GtkGLExt for the new 3D data display capabilities.
+- 3D view: It is possible to display a 3D view of the data.
+- Files: Document history (File → Open Recent → Document History) with much
+  more remembered files, thumbnails, and additional information.  File
+  thumbnails are TMS-compliant and any TMS-aware file manager should display
+  them too.
+- User interface: Position of main window is remembered between sessions.
+- System: Settings that cannot be parsed are no longer silently overwritten and
+  user is informed.
+- Toolbox: Miscellaneous GUI improvements.
 
 Libraries:
 - libgwyddion: MD5 digest, file path canonicalization, and some unistd
@@ -3445,10 +3496,12 @@ Modules:
 
 1.4 (2004-08-04)
 Application:
-- Forgetting settings on MS Windows was fixed.
-- Rudimentary Drag'n'Drop support (drag a file to toolbox to load it).
-- Tools show a thumbnail of active data window beside its name.
-- Splash no longer screens eventual initial file open dialogs.
+- MS Windows: Forgetting settings was fixed.
+- User interface: Rudimentary Drag'n'Drop support (drag a file to toolbox to
+  load it).
+- Tools: Show a thumbnail of active data window beside its name.
+- User interface: Splash screen no longer screens eventual initial file open
+  dialogs.
 
 Modules:
 - Calibrate (new): Change XYZ axis real dimensions
@@ -3485,24 +3538,26 @@ Libraries:
 - libgwydgets: GwyValUnit -- value with unit and selection of unit prefix
 
 Other:
-- New example plug-ins using Gwyddion::dump, Gwyddion.dump.
-- New example plug-ins in C++ and Pascal.
-- Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules implementing
-  plug-in proxy dump format.
-- Dump plug-in allowing to load and save plug-in proxy dump files is
-  available on MS Windows too.
-- Standard vector layers were documented.
+- Development: New example plug-ins using Gwyddion::dump, Gwyddion.dump.
+- Development: New example plug-ins in C++ and Pascal.
+- Development: Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules
+  implementing plug-in proxy dump format.
+- Development: Dump plug-in allowing to load and save plug-in proxy dump files
+  is available on MS Windows too.
+- Development: Standard vector layers were documented.
 
 
 1.3 (2004-06-02)
-This version is binary and source incompatbile with previous ones.  Modules
-have to be recompiled and, in some cases, updated.
 Application:
-- Gtk+-2.4 compatibility issues were fixed (namely crashes and ugly palette
-  menu layout).
-- Modules and plug-ins are searched also in user directory (~/.gwyddion).
-- Option --no-splash disables splash screen.
-- Mask color changes are immediately previewed on corresponding data views.
+- Compatibility: This version is binary and source incompatbile with previous
+  ones.  Modules have to be recompiled and, in some cases, updated.
+- Dependencies: Gtk+-2.4 compatibility issues were fixed (namely crashes and
+  ugly palette menu layout).
+- System: Modules and plug-ins are searched also in user directory
+  (~/.gwyddion).
+- Command line: Option --no-splash disables splash screen.
+- User interface: Mask color changes are immediately previewed on corresponding
+  data views.
 
 Modules:
 - All modules: State of controls is remembered also on Cancel.
@@ -3530,13 +3585,14 @@ Libraries:
 
 1.2 (2004-05-21)
 Application:
-- Recognizes --version and --help options.
-- Data window zoom is keyboard controlable (+, =, -, z).
-- Settings are finally stored in a human readable text file, conversion from
-  the binary dump should be automatic and smooth (however, do backup).
-- Last Used processing function was differentiated to Repeat Last and Re-Show
-  Last, with Ctrl-F and Ctrl-Shfit-F shortcuts.
-- Right click on data window brings a [very simple] context menu.
+- Command line: Options --version and --help work.
+- User interface: Data window zoom is keyboard controlable (+, =, -, z).
+- Resources: Settings are finally stored in a human readable text file,
+  conversion from the binary dump should be automatic and smooth (however, do
+  backup).
+- User interface: Last Used processing function was differentiated to Repeat
+  Last and Re-Show Last, with Ctrl-F and Ctrl-Shfit-F shortcuts.
+- User interface: Right click on data window brings a very simple context menu.
 
 Modules:
 - Unrotate (new): Automagically correct rotation in xy plane.
@@ -3546,7 +3602,7 @@ Modules:
 - Slope distribution: Optionally can use local plane fitting for slopes,
   can create graph of angular slope distribution.
 - Angle distribution: Optionally can use local plane fitting.
-- Data arithmetic, Cross-correlation, and Mask by correlation are regular
+- Data arithmetic, Cross-correlation, and Mask by correlation: Are regular
   modules now.
 - Rawfile: Does not forget presets and settings on Cancel and allow easily
   specify Tab as delimiter.
@@ -3572,24 +3628,23 @@ Libraries:
 - libgwyapp: Option menu of data windows.
 
 Other:
-- Icons in API documentation should be properly installed on install.
-- Several new palettes.
+- Unix compilation: Icons in API documentation should be properly installed on
+  install.
+- Resources: Several new palettes were added.
 
 
 1.1 (2004-04-13)
 Application:
-- Creating mask by correlation (new).  This can be useful for searching
+- Create mask by correlation (new): This can be useful for searching
   for specific patterns on the surface, for example on interferometric
   grids.
-- Cross-correlation (new).  Matching between two slightly different images
+- Cross-correlation (new): Matching between two slightly different images
   of the same feature can be found.
-- A bug preventing new windows from appearing in Data Artithmetic and
-  correlations in some window managers was fixed.
-- Creating mask by outliers detection. It uses 3σ criterium
-  for searching an outlier.
-- Fixed: modules not changing data (and creating new windows instead)
+- User interface: A bug preventing new windows from appearing in Data
+  Artithmetic and correlations in some window managers was fixed.
+- User interface: modules not changing data (and creating new windows instead)
   never became ‘Last used’.
-- Undo/redo memory leak was fixed.
+- System: Undo/redo memory leak was fixed.
 
 Modules:
 - Fractal (new): Fractal dimension of the rough surface can be
@@ -3597,6 +3652,7 @@ Modules:
   spectrum method.
 - Laplace (new): Removal of data under mask (of any shape). It uses
   iterative method similar to solving Laplace equation.
+- Outliers (new): Create mask by outlier detection using 3σ criterion.
 - Pixmap: Can also import data from common bitmap image formats.
 - Rawfile: Supports named presets of import parameters.
 - Rawfile: No longer resets text/binary parameters when switching to
@@ -3624,17 +3680,18 @@ Libraries:
   menu entries.
 
 Other:
-- The license of plug-in proxy as a reference dump format implementation
-  was clarified.
+- Development: The license of plug-in proxy as a reference dump format
+  implementation was clarified.
 
 
 1.0 (2004-03-10)
 Gwyddion:
-- Data can be exported to bitmaps with rules, units, scale, etc.
-- Physical unit handling was improved.
-- Tons of bugfixes.
+- Files: Data can be exported to bitmaps with rules, units, scale, etc.
+- User interface: Physical unit handling was improved.
+- Everywhere: Tons of bugfixes.
 
 
 0.99.1 (2004-03-02)
-Release candidate 1 for v1.0.
+Gwyddion:
+- First public version: Release candidate 1 for v1.0.
 
