@@ -4168,7 +4168,6 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window),
                                 proxy->container, g_quark_from_string(key));
-    gtk_window_set_default_size(GTK_WINDOW(graph_window), 480, 360);
 
     /* Graph DnD */
     gtk_drag_dest_set(graph_window, GTK_DEST_DEFAULT_ALL,

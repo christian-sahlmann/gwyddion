@@ -134,6 +134,7 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow = (GwyGraphWindow*)g_object_new(GWY_TYPE_GRAPH_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(graphwindow), "data",
                            g_get_application_name());
+    gtk_window_set_default_size(GTK_WINDOW(graphwindow), 550, 390);
     gtk_window_set_resizable(GTK_WINDOW(graphwindow), TRUE);
 
     vbox = gtk_vbox_new(FALSE, 0);
