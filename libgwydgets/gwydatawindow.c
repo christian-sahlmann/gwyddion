@@ -480,8 +480,8 @@ gwy_data_window_fit_to_screen(GwyDataWindow *data_window,
     zoom = gwy_data_view_get_zoom(data_view);
     gtk_widget_size_request(GTK_WIDGET(data_view), &request);
     z = MAX(request.width/(gdouble)scrwidth, request.height/(gdouble)scrheight);
-    if (z > 0.85) {
-        zoom *= 0.85/z;
+    if (z > 0.9) {
+        zoom *= 0.9/z;
         gwy_data_view_set_zoom(data_view, zoom);
     }
 }
@@ -857,13 +857,19 @@ gwy_data_window_key_pressed(GtkWidget *widget,
     data_window = GWY_DATA_WINDOW(widget);
     state = event->state & important_mods;
     key = event->keyval;
-    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
+    if (!state && (key == GDK_minus || key == GDK_KP_Subtract)) {
         gwy_data_window_set_zoom(data_window, -1);
+        return TRUE;
+    }
     else if (!state && (key == GDK_equal || key == GDK_KP_Equal
-                        || key == GDK_plus || key == GDK_KP_Add))
+                        || key == GDK_plus || key == GDK_KP_Add)) {
         gwy_data_window_set_zoom(data_window, 1);
-    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
+        return TRUE;
+    }
+    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide)) {
         gwy_data_window_set_zoom(data_window, 10000);
+        return TRUE;
+    }
     else if (state == GDK_CONTROL_MASK && (key == GDK_C || key == GDK_c)) {
         gwy_data_window_copy_to_clipboard(data_window);
         return TRUE;
