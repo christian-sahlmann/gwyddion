@@ -213,7 +213,8 @@ static const guchar* intw_read_info  (const guchar *p,
 static GwyDataField* read_data_field (IntWaveFile *intwfile,
                                       guint i,
                                       const guchar *p,
-                                      guint size);
+                                      guint size,
+                                      GwyDataField **mask);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -300,7 +301,7 @@ intw_load(const gchar *filename,
     container = gwy_container_new();
     for (i = 0; i < N_IS_VALID; i++) {
         guint offset = intwfile.header.file_offsets[i], maxsize = size - offset;
-        GwyDataField *dfield;
+        GwyDataField *dfield, *mask = NULL;
 
         if (!offset || !intwfile.info.is_valid[i])
             continue;
@@ -310,12 +311,18 @@ intw_load(const gchar *filename,
             if (other_offset > offset && other_offset < offset + maxsize)
                 maxsize = other_offset - offset;
         }
-        dfield = read_data_field(&intwfile, i, p + offset, maxsize);
+        dfield = read_data_field(&intwfile, i, buffer + offset, maxsize, &mask);
         if (!dfield)
             continue;
 
         gwy_container_set_object(container,
                                  gwy_app_get_data_key_for_id(id), dfield);
+        g_object_unref(dfield);
+        if (mask) {
+            gwy_container_set_object(container,
+                                     gwy_app_get_mask_key_for_id(id), mask);
+            g_object_unref(mask);
+        }
         gwy_file_channel_import_log_add(container, id, NULL, filename);
         id++;
     }
@@ -424,7 +431,7 @@ intw_read_info(const guchar *p,
 
 static GwyDataField*
 read_data_field(IntWaveFile *intwfile, guint i,
-                const guchar *p, guint size)
+                const guchar *p, guint size, GwyDataField **mask)
 {
     guint xres = intwfile->info.nx;
     guint yres = intwfile->info.ny;
@@ -433,8 +440,8 @@ read_data_field(IntWaveFile *intwfile, guint i,
     guint k;
     GwyRawDataType datatype = GWY_RAW_DATA_FLOAT;
     GwyDataField *dfield;
-    gdouble *d;
-    gdouble q = 1.0;
+    gdouble *d, *m;
+    gdouble q = 1.0, invalid = intwfile->info.invalid_value;
 
     gwy_debug("data[%u] must be at most %u bytes long", i, size);
     gwy_debug("that permits %d bytes per sample", maxbpp);
@@ -454,6 +461,17 @@ read_data_field(IntWaveFile *intwfile, guint i,
     d = gwy_data_field_get_data(dfield);
     gwy_convert_raw_data(p, n, 1, datatype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
                          d, 1.0, 0.0);
+
+    *mask = gwy_data_field_new_alike(dfield, TRUE);
+    m = gwy_data_field_get_data(*mask);
+    for (k = 0; k < n; k++) {
+        if (d[k] != invalid) {
+            m[k] = 1.0;
+            d[k] *= q;
+        }
+    }
+    if (!gwy_app_channel_remove_bad_data(dfield, *mask))
+        gwy_object_unref(*mask);
 
     return dfield;
 }
