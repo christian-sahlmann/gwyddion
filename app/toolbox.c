@@ -819,7 +819,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
             GTK_STOCK_SAVE_AS
         },
         {
-            N_("/_Close..."),
+            N_("/_Close"),
             "<control>W",
             gwy_app_file_close,
             0,
