@@ -26,8 +26,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyrandgenset.h>
 #include <libprocess/arithmetic.h>
+#include <libprocess/filters.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -41,6 +43,7 @@ typedef enum {
     COERCE_DISTRIBUTION_DATA     = 0,
     COERCE_DISTRIBUTION_UNIFORM  = 1,
     COERCE_DISTRIBUTION_GAUSSIAN = 2,
+    COERCE_DISTRIBUTION_LEVELS   = 3,
     COERCE_NDISTRIBUTIONS
 } CoerceDistributionType;
 
@@ -50,8 +53,16 @@ typedef enum {
     COERCE_NPROCESSING
 } CoerceProcessingType;
 
+typedef enum {
+    COERCE_LEVELS_UNIFORM  = 0,
+    COERCE_LEVELS_EQUIAREA = 1,
+    COERCE_NLEVELTYPES
+} CoerceLevelsType;
+
 typedef struct {
     CoerceDistributionType distribution;
+    CoerceLevelsType level_type;
+    gint nlevels;
     CoerceProcessingType processing;
     gboolean update;
     GwyAppDataId template;
@@ -64,6 +75,8 @@ typedef struct {
     GtkWidget *dialogue;
     GtkWidget *view;
     GSList *distribution;
+    GtkWidget *level_type;
+    GtkObject *nlevels;
     GSList *processing;
     GtkWidget *template;
     GtkWidget *update;
@@ -82,6 +95,10 @@ static gboolean      coerce_dialogue       (CoerceArgs *args,
                                             gint id);
 static void          distribution_changed  (GtkToggleButton *toggle,
                                             CoerceControls *controls);
+static void          level_type_changed    (GtkComboBox *combo,
+                                            CoerceControls *controls);
+static void          nlevels_changed       (GtkAdjustment *adj,
+                                            CoerceControls *controls);
 static void          processing_changed    (GtkToggleButton *toggle,
                                             CoerceControls *controls);
 static void          template_changed      (GwyDataChooser *chooser,
@@ -98,9 +115,16 @@ static GwyDataField* coerce_do             (GwyDataField *dfield,
 static void          coerce_do_field       (GwyDataField *dfield,
                                             GwyDataField *result,
                                             const CoerceArgs *args);
+static void          coerce_do_field_levels(GwyDataField *dfield,
+                                            GwyDataField *result,
+                                            const CoerceArgs *args);
 static void          coerce_do_rows        (GwyDataField *dfield,
                                             GwyDataField *result,
                                             const CoerceArgs *args);
+static void          build_values_levels   (const ValuePos *vpos,
+                                            gdouble *z,
+                                            guint n,
+                                            guint nlevels);
 static void          build_values_uniform  (gdouble *z,
                                             guint n,
                                             gdouble min,
@@ -120,6 +144,8 @@ static void          save_args             (GwyContainer *container,
 
 static const CoerceArgs coerce_defaults = {
     COERCE_DISTRIBUTION_UNIFORM,
+    COERCE_LEVELS_EQUIAREA,
+    4,
     COERCE_PROCESSING_FIELD,
     TRUE,
     GWY_APP_DATA_ID_NONE,
@@ -199,6 +225,7 @@ coerce_dialogue(CoerceArgs *args, GwyContainer *data, gint id)
         { N_("distribution|Uniform"),  COERCE_DISTRIBUTION_UNIFORM,  },
         { N_("distribution|Gaussian"), COERCE_DISTRIBUTION_GAUSSIAN, },
         { N_("As another data"),       COERCE_DISTRIBUTION_DATA,     },
+        { N_("Discrete levels"),       COERCE_DISTRIBUTION_LEVELS,   },
     };
 
     static const GwyEnum processings[] = {
@@ -211,6 +238,7 @@ coerce_dialogue(CoerceArgs *args, GwyContainer *data, gint id)
     GwyDataField *dfield;
     GwyDataChooser *chooser;
     gint row, response;
+    GSList *l;
 
     dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
     controls.args = args;
@@ -261,35 +289,67 @@ coerce_dialogue(CoerceArgs *args, GwyContainer *data, gint id)
     label = gtk_label_new(_("Coerce value distribution to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.distribution
         = gwy_radio_buttons_create(distributions, G_N_ELEMENTS(distributions),
                                    G_CALLBACK(distribution_changed), &controls,
                                    args->distribution);
-    row = gwy_radio_buttons_attach_to_table(controls.distribution,
-                                            GTK_TABLE(table),
-                                            3, row);
+    for (l = controls.distribution; l; l = g_slist_next(l)) {
+        GtkWidget *widget = GTK_WIDGET(l->data);
+        CoerceDistributionType dist = gwy_radio_button_get_value(widget);
 
-    controls.template = gwy_data_chooser_new_channels();
-    chooser = GWY_DATA_CHOOSER(controls.template);
-    gwy_data_chooser_set_active_id(chooser, &args->template);
-    gwy_data_chooser_set_filter(chooser, &template_filter, dfield, NULL);
-    gwy_data_chooser_set_active_id(chooser, &args->template);
-    gwy_data_chooser_get_active_id(chooser, &args->template);
-    gwy_table_attach_hscale(table, row, _("_Template:"), NULL,
-                            GTK_OBJECT(controls.template), GWY_HSCALE_WIDGET);
-    g_signal_connect(controls.template, "changed",
-                     G_CALLBACK(template_changed), &controls);
-    row++;
+        gtk_table_attach(GTK_TABLE(table), widget, 0, 3, row, row + 1,
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        if (dist == COERCE_DISTRIBUTION_DATA) {
+            controls.template = gwy_data_chooser_new_channels();
+            chooser = GWY_DATA_CHOOSER(controls.template);
+            gwy_data_chooser_set_active_id(chooser, &args->template);
+            gwy_data_chooser_set_filter(chooser,
+                                        &template_filter, dfield, NULL);
+            gwy_data_chooser_set_active_id(chooser, &args->template);
+            gwy_data_chooser_get_active_id(chooser, &args->template);
+            gwy_table_attach_hscale(table, row, _("_Template:"), NULL,
+                                    GTK_OBJECT(controls.template),
+                                    GWY_HSCALE_WIDGET);
+            g_signal_connect(controls.template, "changed",
+                             G_CALLBACK(template_changed), &controls);
+            row++;
+        }
+        else if (dist == COERCE_DISTRIBUTION_LEVELS) {
+            controls.level_type
+                = gwy_enum_combo_box_newl(G_CALLBACK(level_type_changed),
+                                          &controls, args->level_type,
+                                          _("distribution|Uniform"),
+                                          COERCE_LEVELS_UNIFORM,
+                                          _("Same area"),
+                                          COERCE_LEVELS_EQUIAREA,
+                                          NULL);
+            gwy_table_attach_hscale(table, row, _("_Type:"), NULL,
+                                    GTK_OBJECT(controls.level_type),
+                                    GWY_HSCALE_WIDGET);
+            row++;
+
+            controls.nlevels = gtk_adjustment_new(args->nlevels,
+                                                  2.0, 16384.0,
+                                                  1.0, 100.0, 0.0);
+            gwy_table_attach_hscale(table, row, _("Number of _levels:"), NULL,
+                                    controls.nlevels, GWY_HSCALE_LOG);
+            g_signal_connect(controls.nlevels, "value-changed",
+                             G_CALLBACK(nlevels_changed), &controls);
+            row++;
+        }
+    }
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new(_("Data processing:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.processing
@@ -351,8 +411,7 @@ coerce_dialogue(CoerceArgs *args, GwyContainer *data, gint id)
 }
 
 static void
-distribution_changed(GtkToggleButton *toggle,
-                     CoerceControls *controls)
+distribution_changed(GtkToggleButton *toggle, CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
 
@@ -366,8 +425,27 @@ distribution_changed(GtkToggleButton *toggle,
 }
 
 static void
-processing_changed(GtkToggleButton *toggle,
-                   CoerceControls *controls)
+level_type_changed(GtkComboBox *combo, CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    args->level_type = gwy_enum_combo_box_get_active(combo);
+    if (args->distribution == COERCE_DISTRIBUTION_LEVELS && args->update)
+        preview(controls);
+}
+
+static void
+nlevels_changed(GtkAdjustment *adj, CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    args->nlevels = gwy_adjustment_get_int(adj);
+    if (args->distribution == COERCE_DISTRIBUTION_LEVELS && args->update)
+        preview(controls);
+}
+
+static void
+processing_changed(GtkToggleButton *toggle, CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
 
@@ -381,8 +459,7 @@ processing_changed(GtkToggleButton *toggle,
 }
 
 static void
-template_changed(GwyDataChooser *chooser,
-                 CoerceControls *controls)
+template_changed(GwyDataChooser *chooser, CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
 
@@ -392,8 +469,7 @@ template_changed(GwyDataChooser *chooser,
 }
 
 static void
-update_changed(GtkToggleButton *toggle,
-               CoerceControls *controls)
+update_changed(GtkToggleButton *toggle, CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
 
@@ -408,7 +484,7 @@ update_sensitivity(CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
     GtkWidget *widget;
-    gboolean has_template, is_data, do_update;
+    gboolean has_template, is_data, is_levels, do_update;
 
     has_template
         = !!gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->template),
@@ -419,6 +495,10 @@ update_sensitivity(CoerceControls *controls)
 
     is_data = (args->distribution == COERCE_DISTRIBUTION_DATA);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->template), is_data);
+
+    is_levels = (args->distribution == COERCE_DISTRIBUTION_LEVELS);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->level_type), is_levels);
+    gwy_table_hscale_set_sensitive(controls->nlevels, is_levels);
 
     do_update = args->update;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialogue),
@@ -490,10 +570,24 @@ coerce_do_field(GwyDataField *dfield, GwyDataField *result,
                 const CoerceArgs *args)
 {
     guint n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
-    ValuePos *vpos = g_new(ValuePos, n);
     const gdouble *d = gwy_data_field_get_data_const(dfield);
-    gdouble *z = g_new(gdouble, n), *dr;
+    ValuePos *vpos;
+    gdouble *z, *dr;
     guint k;
+
+    if (args->distribution == COERCE_DISTRIBUTION_LEVELS
+        && args->level_type == COERCE_LEVELS_UNIFORM) {
+        coerce_do_field_levels(dfield, result, args);
+        return;
+    }
+
+    vpos = g_new(ValuePos, n);
+    z = g_new(gdouble, n);
+    for (k = 0; k < n; k++) {
+        vpos[k].z = d[k];
+        vpos[k].k = k;
+    }
+    qsort(vpos, n, sizeof(ValuePos), compare_double);
 
     if (args->distribution == COERCE_DISTRIBUTION_DATA) {
         GQuark quark = gwy_app_get_data_key_for_id(args->template.id);
@@ -502,6 +596,9 @@ coerce_do_field(GwyDataField *dfield, GwyDataField *result,
         guint nsrc = gwy_data_field_get_xres(src)*gwy_data_field_get_yres(src);
         build_values_from_data(z, n,
                                gwy_data_field_get_data_const(src), nsrc);
+    }
+    else if (args->distribution == COERCE_DISTRIBUTION_LEVELS) {
+        build_values_levels(vpos, z, n, args->nlevels);
     }
     else if (args->distribution == COERCE_DISTRIBUTION_UNIFORM) {
         gdouble min, max;
@@ -519,11 +616,6 @@ coerce_do_field(GwyDataField *dfield, GwyDataField *result,
     }
 
     dr = gwy_data_field_get_data(result);
-    for (k = 0; k < n; k++) {
-        vpos[k].z = d[k];
-        vpos[k].k = k;
-    }
-    qsort(vpos, n, sizeof(ValuePos), compare_double);
     for (k = 0; k < n; k++)
         dr[vpos[k].k] = z[k];
 
@@ -532,15 +624,56 @@ coerce_do_field(GwyDataField *dfield, GwyDataField *result,
 }
 
 static void
+coerce_do_field_levels(GwyDataField *dfield, GwyDataField *result,
+                       const CoerceArgs *args)
+{
+    guint n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
+    const gdouble *d = gwy_data_field_get_data_const(dfield);
+    gdouble *dr = gwy_data_field_get_data(result);
+    gdouble min, max, q;
+    guint k, v, nlevels = args->nlevels;
+
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    if (max <= min) {
+        gwy_data_field_fill(result, 0.5*(min + max));
+        return;
+    }
+
+    q = (max - min)/nlevels;
+    for (k = 0; k < n; k++) {
+        v = (guint)ceil((d[k] - min)/q);
+        v = MIN(v, nlevels-1);
+        dr[k] = (v + 0.5)*q + min;
+    }
+}
+
+static void
 coerce_do_rows(GwyDataField *dfield, GwyDataField *result,
                const CoerceArgs *args)
 {
     guint xres = gwy_data_field_get_xres(dfield),
           yres = gwy_data_field_get_yres(dfield);
-    ValuePos *vpos = g_new(ValuePos, xres);
     const gdouble *d = gwy_data_field_get_data_const(dfield);
-    gdouble *z = g_new(gdouble, xres), *dr;
+    ValuePos *vpos;
+    gdouble *z, *dr;
     guint i, j;
+
+    /* It is not completely clear what we should do in the case of row-wise
+     * processing but this at least ensures that the levels are the same in the
+     * entire field but individual rows are transformed individualy. */
+    if (args->distribution == COERCE_DISTRIBUTION_LEVELS) {
+        GwyDataField *tmp = gwy_data_field_duplicate(dfield);
+        gdouble min, max;
+        gwy_data_field_get_min_max(dfield, &min, &max);
+        for (i = 0; i < yres; i++)
+            gwy_data_field_area_renormalize(tmp, 0, i, xres, 1, max-min, min);
+        coerce_do_field(tmp, result, args);
+        g_object_unref(tmp);
+        return;
+    }
+
+    vpos = g_new(ValuePos, xres);
+    z = g_new(gdouble, xres);
 
     if (args->distribution == COERCE_DISTRIBUTION_DATA) {
         GQuark quark = gwy_app_get_data_key_for_id(args->template.id);
@@ -578,6 +711,37 @@ coerce_do_rows(GwyDataField *dfield, GwyDataField *result,
 
     g_free(z);
     g_free(vpos);
+}
+
+static void
+build_values_levels(const ValuePos *vpos, gdouble *z, guint n, guint nlevels)
+{
+    guint i, j, blockstart, counter;
+    gdouble v;
+
+    if (nlevels >= n) {
+        for (i = 0; i < n; i++)
+            z[i] = vpos[i].z;
+        return;
+    }
+
+    blockstart = 0;
+    counter = nlevels/2;
+    for (i = 0; i < n; i++) {
+        counter += nlevels;
+        if (counter >= n) {
+            v = 0.0;
+            for (j = blockstart; j <= i; j++)
+                v += vpos[j].z;
+
+            v /= (i+1 - blockstart);
+            for (j = blockstart; j <= i; j++)
+                z[j] = v;
+
+            counter -= n;
+            blockstart = i+1;
+        }
+    }
 }
 
 static void
@@ -702,6 +866,8 @@ build_values_from_data(gdouble *z, guint n, const gdouble *data, guint ndata)
 }
 
 static const gchar distribution_key[] = "/module/coerce/distribution";
+static const gchar level_type_key[]   = "/module/coerce/level_type";
+static const gchar nlevels_key[]      = "/module/coerce/nlevels";
 static const gchar processing_key[]   = "/module/coerce/processing";
 
 static void
@@ -709,6 +875,8 @@ sanitize_args(CoerceArgs *args)
 {
     args->distribution = MIN(args->distribution, COERCE_NDISTRIBUTIONS-1);
     args->processing = MIN(args->processing, COERCE_NPROCESSING-1);
+    args->level_type = MIN(args->level_type, COERCE_NLEVELTYPES-1);
+    args->nlevels = CLAMP(args->nlevels, 2, 16384);
     if (args->distribution == COERCE_DISTRIBUTION_DATA
         && !gwy_app_data_id_verify_channel(&args->template))
         args->distribution = coerce_defaults.distribution;
@@ -722,6 +890,9 @@ load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, distribution_key,
                                    &args->distribution);
+    gwy_container_gis_enum_by_name(container, level_type_key,
+                                   &args->level_type);
+    gwy_container_gis_int32_by_name(container, nlevels_key, &args->nlevels);
     gwy_container_gis_enum_by_name(container, processing_key,
                                    &args->processing);
     args->template = template_id;
@@ -735,6 +906,9 @@ save_args(GwyContainer *container,
     template_id = args->template;
     gwy_container_set_enum_by_name(container, distribution_key,
                                    args->distribution);
+    gwy_container_set_enum_by_name(container, level_type_key,
+                                   args->level_type);
+    gwy_container_set_int32_by_name(container, nlevels_key, args->nlevels);
     gwy_container_set_enum_by_name(container, processing_key,
                                    args->processing);
 }
