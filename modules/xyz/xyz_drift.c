@@ -324,15 +324,17 @@ xyzdrift(GwyContainer *data, GwyRunType run)
     i = 0;
     while (ids[i] != -1)  {
        key = gwy_app_get_surface_key_for_id(ids[i]);
-       if (!key) continue;
+       if (!key)
+           continue;
 
        title = gwy_app_get_surface_title(data, i);
-       //printf("title %d = %s, key \"%s\", \"%s\" %d\n", i, title, g_quark_to_string(key), "Timestamp", g_strcmp0(g_quark_to_string(key), "Timestamp"));
+       //printf("title %d = %s, key \"%s\", \"%s\" %d\n", i, title, g_quark_to_string(key), "Timestamp", gwy_strequal(g_quark_to_string(key), "Timestamp"));
 
        timesurface = gwy_container_get_object(data, key);
        siunit = gwy_surface_get_si_unit_z(timesurface);
 
-       if (gwy_si_unit_equal(siunit, siunits) || g_strcmp0(title, "Timestamp")==0) {
+       if (gwy_si_unit_equal(siunit, siunits)
+           || gwy_strequal(title, "Timestamp")) {
           rdata.timesurface = gwy_container_get_object(data, key);
           rdata.timepoints = rdata.timesurface->data;
           rdata.ntimepoints = rdata.timesurface->n;
