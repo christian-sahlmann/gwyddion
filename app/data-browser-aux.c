@@ -1308,8 +1308,8 @@ gwy_app_set_data_field_title(GwyContainer *data,
                              gint id,
                              const gchar *name)
 {
-    gchar key[32], *title;
     const gchar *p;
+    gchar *title;
 
     if (!name) {
         name = _("Untitled");
@@ -1323,8 +1323,8 @@ gwy_app_set_data_field_title(GwyContainer *data,
             p = name + strlen(name);
     }
     title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
-    g_snprintf(key, sizeof(key), "/%d/data/title", id);
-    gwy_container_set_string_by_name(data, key, title);
+    gwy_container_set_string(data,
+                             gwy_app_get_data_title_key_for_id(id), title);
 }
 
 gchar*
@@ -1336,8 +1336,8 @@ _gwy_app_figure_out_channel_title(GwyContainer *data, gint channel)
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(channel >= 0, NULL);
 
-    g_snprintf(buf, sizeof(buf), "/%d/data/title", channel);
-    gwy_container_gis_string_by_name(data, buf, &title);
+    gwy_container_gis_string(data, gwy_app_get_data_title_key_for_id(channel),
+                             &title);
     if (!title) {
         g_snprintf(buf, sizeof(buf), "/%d/data/untitled", channel);
         gwy_container_gis_string_by_name(data, buf, &title);
@@ -1388,7 +1388,7 @@ gwy_app_set_brick_title(GwyContainer *data,
                         gint id,
                         const gchar *name)
 {
-    gchar key[32], *title;
+    gchar *title;
     const gchar *p;
 
     if (!name) {
@@ -1403,8 +1403,8 @@ gwy_app_set_brick_title(GwyContainer *data,
             p = name + strlen(name);
     }
     title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
-    g_snprintf(key, sizeof(key), BRICK_PREFIX "/%d/title", id);
-    gwy_container_set_string_by_name(data, key, title);
+    gwy_container_set_string(data,
+                             gwy_app_get_brick_title_key_for_id(id), title);
 }
 
 /**
@@ -1423,13 +1423,11 @@ gwy_app_get_brick_title(GwyContainer *data,
                         gint id)
 {
     const guchar *title = NULL;
-    static gchar buf[40];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
-
-    g_snprintf(buf, sizeof(buf), BRICK_PREFIX "/%d/title", id);
-    gwy_container_gis_string_by_name(data, buf, &title);
+    gwy_container_gis_string(data,
+                             gwy_app_get_brick_title_key_for_id(id), &title);
 
     if (title)
         return g_strdup(title);
@@ -1454,8 +1452,8 @@ gwy_app_set_surface_title(GwyContainer *data,
                           gint id,
                           const gchar *name)
 {
-    gchar key[32], *title;
     const gchar *p;
+    gchar *title;
 
     if (!name) {
         name = _("Untitled");
@@ -1469,8 +1467,8 @@ gwy_app_set_surface_title(GwyContainer *data,
             p = name + strlen(name);
     }
     title = g_strdup_printf("%.*s %d", (gint)(p - name), name, id);
-    g_snprintf(key, sizeof(key), SURFACE_PREFIX "/%d/title", id);
-    gwy_container_set_string_by_name(data, key, title);
+    gwy_container_set_string(data,
+                             gwy_app_get_surface_title_key_for_id(id), title);
 }
 
 /**
@@ -1489,13 +1487,11 @@ gwy_app_get_surface_title(GwyContainer *data,
                           gint id)
 {
     const guchar *title = NULL;
-    static gchar buf[40];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
-
-    g_snprintf(buf, sizeof(buf), SURFACE_PREFIX "/%d/title", id);
-    gwy_container_gis_string_by_name(data, buf, &title);
+    gwy_container_gis_string(data,
+                             gwy_app_get_surface_title_key_for_id(id), &title);
 
     if (title)
         return g_strdup(title);
@@ -2302,7 +2298,7 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
     gdouble min, max;
     gboolean min_set = FALSE, max_set = FALSE;
     GwyRGBA color;
-    gchar key[48];
+    GQuark quark;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
@@ -2314,22 +2310,21 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
 
     gwy_container_gis_object(data, gwy_app_get_mask_key_for_id(id), &mfield);
     gwy_container_gis_object(data, gwy_app_get_show_key_for_id(id), &sfield);
-
-    g_snprintf(key, sizeof(key), "/%d/base/palette", id);
-    gwy_container_gis_string_by_name(data, key, &gradient);
+    gwy_container_gis_string(data, gwy_app_get_data_palette_key_for_id(id),
+                             &gradient);
 
     if (sfield)
         pixbuf = render_data_thumbnail(sfield, gradient,
                                        GWY_LAYER_BASIC_RANGE_FULL,
                                        max_width, max_height, NULL, NULL);
     else {
-        g_snprintf(key, sizeof(key), "/%d/base/range-type", id);
-        gwy_container_gis_enum_by_name(data, key, &range_type);
+        gwy_container_gis_enum(data, gwy_app_get_data_range_type_key_for_id(id),
+                               &range_type);
         if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
-            g_snprintf(key, sizeof(key), "/%d/base/min", id);
-            min_set = gwy_container_gis_double_by_name(data, key, &min);
-            g_snprintf(key, sizeof(key), "/%d/base/max", id);
-            max_set = gwy_container_gis_double_by_name(data, key, &max);
+            quark = gwy_app_get_data_range_min_key_for_id(id);
+            min_set = gwy_container_gis_double(data, quark, &min);
+            quark = gwy_app_get_data_range_max_key_for_id(id);
+            max_set = gwy_container_gis_double(data, quark, &max);
         }
         /* Make thumbnails of images with defects nicer */
         if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
@@ -2342,8 +2337,9 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
     }
 
     if (mfield) {
-        g_snprintf(key, sizeof(key), "/%d/mask", id);
-        if (!gwy_rgba_get_from_container(&color, data, key))
+        quark = gwy_app_get_mask_key_for_id(id);
+        if (!gwy_rgba_get_from_container(&color, data,
+                                         g_quark_to_string(quark)))
             gwy_rgba_get_from_container(&color, gwy_app_settings_get(),
                                         "/mask");
         mask = render_mask_thumbnail(mfield, &color, max_width, max_height);
@@ -2386,7 +2382,6 @@ gwy_app_get_volume_thumbnail(GwyContainer *data,
     GwyDataField *dfield = NULL;
     const guchar *gradient = NULL;
     GdkPixbuf *pixbuf;
-    gchar key[48];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
@@ -2396,17 +2391,17 @@ gwy_app_get_volume_thumbnail(GwyContainer *data,
                                   &brick))
         return NULL;
 
-    g_snprintf(key, sizeof(key), "/brick/%d/preview", id);
-    if (!gwy_container_gis_object_by_name(data, key, &dfield)) {
+    if (!gwy_container_gis_object(data,
+                                  gwy_app_get_brick_preview_key_for_id(id),
+                                  &dfield)) {
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                                 max_width, max_height);
         gdk_pixbuf_fill(pixbuf, 0);
         return pixbuf;
     }
 
-    g_snprintf(key, sizeof(key), "/brick/%d/preview/palette", id);
-    gwy_container_gis_string_by_name(data, key, &gradient);
-
+    gwy_container_gis_string(data, gwy_app_get_brick_palette_key_for_id(id),
+                             &gradient);
     pixbuf = render_data_thumbnail(dfield, gradient,
                                    GWY_LAYER_BASIC_RANGE_FULL,
                                    max_width, max_height, NULL, NULL);
@@ -2439,7 +2434,6 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
     GwyDataField *raster = NULL;
     const guchar *gradient = NULL;
     GdkPixbuf *pixbuf;
-    gchar key[48];
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     g_return_val_if_fail(id >= 0, NULL);
@@ -2449,9 +2443,9 @@ gwy_app_get_xyz_thumbnail(GwyContainer *data,
                                   &surface))
         return NULL;
 
-
-    g_snprintf(key, sizeof(key), "/surface/%d/preview/palette", id);
-    gwy_container_gis_string_by_name(data, key, &gradient);
+    gwy_container_gis_string(data,
+                             gwy_app_get_surface_palette_key_for_id(id),
+                             &gradient);
 
     raster = _gwy_app_create_surface_preview_field(surface,
                                                    max_width, max_height);
@@ -2714,7 +2708,6 @@ _gwy_app_update_data_range_type(GwyDataView *data_view,
     GwyContainer *data;
     GwyTicksStyle ticks_style;
     gboolean show_labels;
-    gchar key[40];
 
     data_window = gtk_widget_get_ancestor(GTK_WIDGET(data_view),
                                           GWY_TYPE_DATA_WINDOW);
@@ -2727,9 +2720,7 @@ _gwy_app_update_data_range_type(GwyDataView *data_view,
     color_axis = GWY_COLOR_AXIS(widget);
     data = gwy_data_view_get_data(data_view);
 
-    g_snprintf(key, sizeof(key), "/%d/show", id);
-
-    if (gwy_container_contains_by_name(data, key)) {
+    if (gwy_container_contains(data, gwy_app_get_show_key_for_id(id))) {
         ticks_style = GWY_TICKS_STYLE_CENTER;
         show_labels = FALSE;
     }
