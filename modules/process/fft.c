@@ -33,6 +33,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FFT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -317,7 +318,6 @@ static gboolean
 fft_dialog(FFTArgs *args,
            GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1 };
     static const GwyEnum fft_outputs[] = {
         { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
         { N_("Modulus + Phase"),   GWY_FFT_OUTPUT_MOD_PHASE, },

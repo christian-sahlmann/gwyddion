@@ -41,7 +41,6 @@
 enum {
     NARGS = 8,
     HISTSIZE = 25,
-    RESPONSE_PREVIEW = 1,
     USER_UNITS_ID = G_MAXINT,
 };
 

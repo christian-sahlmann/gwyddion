@@ -254,10 +254,6 @@ facets_dialog(FacetsArgs *args,
               gint id,
               GQuark mquark)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PREVIEW = 2
-    };
     GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label, *scale, *button;
     GtkWidget *spin;
     FacetsControls controls;

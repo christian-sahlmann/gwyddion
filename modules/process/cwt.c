@@ -30,6 +30,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -128,7 +129,6 @@ cwt_dialog(CWTArgs *args)
 {
     GtkWidget *dialog, *table;
     CWTControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(_("2D CWT"), NULL, 0,

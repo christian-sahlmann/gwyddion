@@ -47,11 +47,6 @@ typedef enum {
     PREVIEW_LAST
 } DistortPreviewType;
 
-enum {
-    RESPONSE_RESET   = 1,
-    RESPONSE_PREVIEW = 2
-};
-
 /* Data for this function. */
 typedef struct {
     DistortPreviewType preview_type;

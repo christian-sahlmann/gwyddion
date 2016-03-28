@@ -28,6 +28,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CONTRAST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -119,7 +120,6 @@ maximize_local_contrast(GwyContainer *data, GwyRunType run)
 static gboolean
 contrast_dialog(ContrastArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table;
     ContrastControls controls;
     gint response;

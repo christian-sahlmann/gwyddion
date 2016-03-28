@@ -29,6 +29,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define TILT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -140,7 +141,6 @@ static gboolean
 tilt_dialog(TiltArgs *args,
             GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label;
     GwySIUnit *unit;
     gchar *unitstr;

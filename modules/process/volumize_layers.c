@@ -35,6 +35,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define VOLUMIZE_LAYERS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 #define MAXPIX 600
@@ -206,7 +207,6 @@ static gboolean
 volumize_layers_dialog(VolumizeLayersArgs *args,
                        gint xres, gint yres, gint zres, gdouble zreal)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table;
     VolumizeLayersControls controls;
     gint response, row = 0;

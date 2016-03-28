@@ -40,6 +40,18 @@ enum {
     PREVIEW_HALF_SIZE = 200,
 };
 
+enum {
+    RESPONSE_RESET     = 1,
+    RESPONSE_PREVIEW   = 2,
+    RESPONSE_CLEAR     = 3,
+    RESPONSE_INIT      = 4,
+    RESPONSE_ESTIMATE  = 5,
+    RESPONSE_REFINE    = 6,
+    RESPONSE_CALCULATE = 7,
+    RESPONSE_LOAD      = 8,
+    RESPONSE_SAVE      = 9,
+};
+
 G_GNUC_UNUSED
 static GwyPixmapLayer*
 create_basic_layer(GwyDataView *dataview, gint id)

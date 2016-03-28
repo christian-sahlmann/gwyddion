@@ -34,6 +34,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define FRACTAL_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -207,11 +208,6 @@ fractal(GwyContainer *data, GwyRunType run)
 static void
 fractal_dialog(FractalArgs *args, GwyContainer *data)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_RECOMPUTE = 2
-    };
-
     GtkWidget *dialog, *table, *hbox, *vbox, *label, *button, *hbox2;
     GwyDataChooser *chooser;
     GwyGraphArea *area;
@@ -231,7 +227,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     dialog = gtk_dialog_new_with_buttons(_("Fractal Dimension"), NULL, 0, NULL);
     button = gwy_stock_like_button_new(_("Reco_mpute"), GTK_STOCK_EXECUTE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog), button,
-                                 RESPONSE_RECOMPUTE);
+                                 RESPONSE_CALCULATE);
     gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
@@ -385,7 +381,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             gwy_selection_clear(selection);
             break;
 
-            case RESPONSE_RECOMPUTE:
+            case RESPONSE_CALCULATE:
             fractal_dialog_recompute(&controls, args);
             break;
 

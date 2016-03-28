@@ -154,10 +154,6 @@ wshed_dialog(WshedArgs *args,
 {
     GtkWidget *dialog, *table, *label, *spin, *hbox;
     WshedControls controls;
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PREVIEW = 2
-    };
     gint response;
     GwyDataField *mfield;
     gint row;

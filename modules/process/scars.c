@@ -43,11 +43,6 @@ enum {
     MAX_LENGTH = 1024
 };
 
-enum {
-    RESPONSE_RESET   = 1,
-    RESPONSE_PREVIEW = 2
-};
-
 typedef struct {
     GwyFeaturesType type;
     gdouble threshold_high;

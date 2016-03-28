@@ -29,6 +29,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define HOUGH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -165,7 +166,6 @@ hough(GwyContainer *data, GwyRunType run)
 static gboolean
 hough_dialog(HoughArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     static const GwyEnum hough_outputs[] = {
         { N_("Line"),   GWY_HOUGH_OUTPUT_LINE,   },
         { N_("Circle"), GWY_HOUGH_OUTPUT_CIRCLE, },

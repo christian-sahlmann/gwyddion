@@ -43,11 +43,6 @@
 
 #define MAX_PARAMS 4
 
-enum {
-    RESPONSE_PREVIEW = 1,
-    RESPONSE_LOAD = 2,
-};
-
 typedef enum {
     GWY_CC_VIEW_DISPLAY_X_CORR   = 0,
     GWY_CC_VIEW_DISPLAY_Y_CORR = 1,

@@ -31,6 +31,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define PSDFLP_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -238,7 +239,6 @@ psdflp_do(const PSDFLPArgs *args, GwyDataField *dfield, GwyDataField *lpsdf)
 static gboolean
 psdflp_dialog(PSDFLPArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table;
     PSDFLPControls controls;
     gint response, row;

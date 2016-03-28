@@ -221,8 +221,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
                           gint id,
                           GQuark dquark)
 {
-    enum { RESPONSE_PREVIEW = 1 };
-
     ConvolutionControls controls;
     GtkWidget *dialog, *hbox, *vbox, *notebook, *label;
     GtkWidget *align;

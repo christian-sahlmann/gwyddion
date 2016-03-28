@@ -34,6 +34,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CNEW_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -42,6 +43,11 @@ typedef enum {
     DUPLICATE_OVERWRITE = 1,
     DUPLICATE_APPEND    = 2
 } ResponseDuplicate;
+
+enum {
+    RESPONSE_DUPLICATE_OVERWRITE = 17,
+    RESPONSE_DUPLICATE_APPEND    = 18
+};
 
 typedef struct {
     gdouble xrange_from;
@@ -93,6 +99,8 @@ static void     cnew                  (GwyContainer *data,
                                        GwyRunType run);
 static gboolean cnew_dialog           (CNewArgs *args,
                                        GwyDataField *dfield);
+static gint     ask_for_overwrite     (GtkWindow *parent,
+                                       CNewArgs *args);
 static void     cnew_load_args        (GwyContainer *container,
                                        CNewArgs *args);
 static void     cnew_save_args        (GwyContainer *container,
@@ -331,13 +339,10 @@ static gboolean
 cnew_dialog(CNewArgs *args,
             GwyDataField *dfield)
 {
-    GtkWidget *dialog, *dialog2, *table, *spin, *label;
+    GtkWidget *dialog, *table, *spin, *label;
     GwySIUnit *unit;
     gint row;
     CNewControls controls;
-    enum { RESPONSE_RESET = 1,
-           RESPONSE_DUPLICATE_OVERWRITE = 2,
-           RESPONSE_DUPLICATE_APPEND = 3 };
     gint response;
 
     controls.args = args;
@@ -627,25 +632,9 @@ cnew_dialog(CNewArgs *args,
             /*check whether this resource already exists*/
             args->name = g_strdup(gtk_entry_get_text(controls.name));
             if (gwy_inventory_get_item(gwy_calibrations(), args->name))
-            {
-                dialog2 = gtk_message_dialog_new (GTK_WINDOW(dialog),
-                                                 GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                 GTK_MESSAGE_WARNING,
-                                                 GTK_BUTTONS_CANCEL,
-                                                 _("Calibration '%s' already exists"),
-                                                 args->name);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Append"), RESPONSE_DUPLICATE_APPEND);
-                response = gtk_dialog_run(GTK_DIALOG(dialog2));
-                if (response == RESPONSE_DUPLICATE_OVERWRITE) {
-                    args->duplicate = DUPLICATE_OVERWRITE;
-                    response = GTK_RESPONSE_OK;
-                } else if (response == RESPONSE_DUPLICATE_APPEND) {
-                    args->duplicate = DUPLICATE_APPEND;
-                    response = GTK_RESPONSE_OK;
-                }
-                gtk_widget_destroy (dialog2);
-            } else args->duplicate = DUPLICATE_NONE;
+                response = ask_for_overwrite(GTK_WINDOW(dialog), args);
+            else
+                args->duplicate = DUPLICATE_NONE;
             break;
 
             case RESPONSE_RESET:
@@ -662,6 +651,41 @@ cnew_dialog(CNewArgs *args,
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static gint
+ask_for_overwrite(GtkWindow *parent, CNewArgs *args)
+{
+    GtkWidget *dialog;
+    gint response;
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_CANCEL,
+                                    _("Calibration '%s' already exists"),
+                                    args->name);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("Append"), RESPONSE_DUPLICATE_APPEND);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+    if (response == RESPONSE_DUPLICATE_OVERWRITE) {
+        args->duplicate = DUPLICATE_OVERWRITE;
+        response = GTK_RESPONSE_OK;
+    }
+    else if (response == RESPONSE_DUPLICATE_APPEND) {
+        args->duplicate = DUPLICATE_APPEND;
+        response = GTK_RESPONSE_OK;
+    }
+    else {
+        response = GTK_RESPONSE_CANCEL;
+    }
+    gtk_widget_destroy(dialog);
+
+    return response;
 }
 
 static void

@@ -44,10 +44,6 @@ enum {
     GWY_HSCALE_WIDTH = 96
 };
 
-enum {
-    RESPONSE_PREVIEW = 2
-};
-
 typedef enum {
     GRAIN_LOGICAL_A,
     GRAIN_LOGICAL_A_AND_B,

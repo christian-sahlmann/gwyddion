@@ -52,10 +52,6 @@
     &load_args_##name, &save_args_##name
 
 enum {
-    RESPONSE_RESET = 1,
-};
-
-enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
     PAGE_PLACEMENT  = 2,

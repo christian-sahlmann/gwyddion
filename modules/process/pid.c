@@ -31,6 +31,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwyddion/gwymathfallback.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define PID_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -192,7 +193,6 @@ pid_dialog(PIDArgs *args)
     GtkWidget *dialog, *table, *spin;
     gint row = 0;
     PIDControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(_("PID simulation"), NULL, 0,

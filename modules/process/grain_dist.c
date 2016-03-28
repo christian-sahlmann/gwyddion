@@ -36,13 +36,13 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
+#include "preview.h"
 
 #define DIST_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
     MIN_RESOLUTION = 4,
     MAX_RESOLUTION = 1024,
-    RESPONSE_CLEAR = 2
 };
 
 typedef enum {

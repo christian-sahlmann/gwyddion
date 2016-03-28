@@ -35,6 +35,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CLOAD_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -43,6 +44,11 @@ typedef enum {
     DUPLICATE_OVERWRITE = 1,
     DUPLICATE_APPEND    = 2
 } ResponseDuplicate;
+
+enum {
+    RESPONSE_DUPLICATE_OVERWRITE = 17,
+    RESPONSE_DUPLICATE_APPEND    = 18
+};
 
 typedef struct {
     gchar *name;
@@ -58,15 +64,14 @@ typedef struct {
     GtkEntry *name;
 } CLoadControls;
 
-enum { RESPONSE_LOAD = 1 };
-
-static gboolean module_register(void);
-static void     cload          (GwyContainer *data,
-                                GwyRunType run);
-static gboolean cload_dialog   (CLoadArgs *args,
-                                GwyDataField *dfield);
-static void     load_caldata   (CLoadControls *controls);
-
+static gboolean module_register  (void);
+static void     cload            (GwyContainer *data,
+                                  GwyRunType run);
+static gboolean cload_dialog     (CLoadArgs *args,
+                                  GwyDataField *dfield);
+static void     load_caldata     (CLoadControls *controls);
+static gint     ask_for_overwrite(GtkWindow *parent,
+                                  CLoadArgs *args);
 
 static const CLoadArgs cload_defaults = {
     "new calibration",
@@ -195,14 +200,11 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 
 static gboolean
 cload_dialog(CLoadArgs *args,
-            G_GNUC_UNUSED GwyDataField *dfield)
+             G_GNUC_UNUSED GwyDataField *dfield)
 {
-    GtkWidget *dialog, *dialog2, *table, *label;
-    gint row = 0;
+    GtkWidget *dialog, *table, *label;
     CLoadControls controls;
-    enum { RESPONSE_RESET = 1,
-        RESPONSE_DUPLICATE_OVERWRITE = 2,
-        RESPONSE_DUPLICATE_APPEND = 3 };
+    gint row = 0;
 
     gint response;
 
@@ -261,25 +263,9 @@ cload_dialog(CLoadArgs *args,
             /*check whether this resource already exists*/
             args->name = g_strdup(gtk_entry_get_text(controls.name));
             if (gwy_inventory_get_item(gwy_calibrations(), args->name))
-            {
-                dialog2 = gtk_message_dialog_new (GTK_WINDOW(dialog),
-                                                  GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                  GTK_MESSAGE_WARNING,
-                                                  GTK_BUTTONS_CANCEL,
-                                                  _("Calibration '%s' already exists"),
-                                                  args->name);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Append"), RESPONSE_DUPLICATE_APPEND);
-                response = gtk_dialog_run(GTK_DIALOG(dialog2));
-                if (response == RESPONSE_DUPLICATE_OVERWRITE) {
-                    args->duplicate = DUPLICATE_OVERWRITE;
-                    response = GTK_RESPONSE_OK;
-                } else if (response == RESPONSE_DUPLICATE_APPEND) {
-                    args->duplicate = DUPLICATE_APPEND;
-                    response = GTK_RESPONSE_OK;
-                }
-                gtk_widget_destroy (dialog2);
-            } else args->duplicate = DUPLICATE_NONE;
+                response = ask_for_overwrite(GTK_WINDOW(dialog), args);
+            else
+                args->duplicate = DUPLICATE_NONE;
             break;
 
             case RESPONSE_LOAD:
@@ -297,6 +283,40 @@ cload_dialog(CLoadArgs *args,
     return TRUE;
 }
 
+static gint
+ask_for_overwrite(GtkWindow *parent, CLoadArgs *args)
+{
+    GtkWidget *dialog;
+    gint response;
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_CANCEL,
+                                    _("Calibration '%s' already exists"),
+                                    args->name);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("Append"), RESPONSE_DUPLICATE_APPEND);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+    if (response == RESPONSE_DUPLICATE_OVERWRITE) {
+        args->duplicate = DUPLICATE_OVERWRITE;
+        response = GTK_RESPONSE_OK;
+    }
+    else if (response == RESPONSE_DUPLICATE_APPEND) {
+        args->duplicate = DUPLICATE_APPEND;
+        response = GTK_RESPONSE_OK;
+    }
+    else {
+        response = GTK_RESPONSE_CANCEL;
+    }
+    gtk_widget_destroy(dialog);
+
+    return response;
+}
 
 static void
 load_caldata(CLoadControls *controls)

@@ -31,6 +31,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define RANK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -139,8 +140,6 @@ rank(GwyContainer *data, GwyRunType run)
 static gboolean
 rank_dialog(RankArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
-
     static const GwyEnum types[] = {
         { N_("Rank transform"),      FILTER_RANK,          },
         { N_("Local normalization"), FILTER_NORMALIZATION, },

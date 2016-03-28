@@ -33,6 +33,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define DWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -156,7 +157,6 @@ static gboolean
 dwt_dialog(DWTArgs *args,
            gint size, gint newsize)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label;
     DWTControls controls;
     gint row, response;

@@ -38,10 +38,6 @@
 
 #define DISCONN_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    RESPONSE_PREVIEW = 2,
-};
-
 typedef enum {
     FEATURES_POSITIVE = 1 << 0,
     FEATURES_NEGATIVE = 1 << 2,
@@ -187,8 +183,6 @@ mark_disconn(GwyContainer *data,
 static gboolean
 disconn_dialog(DisconnArgs *args, GwyContainer *data, gint id)
 {
-    enum { RESPONSE_RESET = 1 };
-
     static const GwyEnum types[] = {
         { N_("Positive"), FEATURES_POSITIVE, },
         { N_("Negative"), FEATURES_NEGATIVE, },

@@ -354,7 +354,6 @@ poly_level_dialog(PolyLevelArgs *args,
                   GwyDataField *mfield,
                   gint id)
 {
-    enum { RESPONSE_RESET = 1 };
     static const GwyEnum types[] = {
         { N_("Independent degrees"),  TRUE,  },
         { N_("Limited total degree"), FALSE, },

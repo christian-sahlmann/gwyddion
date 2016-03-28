@@ -44,10 +44,6 @@
     static gdouble noise_##name##_down(GwyRandGenSet *rng, gdouble sigma);
 
 enum {
-    RESPONSE_RESET = 1,
-};
-
-enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
     PAGE_NPAGES

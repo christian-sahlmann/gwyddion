@@ -29,6 +29,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define MEDIANBG_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -169,7 +170,6 @@ median(GwyContainer *data, GwyRunType run)
 static gboolean
 median_dialog(MedianBgArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *spin;
     MedianBgControls controls;
     gint response, row;

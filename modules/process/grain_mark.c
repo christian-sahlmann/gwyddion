@@ -41,11 +41,6 @@ enum {
     MARK_LAP    = 2
 };
 
-enum {
-    RESPONSE_RESET   = 1,
-    RESPONSE_PREVIEW = 2
-};
-
 typedef struct {
     gboolean inverted;
     gdouble height;

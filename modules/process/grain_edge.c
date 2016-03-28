@@ -35,11 +35,6 @@
 
 #define GEDGE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-enum {
-    RESPONSE_RESET   = 1,
-    RESPONSE_PREVIEW = 2
-};
-
 typedef struct {
     gdouble threshold_laplasian;
     gboolean update;

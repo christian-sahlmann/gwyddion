@@ -47,11 +47,6 @@ typedef enum {
     GWY_FFTF_1D_VIEW_UNMARKED = 1
 } GwyFftf1dViewType;
 
-enum {
-    RESPONSE_PREVIEW = 1,
-    RESPONSE_CLEAR   = 2
-};
-
 typedef struct {
     GwyFftf1dSuppressType suppress;
     GwyFftf1dViewType view_type;

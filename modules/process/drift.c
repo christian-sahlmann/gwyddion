@@ -227,11 +227,6 @@ drift_dialog(DriftArgs *args,
              GwyDataField *sfield,
              gint id)
 {
-    enum {
-        RESPONSE_RESET   = 1,
-        RESPONSE_PREVIEW = 2
-    };
-
     GtkWidget *dialog, *table, *hbox, *label, *hbox2;
     GwyDataChooser *chooser;
     GwySIUnit *unit;

@@ -31,6 +31,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define SEMSIM_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -198,7 +199,6 @@ semsim(GwyContainer *data, GwyRunType run)
 static gboolean
 semsim_dialog(SEMsimArgs *args, GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label;
     SEMsimControls controls;
     gint response;

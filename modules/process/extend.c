@@ -35,6 +35,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define EXTEND_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -183,7 +184,6 @@ extend(GwyContainer *data, GwyRunType run)
 static gboolean
 extend_dialog(ExtendArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label;
     ExtendControls controls;
     gint row, response;

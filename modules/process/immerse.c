@@ -61,11 +61,6 @@ typedef enum {
     GWY_IMMERSE_LEVEL_LAST
 } GwyImmerseLevelType;
 
-typedef enum {
-    IMMERSE_RESPONSE_IMPROVE = 1,
-    IMMERSE_RESPONSE_LOCATE
-} ImmerseResponseType;
-
 typedef struct {
     GwyImmerseSamplingType sampling;
     GwyImmerseLevelType leveling;
@@ -109,7 +104,7 @@ static gboolean immerse_data_filter         (GwyContainer *data,
                                              gint id,
                                              gpointer user_data);
 static void     immerse_search              (ImmerseControls *controls,
-                                             ImmerseResponseType search_type);
+                                             gint search_type);
 static void     immerse_correlate           (GwyDataField *image,
                                              GwyDataField *kernel,
                                              gint *col,
@@ -227,13 +222,11 @@ immerse_dialog(ImmerseArgs *args)
     controls.dialog = gtk_dialog_new_with_buttons(_("Immerse Detail"),
                                                   NULL, 0, NULL);
     dialog = GTK_DIALOG(controls.dialog);
-    button = gtk_dialog_add_button(dialog,
-                                   _("_Locate"), IMMERSE_RESPONSE_LOCATE);
+    button = gtk_dialog_add_button(dialog, _("_Locate"), RESPONSE_ESTIMATE);
     gtk_tooltips_set_tip(tooltips, button,
                          _("Locate detail by full image correlation search"),
                          NULL);
-    button = gtk_dialog_add_button(dialog,
-                                   _("_Improve"), IMMERSE_RESPONSE_IMPROVE);
+    button = gtk_dialog_add_button(dialog, _("_Improve"), RESPONSE_REFINE);
     gtk_tooltips_set_tip(tooltips, button,
                          _("Improve detail position by "
                            "correlation search in neighborhood"), NULL);
@@ -379,8 +372,8 @@ immerse_dialog(ImmerseArgs *args)
             return FALSE;
             break;
 
-            case IMMERSE_RESPONSE_IMPROVE:
-            case IMMERSE_RESPONSE_LOCATE:
+            case RESPONSE_ESTIMATE:
+            case RESPONSE_REFINE:
             immerse_search(&controls, response);
             break;
 
@@ -429,10 +422,10 @@ immerse_detail_cb(GwyDataChooser *chooser,
                                       GTK_RESPONSE_OK,
                                       data != NULL);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
-                                      IMMERSE_RESPONSE_LOCATE,
+                                      RESPONSE_ESTIMATE,
                                       data != NULL);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
-                                      IMMERSE_RESPONSE_IMPROVE,
+                                      RESPONSE_REFINE,
                                       data != NULL);
 
     if (data) {
@@ -534,7 +527,7 @@ immerse_data_filter(GwyContainer *data,
 
 static void
 immerse_search(ImmerseControls *controls,
-               ImmerseResponseType search_type)
+               gint search_type)
 {
     GwyDataField *dfield, *dfieldsub, *ifield, *iarea;
     gdouble wr, hr, xpos, ypos, deltax, deltay;
@@ -564,7 +557,7 @@ immerse_search(ImmerseControls *controls,
     h = GWY_ROUND(MAX(hr, 1.0));
     gwy_debug("w: %d, h: %d", w, h);
     g_assert(w <= ixres && h <= iyres);
-    if (search_type == IMMERSE_RESPONSE_IMPROVE) {
+    if (search_type == RESPONSE_REFINE) {
         xfrom = gwy_data_field_rtoj(ifield, controls->args->xpos);
         yfrom = gwy_data_field_rtoi(ifield, controls->args->ypos);
         /* Calculate the area we will search the detail in */

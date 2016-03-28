@@ -30,6 +30,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define SCALE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -188,7 +189,6 @@ scale_dialog(ScaleArgs *args)
 {
     GtkWidget *dialog, *table, *spin;
     ScaleControls controls;
-    enum { RESPONSE_RESET = 1 };
     gdouble adjmin, step = 1e-4;
     gint response;
 

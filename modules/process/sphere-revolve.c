@@ -30,6 +30,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define SPHREV_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -208,7 +209,6 @@ sphrev_dialog(Sphrev1DArgs *args)
         { N_("_Vertical direction"),   SPHREV_VERTICAL,   },
         { N_("_Both directions"),      SPHREV_BOTH,   },
     };
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *spin;
     Sphrev1DControls controls;
     gint response, row;

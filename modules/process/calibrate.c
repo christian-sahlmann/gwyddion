@@ -32,6 +32,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define CALIBRATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -380,7 +381,6 @@ static gboolean
 calibrate_dialog(CalibrateArgs *args,
                  GwyDataField *dfield)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label;
     GwyDataChooser *chooser;
     GwySIUnit *unit;

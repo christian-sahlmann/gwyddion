@@ -594,7 +594,6 @@ curvature_dialog(CurvatureArgs *args,
                  GwyDataField *mfield,
                  gint id)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label, *hbox, *vbox, *treeview, *button, *hbox2;
     GwyDataChooser *chooser;
     GtkTreeSelection *selection;

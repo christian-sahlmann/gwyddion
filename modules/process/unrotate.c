@@ -206,7 +206,6 @@ unrotate_dialog(UnrotateArgs *args,
                 gdouble *correction,
                 GwyPlaneSymmetry guess)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label, *hbox;
     UnrotateControls controls;
     const gchar *s;

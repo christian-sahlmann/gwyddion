@@ -27,6 +27,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define MASKDIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -135,8 +136,6 @@ mask_distribute(GwyContainer *data, GwyRunType run)
 static gboolean
 mask_distrib_dialog(MaskDistribArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
-
     static const GwyEnum modes[] = {
         { N_("Channels within the file"), DISTRIBUTE_WITHIN_FILE,  },
         { N_("Channels in all files"),    DISTRIBUTE_TO_ALL_FILES, },

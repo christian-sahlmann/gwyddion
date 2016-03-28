@@ -39,10 +39,6 @@
 
 #define MAX_PARAMS 4
 
-enum {
-    RESPONSE_SAVE = 1
-};
-
 typedef enum {
     GWY_FIT_2D_DISPLAY_DATA   = 0,
     GWY_FIT_2D_DISPLAY_RESULT = 1,
@@ -232,11 +228,6 @@ fit_2d_dialog(Fit2DArgs *args,
 {
     GtkWidget *dialog, *table, *hbox, *vbox, *hbox2, *alignment;
     Fit2DControls controls;
-    enum {
-        RESPONSE_FIT = 1,
-        RESPONSE_INITS = 2,
-        RESPONSE_GUESS = 3
-    };
     gint response, i, j;
     GtkWidget *label;
 
@@ -247,10 +238,10 @@ fit_2d_dialog(Fit2DArgs *args,
 
     dialog = gtk_dialog_new_with_buttons(_("Fit Sphere"), NULL, 0,
                                          gwy_sgettext("verb|_Fit"),
-                                         RESPONSE_FIT,
+                                         RESPONSE_CALCULATE,
                                          gwy_sgettext("verb|_Estimate"),
-                                         RESPONSE_GUESS,
-                                         _("_Plot Inits"), RESPONSE_INITS,
+                                         RESPONSE_ESTIMATE,
+                                         _("_Plot Inits"), RESPONSE_INIT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -460,15 +451,15 @@ fit_2d_dialog(Fit2DArgs *args,
                 create_results_window(&controls, args);
             break;
 
-            case RESPONSE_FIT:
+            case RESPONSE_CALCULATE:
             fit_2d_run(&controls, args);
             break;
 
-            case RESPONSE_GUESS:
+            case RESPONSE_ESTIMATE:
             guess(&controls, args);
             break;
 
-            case RESPONSE_INITS:
+            case RESPONSE_INIT:
             plot_inits(&controls, args);
             break;
 

@@ -30,6 +30,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define LATSIM_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -151,7 +152,6 @@ latsim_dialog(LatSimArgs *args)
     GtkWidget *dialog, *table, *spin;
     gint row = 0;
     LatSimControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response;
 
     dialog = gtk_dialog_new_with_buttons(_("Lateral force simulation"), NULL, 0,

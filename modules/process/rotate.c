@@ -250,7 +250,6 @@ rotate_dialog(RotateArgs *args,
 {
     GtkWidget *dialog, *table, *hbox;
     RotateControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response;
 
     controls.args = args;

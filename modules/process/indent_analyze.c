@@ -637,16 +637,12 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
     GtkWidget *dialog, *table, *hbox;
     IndentAnalyzeControls controls;
     gint response;
-    enum {
-        RESPONSE_COMPUTE = 1,
-        RESPONSE_SAVE = 2
-    };
     //gdouble zoomval;
     GtkObject *layer;
 
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Indentation statistics"), NULL, 0,
-                                         _("_Compute & mark"), RESPONSE_COMPUTE,
+                                         _("_Compute & mark"), RESPONSE_CALCULATE,
                                          _("_Save statistics"), RESPONSE_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
@@ -683,33 +679,33 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
 
     gtk_widget_show_all(dialog);
     do {
-      response = gtk_dialog_run(GTK_DIALOG(dialog));
-      switch (response) {
-         case GTK_RESPONSE_CANCEL:
-         case GTK_RESPONSE_DELETE_EVENT:
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
             g_object_unref(controls.mydata);
             gtk_widget_destroy(dialog);
-         case GTK_RESPONSE_NONE:
+            case GTK_RESPONSE_NONE:
             return FALSE;
             break;
 
-         case GTK_RESPONSE_OK:
+            case GTK_RESPONSE_OK:
             break;
 
-         case RESPONSE_COMPUTE:
+            case RESPONSE_CALCULATE:
             compute_and_preview(&controls);
             update_data_labels(&controls);
             break;
 
-         case RESPONSE_SAVE:
+            case RESPONSE_SAVE:
             save_statistics_dialog(&controls, dialog);
             break;
 
-         default:
+            default:
             g_assert_not_reached();
             break;
-      }
-   } while (response != GTK_RESPONSE_OK);
+        }
+    } while (response != GTK_RESPONSE_OK);
 
    indent_analyze_ok(data, &controls);
 
@@ -719,8 +715,6 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
    return controls.computed;
 }
 
-
-/* ====================================================================================== */
 
 static void
 get_field_slope_from_border(GwyDataField *dfield, gdouble *c, gdouble *bx,

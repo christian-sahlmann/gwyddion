@@ -77,10 +77,6 @@ typedef enum {
     ZOOM_16 = 16
 } ZoomType;
 
-enum {
-    RESPONSE_RESET,
-};
-
 typedef struct {
     GwyContainer    *mydata;
     GwyContainer    *data;

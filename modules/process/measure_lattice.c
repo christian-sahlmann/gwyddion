@@ -45,12 +45,6 @@
 
 #define LATMEAS_RUN_MODES (GWY_RUN_INTERACTIVE)
 
-enum {
-    RESPONSE_RESET = 1,
-    RESPONSE_REFINE = 2,
-    RESPONSE_ESTIMATE = 3,
-};
-
 typedef enum {
     IMAGE_DATA,
     IMAGE_ACF,

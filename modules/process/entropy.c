@@ -34,15 +34,12 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
+#include "preview.h"
 
 #define ENTROPY_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 #define ENTROPY_NORMAL 1.41893853320467274178l
 #define ENTROPY_NORMAL_2D 2.144729885849400174l
-
-enum {
-    RESPONSE_PREVIEW = 2,
-};
 
 typedef enum {
     ENTROPY_VALUES = 0,

@@ -27,6 +27,7 @@
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define ANGLE_DIST_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -164,9 +165,7 @@ angle_dialog(AngleArgs *args)
 {
     GtkWidget *dialog, *table;
     AngleControls controls;
-    enum { RESPONSE_RESET = 1 };
-    gint response;
-    gint row;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,

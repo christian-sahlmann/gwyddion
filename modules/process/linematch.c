@@ -777,8 +777,6 @@ linematch_dialog(LineMatchArgs *args,
                  GwyDataField *mfield,
                  gint id)
 {
-    enum { RESPONSE_RESET = 1 };
-
     GtkWidget *dialog, *table, *label, *hbox, *alignment;
     GwyDataChooser *chooser;
     LineMatchControls controls;

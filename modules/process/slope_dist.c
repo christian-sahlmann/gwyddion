@@ -37,7 +37,6 @@
 
 enum {
     MAX_OUT_SIZE = 4096,
-    RESPONSE_PREVIEW = 2,
 };
 
 typedef enum {
@@ -259,7 +258,6 @@ slope_dialog(SlopeArgs *args, gboolean same_units,
     GwyDataChooser *chooser;
     GwyGraphModel *gmodel;
     SlopeControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response;
     gint row;
 

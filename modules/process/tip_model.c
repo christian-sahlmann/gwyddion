@@ -33,6 +33,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define TIP_MODEL_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -148,10 +149,6 @@ tip_model(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 static void
 tip_model_dialog(TipModelArgs *args)
 {
-    enum {
-        RESPONSE_RESET   = 1,
-        RESPONSE_PREVIEW = 2
-    };
     GtkWidget *dialog, *table, *hbox, *spin;
     GwyContainer *data;
     TipModelControls controls;

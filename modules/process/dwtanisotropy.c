@@ -176,7 +176,6 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 static gboolean
 dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table;
     DWTAnisotropyControls controls;
     gint response;

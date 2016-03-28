@@ -51,10 +51,6 @@ typedef enum {
     MASK_EDIT_INTERSECT = 3
 } MaskEditMode;
 
-enum {
-    RESPONSE_PREVIEW = 1,
-};
-
 typedef struct {
     MarkWithWhat mark_with;
     MaskEditMode operation;

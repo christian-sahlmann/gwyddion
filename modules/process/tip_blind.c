@@ -34,6 +34,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define TIP_BLIND_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -216,11 +217,6 @@ tip_blind(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 static void
 tip_blind_dialog(TipBlindArgs *args)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_PARTIAL,
-        RESPONSE_FULL
-    };
     GtkWidget *dialog, *table, *hbox, *vbox, *label;
     GwyContainer *data;
     GwyGraphModel *gmodel;
@@ -233,8 +229,8 @@ tip_blind_dialog(TipBlindArgs *args)
     gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Blind Tip Estimation"), NULL, 0,
-                                         _("Run _Partial"), RESPONSE_PARTIAL,
-                                         _("Run _Full"), RESPONSE_FULL,
+                                         _("Run _Partial"), RESPONSE_ESTIMATE,
+                                         _("Run _Full"), RESPONSE_REFINE,
                                          _("_Reset Tip"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -470,11 +466,11 @@ tip_blind_dialog(TipBlindArgs *args)
             reset(&controls, args);
             break;
 
-            case RESPONSE_PARTIAL:
+            case RESPONSE_ESTIMATE:
             tip_blind_run(&controls, args, FALSE);
             break;
 
-            case RESPONSE_FULL:
+            case RESPONSE_REFINE:
             tip_blind_run(&controls, args, TRUE);
             break;
 

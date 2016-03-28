@@ -39,10 +39,6 @@
 #define WORK_UPDATE_CHECK 1000000
 
 enum {
-    RESPONSE_RESET = 1,
-};
-
-enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
     PAGE_GRAPHS     = 2,

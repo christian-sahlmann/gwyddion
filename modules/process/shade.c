@@ -198,7 +198,6 @@ shade_dialog(ShadeArgs *args,
     GtkWidget *dialog, *hbox, *table;
     const guchar *pal;
     ShadeControls controls;
-    enum { RESPONSE_RESET = 1 };
     gint response, row;
 
     controls.args = args;

@@ -61,10 +61,6 @@
                                const LatSynthArgs *args)
 
 enum {
-    RESPONSE_RESET = 1,
-};
-
-enum {
     PAGE_DIMENSIONS = 0,
     PAGE_LATTICE    = 1,
     PAGE_SURFACE    = 2,

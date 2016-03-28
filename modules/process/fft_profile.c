@@ -44,10 +44,6 @@ enum {
     MAX_RESOLUTION = 16384
 };
 
-enum {
-    RESPONSE_CLEAR = 1,
-};
-
 typedef struct {
     gboolean separate;
     gboolean fixres;

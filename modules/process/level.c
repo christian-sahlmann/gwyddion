@@ -33,6 +33,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+#include "preview.h"
 
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -234,7 +235,6 @@ static gboolean
 level_dialog(LevelArgs *args,
              const gchar *title)
 {
-    enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *label, *table;
     gint row, response;
     LevelControls controls;
