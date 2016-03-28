@@ -33,6 +33,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
+#include "preview.h"
 
 #define COERCE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
@@ -52,16 +53,20 @@ typedef enum {
 typedef struct {
     CoerceDistributionType distribution;
     CoerceProcessingType processing;
+    gboolean update;
     GwyAppDataId template;
 } CoerceArgs;
 
 typedef struct {
     CoerceArgs *args;
+    GwyContainer *mydata;
     GwyDataField *dfield;
     GtkWidget *dialogue;
+    GtkWidget *view;
     GSList *distribution;
     GSList *processing;
     GtkWidget *template;
+    GtkWidget *update;
 } CoerceControls;
 
 typedef struct {
@@ -73,17 +78,21 @@ static gboolean      module_register       (void);
 static void          coerce                (GwyContainer *data,
                                             GwyRunType run);
 static gboolean      coerce_dialogue       (CoerceArgs *args,
-                                            GwyDataField *dfield);
+                                            GwyContainer *data,
+                                            gint id);
 static void          distribution_changed  (GtkToggleButton *toggle,
                                             CoerceControls *controls);
 static void          processing_changed    (GtkToggleButton *toggle,
                                             CoerceControls *controls);
 static void          template_changed      (GwyDataChooser *chooser,
                                             CoerceControls *controls);
+static void          update_changed        (GtkToggleButton *toggle,
+                                            CoerceControls *controls);
 static void          update_sensitivity    (CoerceControls *controls);
 static gboolean      template_filter       (GwyContainer *data,
                                             gint id,
                                             gpointer user_data);
+static void          preview               (CoerceControls *controls);
 static GwyDataField* coerce_do             (GwyDataField *dfield,
                                             const CoerceArgs *args);
 static void          coerce_do_field       (GwyDataField *dfield,
@@ -112,6 +121,7 @@ static void          save_args             (GwyContainer *container,
 static const CoerceArgs coerce_defaults = {
     COERCE_DISTRIBUTION_UNIFORM,
     COERCE_PROCESSING_FIELD,
+    TRUE,
     GWY_APP_DATA_ID_NONE,
 };
 
@@ -165,7 +175,7 @@ coerce(GwyContainer *data, GwyRunType run)
         args.distribution = coerce_defaults.distribution;
 
     if (run == GWY_RUN_IMMEDIATE
-        || (run == GWY_RUN_INTERACTIVE && coerce_dialogue(&args, dfield))) {
+        || (run == GWY_RUN_INTERACTIVE && coerce_dialogue(&args, data, id))) {
         result = coerce_do(dfield, &args);
 
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
@@ -183,7 +193,7 @@ coerce(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
+coerce_dialogue(CoerceArgs *args, GwyContainer *data, gint id)
 {
     static const GwyEnum distributions[] = {
         { N_("distribution|Uniform"),  COERCE_DISTRIBUTION_UNIFORM,  },
@@ -197,31 +207,55 @@ coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
     };
 
     CoerceControls controls;
-    GtkWidget *dialogue, *table, *label;
+    GtkWidget *dialogue, *table, *label, *vbox, *hbox;
+    GwyDataField *dfield;
     GwyDataChooser *chooser;
     gint row, response;
 
+    dfield = gwy_container_get_object(data, gwy_app_get_data_key_for_id(id));
     controls.args = args;
     controls.dfield = dfield;
 
-    dialogue = gtk_dialog_new_with_buttons(_("Coerce Statistics"),
-                                           NULL, 0,
-                                           GTK_STOCK_CANCEL,
-                                           GTK_RESPONSE_CANCEL,
-                                           GTK_STOCK_OK,
-                                           GTK_RESPONSE_OK,
+    dialogue = gtk_dialog_new_with_buttons(_("Coerce Statistics"), NULL, 0,
                                            NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialogue),
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
+    gtk_dialog_add_button(GTK_DIALOG(dialogue),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialogue),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialogue), GTK_RESPONSE_OK);
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
     controls.dialogue = dialogue;
 
-    table = gtk_table_new(COERCE_NDISTRIBUTIONS + COERCE_NPROCESSING + 4,
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialogue)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    vbox = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
+    controls.mydata = gwy_container_new();
+    dfield = gwy_data_field_new_alike(dfield, TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    g_object_unref(dfield);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    table = gtk_table_new(COERCE_NDISTRIBUTIONS + COERCE_NPROCESSING + 6,
                           4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialogue)->vbox), table,
-                       TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     row = 0;
 
     label = gtk_label_new(_("Coerce value distribution to:"));
@@ -266,9 +300,25 @@ coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
                                             GTK_TABLE(table),
                                             3, row);
 
-    update_sensitivity(&controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.update,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.update, "toggled",
+                     G_CALLBACK(update_changed), &controls);
+    row++;
+
+    update_sensitivity(&controls);
     gtk_widget_show_all(dialogue);
+    if (args->update)
+        preview(&controls);
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialogue));
@@ -277,10 +327,15 @@ coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialogue);
             case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
             return FALSE;
             break;
 
             case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_PREVIEW:
+            preview(&controls);
             break;
 
             default:
@@ -290,6 +345,7 @@ coerce_dialogue(CoerceArgs *args, GwyDataField *dfield)
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialogue);
+    g_object_unref(controls.mydata);
 
     return TRUE;
 }
@@ -305,6 +361,8 @@ distribution_changed(GtkToggleButton *toggle,
 
     args->distribution = gwy_radio_buttons_get_current(controls->distribution);
     update_sensitivity(controls);
+    if (args->update)
+        preview(controls);
 }
 
 static void
@@ -318,6 +376,8 @@ processing_changed(GtkToggleButton *toggle,
 
     args->processing = gwy_radio_buttons_get_current(controls->processing);
     update_sensitivity(controls);
+    if (args->update)
+        preview(controls);
 }
 
 static void
@@ -327,6 +387,20 @@ template_changed(GwyDataChooser *chooser,
     CoerceArgs *args = controls->args;
 
     gwy_data_chooser_get_active_id(chooser, &args->template);
+    if (args->update)
+        preview(controls);
+}
+
+static void
+update_changed(GtkToggleButton *toggle,
+               CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+
+    args->update = gtk_toggle_button_get_active(toggle);
+    update_sensitivity(controls);
+    if (args->update)
+        preview(controls);
 }
 
 static void
@@ -334,7 +408,7 @@ update_sensitivity(CoerceControls *controls)
 {
     CoerceArgs *args = controls->args;
     GtkWidget *widget;
-    gboolean has_template, is_data;
+    gboolean has_template, is_data, do_update;
 
     has_template
         = !!gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->template),
@@ -345,6 +419,10 @@ update_sensitivity(CoerceControls *controls)
 
     is_data = (args->distribution == COERCE_DISTRIBUTION_DATA);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->template), is_data);
+
+    do_update = args->update;
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialogue),
+                                      RESPONSE_PREVIEW, !do_update);
 }
 
 static gboolean
@@ -378,6 +456,17 @@ compare_double(const void *a, const void *b)
     if (*da > *db)
         return 1;
     return 0;
+}
+
+static void
+preview(CoerceControls *controls)
+{
+    CoerceArgs *args = controls->args;
+    GwyDataField *result;
+
+    result = coerce_do(controls->dfield, args);
+    gwy_container_set_object_by_name(controls->mydata, "/0/data", result);
+    g_object_unref(result);
 }
 
 static GwyDataField*
