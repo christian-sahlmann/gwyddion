@@ -824,6 +824,19 @@ gwy_data_view_update(GwyDataView *data_view)
             need_resize = TRUE;
     }
 
+    if (!need_resize && data_view->realsquare) {
+        if (!data_view->pixbuf)
+            need_resize = TRUE;
+        else {
+            GtkRequisition req;
+
+            gwy_data_view_size_request(widget, &req);
+            if (req.width != gdk_pixbuf_get_width(data_view->pixbuf)
+                || req.height != gdk_pixbuf_get_height(data_view->pixbuf))
+                need_resize = TRUE;
+        }
+    }
+
     if (need_resize) {
         gwy_debug("needs resize");
         gtk_widget_queue_resize(widget);
