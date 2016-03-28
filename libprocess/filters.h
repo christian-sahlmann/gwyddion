@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,13 @@ G_BEGIN_DECLS
 
 void gwy_data_field_normalize                         (GwyDataField *data_field);
 void gwy_data_field_renormalize                       (GwyDataField *data_field,
+                                                       gdouble range,
+                                                       gdouble offset);
+void gwy_data_field_area_renormalize                  (GwyDataField *data_field,
+                                                       gint col,
+                                                       gint row,
+                                                       gint width,
+                                                       gint height,
                                                        gdouble range,
                                                        gdouble offset);
 gint gwy_data_field_threshold                         (GwyDataField *data_field,

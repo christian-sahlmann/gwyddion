@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2014 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -148,7 +148,7 @@ gwy_data_field_normalize(GwyDataField *data_field)
  * @range: New data interval size.
  * @offset: New data interval offset.
  *
- * Transforms data in a data field with first linear function to given range.
+ * Transforms data in a data field with linear function to given range.
  *
  * When @range is positive, the new data range is (@offset, @offset+@range);
  * when @range is negative, the new data range is (@offset-@range, @offset).
@@ -224,6 +224,94 @@ gwy_data_field_renormalize(GwyDataField *data_field,
                                 + offset;
         /* FIXME: we can recompute ARF and ART too */
     }
+}
+
+/**
+ * gwy_data_field_area_renormalize:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @range: New data interval size.
+ * @offset: New data interval offset.
+ *
+ * Transforms data in a part of a data field with linear function to given
+ * range.
+ *
+ * When @range is positive, the new data range is (@offset, @offset+@range);
+ * when @range is negative, the new data range is (@offset-@range, @offset).
+ * In neither case the data are flipped, negative range only means different
+ * selection of boundaries.
+ *
+ * When @range is zero, this method is equivalent to
+ * gwy_data_field_fill(@data_field, @offset).
+ *
+ * Since: 2.45
+ **/
+void
+gwy_data_field_area_renormalize(GwyDataField *dfield,
+                                gint col,
+                                gint row,
+                                gint width,
+                                gint height,
+                                gdouble range,
+                                gdouble offset)
+{
+    gdouble min, max;
+    gdouble *d, *r;
+    gint xres, yres, i, j;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    xres = dfield->xres;
+    yres = dfield->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= xres
+                     && row + height <= yres);
+
+    if (col == 0 && row == 0 && width == xres && height == yres) {
+        gwy_data_field_renormalize(dfield, range, offset);
+        return;
+    }
+
+    if (!range) {
+        gwy_data_field_area_fill(dfield, col, row, width, height, offset);
+        return;
+    }
+
+    gwy_data_field_area_get_min_max_mask(dfield, NULL, GWY_MASK_IGNORE,
+                                         col, row, width, height,
+                                         &min, &max);
+    if (min == max) {
+        gwy_data_field_area_fill(dfield, col, row, width, height, offset);
+        return;
+    }
+
+    if ((range > 0 && min == offset && min + range == max)
+        || (range < 0 && max == offset && min - range == max))
+        return;
+
+    /* The general case */
+    d = dfield->data;
+    if (range > 0) {
+        max -= min;
+        for (i = 0; i < height; i++) {
+            r = d + (i + row)*xres + col;
+            for (j = 0; j < width; j++)
+                r[j] = (r[j] - min)/max*range + offset;
+        }
+    }
+    else {
+        min = max - min;
+        for (i = 0; i < height; i++) {
+            r = d + (i + row)*xres + col;
+            for (j = 0; j < width; j++)
+                r[j] = (max - r[j])/min*range + offset;
+        }
+    }
+
+    gwy_data_field_invalidate(dfield);
 }
 
 /**
