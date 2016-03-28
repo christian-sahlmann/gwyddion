@@ -124,6 +124,7 @@ static void       save_widget_screen_relative_size      (GtkWidget *widget,
                                                          GwyContainer *container,
                                                          const gchar *prefix,
                                                          gboolean absolute_too);
+static void       restore_data_window_zoom              (GwyDataWindow *data_window);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -369,6 +370,7 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     gwy_data_window_set_ul_corner_widget(data_window, ebox);
     gwy_help_add_to_window(GTK_WINDOW(data_window), "data-windows", NULL,
                            GWY_HELP_DEFAULT);
+    restore_data_window_zoom(data_window);
 
     data_view = gwy_data_window_get_data_view(data_window);
     g_signal_connect_swapped(data_view, "button-press-event",
@@ -1424,6 +1426,7 @@ _gwy_app_brick_window_setup(GwyDataWindow *data_window)
     gwy_app_add_main_accel_group(GTK_WINDOW(data_window));
     gwy_help_add_to_window(GTK_WINDOW(data_window), "volume-data", NULL,
                            GWY_HELP_DEFAULT);
+    restore_data_window_zoom(data_window);
 
     data_view = gwy_data_window_get_data_view(data_window);
     g_signal_connect_swapped(data_view, "button-press-event",
@@ -2449,6 +2452,50 @@ save_widget_screen_relative_size(GtkWidget *widget,
         gwy_container_set_int32_by_name(container, key, h);
         g_free(key);
     }
+}
+
+static void
+restore_data_window_zoom(GwyDataWindow *data_window)
+{
+    GwyDataView *data_view = gwy_data_window_get_data_view(data_window);
+    GwyContainer *container = gwy_data_view_get_data(data_view);
+    const gchar *prefix = gwy_data_view_get_data_prefix(data_view);
+    GdkScreen *screen = gtk_window_get_screen(GTK_WINDOW(data_window));
+    GtkRequisition req;
+    gdouble scw, sch, scale, relsize, newrelsize;
+    gchar *key;
+
+    if (!container || !prefix || !screen)
+        return;
+
+    key = g_strconcat(prefix, "/view/relative-size", NULL);
+    if (!gwy_container_gis_double_by_name(container, key, &relsize)) {
+        g_free(key);
+        return;
+    }
+    g_free(key);
+
+    key = g_strconcat(prefix, "/view/scale", NULL);
+    if (!gwy_container_gis_double_by_name(container, key, &scale)) {
+        g_free(key);
+        return;
+    }
+    g_free(key);
+
+    gtk_widget_size_request(GTK_WIDGET(data_view), &req);
+    scw = gdk_screen_get_width(screen);
+    sch = gdk_screen_get_height(screen);
+    newrelsize = MAX(req.width/scw, req.height/sch);
+    gwy_debug("restoring data window: "
+              "relsize %g, zoom %g, request %dx%d, newrelsize %g",
+              relsize, scale, req.width, req.height, newrelsize);
+
+    /* If the data view will be small we can just apply the saved zoom.  Should
+     * it be larger though, we must check if it is not too large and better
+     * show it at defaut size than huge. */
+    if (newrelsize > 1.2*relsize || newrelsize > 0.85)
+        return;
+    gwy_data_view_set_zoom(data_view, scale);
 }
 
 gint
