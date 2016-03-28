@@ -52,7 +52,7 @@ module_register(void)
 {
     gwy_process_func_register("xyzize",
                               (GwyProcessFunc)&xyzize,
-                              N_("/_Basic Operations/XYZize..."),
+                              N_("/_Basic Operations/_XYZize..."),
                               NULL,
                               XYZIZE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
