@@ -125,6 +125,9 @@ static void       save_widget_screen_relative_size      (GtkWidget *widget,
                                                          const gchar *prefix,
                                                          gboolean absolute_too);
 static void       restore_data_window_zoom              (GwyDataWindow *data_window);
+static void       restore_other_window_size             (GtkWindow *window,
+                                                         GwyContainer *container,
+                                                         const gchar *prefix);
 
 /* Must match Gwy3DViewLabel */
 static const struct {
@@ -310,7 +313,7 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
 
 /*****************************************************************************
  *                                                                           *
- *     Data window list management                                           *
+ *     Data window management                                                *
  *                                                                           *
  *****************************************************************************/
 
@@ -696,7 +699,7 @@ gwy_app_data_window_change_square(GtkWidget *item,
 
 /*****************************************************************************
  *                                                                           *
- *     Graph window list management                                          *
+ *     Graph window management                                               *
  *                                                                           *
  *****************************************************************************/
 
@@ -729,6 +732,8 @@ _gwy_app_graph_window_setup(GwyGraphWindow *graph_window,
     gwy_app_add_main_accel_group(GTK_WINDOW(graph_window));
     gwy_help_add_to_window(GTK_WINDOW(graph_window), "graph-windows", NULL,
                            GWY_HELP_DEFAULT);
+    restore_other_window_size(GTK_WINDOW(graph_window),
+                              container, g_quark_to_string(prefix));
 
     graph = gwy_graph_window_get_graph(graph_window);
     g_signal_connect_swapped(graph, "button-press-event",
@@ -821,6 +826,7 @@ void
 _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 {
     GtkTooltips *tooltips;
+    Gwy3DView *view3d;
     GtkWidget *button;
 
     gwy_app_add_main_accel_group(GTK_WINDOW(window3d));
@@ -830,8 +836,8 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
                                        GTK_STOCK_SAVE);
     gtk_tooltips_set_tip(tooltips, button,
                          _("Save 3D view to an image"), NULL);
-    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
-    gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(window3d),
+    gwy_3d_window_add_action_widget(window3d, button);
+    gwy_3d_window_add_small_toolbar_button(window3d,
                                            GTK_STOCK_SAVE,
                                            _("Save 3D view to an image"),
                                            G_CALLBACK(gwy_app_3d_window_export),
@@ -842,17 +848,22 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
     button = gtk_button_new_with_mnemonic(_("Set as Default"));
     gtk_tooltips_set_tip(tooltips, button,
                          _("Set the current view setup as the default"), NULL);
-    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
+    gwy_3d_window_add_action_widget(window3d, button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_set_defaults),
                              window3d);
 
-    gwy_app_3d_window_add_overlay_menu(GWY_3D_WINDOW(window3d));
-    g_signal_connect(window3d, "configure-event",
-                     G_CALLBACK(gwy_app_3d_window_configured), NULL);
-
+    gwy_app_3d_window_add_overlay_menu(window3d);
     gwy_help_add_to_window(GTK_WINDOW(window3d), "opengl-3d-view", NULL,
                            GWY_HELP_DEFAULT);
+
+    view3d = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window3d));
+    restore_other_window_size(GTK_WINDOW(window3d),
+                              gwy_3d_view_get_data(view3d),
+                              gwy_3d_view_get_setup_prefix(view3d));
+
+    g_signal_connect(window3d, "configure-event",
+                     G_CALLBACK(gwy_app_3d_window_configured), NULL);
 }
 
 static gboolean
@@ -1829,6 +1840,10 @@ _gwy_app_surface_window_setup(GwyDataWindow *data_window)
                            GWY_HELP_DEFAULT);
 
     data_view = gwy_data_window_get_data_view(data_window);
+    restore_other_window_size(GTK_WINDOW(data_window),
+                              gwy_data_view_get_data(data_view),
+                              gwy_data_view_get_data_prefix(data_view));
+
     g_signal_connect_swapped(data_view, "button-press-event",
                              G_CALLBACK(gwy_app_surface_popup_menu_popup_mouse),
                              popup_menu);
@@ -2482,6 +2497,9 @@ restore_data_window_zoom(GwyDataWindow *data_window)
     }
     g_free(key);
 
+    if (scale <= 0.0 || relsize <= 0.0)
+        return;
+
     gtk_widget_size_request(GTK_WIDGET(data_view), &req);
     scw = gdk_screen_get_width(screen);
     sch = gdk_screen_get_height(screen);
@@ -2496,6 +2514,57 @@ restore_data_window_zoom(GwyDataWindow *data_window)
     if (newrelsize > 1.2*relsize || newrelsize > 0.85)
         return;
     gwy_data_view_set_zoom(data_view, scale);
+}
+
+static void
+restore_other_window_size(GtkWindow *window,
+                          GwyContainer *container, const gchar *prefix)
+{
+    GdkScreen *screen = gtk_window_get_screen(window);
+    gdouble scw, sch, relsize, newrelsize;
+    gint w, h;
+    gchar *key;
+
+    if (!container || !prefix || !screen)
+        return;
+
+    key = g_strconcat(prefix, "/view/relative-size", NULL);
+    if (!gwy_container_gis_double_by_name(container, key, &relsize)) {
+        g_free(key);
+        return;
+    }
+    g_free(key);
+
+    key = g_strconcat(prefix, "/view/width", NULL);
+    if (!gwy_container_gis_int32_by_name(container, key, &w)) {
+        g_free(key);
+        return;
+    }
+    g_free(key);
+
+    key = g_strconcat(prefix, "/view/height", NULL);
+    if (!gwy_container_gis_int32_by_name(container, key, &h)) {
+        g_free(key);
+        return;
+    }
+    g_free(key);
+
+    if (w <= 0 || h <= 0 || relsize <= 0.0)
+        return;
+
+    scw = gdk_screen_get_width(screen);
+    sch = gdk_screen_get_height(screen);
+    newrelsize = MAX(w/scw, h/sch);
+    gwy_debug("restoring other window: "
+              "relsize %g, size %dx%d, newrelsize %g",
+              relsize, w, h, newrelsize);
+
+    /* If the window will be small we can just apply the saved zoom.  Should
+     * it be larger though, we must check if it is not too large and better
+     * show it at defaut size than huge. */
+    if (newrelsize > 1.2*relsize || newrelsize > 0.9)
+        return;
+    gtk_window_set_default_size(window, w, h);
 }
 
 gint
