@@ -44,6 +44,8 @@ Libraries:
   array was added.
 - libgwydgets: Graph and 3D windows can be resized using keyboard, similarly
   to other data windows.
+- libgwydgets: GwyDataView with physical aspect ratio resizes itself now when
+  the physical dimensions change but pixel dimensions do not.
 - libgwymodule: XYZ data processing module management functions were added.
 - libgwyapp: All program messages are gathered by the default logger and
   displayed in a text view.
@@ -64,6 +66,8 @@ Libraries:
 - libgwyapp: GwyAppFileChooser open dialogue can filter files by name.
 - libgwyapp: It is possible to query the current data browser page using
   gwy_app_data_browser_get_current().
+- libgwyapp: Data can be duplicated with Ctrl-D, deleted with Ctrl-Delete and
+  extracted to a new file with Ctrl-Insert.
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
