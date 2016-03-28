@@ -32,6 +32,8 @@ Libraries:
   means, not the global mean.
 - libgwyprocess: Raw 2D FFT transform using the SimpleFFT backend (i.e. with
   FFTW unavailable) overwriting the input data field was fixed.
+- libgwyprocess: New function gwy_data_field_area_renormalize() transforms
+  values in just a part of data field.
 - libgwydgets: A large number of new stock icons were added.
 - libgwydgets: The gradient can be unset using data window colour axis menu.
   The colour gradient and GL material can be unset in the 3D window as well.
@@ -68,6 +70,8 @@ Libraries:
   gwy_app_data_browser_get_current().
 - libgwyapp: Data can be duplicated with Ctrl-D, deleted with Ctrl-Delete and
   extracted to a new file with Ctrl-Insert.
+- libgwyapp: Zooms and sizes of all kinds data windows are saved and restored
+  when the data are displayed again (if they seem sane for the current screen).
 
 Modules:
 - Straighten path (new): Extracts image sampled along a spline curve and the
