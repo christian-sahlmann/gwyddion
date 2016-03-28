@@ -1437,6 +1437,142 @@ gwy_convert_raw_data(gconstpointer data,
 
     g_return_if_fail(data && target);
 
+    if (offset == 0.0 && scale == 1.0) {
+        if (datatype == GWY_RAW_DATA_SINT8) {
+            const gint8 *s8 = (const gint8*)data;
+            for (i = nitems; i; i--, s8 += stride, target++)
+                *target = *s8;
+        }
+        else if (datatype == GWY_RAW_DATA_UINT8) {
+            const guint8 *u8 = (const guint8*)data;
+            for (i = nitems; i; i--, u8 += stride, target++)
+                *target = *u8;
+        }
+        else if (datatype == GWY_RAW_DATA_SINT16) {
+            const gint16 *s16 = (const gint16*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, s16 += stride, target++)
+                    *target = (gint16)GUINT16_SWAP_LE_BE(*s16);
+            }
+            else {
+                for (i = nitems; i; i--, s16 += stride, target++)
+                    *target = *s16;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_UINT16) {
+            const guint16 *u16 = (const guint16*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, u16 += stride, target++)
+                    *target = GUINT16_SWAP_LE_BE(*u16);
+            }
+            else {
+                for (i = nitems; i; i--, u16 += stride, target++)
+                    *target = *u16;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_SINT32) {
+            const gint32 *s32 = (const gint32*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, s32 += stride, target++)
+                    *target = (gint32)GUINT32_SWAP_LE_BE(*s32);
+            }
+            else {
+                for (i = nitems; i; i--, s32 += stride, target++)
+                    *target = *s32;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_UINT32) {
+            const guint32 *u32 = (const guint32*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, u32 += stride, target++)
+                    *target = GUINT32_SWAP_LE_BE(*u32);
+            }
+            else {
+                for (i = nitems; i; i--, u32 += stride, target++)
+                    *target = *u32;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_SINT64) {
+            const gint64 *s64 = (const gint64*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, s64 += stride, target++)
+                    *target = (gint64)GUINT64_SWAP_LE_BE(*s64);
+            }
+            else {
+                for (i = nitems; i; i--, s64 += stride, target++)
+                    *target = *s64;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_UINT64) {
+            const guint64 *u64 = (const guint64*)data;
+            if (byteswap) {
+                for (i = nitems; i; i--, u64 += stride, target++)
+                    *target = GUINT64_SWAP_LE_BE(*u64);
+            }
+            else {
+                for (i = nitems; i; i--, u64 += stride, target++)
+                    *target = *u64;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_HALF) {
+            const guchar *p = (const guchar*)data;
+            if (littleendian) {
+                for (i = nitems; i; i--, p += 2*stride, target++)
+                    *target = get_half_le(p);
+            }
+            else {
+                for (i = nitems; i; i--, p += 2*stride, target++)
+                    *target = get_half_be(p);
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_FLOAT) {
+            const guint32 *u32 = (const guint32*)data;
+            const gfloat *f32 = (const gfloat*)data;
+            union { guint32 u; gfloat f; } v;
+            if (byteswap) {
+                for (i = nitems; i; i--, u32 += stride, target++) {
+                    v.u = GUINT32_SWAP_LE_BE(*u32);
+                    *target = v.f;
+                }
+            }
+            else {
+                for (i = nitems; i; i--, f32 += stride, target++)
+                    *target = *f32;
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_REAL) {
+            const guchar *p = (const guchar*)data;
+            if (littleendian) {
+                for (i = nitems; i; i--, p += 6*stride, target++)
+                    *target = get_pascal_real_le(p);
+            }
+            else {
+                for (i = nitems; i; i--, p += 6*stride, target++)
+                    *target = get_pascal_real_be(p);
+            }
+        }
+        else if (datatype == GWY_RAW_DATA_DOUBLE) {
+            const guint64 *u64 = (const guint64*)data;
+            const gdouble *d64 = (const gdouble*)data;
+            union { guint64 u; double d; } v;
+            if (byteswap) {
+                for (i = nitems; i; i--, u64 += stride, target++) {
+                    v.u = GUINT64_SWAP_LE_BE(*u64);
+                    *target = v.d;
+                }
+            }
+            else {
+                for (i = nitems; i; i--, d64 += stride, target++)
+                    *target = *d64;
+            }
+        }
+        else {
+            g_assert_not_reached();
+        }
+
+        return;
+    }
+
     if (datatype == GWY_RAW_DATA_SINT8) {
         const gint8 *s8 = (const gint8*)data;
         for (i = nitems; i; i--, s8 += stride, target++)
