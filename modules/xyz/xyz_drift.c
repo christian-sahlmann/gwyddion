@@ -255,7 +255,7 @@ static const XYZDriftArgs xyzdrift_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Analyze drift in XYZ data."),
+    N_("Analyzes drift in XYZ data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "Petr Klapetek",
@@ -273,7 +273,7 @@ module_register(void)
                           NULL,
                           XYZDRIFT_RUN_MODES,
                           GWY_MENU_FLAG_XYZ,
-                          N_("Analyze and/or remove the drift"));
+                          N_("Analyze and/or remove drift"));
 
     return TRUE;
 }
