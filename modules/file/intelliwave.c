@@ -24,7 +24,7 @@
  * <mime-type type="application/x-intelliwave-esd">
  *   <comment>IntelliWave interferometric ESD data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="ESD IntelliWave"/>
+ *     <match type="string" offset="0" value="ESD "/>
  *   </magic>
  *   <glob pattern="*.esd"/>
  *   <glob pattern="*.ESD"/>
@@ -34,7 +34,7 @@
 /**
  * [FILE-MAGIC-FILEMAGIC]
  * # IntelliWave interferometric ESD data
- * 0 string ESD\ IntelliWave IntelliWave interferometric ESD data
+ * 0 string ESD\  IntelliWave interferometric ESD data
  **/
 
 /**
@@ -59,7 +59,7 @@
 
 #define EXTENSION ".esd"
 
-#define MAGIC "ESD IntelliWave"
+#define MAGIC "ESD "
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 enum {
@@ -67,6 +67,7 @@ enum {
     INFO_SIZE = 962,
     NAME_LEN = 50,
     N_IS_VALID = 50, /* the number of things that have is_valid[] flags */
+    N_INTERFEROGRAMS = 5,
 };
 
 /*
@@ -196,25 +197,33 @@ typedef struct {
 */
 
 typedef struct {
+    const gchar *filename;
     IntWaveFileHeader header;
     IntWaveFileInfo info;
 } IntWaveFile;
 
-static gboolean      module_register (void);
-static gint          intw_detect     (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* intw_load       (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static const guchar* intw_read_header(const guchar *p,
-                                      IntWaveFile *intwfile);
-static const guchar* intw_read_info  (const guchar *p,
-                                      IntWaveFile *intwfile);
-static GwyDataField* read_data_field (IntWaveFile *intwfile,
-                                      guint i,
-                                      const guchar *buffer,
-                                      guint size,
-                                      GwyDataField **mask);
+static gboolean      module_register        (void);
+static gint          intw_detect            (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* intw_load              (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static const guchar* intw_read_header       (const guchar *p,
+                                             IntWaveFile *intwfile);
+static const guchar* intw_read_info         (const guchar *p,
+                                             IntWaveFile *intwfile);
+static guint         check_data_block       (const IntWaveFile *intwfile,
+                                             guint i,
+                                             guint size,
+                                             guint minbpp);
+static void          read_data_field_opd    (GwyContainer *container,
+                                             gint *id,
+                                             const IntWaveFile *intwfile,
+                                             const guchar *p);
+static void          read_data_field_fringes(GwyContainer *container,
+                                             gint *id,
+                                             const IntWaveFile *intwfile,
+                                             const guchar *p);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -267,7 +276,7 @@ intw_load(const gchar *filename,
     GError *err = NULL;
     IntWaveFile intwfile;
     gint id = 0;
-    guint i, j;
+    guint i, n, offset;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -286,53 +295,46 @@ intw_load(const gchar *filename,
     p = intw_read_info(p, &intwfile);
     g_assert(p - buffer == HEADER_SIZE + INFO_SIZE);
 
-    if (err_DIMENSION(error, intwfile.info.nx)
-        || err_DIMENSION(error, intwfile.info.nx)) {
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+    for (i = 0; i < N_IS_VALID; i++) {
+        offset = intwfile.header.file_offsets[i];
+        if (offset == 0xffffffffu
+            || offset == 0xfffffffeu
+            || offset == 0x00000001u) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Invalid data address 0x%0x found.  "
+                          "File is in some unknown format version."),
+                        offset);
+            goto fail;
+        }
     }
 
-    if (intwfile.info.nz != intwfile.info.nx * intwfile.info.ny) {
+    if (err_DIMENSION(error, intwfile.info.nx)
+        || err_DIMENSION(error, intwfile.info.nx))
+        goto fail;
+
+    n = intwfile.info.nz;
+    if (n != intwfile.info.nx * intwfile.info.ny) {
         err_INVALID(error, "nz");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     container = gwy_container_new();
-    for (i = 0; i < N_IS_VALID; i++) {
-        guint offset = intwfile.header.file_offsets[i], maxsize = size - offset;
-        GwyDataField *dfield, *mask = NULL;
 
-        if (!offset || !intwfile.info.is_valid[i])
-            continue;
+    i = INTWAVE_DATA_OPD;
+    if ((offset = check_data_block(&intwfile, i, size, sizeof(gfloat))))
+        read_data_field_opd(container, &id, &intwfile, buffer + offset);
 
-        for (j = 0; j < N_IS_VALID; j++) {
-            guint other_offset = intwfile.header.file_offsets[j];
-            if (other_offset > offset && other_offset < offset + maxsize)
-                maxsize = other_offset - offset;
-        }
-        dfield = read_data_field(&intwfile, i, buffer, maxsize, &mask);
-        if (!dfield)
-            continue;
-
-        gwy_container_set_object(container,
-                                 gwy_app_get_data_key_for_id(id), dfield);
-        g_object_unref(dfield);
-        if (mask) {
-            gwy_container_set_object(container,
-                                     gwy_app_get_mask_key_for_id(id), mask);
-            g_object_unref(mask);
-        }
-        gwy_file_channel_import_log_add(container, id, NULL, filename);
-        id++;
-    }
-
-    gwy_file_abandon_contents(buffer, size, NULL);
+    i = INTWAVE_DATA_FRINGE;
+    if ((offset = check_data_block(&intwfile, i, size,
+                                   N_INTERFEROGRAMS*sizeof(gint16))))
+        read_data_field_fringes(container, &id, &intwfile, buffer + offset);
 
     if (!gwy_container_get_n_items(container))
         err_NO_DATA(error);
 
-
+fail:
+    gwy_file_abandon_contents(buffer, size, NULL);
     return container;
 }
 
@@ -429,56 +431,142 @@ intw_read_info(const guchar *p,
     return p;
 }
 
-static GwyDataField*
-read_data_field(IntWaveFile *intwfile, guint i,
-                const guchar *buffer, guint maxsize, GwyDataField **mask)
+static guint
+check_data_block(const IntWaveFile *intwfile, guint i,
+                 guint size, guint minbpp)
+{
+    guint offset = intwfile->header.file_offsets[i];
+    guint n = intwfile->info.nz;
+    guint maxsize, maxbpp, other_offset, j;
+
+    if (!offset || !intwfile->info.is_valid[i])
+        return 0;
+
+    if (offset >= size) {
+        g_warning("Data block %u is beyond the end of file.", i);
+        return 0;
+    }
+
+    maxsize = size - offset;
+    for (j = 0; j < N_IS_VALID; j++) {
+        other_offset = intwfile->header.file_offsets[j];
+        if (other_offset > offset && other_offset < offset + maxsize)
+            maxsize = other_offset - offset;
+    }
+    maxbpp = maxsize/n;
+
+    gwy_debug("data[%u] at 0x%08x (%u) must be at most %u bytes long",
+              i, offset, offset, maxsize);
+    gwy_debug("that permits %u bytes per sample", maxbpp);
+    gwy_debug("%u bytes from 0x%08x (%u) would be then unclaimed",
+              maxsize - maxbpp*n, offset + maxbpp*n, offset + maxbpp*n);
+
+    if (maxbpp < minbpp) {
+        g_warning("Data block %u is truncated.", i);
+        return 0;
+    }
+
+    return offset;
+}
+
+static void
+read_data_field_opd(GwyContainer *container, gint *id,
+                    const IntWaveFile *intwfile, const guchar *p)
 {
     guint xres = intwfile->info.nx;
     guint yres = intwfile->info.ny;
     guint n = intwfile->info.nz;
-    guint maxbpp = maxsize/n;
-    guint pos = intwfile->header.file_offsets[i];
-    const guchar *p = buffer + pos;
     guint k;
-    GwyRawDataType datatype = GWY_RAW_DATA_FLOAT;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mask;
     gdouble *d, *m;
-    gdouble q = 1.0, invalid = intwfile->info.invalid_value;
-
-    gwy_debug("data[%u] at 0x%08x (%u) must be at most %u bytes long",
-              i, pos, pos, maxsize);
-    gwy_debug("that permits %u bytes per sample", maxbpp);
-    gwy_debug("%u bytes from 0x%08x (%u) would be then unclaimed",
-              maxsize - maxbpp*n, pos + maxbpp*n, pos + maxbpp*n);
-
-    if (i == INTWAVE_DATA_OPD) {
-        if (maxbpp < 4)
-            return NULL;
-
-        q = 1e-6 * intwfile->info.wavelength;
-    }
-    else {
-        gwy_info("Unhandled data type %u.", i);
-        return NULL;
-    }
+    gdouble q = 1e-6 * intwfile->info.wavelength,
+            invalid = intwfile->info.invalid_value;
 
     dfield = gwy_data_field_new(xres, yres, xres, yres, FALSE);
     d = gwy_data_field_get_data(dfield);
-    gwy_convert_raw_data(p, n, 1, datatype, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+    gwy_convert_raw_data(p, n, 1,
+                         GWY_RAW_DATA_FLOAT, GWY_BYTE_ORDER_LITTLE_ENDIAN,
                          d, 1.0, 0.0);
 
-    *mask = gwy_data_field_new_alike(dfield, TRUE);
-    m = gwy_data_field_get_data(*mask);
+    mask = gwy_data_field_new_alike(dfield, TRUE);
+    m = gwy_data_field_get_data(mask);
     for (k = 0; k < n; k++) {
         if (d[k] != invalid) {
             m[k] = 1.0;
             d[k] *= q;
         }
     }
-    if (!gwy_app_channel_remove_bad_data(dfield, *mask))
-        gwy_object_unref(*mask);
+    if (!gwy_app_channel_remove_bad_data(dfield, mask))
+        gwy_object_unref(mask);
 
-    return dfield;
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+    gwy_container_set_object(container,
+                             gwy_app_get_data_key_for_id(*id), dfield);
+    g_object_unref(dfield);
+
+    gwy_container_set_const_string(container,
+                                   gwy_app_get_data_title_key_for_id(*id),
+                                   "OPD");
+
+    if (mask) {
+        gwy_container_set_object(container,
+                                 gwy_app_get_mask_key_for_id(*id), mask);
+        g_object_unref(mask);
+    }
+
+    gwy_file_channel_import_log_add(container, *id, NULL,
+                                    intwfile->filename);
+    (*id)++;
+}
+
+static void
+read_data_field_fringes(GwyContainer *container,
+                        gint *id,
+                        const IntWaveFile *intwfile,
+                        const guchar *p)
+{
+    guint xres = intwfile->info.nx;
+    guint yres = intwfile->info.ny;
+    guint n = intwfile->info.nz;
+    guint i, k;
+    GwyDataField *dfield, *mask;
+    gdouble *d, *m;
+    gdouble invalid = intwfile->info.invalid_value;
+
+    for (i = 0; i < N_INTERFEROGRAMS; i++) {
+        dfield = gwy_data_field_new(xres, yres, xres, yres, FALSE);
+        d = gwy_data_field_get_data(dfield);
+        gwy_convert_raw_data(p + i*n*sizeof(gint16), n, 1,
+                             GWY_RAW_DATA_SINT16, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             d, 1.0, 0.0);
+
+        mask = gwy_data_field_new_alike(dfield, TRUE);
+        m = gwy_data_field_get_data(mask);
+        for (k = 0; k < n; k++) {
+            if (d[k] != invalid)
+                m[k] = 1.0;
+        }
+        if (!gwy_app_channel_remove_bad_data(dfield, mask))
+            gwy_object_unref(mask);
+
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(*id), dfield);
+        g_object_unref(dfield);
+
+        gwy_container_set_string(container,
+                                 gwy_app_get_data_title_key_for_id(*id),
+                                 g_strdup_printf("Interferogram %u", i+1));
+
+        if (mask) {
+            gwy_container_set_object(container,
+                                     gwy_app_get_mask_key_for_id(*id), mask);
+            g_object_unref(mask);
+        }
+
+        gwy_file_channel_import_log_add(container, *id, NULL,
+                                        intwfile->filename);
+        (*id)++;
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
