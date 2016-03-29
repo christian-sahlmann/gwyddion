@@ -491,18 +491,19 @@ gwy_app_tip_of_the_day(void)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 8);
 
     align = gtk_alignment_new(0.5, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, TRUE, 0);
 
     tod->icon = gtk_image_new();
     gtk_container_add(GTK_CONTAINER(align), tod->icon);
 
     align = gtk_alignment_new(0.5, 0.0, 1.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, TRUE, 0);
 
     tod->text = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(tod->text), 0.0, 0.0);
     gtk_label_set_line_wrap(GTK_LABEL(tod->text), TRUE);
     gtk_label_set_selectable(GTK_LABEL(tod->text), TRUE);
-    gtk_widget_set_size_request(tod->text, 320, -1);
+    gtk_widget_set_size_request(tod->text, 320, 72);
     gtk_container_add(GTK_CONTAINER(align), tod->text);
 
     /* Randomize tips */
