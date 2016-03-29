@@ -867,7 +867,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
                     "<file>/Save",            GWY_MENU_FLAG_FILE,
                     "<file>/Save As...",      GWY_MENU_FLAG_FILE,
                     "<file>/Merge...",        GWY_MENU_FLAG_FILE,
-                    "<file>/Close...",        GWY_MENU_FLAG_FILE,
+                    "<file>/Close",           GWY_MENU_FLAG_FILE,
                     "<file>/Remove All Logs", GWY_MENU_FLAG_FILE,
                     NULL);
 
