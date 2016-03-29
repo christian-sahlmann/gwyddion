@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2008 David Necas (Yeti).
+ *  Copyright (C) 2008-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <app/app.h>
+#include <app/settings.h>
 
 #define DEFAULT_ICON GTK_STOCK_INFO
 
@@ -38,6 +39,7 @@ typedef struct {
     GtkWidget *dialog;
     GtkWidget *icon;
     GtkWidget *text;
+    GtkWidget *show_at_startup;
 } GwyTipOfTheDay;
 
 enum {
@@ -453,12 +455,27 @@ finalize(GwyTipOfTheDay *tod)
     g_free(tod);
 }
 
+static void
+show_at_startup_changed(GtkToggleButton *toggle, GwyContainer *settings)
+{
+    gboolean show_at_startup = gtk_toggle_button_get_active(toggle);
+
+    gwy_container_set_boolean_by_name(settings, "/app/tips/show-at-startup",
+                                      show_at_startup);
+}
+
 void
 gwy_app_tip_of_the_day(void)
 {
     GtkWidget *dialog, *image, *button, *hbox, *align;
+    GwyContainer *settings;
     GwyTipOfTheDay *tod;
     guint i, n, *source;
+    gboolean show_at_startup = FALSE;
+
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, "/app/tips/show-at-startup",
+                                      &show_at_startup);
 
     n = G_N_ELEMENTS(tips);
     tod = g_new0(GwyTipOfTheDay, 1);
@@ -505,6 +522,19 @@ gwy_app_tip_of_the_day(void)
     gtk_label_set_selectable(GTK_LABEL(tod->text), TRUE);
     gtk_widget_set_size_request(tod->text, 320, 72);
     gtk_container_add(GTK_CONTAINER(align), tod->text);
+
+    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
+    gtk_alignment_set_padding(GTK_ALIGNMENT(align), 2, 2, 16, 16);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), align,
+                       FALSE, FALSE, 0);
+
+    tod->show_at_startup
+        = gtk_check_button_new_with_mnemonic(_("_Show tips at startup"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tod->show_at_startup),
+                                 show_at_startup);
+    gtk_container_add(GTK_CONTAINER(align), tod->show_at_startup);
+    g_signal_connect(tod->show_at_startup, "toggled",
+                     G_CALLBACK(show_at_startup_changed), settings);
 
     /* Randomize tips */
     source = g_new(guint, n);
