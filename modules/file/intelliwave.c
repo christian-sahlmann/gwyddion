@@ -212,7 +212,7 @@ static const guchar* intw_read_info  (const guchar *p,
                                       IntWaveFile *intwfile);
 static GwyDataField* read_data_field (IntWaveFile *intwfile,
                                       guint i,
-                                      const guchar *p,
+                                      const guchar *buffer,
                                       guint size,
                                       GwyDataField **mask);
 
@@ -311,7 +311,7 @@ intw_load(const gchar *filename,
             if (other_offset > offset && other_offset < offset + maxsize)
                 maxsize = other_offset - offset;
         }
-        dfield = read_data_field(&intwfile, i, buffer + offset, maxsize, &mask);
+        dfield = read_data_field(&intwfile, i, buffer, maxsize, &mask);
         if (!dfield)
             continue;
 
@@ -431,20 +431,25 @@ intw_read_info(const guchar *p,
 
 static GwyDataField*
 read_data_field(IntWaveFile *intwfile, guint i,
-                const guchar *p, guint size, GwyDataField **mask)
+                const guchar *buffer, guint maxsize, GwyDataField **mask)
 {
     guint xres = intwfile->info.nx;
     guint yres = intwfile->info.ny;
     guint n = intwfile->info.nz;
-    guint maxbpp = size/n;
+    guint maxbpp = maxsize/n;
+    guint pos = intwfile->header.file_offsets[i];
+    const guchar *p = buffer + pos;
     guint k;
     GwyRawDataType datatype = GWY_RAW_DATA_FLOAT;
     GwyDataField *dfield;
     gdouble *d, *m;
     gdouble q = 1.0, invalid = intwfile->info.invalid_value;
 
-    gwy_debug("data[%u] must be at most %u bytes long", i, size);
-    gwy_debug("that permits %d bytes per sample", maxbpp);
+    gwy_debug("data[%u] at 0x%08x (%u) must be at most %u bytes long",
+              i, pos, pos, maxsize);
+    gwy_debug("that permits %u bytes per sample", maxbpp);
+    gwy_debug("%u bytes from 0x%08x (%u) would be then unclaimed",
+              maxsize - maxbpp*n, pos + maxbpp*n, pos + maxbpp*n);
 
     if (i == INTWAVE_DATA_OPD) {
         if (maxbpp < 4)
