@@ -111,18 +111,18 @@ gwy_osx_open_file(gpointer data,
 @implementation GwyOSXEventHandler
 - (void)handleOpenEvent:(NSAppleEventDescriptor *)event withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-    #pragma unused (replyEvent)
+#pragma unused (replyEvent)
     NSAppleEventDescriptor *descr = [event descriptorForKeyword:keyDirectObject];
     NSInteger i,count = [descr numberOfItems];
 
-    for(i=0;i<count;i++)
-    {
-        NSAppleEventDescriptor *descr1 = i==0?descr:[descr descriptorAtIndex:i];
+    for(i = 0; i < count; i++) {
+        NSAppleEventDescriptor *descr1 = (i == 0
+                                          ? descr
+                                          : [descr descriptorAtIndex:i]);
         NSString *url = [descr1 stringValue];
         NSString *filename = [[NSURL URLWithString:url]  path];
 
-
-        char * strBuffer = (char*)[filename UTF8String];
+        char *strBuffer = (char*)[filename UTF8String];
 
         if (fileModulesReady)
             gwy_osx_open_file(strBuffer, NULL);
@@ -136,8 +136,8 @@ gwy_osx_open_file(gpointer data,
 
 - (void)handleQuitEvent:(NSAppleEventDescriptor *)event withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-   #pragma unused (event)
-   #pragma unused (replyEvent)
+#pragma unused (event)
+#pragma unused (replyEvent)
    gtk_main_quit();
 }
 
@@ -165,9 +165,7 @@ gwy_osx_init_handler(USED_ON_MAC int *argc)
     if (bundle_url_ref)
         CFRelease(bundle_url_ref);
 
-
     eventHandler = [[GwyOSXEventHandler alloc] init];
-
 
     appleEventManager = [NSAppleEventManager sharedAppleEventManager];
     [appleEventManager setEventHandler:eventHandler
@@ -181,7 +179,7 @@ gwy_osx_init_handler(USED_ON_MAC int *argc)
                             andEventID:kAEQuitApplication];
 
 #ifdef HAVE_GTK_MAC_INTEGRATION
-    theApp  = g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
+    theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 #endif
 #endif
 }
@@ -196,15 +194,17 @@ gwy_osx_remove_handler(void)
     [eventHandler release];
     eventHandler = nil;
 #ifdef HAVE_GTK_MAC_INTEGRATION
-    g_object_unref (theApp);
+    g_object_unref(theApp);
 #endif
 #endif
 }
 
-void
+gboolean
 gwy_osx_open_files(void)
 {
 #ifdef USE_MAC_INTEGRATION
+    gboolean opening_files = !!files_array;
+
     if (files_array) {
         g_ptr_array_foreach(files_array, gwy_osx_open_file, NULL);
         g_ptr_array_foreach(files_array, (GFunc)g_free, NULL);
@@ -212,7 +212,10 @@ gwy_osx_open_files(void)
         files_array = NULL;
     }
     fileModulesReady = 1;
+
+    return opening_files;
 #endif
+    return FALSE;
 }
 
 void

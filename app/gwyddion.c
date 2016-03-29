@@ -59,9 +59,10 @@ typedef struct {
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
-static void     open_command_line_files         (gint n,
+static gboolean open_command_line_files         (gint n,
                                                  gchar **args);
-static gboolean open_directory_on_startup       (gpointer user_data);
+static gboolean open_directory_at_startup       (gpointer user_data);
+static gboolean show_tip_at_startup             (gpointer user_data);
 static gint     check_command_line_files        (gint n,
                                                  gchar **args);
 static void     print_help                      (void);
@@ -97,6 +98,8 @@ main(int argc, char *argv[])
     gchar **module_dirs;
     gchar *settings_file, *recent_file_file, *accel_file;
     gboolean has_settings, settings_ok = FALSE;
+    gboolean opening_files = FALSE, show_tips = FALSE;
+    GwyContainer *settings;
     GError *settings_err = NULL;
     GTimer *timer;
 
@@ -162,7 +165,7 @@ main(int argc, char *argv[])
     if (has_settings)
         settings_ok = gwy_app_settings_load(settings_file, &settings_err);
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
-    gwy_app_settings_get();
+    settings = gwy_app_settings_get();
     debug_time(timer, "load settings");
 
     gwy_app_splash_set_message(_("Registering modules"));
@@ -229,12 +232,17 @@ main(int argc, char *argv[])
     gtk_window_present(GTK_WINDOW(toolbox));
     debug_time(timer, "show toolbox");
 
-    open_command_line_files(argc - 1, argv + 1);
-    gwy_osx_open_files();
+    opening_files |= open_command_line_files(argc - 1, argv + 1);
+    opening_files |= gwy_osx_open_files();
     debug_time(timer, "open commandline files");
 
     g_timer_destroy(timer);
     debug_time(NULL, "STARTUP");
+
+    gwy_container_gis_boolean_by_name(settings, "/app/tips/show-at-startup",
+                                      &show_tips);
+    if (show_tips && !opening_files)
+        g_idle_add(show_tip_at_startup, NULL);
 
     gtk_main();
 
@@ -499,18 +507,21 @@ fix_win32_commandline_arg(gchar *p)
 #endif
 }
 
-static void
+static gboolean
 open_command_line_files(gint n, gchar **args)
 {
     gchar *dir_to_open = NULL;
     gchar **p;
     gchar *cwd, *filename, *q;
+    gboolean opening_anything = FALSE;
 
     cwd = g_get_current_dir();
 #ifdef DEBUG
     gwy_debug("current dir: <%s>", g_strescape(cwd, ""));
 #endif
     for (p = args; n; p++, n--) {
+        opening_anything = TRUE;
+
         q = fix_win32_commandline_arg(*p);
 #ifdef DEBUG
         gwy_debug("argv: <%s>", g_strescape(*p, ""));
@@ -539,11 +550,13 @@ open_command_line_files(gint n, gchar **args)
     g_free(cwd);
 
     if (dir_to_open)
-        g_idle_add(open_directory_on_startup, dir_to_open);
+        g_idle_add(open_directory_at_startup, dir_to_open);
+
+    return opening_anything;
 }
 
 static gboolean
-open_directory_on_startup(gpointer user_data)
+open_directory_at_startup(gpointer user_data)
 {
     gchar *dir_to_open = (gchar*)user_data;
 
@@ -600,6 +613,13 @@ check_command_line_files(gint n,
     }
 
     return nfailures;
+}
+
+static gboolean
+show_tip_at_startup(G_GNUC_UNUSED gpointer user_data)
+{
+    gwy_app_tip_of_the_day();
+    return FALSE;
 }
 
 /**
