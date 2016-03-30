@@ -1026,7 +1026,7 @@ construct_options(XYZDriftControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->neighbors = gtk_adjustment_new(args->neighbors, -1000, 1000, 1, 100, 0);
+    controls->neighbors = gtk_adjustment_new(args->neighbors, 1, 100, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->neighbors), 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
@@ -1357,6 +1357,10 @@ find_initial_diff(double px, double pv, double nv, double *nx, double *diff)
 static gboolean
 find_next_pos(double px, double ppx, double pv, double ppv, double *nx, double *diff, double mindiff, double tolerance)
 {
+   *nx = px+(*diff);
+    return TRUE;
+
+
    if (fabs(pv-ppv)<=tolerance) {printf("In tolerance\n"); return TRUE;} //value difference is small enough
    if (fabs((*diff))<=fabs(mindiff)) {printf("Small enough\n"); return TRUE;} //x difference is small enough
 
@@ -1414,7 +1418,7 @@ neighbors_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->neighbors = gtk_adjustment_get_value(adj);
+    args->neighbors = gtk_adjustment_get_value(adj)/100.0;
 }
 
 
@@ -1442,11 +1446,12 @@ get_error(GwyXYZ *points, gint *nbfrom, gint *nbto, gint nnbs, gdouble *zdrift)
 
     /*for each neighbor, sum the squared difference after drift correction*/
     for (i=0; i<nnbs; i++) {
-        sum += ((points[nbfrom[i]].z + zdrift[nbfrom[i]]) - (points[nbto[i]].z + zdrift[nbto[i]]))
-              *((points[nbfrom[i]].z + zdrift[nbfrom[i]]) - (points[nbto[i]].z + zdrift[nbto[i]]));
+//        sum += ((points[nbfrom[i]].z - zdrift[nbfrom[i]]) - (points[nbto[i]].z - zdrift[nbto[i]]))
+//              *((points[nbfrom[i]].z - zdrift[nbfrom[i]]) - (points[nbto[i]].z - zdrift[nbto[i]]));
 
+        sum += (points[nbfrom[i]].z - points[nbto[i]].z)*(points[nbfrom[i]].z - points[nbto[i]].z);
     }
-    return sum/nnbs;
+    return sqrt(sum)/nnbs;
 
 }
 
@@ -1529,9 +1534,9 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
     get_bin(points[index].x, points[index].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
 
     //search in surrounding bins
-    for (i=MAX(0, bi-1); i<MIN(bi+1, NBIN); i++)
+    for (i=MAX(0, bi-1); i<=MIN(bi+1, NBIN-1); i++)
     {
-        for (j=MAX(0, bj-1); j<MIN(bj+1, NBIN); j++)
+        for (j=MAX(0, bj-1); j<=MIN(bj+1, NBIN-1); j++)
         {
             for (k=0; k<nbin[i][j]; k++) //go through bin
             {
@@ -1562,14 +1567,14 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
 
 static gint 
 find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npoints, gdouble timethreshold, gdouble posthreshold, gdouble *xdrift, gdouble *ydrift,
-               gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
+               gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset, gdouble neighbors)
 {
     gint i, nnbs = 0, closest;
+    gint skip = (gint)CLAMP((1.0/neighbors), 1, npoints);
     gint ***bin, **nbin;
     FILE *fw = fopen("nbs.txt", "w");
 
-
-
+    
 
     bin = g_new(gint**, NBIN);
     for (i=0; i<NBIN; i++) bin[i] = g_new(gint*, NBIN);
@@ -1582,7 +1587,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
     nnbs = 0;
     fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
 
-    for (i=0; i<npoints; i++) {
+    for (i=0; i<npoints; i+=skip) {
         closest = find_closest_point_bining(points, time, timethreshold, posthreshold, i, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
 
         if (closest>=0) {
@@ -1772,11 +1777,12 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
 
     //correct xyz data (corpoints) for drift
     correct_drift(points, npoints, xdrift, ydrift, zdrift,
-                        corpoints, FALSE);
+                        corpoints, TRUE);
 
     //find neigbors for error evaluation
     nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
-                          controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin);
+                          controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
+                          controls->args->neighbors);
 
     //get the error
     return get_error(corpoints, nbfrom, nbto, nnbs, zdrift);
@@ -1787,7 +1793,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 {
     gint i, iteration, closest, intit;
     gint *nbfrom, *nbto, nnbs;
-    gdouble timethreshold = 1e3, posthreshold = 1e-6, tolerance = 1e-15;
+    gdouble timethreshold = 1e3, posthreshold = 1e-6, tolerance = 1e-18;
     gdouble ax, ay, az, bx, by, bz, cx, cy, cz, next;
     gdouble pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz;
     gdouble vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
@@ -1823,7 +1829,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
        {
            //iterate through bx
            //estimate initial step size
-           mindiff = 1e-15;
+           mindiff = 1e-17;
            bx = pbx = controls->args->xdrift_b;
 
            printf("starting init drift search\n");
@@ -1851,15 +1857,15 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
            //find minimum
             
-           pbx = bx;
+           pbx = pbx;
            vpbx = vbx;
-           diff = mindiff*1000;
+           diff = mindiff*1e5;
            bx = pbx+diff;
            vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
 
-           printf("start finding minimum at %g, with diff %g\n", bx, diff);
+           printf("start finding minimum at %g, with diff %g\n", pbx, diff);
 
            intit = 0;
            do {
@@ -1872,7 +1878,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
                  printf("minimum search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
-              }
+              } else     fprintf(stderr, "completed search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
+
               intit++;
            } while (!done && intit<100);
        }
@@ -2020,9 +2027,9 @@ init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble
     for (i=0; i<npoints; i++) {
        time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this
 
-       xdrift[i] = get_xydrift_val(args->xdrift_type, args->xdrift_a, args->xdrift_b, args->xdrift_c, time[i]);
-       ydrift[i] = get_xydrift_val(args->ydrift_type, args->ydrift_a, args->ydrift_b, args->ydrift_c, time[i]);
-       zdrift[i] = get_zdrift_val(args->zdrift_type, args->zdrift_a, args->zdrift_b, args->zdrift_c, time[i]);
+//       xdrift[i] = get_xydrift_val(args->xdrift_type, args->xdrift_a, args->xdrift_b, args->xdrift_c, time[i]);
+//       ydrift[i] = get_xydrift_val(args->ydrift_type, args->ydrift_a, args->ydrift_b, args->ydrift_c, time[i]);
+//       zdrift[i] = get_zdrift_val(args->zdrift_type, args->zdrift_a, args->zdrift_b, args->zdrift_c, time[i]);
     }
 }
 
@@ -2034,8 +2041,8 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
     gint i;
 
     for (i=0; i<npoints; i++) {
-       corpoints[i].x = points[i].x + xdrift[i];
-       corpoints[i].y = points[i].y + ydrift[i];
+       corpoints[i].x = points[i].x - xdrift[i];
+       corpoints[i].y = points[i].y - ydrift[i];
        if (correctz) corpoints[i].z = points[i].z - zdrift[i];
     }
 }
@@ -2072,7 +2079,7 @@ preview(XYZDriftControls *controls)
                 args->neighbors, args->threshold_length, args->threshold_time);
 
 
-    /*fill xdrift, ydrift and zdrift arrays from user/default values*/
+    /*remove when time is in seconds, does nothing else*/
     init_drift(controls, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
     /*estimate the drift using some fitting routine, returning filled xdrift, ydrift and zdrift arrays*/
@@ -2080,6 +2087,11 @@ preview(XYZDriftControls *controls)
         estimate_drift(controls, rdata->points, rdata->corpoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
     /*correct data for drift, creating corpoints from points*/
+    set_drift(controls, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift, 
+                    args->xdrift_a, args->xdrift_b, args->xdrift_c, 
+                    args->ydrift_a, args->ydrift_b, args->ydrift_c, 
+                    args->zdrift_a, args->zdrift_b, args->zdrift_c);
+
     correct_drift(rdata->points, rdata->npoints, rdata->xdrift, rdata->ydrift, rdata->zdrift,
                   rdata->corpoints, TRUE);
 
