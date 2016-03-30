@@ -14,4 +14,4 @@ Icon=@datadir@/icons/hicolor/48x48/apps/gwyddion.png
 MimeType=@MIME_TYPE_LIST@
 Terminal=false
 StartupNotify=true
-Categories=GTK;Physics;Science;Engineering;RasterGraphics;2DGraphics;Graphics;
+Categories=Science;Physics;Engineering;DataVisualization;GTK
