@@ -942,7 +942,8 @@ preview(XYZRasControls *controls)
 
     /* When user starts messing with the controls, remove the direct
      * rendering option. */
-    gtk_widget_hide(controls->directbox);
+    if (controls->directbox)
+        gtk_widget_hide(controls->directbox);
 }
 
 static void
