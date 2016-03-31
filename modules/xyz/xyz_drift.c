@@ -1527,7 +1527,7 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
     gint bi, bj, i, j, k, bindex;
     int closest = -1;
     double mindist = G_MAXDOUBLE;
-    double sdist;
+    double sdist, spt = pt*pt;
 
 
     //get actual bin
@@ -1544,10 +1544,12 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
 
                   if ((time[index] - time[bindex])>tt) {
 
-                     sdist = (((points[index].x + xdrift[index]) - (points[bindex].x + xdrift[bindex]))*((points[index].x + xdrift[index]) - (points[bindex].x + xdrift[bindex])) +
-                         ((points[index].y + ydrift[index]) - (points[bindex].y + ydrift[bindex]))*((points[index].y + ydrift[index]) - (points[bindex].y + ydrift[bindex])));
-
-                     if (sdist<(pt*pt)) {
+                     sdist = (points[index].x - points[bindex].x)*(points[index].x - points[bindex].x) +
+                         (points[index].y - points[bindex].y)*(points[index].y - points[bindex].y);
+                      
+    //                 printf("%d %d   %g %g    %g %g   %g\n", index, bindex, points[index].x, points[index].y, points[bindex].x, points[bindex].y, sdist);
+ 
+                     if (sdist<spt) {
                         if (sdist<mindist) {
                            mindist = sdist;
                             closest = bindex;
@@ -1770,7 +1772,7 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
                   gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz, gint *nbfrom, gint *nbto)
 {
     gint nnbs;
-    gdouble timethreshold = 1e3, posthreshold = 1e-6; //FIXME this should come from GUI
+    gdouble timethreshold = 1e1, posthreshold = 1e-6; //FIXME this should come from GUI
     //set drift arrays
     set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
                     ax, bx, cx, ay, by, cy, az, bz, cz);
@@ -1793,7 +1795,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 {
     gint i, iteration, closest, intit;
     gint *nbfrom, *nbto, nnbs;
-    gdouble timethreshold = 1e3, posthreshold = 1e-6, tolerance = 1e-18;
+    gdouble timethreshold = 1e3, posthreshold = 10e-6, tolerance = 1e-18;
     gdouble ax, ay, az, bx, by, bz, cx, cy, cz, next;
     gdouble pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz;
     gdouble vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
@@ -1837,6 +1839,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
            vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                   ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
+/*
       
 
            vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -1859,14 +1862,19 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
             
            pbx = pbx;
            vpbx = vbx;
-           diff = mindiff*1e5;
+           diff = mindiff*1e1;
            bx = pbx+diff;
+
+*/
+/*
            vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
+*/
 
-           printf("start finding minimum at %g, with diff %g\n", pbx, diff);
+           printf("start finding minimum at %g, with diff %g   error %g\n", pbx, diff, vbx);
 
+/*
            intit = 0;
            do {
               done = find_next_pos(bx, pbx, vbx, vpbx, &next, &diff, mindiff, tolerance);
@@ -1882,6 +1890,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
               intit++;
            } while (!done && intit<100);
+*/
        }
 
        iteration++;
