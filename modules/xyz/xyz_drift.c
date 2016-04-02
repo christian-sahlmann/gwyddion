@@ -466,30 +466,32 @@ static void
 upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
 {
     gchar buffer[20];
+    XYZDriftData *rdata = controls->rdata;
+
 
     if (x) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_a);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_a_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_a), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_b);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_b), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->xdrift_c);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_c), buffer);
     }
     if (y) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_a);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_a_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_a), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_b);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_b), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->ydrift_c);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_c), buffer);
     }
 
     if (z) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_a);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_a_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_a), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_b);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_b), buffer);
-        g_snprintf(buffer, sizeof(buffer), "%.4g", controls->args->zdrift_c);
+        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_c), buffer);
     }
 }
@@ -1831,7 +1833,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     gdouble pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz;
     gdouble vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
     gdouble vpax, vpay, vpaz, vpbx, vpby, vpbz, vpcx, vpcy, vpcz;
-    gdouble minxdrift, minxdrifts, minydrift, minydrifts, mindiff, diff;
+    gdouble mindiff, diff;
     gdouble err, minerr, minzdrift, minzdrifts;
     gboolean done;
 
@@ -1857,68 +1859,159 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     //successively minimize all the variables
     iteration = 0;
     do {
+           if (controls->args->fit_xdrift) 
+           {
+               //iterate through bx
+               pbx = bx;
+               printf("bx search\n");
 
-       if (controls->args->fit_xdrift) 
-       {
-           //iterate through bx
-           //estimate initial step size
-           mindiff = 1e-17;
-           bx = pbx = controls->args->xdrift_b;
+               vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+ 
+               diff = 1e-8;
+               mindiff = 1e-12;
+               bx = pbx+diff;
 
-           printf("starting init drift search\n");
+               vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
+               printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pbx, vpbx, bx, vbx, diff);
 
-           vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                  ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+               intit = 0;
+               do {
+                   done = find_next_pos(bx, pbx, vbx, vpbx, &next, &diff, mindiff, tolerance);
+                   if (!done) {
+                      pbx = bx;
+                      vpbx = vbx;
+                      bx = next;
+                      vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
-           /* //automatic estimation of start difference, skip for now
+                      printf("minimum search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
+                  } else  {
+                     bx = pbx;
+                     fprintf(stderr, "completed search: pbx %g vpbx %g\n", pbx, vpbx);
+                  }
 
-           vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                  ax, bx+mindiff, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                  intit++;
+               } while (!done && intit<100);
+           }
+           if (controls->args->fit_xdrift) 
+           {
+               //iterate through cx
+               pcx = cx;
+               printf("cx search\n");
 
-           intit = 0;
-           do {
-              done = find_initial_diff(pbx, vpbx, vbx, &bx, &mindiff);
-              printf("iteration with %g %g %g %g,   diff %g\n", pbx, vpbx, bx, vbx, mindiff);
-              if (!done) {
-                  vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                     ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+               vpcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+ 
+               diff = 1e-11;
+               mindiff = 1e-14;
+               cx = pcx+diff;
 
-              }
-              intit++;
-           } while (!done && intit<10);
-           printf("diff found: %g\n", mindiff);
+               vcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
-           */
-            
-           diff = 1e-8;//mindiff*100;
-           bx = pbx+diff;
+               printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pcx, vpcx, cx, vcx, diff);
 
-           vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                     ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+               intit = 0;
+               do {
+                   done = find_next_pos(cx, pcx, vcx, vpcx, &next, &diff, mindiff, tolerance);
+                   if (!done) {
+                      pcx = cx;
+                      vpcx = vcx;
+                      cx = next;
+                      vcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
-           printf("start finding minimum at %g %g  %g %g with diff %g   error %g %g\n", pbx, pby, bx, by, diff, vpbx, vbx);
+                      printf("minimum search: pcx %g vpcx %g cx %g vcx %g    diff %g  go to %g\n", pcx, vpcx, cx, vcx, diff, next);
+                  } else  {
+                     cx = pcx;
+                     fprintf(stderr, "completed search: pbx %g vpbx %g\n", pcx, vpcx);
+                  }
 
-           intit = 0;
-           do {
-              done = find_next_pos(bx, pbx, vbx, vpbx, &next, &diff, mindiff, tolerance);
-              if (!done) {
-                 pbx = bx;
-                 vpbx = vbx;
-                 bx = next;
-                 vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                     ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                  intit++;
+               } while (!done && intit<100);
+           }
 
-                 printf("minimum search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
-              } else     fprintf(stderr, "completed search: pbx %g vpbx \n", vpbx, vbx);
+           if (controls->args->fit_ydrift) 
+           {
+               //iterate through by
+               pby = by;
+               printf("by search\n");
 
-              intit++;
-           } while (!done && intit<100);
+               vpby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+ 
+               diff = 1e-8;
+               mindiff = 1e-12;
+               by = pby+diff;
 
-       }
+               vby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+               printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pby, vpby, by, vby, diff);
+
+               intit = 0;
+               do {
+                   done = find_next_pos(by, pby, vby, vpby, &next, &diff, mindiff, tolerance);
+                   if (!done) {
+                      pby = by;
+                      vpby = vby;
+                      by = next;
+                      vby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+                      printf("minimum search: pby %g vpby %g by %g vby %g    diff %g  go to %g\n", pby, vpby, by, vby, diff, next);
+                  } else  {
+                     by = pby;
+                     fprintf(stderr, "completed search: pby %g vpby %g\n", pby, vpby);
+                  }
+
+                  intit++;
+               } while (!done && intit<100);
+           }
+           if (controls->args->fit_ydrift) 
+           {
+               //iterate through cy
+               pcy = cy;
+               printf("cy search\n");
+
+               vpcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+ 
+               diff = 1e-11;
+               mindiff = 1e-14;
+               cy = pcy+diff;
+
+               vcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+               printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pcy, vpcy, cy, vcy, diff);
+
+               intit = 0;
+               do {
+                   done = find_next_pos(cy, pcy, vcy, vpcy, &next, &diff, mindiff, tolerance);
+                   if (!done) {
+                      pcy = cy;
+                      vpcy = vcy;
+                      cy = next;
+                      vcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+                      printf("minimum search: pcy %g vpcy %g cy %g vcy %g    diff %g  go to %g\n", pcy, vpcy, cy, vcy, diff, next);
+                  } else  {
+                     cy = pcy;
+                     fprintf(stderr, "completed search: pcy %g vpcy %g\n", pcy, vpcy);
+                  }
+
+                  intit++;
+               } while (!done && intit<100);
+           }
+
 
        iteration++;
-    } while (iteration<1);
+    } while (iteration<10);
 
     rdata->xdrift_a_result = ax;
     rdata->xdrift_b_result = bx;
@@ -1930,11 +2023,13 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     rdata->zdrift_b_result = bz;
     rdata->zdrift_c_result = cz;
 
+    
     printf("Resulting drifts: x %g %g %g    y %g %g %g    z %g %g %g\n", 
                               rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result,
                               rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result,
                               rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result
                               );
+
 
     free(nbfrom);
     free(nbto);
@@ -2148,5 +2243,30 @@ xyzdrift_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, xres_key, args->xres);
     gwy_container_set_int32_by_name(container, yres_key, args->yres);
 }
+
+
+
+           /* //automatic estimation of start difference, skip for now
+
+           vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                  ax, bx+mindiff, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+           intit = 0;
+           do {
+              done = find_initial_diff(pbx, vpbx, vbx, &bx, &mindiff);
+              printf("iteration with %g %g %g %g,   diff %g\n", pbx, vpbx, bx, vbx, mindiff);
+              if (!done) {
+                  vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                     ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+              }
+              intit++;
+           } while (!done && intit<10);
+           printf("diff found: %g\n", mindiff);
+
+           */
+ 
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
