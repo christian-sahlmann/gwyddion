@@ -109,6 +109,7 @@ typedef struct {
     gdouble ymin;
     gdouble ymax;
 
+
     
 
 } XYZDriftArgs;
@@ -127,6 +128,17 @@ typedef struct {
     gdouble *ydrift;
     gdouble *zdrift;
     gdouble *time;
+
+    gdouble xdrift_a_result;
+    gdouble xdrift_b_result;
+    gdouble xdrift_c_result;
+    gdouble ydrift_a_result;
+    gdouble ydrift_b_result;
+    gdouble ydrift_c_result;
+    gdouble zdrift_a_result;
+    gdouble zdrift_b_result;
+    gdouble zdrift_c_result;
+
 } XYZDriftData;
 
 typedef struct {
@@ -1357,9 +1369,6 @@ find_initial_diff(double px, double pv, double nv, double *nx, double *diff)
 static gboolean
 find_next_pos(double px, double ppx, double pv, double ppv, double *nx, double *diff, double mindiff, double tolerance)
 {
-   *nx = px+(*diff);
-    return TRUE;
-
 
    if (fabs(pv-ppv)<=tolerance) {printf("In tolerance\n"); return TRUE;} //value difference is small enough
    if (fabs((*diff))<=fabs(mindiff)) {printf("Small enough\n"); return TRUE;} //x difference is small enough
@@ -1603,23 +1612,6 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
 
 
     fclose(fw);
-
-
-/*
-    nnbs = 0;
-    fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
-    for (i=0; i<npoints; i++) {
-        closest = find_closest_point(points, timepoints, npoints, timethreshold, posthreshold, i, xdrift, ydrift);
-        if (closest>=0) {
-            fprintf(fw, "closest %d %d    %g %g    %g %g   %g %g   %g %g    %g\n", i, closest, points[i].x, points[i].y, points[closest].x, points[closest].y, points[i].z, points[closest].z, timepoints[i].z, timepoints[closest].z, timepoints[i].z-timepoints[closest].z);
-            nbfrom[nnbs] = closest;
-            nbto[nnbs] = i;
-            nnbs++;
-        }
-    }
-    fclose(fw);
-*/
-
     return nnbs;
 }
 
@@ -1644,7 +1636,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     n = gwy_nlfit_preset_get_nparams(preset);
     origparams = g_memdup(params, n*sizeof(gdouble));
     gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
-    printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
+    //printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
     if (!ok) {
         g_free(origparams);
         return FALSE;
@@ -1754,6 +1746,44 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gdouble *time, G_GNUC_UNU
 }
 
 static void
+init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
+{
+    gint i;
+    XYZDriftArgs *args = controls->args;
+    XYZDriftData *rdata = controls->rdata;
+
+    rdata->xdrift_a_result = args->xdrift_a;
+    rdata->xdrift_b_result = args->xdrift_b;
+    rdata->xdrift_c_result = args->xdrift_c;
+    rdata->ydrift_a_result = args->ydrift_a;
+    rdata->ydrift_b_result = args->ydrift_b;
+    rdata->ydrift_c_result = args->ydrift_c;
+    rdata->zdrift_a_result = args->zdrift_a;
+    rdata->zdrift_b_result = args->zdrift_b;
+    rdata->zdrift_c_result = args->zdrift_c;
+
+
+    for (i=0; i<npoints; i++) {
+       time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this
+    }
+}
+
+
+static void
+correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
+               GwyXYZ *corpoints, gboolean correctz)
+{
+    gint i;
+
+    for (i=0; i<npoints; i++) {
+       corpoints[i].x = points[i].x - xdrift[i];
+       corpoints[i].y = points[i].y - ydrift[i];
+       if (correctz) corpoints[i].z = points[i].z - zdrift[i];
+    }
+}
+
+
+static void
 set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
           gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz)
 {
@@ -1793,6 +1823,7 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
 static void
 estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
+    XYZDriftData *rdata = controls->rdata;
     gint i, iteration, closest, intit;
     gint *nbfrom, *nbto, nnbs;
     gdouble timethreshold = 1e3, posthreshold = 10e-6, tolerance = 1e-18;
@@ -1836,13 +1867,13 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
            printf("starting init drift search\n");
 
-           vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                  ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
-
-/*
-      
 
            vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                  ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+
+           /* //automatic estimation of start difference, skip for now
+
+           vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                   ax, bx+mindiff, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
            intit = 0;
@@ -1850,7 +1881,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
               done = find_initial_diff(pbx, vpbx, vbx, &bx, &mindiff);
               printf("iteration with %g %g %g %g,   diff %g\n", pbx, vpbx, bx, vbx, mindiff);
               if (!done) {
-                  vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                  vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
               }
@@ -1858,23 +1889,16 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
            } while (!done && intit<10);
            printf("diff found: %g\n", mindiff);
 
-           //find minimum
+           */
             
-           pbx = pbx;
-           vpbx = vbx;
-           diff = mindiff*1e1;
+           diff = 1e-8;//mindiff*100;
            bx = pbx+diff;
 
-*/
-/*
            vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
-*/
+           printf("start finding minimum at %g %g  %g %g with diff %g   error %g %g\n", pbx, pby, bx, by, diff, vpbx, vbx);
 
-           printf("start finding minimum at %g, with diff %g   error %g\n", pbx, diff, vbx);
-
-/*
            intit = 0;
            do {
               done = find_next_pos(bx, pbx, vbx, vpbx, &next, &diff, mindiff, tolerance);
@@ -1886,174 +1910,36 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
 
                  printf("minimum search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
-              } else     fprintf(stderr, "completed search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
+              } else     fprintf(stderr, "completed search: pbx %g vpbx \n", vpbx, vbx);
 
               intit++;
            } while (!done && intit<100);
-*/
+
        }
 
        iteration++;
     } while (iteration<1);
 
+    rdata->xdrift_a_result = ax;
+    rdata->xdrift_b_result = bx;
+    rdata->xdrift_c_result = cx;
+    rdata->ydrift_a_result = ay;
+    rdata->ydrift_b_result = by;
+    rdata->ydrift_c_result = cy;
+    rdata->zdrift_a_result = az;
+    rdata->zdrift_b_result = bz;
+    rdata->zdrift_c_result = cz;
 
-
-    /*iterate through x and y*/
-
-/* 
-    for (bx = (0.1*controls->args->xdrift_b); bx <= (3*controls->args->xdrift_b); bx += (0.05*controls->args->xdrift_b)) 
-    { 
-       for (by = (0.1*controls->args->ydrift_b); by <= (3*controls->args->ydrift_b); by += (0.05*controls->args->ydrift_b))  
-       {
-
-          set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
-                    ax, bx, cx, ay, by, cy, az, bz, cz);
-          correct_drift(points, npoints, xdrift, ydrift, zdrift,
-                        corpoints, FALSE);
-
-
-          nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
-                          controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin);
-
-          err = get_error(corpoints, nbfrom, nbto, nnbs, zdrift);
-          printf("%g %g %g\n", bx, by, err);
-       }
-
-    }
-*/
-/*
-    for (bz = (0.5*controls->args->zdrift_b); bz <= (2*controls->args->zdrift_b); bz += (0.1*controls->args->zdrift_b))
-    {
-        //correct data for actual drift in xyz
-        set_drift(controls, points, timepoints, npoints, time, xdrift, ydrift, zdrift, 
-                  ax, bx, cx, ay, by, cy, az, bz, cz);
-
-        err = get_error(corpoints, npoints, nbfrom, nbto, nnbs, xdrift, ydrift, zdrift);
-
-        if (err<minerr) {
-            minerr = err;
-            printf("error %g     params %g %g %g    %g %g %g    %g %g %g\n", err, ax, bx, cx, ay, by, cy, az, bz, cz);
-        }
-    }
-*/
-
-//    get z drift directly
-//    get_zdrift(controls, points, time, zdrift, nbfrom, nbto, nnbs);
-
-
-    g_free(nbfrom);
-    g_free(nbto);
-
-
-
- 
-//    FILE *fw = fopen("data.txt", "w");
- //   for (i=0; i<npoints; i++)
- //       fprintf(fw, "%g %g\n", timepoints[i].z, points[i].z);
- //   fclose(fw);
-
-
-   return;
-
-    //xy loop, drift must be taken into accound while searching for neighbors
-    //ifor (xmdrift = (xsdrift-0); xmdrift<(xsdrift+1); xmdrift+=1)
-//    {
-     //for (xmmdrift = 300000000; xmmdrift<400000000; xmmdrift+=100000000)
-//     {
-      //for (ymdrift = (ysdrift-2); ymdrift<(ysdrift+2); ymdrift+=1)
-//      {
-       //for (ymmdrift = -1000000000; ymmdrift<1000000000; ymmdrift+=500000000)
-//       {
-//        ymdrift = xmdrift;
-//        ymmdrift = xmmdrift;
-
-//        for (i=0; i<npoints; i++) {
-//            xdrift[i] = (time[i]-time[0])*xsdrift/1e15 + (time[i]-time[0])*(time[i]-time[0])*xmmdrift/1e15/1e15;
-//            ydrift[i] = (time[i]-time[0])*ysdrift/1e15 + (time[i]-time[0])*(time[i]-time[0])*ymmdrift/1e15/1e15;
-//        }
-
-
-//TODO use corpoints to fill the data after drift in x y, to speedup the process. Corpoints finally should be ready for final calculations
-
-
-//        nnbs = find_neighbors(nbfrom, nbto, points, timepoints, npoints, timethreshold, posthreshold, xdrift, ydrift);
- 
-        //z loop, only height changes here
-//        minerr = G_MAXDOUBLE;
-/*        for (zmdrift = (zsdrift-0.5); zmdrift<=(zsdrift+0.5); zmdrift+=0.2)
-        {
-            for (zmmdrift = -3500; zmmdrift <= (-2500); zmmdrift+=500)
-            {
-                for (i=0; i<npoints; i++) {
-                    zdrift[i] = (time[i]-time[0])*zmdrift/1e9 + (time[i]-time[0])*(time[i]-time[0])*zmmdrift/1e9/1e9;
-                }
-*/
-                /*evaluate drift*/
- /*               err = get_error(points, npoints, nbfrom, nbto, nnbs, xdrift, ydrift, zdrift);
-                printf("error for drift ( %g %g ) ( %g %g ) ( %g %g ): %g  evaluated from %d neighbors\n", xmdrift, xmmdrift, ymdrift, ymmdrift, zmdrift, zmmdrift, err, nnbs);
- 
-                if (err<minerr) {
-                    minzdrift = zmdrift;
-                    minzdrifts = zmmdrift;
-                    minxdrift = xmdrift;
-                    minxdrifts = xmmdrift;
-                    minydrift = ymdrift;
-                    minydrifts = ymmdrift;
-                    minerr = err;
-                }
-            }
-            printf("\n");
-         }
-       }
-      }
-     }
-    }
-   */ 
-
-    /*interpolate drift*/
-/*    for (i=0; i<npoints; i++) {
-       xdrift[i] = (time[i]-time[0])*minxdrift/1e15 + (time[i]-time[0])*(time[i]-time[0])*minxdrifts/1e15/1e15;
-       ydrift[i] = (time[i]-time[0])*minydrift/1e15 + (time[i]-time[0])*(time[i]-time[0])*minydrifts/1e15/1e15;
-       zdrift[i] = (time[i]-time[0])*minzdrift/1e9 + (time[i]-time[0])*(time[i]-time[0])*minzdrifts/1e9/1e9;
-    }
-
-    printf("Resulting drifts: x %g %g   y %g %g  z %g %g\n", minxdrift, minxdrifts, minydrift, minydrifts, minzdrift, minzdrifts);
+    printf("Resulting drifts: x %g %g %g    y %g %g %g    z %g %g %g\n", 
+                              rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result,
+                              rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result,
+                              rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result
+                              );
 
     free(nbfrom);
     free(nbto);
 
-*/
 
-}
-
-
-static void
-init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
-{
-    gint i;
-    XYZDriftArgs *args = controls->args;
-
-    for (i=0; i<npoints; i++) {
-       time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this
-
-//       xdrift[i] = get_xydrift_val(args->xdrift_type, args->xdrift_a, args->xdrift_b, args->xdrift_c, time[i]);
-//       ydrift[i] = get_xydrift_val(args->ydrift_type, args->ydrift_a, args->ydrift_b, args->ydrift_c, time[i]);
-//       zdrift[i] = get_zdrift_val(args->zdrift_type, args->zdrift_a, args->zdrift_b, args->zdrift_c, time[i]);
-    }
-}
-
-
-static void
-correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
-               GwyXYZ *corpoints, gboolean correctz)
-{
-    gint i;
-
-    for (i=0; i<npoints; i++) {
-       corpoints[i].x = points[i].x - xdrift[i];
-       corpoints[i].y = points[i].y - ydrift[i];
-       if (correctz) corpoints[i].z = points[i].z - zdrift[i];
-    }
 }
 
  
@@ -2066,6 +1952,7 @@ preview(XYZDriftControls *controls)
     GwyGraphCurveModel *gcmodel;
     GwyDataField *dfield;
     GtkWidget *entry;
+    gchar buffer[100];
     gint xres, yres;
     gchar *error = NULL;
 
@@ -2093,16 +1980,24 @@ preview(XYZDriftControls *controls)
 
     /*estimate the drift using some fitting routine, returning filled xdrift, ydrift and zdrift arrays*/
     if (args->fit_xdrift || args->fit_ydrift || args->fit_zdrift) 
-        estimate_drift(controls, rdata->points, rdata->corpoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
+        estimate_drift(controls, rdata->points, rdata->corpoints, rdata->npoints, rdata->time,
+                       rdata->xdrift, rdata->ydrift, rdata->zdrift);
 
     /*correct data for drift, creating corpoints from points*/
     set_drift(controls, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift, 
-                    args->xdrift_a, args->xdrift_b, args->xdrift_c, 
-                    args->ydrift_a, args->ydrift_b, args->ydrift_c, 
-                    args->zdrift_a, args->zdrift_b, args->zdrift_c);
+                    rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result, 
+                    rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result, 
+                    rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result);
 
     correct_drift(rdata->points, rdata->npoints, rdata->xdrift, rdata->ydrift, rdata->zdrift,
                   rdata->corpoints, TRUE);
+
+    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result);
+    gtk_label_set_text(GTK_LABEL(controls->result_x), buffer); 
+    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result);
+    gtk_label_set_text(GTK_LABEL(controls->result_y), buffer); 
+    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result);
+    gtk_label_set_text(GTK_LABEL(controls->result_z), buffer); 
 
 
     /*render preview*/
