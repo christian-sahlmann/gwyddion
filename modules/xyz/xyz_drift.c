@@ -101,7 +101,8 @@ typedef struct {
 
     gdouble threshold_time;
     gdouble threshold_length;
-    gdouble neighbors;    
+    gdouble neighbors;   
+    gint iterations; 
 
     /* Interface only. */
     gdouble xmin;
@@ -181,6 +182,7 @@ typedef struct {
     GtkObject *threshold_time;
     GtkObject *threshold_length;
     GtkObject *neighbors;
+    GtkObject *iterations;
 
     GtkWidget *view;
     GtkWidget *do_preview;
@@ -229,6 +231,8 @@ static void          neighbors_changed      (XYZDriftControls *controls,
                                              GtkAdjustment *adj);
 static void          threshold_changed      (XYZDriftControls *controls,
                                              GtkAdjustment *adj);
+static void          iterations_changed     (XYZDriftControls *controls,
+                                             GtkAdjustment *adj);
 static void          zdrift_type_changed    (GtkWidget *combo, 
                                              XYZDriftControls *controls);
 static void          graph_changed          (GtkWidget *combo, 
@@ -259,7 +263,7 @@ static const XYZDriftArgs xyzdrift_defaults = {
     512, 512,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0, 0, 0, 0, 0, 0, 2,
-    1, 10, 100,
+    1, 10, 100, 10,
     /* Interface only. */
     0.0, 0.0, 0.0, 0.0
 };
@@ -476,6 +480,10 @@ upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_c), buffer);
+
+        controls->args->xdrift_a = rdata->xdrift_a_result;
+        controls->args->xdrift_b = rdata->xdrift_b_result;
+        controls->args->xdrift_c = rdata->xdrift_c_result;
     }
     if (y) {
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_a_result);
@@ -484,6 +492,10 @@ upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_c), buffer);
+
+        controls->args->ydrift_a = rdata->ydrift_a_result;
+        controls->args->ydrift_b = rdata->ydrift_b_result;
+        controls->args->ydrift_c = rdata->ydrift_c_result;
     }
 
     if (z) {
@@ -493,6 +505,10 @@ upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_c), buffer);
+
+        controls->args->zdrift_a = rdata->zdrift_a_result;
+        controls->args->zdrift_b = rdata->zdrift_b_result;
+        controls->args->zdrift_c = rdata->zdrift_c_result;
     }
 }
 
@@ -670,6 +686,9 @@ xyzdrift_dialog(XYZDriftArgs *args,
     g_signal_connect_swapped(controls.threshold_length, "value-changed",
                              G_CALLBACK(threshold_changed), &controls);
 
+    g_signal_connect_swapped(controls.iterations, "value-changed",
+                             G_CALLBACK(iterations_changed), &controls);
+
 
 
 
@@ -827,6 +846,10 @@ construct_options(XYZDriftControls *controls,
                   gint row)
 {
     XYZDriftArgs *args = controls->args;
+    GwySurface *surface = controls->rdata->surface;
+    GwySIValueFormat *vf;
+
+ 
     GtkWidget *label, *spin, *button;
     static const GwyEnum zdrifts[] = {
         { N_("2nd order polynom"),  GWY_XYZDRIFT_ZMETHOD_POLYNOM,  },
@@ -846,7 +869,8 @@ construct_options(XYZDriftControls *controls,
 
 
 
-
+   vf = gwy_surface_get_value_format_xy(surface, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                         NULL);
 
     gtk_table_attach(table, gwy_label_new_header(_("Initial values")),
                      0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1058,13 +1082,16 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->threshold_length = gtk_adjustment_new(args->threshold_length, 0, 1000, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->threshold_length), 0, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new("px");
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), vf->units);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
 
     row++;
 
@@ -1074,6 +1101,7 @@ construct_options(XYZDriftControls *controls,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls->threshold_time = gtk_adjustment_new(args->threshold_time, 0, 1000, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->threshold_time), 0, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1084,6 +1112,19 @@ construct_options(XYZDriftControls *controls,
 
 
     row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Max iterations:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->iterations = gtk_adjustment_new(args->iterations, 1, 100, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->iterations), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++;
+
 
     gtk_table_attach(table, gwy_label_new_header(_("Results")),
                      0, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1148,6 +1189,7 @@ construct_options(XYZDriftControls *controls,
     g_signal_connect(button, "clicked",
                      G_CALLBACK(z_to_inits_cb), controls);
 
+   gwy_si_unit_value_format_free(vf);
  
 
     return row;
@@ -1419,7 +1461,7 @@ threshold_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->threshold_length = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_length));
+    args->threshold_length = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_length))*controls->rdata->xymag;
     args->threshold_time = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_time));
 }
 
@@ -1430,6 +1472,15 @@ neighbors_changed(XYZDriftControls *controls,
     XYZDriftArgs *args = controls->args;
 
     args->neighbors = gtk_adjustment_get_value(adj)/100.0;
+}
+
+static void
+iterations_changed(XYZDriftControls *controls,
+             GtkAdjustment *adj)
+{
+    XYZDriftArgs *args = controls->args;
+
+    args->iterations = gtk_adjustment_get_value(adj);
 }
 
 
@@ -1804,7 +1855,9 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
                   gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz, gint *nbfrom, gint *nbto)
 {
     gint nnbs;
-    gdouble timethreshold = 1e1, posthreshold = 1e-6; //FIXME this should come from GUI
+    gdouble timethreshold = controls->args->threshold_time; 
+    gdouble posthreshold = controls->args->threshold_length; 
+
     //set drift arrays
     set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
                     ax, bx, cx, ay, by, cy, az, bz, cz);
@@ -1826,17 +1879,17 @@ static void
 estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
 {
     XYZDriftData *rdata = controls->rdata;
-    gint i, iteration, closest, intit;
-    gint *nbfrom, *nbto, nnbs;
-    gdouble timethreshold = 1e3, posthreshold = 10e-6, tolerance = 1e-18;
+    gint iteration, intit;
+    gint *nbfrom, *nbto;
+    gdouble tolerance = 1e-18;
     gdouble ax, ay, az, bx, by, bz, cx, cy, cz, next;
-    gdouble pax, pay, paz, pbx, pby, pbz, pcx, pcy, pcz;
-    gdouble vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
-    gdouble vpax, vpay, vpaz, vpbx, vpby, vpbz, vpcx, vpcy, vpcz;
+    gdouble pax, pay, pbx, pby, pcx, pcy;
+    gdouble vax, vay, vbx, vby, vcx, vcy;
+    gdouble vpax, vpay, vpbx, vpby, vpcx, vpcy;
     gdouble mindiff, diff;
-    gdouble err, minerr, minzdrift, minzdrifts;
+    gdouble minerr;
     gboolean done;
-
+    gdouble cdiff, bdiff;
 
     ax = controls->args->xdrift_a;
     bx = controls->args->xdrift_b;
@@ -1854,7 +1907,13 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbfrom = g_new(gint, npoints);
     nbto = g_new(gint, npoints);
 
-    minerr = G_MAXDOUBLE;    
+    minerr = G_MAXDOUBLE;
+    bdiff = 1e-12;
+    cdiff = 1e-15;    
+
+//    bdiff = 1e-8;
+//    cdiff = 1e-12;    
+
 
     //successively minimize all the variables
     iteration = 0;
@@ -1868,8 +1927,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                       ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
  
-               diff = 1e-8;
-               mindiff = 1e-12;
+               diff = bdiff;
+               mindiff = diff/100;
                bx = pbx+diff;
 
                vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -1905,8 +1964,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                vpcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                       ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
  
-               diff = 1e-11;
-               mindiff = 1e-14;
+               diff = cdiff;
+               mindiff = diff/100;
                cx = pcx+diff;
 
                vcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -1943,8 +2002,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                vpby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                       ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
  
-               diff = 1e-8;
-               mindiff = 1e-12;
+               diff = bdiff;
+               mindiff = bdiff/100;
                by = pby+diff;
 
                vby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -1980,8 +2039,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                vpcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
                       ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
  
-               diff = 1e-11;
-               mindiff = 1e-14;
+               diff = cdiff;
+               mindiff = cdiff/100;
                cy = pcy+diff;
 
                vcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -2011,7 +2070,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
 
        iteration++;
-    } while (iteration<10);
+    } while (iteration<controls->args->iterations);
 
     rdata->xdrift_a_result = ax;
     rdata->xdrift_b_result = bx;
