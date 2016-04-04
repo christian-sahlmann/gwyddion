@@ -1712,7 +1712,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
 }
 
 static double
-get_xydrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
+get_drift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
 {
     gdouble rtime = time;
 
@@ -1723,80 +1723,6 @@ get_xydrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
     else return 0;
 }
 
-static double
-get_zdrift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
-{
-    gdouble rtime = time;
-
-    if (type==0) //polynom
-       return a + b*rtime + c*rtime*rtime;
-    else if (type==1) //exponential
-       return a + b*exp(rtime/c);
-    else return 0; //ignore moving average drift type
-}
-
-
-
-//evaluate zdrift from actual corrected positions and previously found neighbors
-static void
-get_zdrift(XYZDriftControls *controls, GwyXYZ *points, gdouble *time, G_GNUC_UNUSED gdouble *zdrift, gint *nbfrom, gint *nbto, gint nnbs) 
-{
-    gint i;
-    gdouble *dtime, *drift;
-    gdouble params[3];
-    gdouble errors[3];
-    gboolean fixed[3];
-    gchar buffer[100];
-    GwyGraphCurveModel *gcmodel;
-    gboolean ok;
-
-    FILE *fw = fopen("driftdata.txt", "w");
-
-
-    /*re-read for sure*/
-    zdrift_changed(controls, NULL);
-
-    dtime = g_new(gdouble, nnbs);
-    drift = g_new(gdouble, nnbs);
-
-    for (i=0; i<nnbs; i++) {
-        dtime[i] = (time[nbfrom[i]]+time[nbto[i]])/2;
-        drift[i] = (points[nbto[i]].z - points[nbfrom[i]].z)/2;
-    }    
-
-    params[0] = controls->args->zdrift_a;
-    params[1] = controls->args->zdrift_b;
-    params[2] = controls->args->zdrift_c;
-    fixed[0] = 0;
-    fixed[1] = 0; 
-    fixed[2] = 0;
-
-    gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(gcmodel, dtime, drift, nnbs);
-
-    if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM)
-        ok = fit_func_to_curve(gcmodel, "Polynomial (order 2)", params, errors, fixed);
-    else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL)
-        ok = fit_func_to_curve(gcmodel, "Exponential", params, errors, fixed);
-
-
-    printf("Fitting completed with %d: %g %g %g\n", ok, params[0], params[1], params[2]);  
-    g_snprintf(buffer, sizeof(buffer), "a = %g +- %g,  b = %g +- %g,  c = %g +- %g", params[0], errors[0], params[1], errors[1], params[2], errors[2]);
-    gtk_label_set_text(GTK_LABEL(controls->result_z), buffer); 
-
-    controls->args->zdrift_a = params[0];
-    controls->args->zdrift_b = params[1];
-    controls->args->zdrift_c = params[2];
-
-    for (i=0; i<nnbs; i++) {
-        fprintf(fw, "%g %g %g\n", dtime[i], drift[i], params[0] + params[1]*dtime[i] + params[2]*dtime[i]*dtime[i]);
-    }
-    fclose(fw);
-
-    g_free(dtime);
-    g_free(drift);
-    //g_free(gcmodel);
-}
 
 static void
 init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
@@ -1844,12 +1770,85 @@ set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdri
     XYZDriftArgs *args = controls->args;
 
     for (i=0; i<npoints; i++) {
-       xdrift[i] = get_xydrift_val(args->xdrift_type, ax, bx, cx, time[i]);
-       ydrift[i] = get_xydrift_val(args->ydrift_type, ay, by, cy, time[i]);
-       zdrift[i] = get_zdrift_val(args->zdrift_type, az, bz, cz, time[i]);
+       xdrift[i] = get_drift_val(args->xdrift_type, ax, bx, cx, time[i]);
+       ydrift[i] = get_drift_val(args->ydrift_type, ay, by, cy, time[i]);
+       zdrift[i] = get_drift_val(args->zdrift_type, az, bz, cz, time[i]);
     }
 }
 
+
+static gboolean
+get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
+                  gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble *az, gdouble *bz, gdouble *cz, gint *nbfrom, gint *nbto)
+{
+    gint nnbs;
+    gint i;
+    gdouble *dtime, *drift;
+    gdouble params[3];
+    gdouble errors[3];
+    gboolean fixed[3];
+    gchar buffer[100];
+    GwyGraphCurveModel *gcmodel;
+    gboolean ok;
+
+    gdouble timethreshold = controls->args->threshold_time; 
+    gdouble posthreshold = controls->args->threshold_length; 
+
+    FILE *fw = fopen("driftdata.txt", "w");
+
+    //set drift arrays
+    set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
+                    ax, bx, cx, ay, by, cy, *az, *bz, *cz);
+
+    //correct xy data (corpoints) for drift, don't correct z as this will be fitted
+    correct_drift(points, npoints, xdrift, ydrift, zdrift,
+                        corpoints, FALSE);
+
+    //find neigbors for error evaluation
+    nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
+                          controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
+                          controls->args->neighbors);
+
+    dtime = g_new(gdouble, nnbs);
+    drift = g_new(gdouble, nnbs);
+
+    for (i=0; i<nnbs; i++) {
+        dtime[i] = (time[nbfrom[i]]+time[nbto[i]])/2;
+        drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/2;
+    }    
+
+    params[0] = *az;
+    params[1] = *bz;
+    params[2] = *cz;
+    fixed[0] = 0;
+    fixed[1] = 0; 
+    fixed[2] = 0;
+
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(gcmodel, dtime, drift, nnbs);
+
+    if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM)
+        ok = fit_func_to_curve(gcmodel, "Polynomial (order 2)", params, errors, fixed);
+    else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL)
+        ok = fit_func_to_curve(gcmodel, "Exponential", params, errors, fixed);
+
+    printf("Fitting completed with %d: %g %g %g\n", ok, params[0], params[1], params[2]);  
+
+    *az = params[0];
+    *bz = params[1];
+    *cz = params[2];
+
+    for (i=0; i<nnbs; i++) {
+        fprintf(fw, "%g %g %g\n", dtime[i], drift[i], params[0] + params[1]*exp(dtime[i]/params[2]));
+    }
+    fclose(fw);
+
+    g_free(dtime);
+    g_free(drift);
+    //g_free(gcmodel);
+
+    return ok;
+}
 static gdouble
 get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
                   gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz, gint *nbfrom, gint *nbto)
@@ -1918,6 +1917,15 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     //successively minimize all the variables
     iteration = 0;
     do {
+           if (controls->args->fit_zdrift) //do z drift first as it impact the others most
+           {
+               printf("cz search\n");
+
+               get_zdrift(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
+                  ax, bx, cx, ay, by, cy, &az, &bz, &cz, nbfrom, nbto);
+           }
+
+
            if (controls->args->fit_xdrift) 
            {
                //iterate through bx
