@@ -1689,7 +1689,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     n = gwy_nlfit_preset_get_nparams(preset);
     origparams = g_memdup(params, n*sizeof(gdouble));
     gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
-    //printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
+    printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
     if (!ok) {
         g_free(origparams);
         return FALSE;
@@ -1817,29 +1817,44 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
         drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/2;
     }    
 
-    params[0] = *az;
-    params[1] = *bz;
-    params[2] = *cz;
-    fixed[0] = 0;
-    fixed[1] = 0; 
-    fixed[2] = 0;
-
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(gcmodel, dtime, drift, nnbs);
 
-    if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM)
-        ok = fit_func_to_curve(gcmodel, "Polynomial (order 2)", params, errors, fixed);
-    else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL)
+    if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM) {
+       params[0] = *bz;
+       params[1] = 2*(*cz);
+       fixed[0] = 0;
+       fixed[1] = 0; 
+
+       ok = fit_func_to_curve(gcmodel, "Polynomial (order 1)", params, errors, fixed);
+
+       *az = 0;
+       *bz = params[0];
+       *cz = params[1]/2.0;
+    }
+    else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL) {
+        params[0] = 0;
+        params[1] = (*bz)/(*cz);
+        params[2] = *cz;
+        fixed[0] = 1;
+        fixed[1] = 0; 
+        fixed[2] = 0;
+
         ok = fit_func_to_curve(gcmodel, "Exponential", params, errors, fixed);
 
-    printf("Fitting completed with %d: %g %g %g\n", ok, params[0], params[1], params[2]);  
+        *az = 0;
+        *bz = params[1]*params[2];
+        *cz = params[2];
+    }
 
-    *az = params[0];
-    *bz = params[1];
-    *cz = params[2];
+    printf("Fitting completed with %d: %g %g %g\n", ok, *az, *bz, *cz);  
+
 
     for (i=0; i<nnbs; i++) {
-        fprintf(fw, "%g %g %g\n", dtime[i], drift[i], params[0] + params[1]*exp(dtime[i]/params[2]));
+        if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM)
+            fprintf(fw, "%g %g %g\n", dtime[i], drift[i],  (*bz) + 2*(*cz)*dtime[i]);
+        else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL)
+            fprintf(fw, "%g %g %g\n", dtime[i], drift[i], (*bz)/(*cz)*exp(dtime[i]/(*cz)));
     }
     fclose(fw);
 
