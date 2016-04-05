@@ -75,6 +75,8 @@ Christian Bühler <christian.buehler@uni-ulm.de>
     K-means and K-medians modules.
 Petr Grolich <pgrolich@cmi.cz>
     MSVC compatibility and Win32 testing.
+Samo Ziberna <samo.ziberna@aperesearch.com>
+    APE DAX import module improvements.
 
 
 === Translators ===

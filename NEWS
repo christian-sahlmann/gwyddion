@@ -109,6 +109,7 @@ Modules:
   documentation describes.  Multiply old values by 4 to get the same coverage.
 - Mark disconnected: The operation is undoable now.
 - XYZ export: Can export both channels and XYZ data.
+- APE DAX: Complete metadata are imported, miscellaneous other improvements.
 
 
 2.44 (2016-01-11)
