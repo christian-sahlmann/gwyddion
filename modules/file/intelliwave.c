@@ -289,6 +289,7 @@ intw_load(const gchar *filename,
         return NULL;
     }
 
+    intwfile.filename = filename;
     p = buffer;
     p = intw_read_header(p, &intwfile);
     g_assert(p - buffer == HEADER_SIZE);
