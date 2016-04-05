@@ -47,7 +47,7 @@
  *          </Channel>
  *      </Channels>
  *  </Scan>
- * 
+ *
  **/
 
 /**
@@ -129,8 +129,8 @@ const gchar* header_string = "/Scan/Header";
 const gchar* scanSize_string = "/Scan/Header/ScanSize";
 const gchar* channel_string = "/Scan/Channels/Channel";
 
-static const gchar* scan[] = { "Header", "Channels"};
-static const gchar* header[] = { "FileVersion", "Date", "ScanSize"};
+static const gchar* scan[] = { "Header", "Channels" };
+static const gchar* header[] = { "FileVersion", "Date", "ScanSize" };
 static const gchar* scanSizeArray[] = { "XRes", "YRes", "X", "Y" };
 static const gchar* channel[] = { "Label", "DataUnit", "BINFile" };
 
@@ -158,7 +158,7 @@ static const GwyEnum spm_modes_display_names[] = {
 static const GwyEnum spm_modes_names[] = {
     { "SNOM",      SPM_MODE_SNOM },
     { "AFM_NC",    SPM_MODE_AFM_NONCONTACT },
-    { "AFM_C", 	   SPM_MODE_AFM_CONTACT },
+    { "AFM_C",     SPM_MODE_AFM_CONTACT },
     { "STM",       SPM_MODE_STM },
     { "PHASE_AFM", SPM_MODE_PHASE_DETECT_AFM },
 };
@@ -192,18 +192,18 @@ typedef struct {
 
 /*XML fields arrays*/
 static const APEXmlField dax_afm_c[] = {
-    {"VPmt1", "BIAS DC Voltage"}
+    { "VPmt1", "BIAS DC Voltage" }
 };
 
 static const APEXmlField dax_afm_nc[] = {
-    {"TipOscFreq", "Tip Oscillation Frequency"},
-    {"VPmt1", "BIAS DC Voltage"}
+    { "TipOscFreq", "Tip Oscillation Frequency" },
+    { "VPmt1", "BIAS DC Voltage" }
 };
 
 static const APEXmlField dax_snom[] = {
-    {"TipOscFreq", "Tip Oscillation Frequency"},
-    {"VPmt1", "PMT 1 Voltage"},
-    {"VPmt2", "PMT 2 Voltage"}
+    { "TipOscFreq", "Tip Oscillation Frequency" },
+    { "VPmt1", "PMT 1 Voltage" },
+    { "VPmt2", "PMT 2 Voltage" }
 };
 
 static const APEXmlField dax_stm[] = {
@@ -228,7 +228,7 @@ static GwyDataField* apedax_get_data_field         (GwyZipFile uFile,
                                                     gchar *zUnit,
                                                     gdouble scale,
                                                     GError **error);
-static gboolean      apedax_get_channels_data	   (GwyZipFile uFile,
+static gboolean      apedax_get_channels_data      (GwyZipFile uFile,
                                                     guchar *scan_xml_content,
                                                     gsize content_size,
                                                     const gchar *filename,
@@ -255,7 +255,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports A.P.E. Research DAX data files."),
-    "Andrea Cervesato <infos@aperesearch.com>, Gianfranco Gallizia <infos@aperesearch.com>, Samo Ziberna <infos@aperesearch.com>",
+    "Andrea Cervesato <infos@aperesearch.com>, "
+        "Gianfranco Gallizia <infos@aperesearch.com>, "
+        "Samo Ziberna <infos@aperesearch.com>",
     "0.7",
     "A.P.E. Research srl",
     "2015"
@@ -288,8 +290,10 @@ apedax_detect(const GwyFileDetectInfo *fileinfo,
     gsize size = 0;
     GError **error = NULL;
 
-    score += (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0);
-    score += (g_str_has_suffix(fileinfo->name_lowercase, APDT_EXTENSION) ? 10 : 0);
+    score += (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION)
+              ? 10 : 0);
+    score += (g_str_has_suffix(fileinfo->name_lowercase, APDT_EXTENSION)
+              ? 10 : 0);
 
     if (only_name)
         return score;
@@ -358,7 +362,7 @@ apedax_load(const gchar *filename,
 
     gwy_debug("Opening the file with MiniZIP");
     uFile = gwyzip_open(filename);
-    
+
     if (uFile == NULL) {
         goto fail;
     }
@@ -370,7 +374,7 @@ apedax_load(const gchar *filename,
 
     buffer = gwyzip_get_file_content(uFile, &content_size, error);
 
-    if (buffer == NULL )
+    if (buffer == NULL)
         goto fail;
 
     if (!apedax_is_xml_valid(buffer, content_size))
@@ -391,18 +395,18 @@ apedax_load(const gchar *filename,
 
     scan_size_result = apedax_get_scan_size(doc, &scan_size, error);
 
-    if (scan_size_result == FALSE)
+    if (!scan_size_result)
         goto fail;
-    
-    channels_data_result =  apedax_get_channels_data(uFile,
-                             buffer,
-                             content_size,
-                             filename,
-                             container,
-                             meta,
-                             &scan_size,
-                             error);
-    if (channels_data_result == FALSE)
+
+    channels_data_result = apedax_get_channels_data(uFile,
+                                                    buffer,
+                                                    content_size,
+                                                    filename,
+                                                    container,
+                                                    meta,
+                                                    &scan_size,
+                                                    error);
+    if (!channels_data_result)
         goto fail;
 
     goto cleanup;
@@ -415,20 +419,18 @@ fail:
         err_FILE_TYPE(error, FILE_TYPE);
     }
     gwy_debug("Cleaning up after a fail");
-    if(container != NULL) {
+    if (container != NULL) {
         gwy_object_unref(container);
     }
 
 cleanup:
-    // Clean
+    /* Clean */
     xmlFreeDoc(doc);
-    if(meta != NULL) {
+    g_free(buffer);
+    if (meta != NULL) {
         g_object_unref(meta);
     }
-    if(buffer != NULL) {
-        g_free(buffer);
-    }
-    if(uFile != NULL) {
+    if (uFile != NULL) {
         gwyzip_close(uFile);
     }
 
@@ -436,7 +438,7 @@ cleanup:
 }
 
 /*Gets the metadata from the XML file*/
-static GwyContainer* 
+static GwyContainer*
 apedax_get_meta(guchar *scan_xml_content,
                 gsize content_size,
                 gboolean apdt_file)
@@ -479,21 +481,21 @@ apedax_get_meta(guchar *scan_xml_content,
      }
 
     gwy_debug("Populating metadata container");
-    
+
     context = xmlXPathNewContext(doc);
     if (context == NULL) {
         goto fail;
     }
     path_object = xmlXPathEvalExpression(header_string, context);
-    
+
     if (path_object == NULL) {
         goto fail;
     }
-        
+
     /*There must be at least one header node*/
     node_set = path_object->nodesetval;
     head_node = node_set->nodeTab[0];
-    
+
     cur = head_node->xmlChildrenNode;
 
     while (cur) {
@@ -502,31 +504,33 @@ apedax_get_meta(guchar *scan_xml_content,
             key = (gchar*)cur->name;
             cur_child = cur->xmlChildrenNode;
             while (cur_child) {
-                if (cur_child-> type == XML_ELEMENT_NODE) {
+                if (cur_child->type == XML_ELEMENT_NODE) {
                     key_child = (gchar*)cur_child->name;
                     value = xmlNodeGetContent(cur_child);
                     if (value != NULL) {
                         concat_key = g_strconcat(key, " - ", key_child, NULL);
-                        gwy_container_set_const_string_by_name(meta, concat_key, (gchar*)value);
+                        gwy_container_set_const_string_by_name(meta, concat_key,
+                                                               (gchar*)value);
                         g_free(concat_key);
                         xmlFree(value);
                         have_child = TRUE;
                     }
                 }
                 cur_child = cur_child->next;
-            }// while(cur_child)
-            if (have_child == FALSE) {
+            }
+            if (!have_child) {
                 value = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
                 if (value != NULL) {
-                    gwy_container_set_const_string_by_name(meta, key, (gchar*)value);
+                    gwy_container_set_const_string_by_name(meta, key,
+                                                           (gchar*)value);
                     xmlFree(value);
                 }
             }
         }
         cur = cur->next;
-    }// while(cur)
-       
-        
+    }
+
+
     if (apdt_file) {
         gwy_debug("Selected APDT file fields");
     }
@@ -536,38 +540,40 @@ apedax_get_meta(guchar *scan_xml_content,
         if (gwy_container_contains_by_name(meta, SPM_MODE_NAME)) {
             buffer = gwy_container_get_string_by_name(meta, SPM_MODE_NAME);
             current_SPM_mode = gwy_string_to_enum(buffer,
-                                                spm_modes_names,
-                                                G_N_ELEMENTS(spm_modes_names));
+                                                  spm_modes_names,
+                                                  G_N_ELEMENTS(spm_modes_names));
             spm_mode_disp = gwy_enum_to_string(current_SPM_mode,
-                                                spm_modes_display_names,
-                                                G_N_ELEMENTS(spm_modes_display_names));
-            gwy_container_set_const_string_by_name(meta, SPM_MODE_NAME, spm_mode_disp);
-            //Change the meta names
+                                               spm_modes_display_names,
+                                               G_N_ELEMENTS(spm_modes_display_names));
+            gwy_container_set_const_string_by_name(meta, SPM_MODE_NAME,
+                                                   spm_mode_disp);
+            /* Change the meta names */
             switch (current_SPM_mode) {
                 case SPM_MODE_AFM_CONTACT:
                 fields = dax_afm_c;
                 fields_size = G_N_ELEMENTS(dax_afm_c);
                 break;
-                
+
                 case SPM_MODE_AFM_NONCONTACT:
                 fields = dax_afm_nc;
                 fields_size = G_N_ELEMENTS(dax_afm_nc);
                 break;
-                
+
                 case SPM_MODE_SNOM:
                 fields = dax_snom;
                 fields_size = G_N_ELEMENTS(dax_snom);
                 break;
-                
+
                 case SPM_MODE_STM:
                 fields = dax_stm;
                 fields_size = G_N_ELEMENTS(dax_stm);
                 break;
             }
-        
+
             for (i = 0; i < fields_size; i++) {
                 if (gwy_container_contains_by_name(meta, fields[i].name)) {
-                    gwy_container_rename_by_name(meta, fields[i].name, fields[i].display_name, FALSE);
+                    gwy_container_rename_by_name(meta, fields[i].name,
+                                                 fields[i].display_name, FALSE);
                 }
                 else {
                     gwy_debug("Some metadata not present!");
@@ -580,9 +586,9 @@ apedax_get_meta(guchar *scan_xml_content,
         }
     }
 
-    gwy_debug("Returning metadata container");   
+    gwy_debug("Returning metadata container");
     goto cleanup;
-    
+
 fail:
     gwy_debug("Cleaning up after a fail");
     gwy_object_unref(meta);
@@ -601,9 +607,9 @@ cleanup:
 
 
 /** Return the xml node as string
- * 
+ *
  * Return the value of the xml node or NULL if not found
- */ 
+ */
 static gchar*
 apedax_get_xml_node_as_string(xmlDocPtr doc, const gchar *node_xpath)
 {
@@ -618,13 +624,13 @@ apedax_get_xml_node_as_string(xmlDocPtr doc, const gchar *node_xpath)
     if (context == NULL) {
         return NULL;
     }
-        
+
     path_object = xmlXPathEvalExpression((const xmlChar*)node_xpath, context);
 
     if (path_object != NULL) {
-        
+
         if (!xmlXPathNodeSetIsEmpty(path_object->nodesetval)) {
-            
+
             node_set = path_object->nodesetval;
 
             if (node_set->nodeNr == 1) {
@@ -636,10 +642,10 @@ apedax_get_xml_node_as_string(xmlDocPtr doc, const gchar *node_xpath)
             }
         }
         xmlXPathFreeObject(path_object);
-    
+
     }
     xmlXPathFreeContext(context);
-    
+
     return node_string;
 }
 
@@ -665,7 +671,8 @@ apedax_get_data_field(GwyZipFile uFile,
         return NULL;
 
     if (err_SIZE_MISMATCH(error, expected_size, content_size, FALSE)) {
-       return NULL;
+        g_free(buffer);
+        return NULL;
     }
 
     dfield = gwy_data_field_new(scan_size->XRes, scan_size->YRes,
@@ -690,6 +697,7 @@ apedax_get_data_field(GwyZipFile uFile,
                          data,
                          scale,
                          0.0);
+    g_free(buffer);
 
     return dfield;
 }
@@ -761,40 +769,44 @@ apedax_get_channels_data(GwyZipFile uFile,
     }
 
     for (i = 0; i < node_set->nodeNr; i++) {
-        //Initialize the values to default
+        /* Initialize the values to default */
         scale_factor = 1.0;
         label = NULL;
         zUnit_string = NULL;
         bin_filename = NULL;
 
         cur = node_set->nodeTab[i]->xmlChildrenNode;
-        channel_meta = gwy_container_duplicate(meta); // Create a meta container for this channel
+        /* Create a meta container for this channel */
+        channel_meta = gwy_container_duplicate(meta);
         while (cur) {
             buffer = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
-            if(buffer != NULL){
+            if (buffer != NULL) {
+                const gchar *curname = cur->name;
+
                 /*Label*/
-                if (gwy_strequal((gchar*)cur->name, XML_CHANNEL_LABEL_NAME)) {
+                if (gwy_strequal(curname, XML_CHANNEL_LABEL_NAME)) {
                     label = g_strdup(buffer);
                 }
                 /*Factor*/
-                else if (gwy_strequal((gchar*)cur->name, XML_CHANNEL_CONVERSION_FACTOR_NAME)) {
+                else if (gwy_strequal(curname,
+                                      XML_CHANNEL_CONVERSION_FACTOR_NAME)) {
                     scale_factor = g_ascii_strtod((gchar*)buffer, NULL);
                 }
                 /*Unit*/
-                else if (gwy_strequal((gchar*)cur->name, XML_CHANNEL_DATA_UNIT_NAME)) {
+                else if (gwy_strequal(curname, XML_CHANNEL_DATA_UNIT_NAME)) {
                     zUnit_string = g_strdup((gchar*)buffer);
                     zUnit = gwy_si_unit_new_parse(zUnit_string, &power10);
                     g_object_unref(zUnit);
                 }
                 /*Binary file name*/
-                else if (gwy_strequal((gchar*)cur->name, XML_CHANNEL_BINARY_FILE_NAME)) {
+                else if (gwy_strequal(curname, XML_CHANNEL_BINARY_FILE_NAME)) {
                     bin_filename = g_strdup((gchar*)buffer);
                 }
                 else {
-                    // Add the info to the metadata of the channel
+                    /* Add the info to the metadata of the channel */
                     gwy_container_set_const_string_by_name(channel_meta,
-                                                            (gchar*)cur->name,
-                                                            g_strdup((gchar*)buffer));
+                                                           curname,
+                                                           (gchar*)buffer);
                 }
                 xmlFree(buffer);
             }
@@ -815,57 +827,60 @@ apedax_get_channels_data(GwyZipFile uFile,
             if (dfield) {
                 g_snprintf(key, sizeof(key), "/%d/data", i);
                 gwy_container_set_object_by_name(container, key, dfield);
-                gwy_file_channel_import_log_add(container, i, NULL,
-                                                filename);
+                gwy_file_channel_import_log_add(container, i, NULL, filename);
 
                 g_snprintf(key, sizeof(key), "/%d/meta", i);
                 gwy_container_set_object_by_name(container, key, channel_meta);
-                
+
                 g_object_unref(dfield);
-                outcome = TRUE; // We have at least one channel
+                outcome = TRUE; /* We have at least one channel */
             }
+
+            g_free(bin_filename);
         }
         else {
             g_warning("Missing one or more chanel field(s). Ignoring chanel.");
         }
         g_object_unref(channel_meta);
-    }// for
+    }
 
-    if (outcome == FALSE) {
-        // We don't have channels
+    if (!outcome) {
+        /* We don't have channels */
         goto fail;
     }
-    
+
     goto cleanup;
-    
+
 fail:
-    // Something went wrong!!
+    /* Something went wrong!! */
     if (error == NULL) {
         err_FILE_TYPE(error, FILE_TYPE);
     }
 
 cleanup:
-    if(path_object != NULL) {
+    if (path_object != NULL) {
         xmlXPathFreeObject(path_object);
     }
-    if(context != NULL) {
+    if (context != NULL) {
         xmlXPathFreeContext(context);
     }
-    if(doc != NULL){
+    if (doc != NULL) {
         xmlFreeDoc(doc);
     }
     return outcome;
 }
 
-/**	Retrieve the scan size and check the dimensions.
- * 
- *  Returns TRUE if it find all the dimensions and if they are valid dimensions, false otherwise
- */ 
+/**
+ * Retrieve the scan size and check the dimensions.
+ *
+ * Returns TRUE if it find all the dimensions and if they are valid dimensions,
+ * false otherwise.
+ */
 static gboolean
 apedax_get_scan_size(xmlDocPtr doc, APEScanSize *scan_size, GError **error)
 {
     xmlChar *buffer = NULL;
-	
+
     /*Number of columns (XRes)*/
     buffer = apedax_get_xml_node_as_string(doc, XML_PATH_SCAN_SIZE_XRES);
 
@@ -874,7 +889,7 @@ apedax_get_scan_size(xmlDocPtr doc, APEScanSize *scan_size, GError **error)
     }
     scan_size->XRes = (gint)g_ascii_strtod(buffer, NULL);
     g_free(buffer);
-    
+
     /*Number of rows (YRes)*/
     buffer = apedax_get_xml_node_as_string(doc, XML_PATH_SCAN_SIZE_YRES);
 
@@ -883,17 +898,17 @@ apedax_get_scan_size(xmlDocPtr doc, APEScanSize *scan_size, GError **error)
     }
     scan_size->YRes = (gint)g_ascii_strtod(buffer, NULL);
     g_free(buffer);
-    
+
     /*Width in nanometers*/
     buffer = apedax_get_xml_node_as_string(doc, XML_PATH_SCAN_SIZE_X);
-    
+
     if (buffer == NULL) {
         return FALSE;
     }
     scan_size->XReal = g_ascii_strtod(buffer, NULL);
     scan_size->XReal *= 1e-9; /*nm to m conversion*/
     g_free(buffer);
-    
+
 
     /*Height in nanometers*/
     buffer = apedax_get_xml_node_as_string(doc, XML_PATH_SCAN_SIZE_Y);
@@ -904,7 +919,7 @@ apedax_get_scan_size(xmlDocPtr doc, APEScanSize *scan_size, GError **error)
     scan_size->YReal = g_ascii_strtod(buffer, NULL);
     scan_size->YReal *= 1e-9; /*nm to m conversion*/
     g_free(buffer);
-    
+
     /*Checking the dimensions*/
     if (err_DIMENSION(error, scan_size->XRes)) {
         return FALSE;
@@ -933,54 +948,50 @@ apedax_is_xml_valid(guchar *scan_xml_content, gsize content_size)
 {
     xmlDocPtr doc;
 
-    gboolean result = TRUE;
     gboolean channel_ok = FALSE;
     gint num_elements = 0;
-    gint i=0;
-    
+    gint i = 0;
+
     doc = xmlReadMemory(scan_xml_content,
                         content_size,
                         XML_FILE_NAME,
                         NULL,
                         0);
 
-    if (doc == NULL){
+    if (doc == NULL) {
         return FALSE;
     }
 
-    //Check if is present all the minimum Scan data (names in scan[])
+    /* Check if is present all the minimum Scan data (names in scan[]) */
     num_elements = G_N_ELEMENTS(scan);
-    for (i=0; i < num_elements; i++) {
-        result = apedax_is_xml_node_present(doc, scan_string, scan[i], TRUE);
-        if (result == FALSE) {
+    for (i = 0; i < num_elements; i++) {
+        if (!apedax_is_xml_node_present(doc, scan_string, scan[i], TRUE))
             return FALSE;
-        }
     }
 
-    //Check if is present all the minimum header data (names in header[])
+    /* Check if is present all the minimum header data (names in header[]) */
     num_elements = G_N_ELEMENTS(header);
-    for (i=0; i < num_elements; i++) {
-        result = apedax_is_xml_node_present(doc, header_string, header[i], TRUE);
-        if (result == FALSE) {
+    for (i = 0; i < num_elements; i++) {
+        if (!apedax_is_xml_node_present(doc, header_string, header[i], TRUE))
             return FALSE;
-        }
     }
 
-    //Check if is present all the minimum scanSize data (names in scanSize[])
+    /* Check if is present all the minimum scanSize data (names in scanSize[])
+     */
     num_elements = G_N_ELEMENTS(scanSizeArray);
-    for (i=0; i < num_elements; i++) {
-        result = apedax_is_xml_node_present(doc, scanSize_string, scanSizeArray[i], TRUE);
-        if (result == FALSE) {
+    for (i = 0; i < num_elements; i++) {
+        if (!apedax_is_xml_node_present(doc, scanSize_string,
+                                        scanSizeArray[i], TRUE))
             return FALSE;
-        }
     }
 
-    //Check if is present at least one Channel with the minimum channel data (names in channel[])
+    /* Check if is present at least one Channel with the minimum channel data
+     * (names in channel[]) */
     channel_ok = TRUE;
     num_elements = G_N_ELEMENTS(channel);
-    for (i=0; i < num_elements; i++) {
-        result = apedax_is_xml_node_present(doc, channel_string, channel[i], FALSE);
-        if (result == FALSE) {
+    for (i = 0; i < num_elements; i++) {
+        if (!apedax_is_xml_node_present(doc, channel_string,
+                                        channel[i], FALSE)) {
             channel_ok = FALSE;
             break;
         }
@@ -989,7 +1000,10 @@ apedax_is_xml_valid(guchar *scan_xml_content, gsize content_size)
 }
 
 static gboolean
-apedax_is_xml_node_present(xmlDocPtr doc, const gchar *node_xbase_path, const gchar *node_xpath, gboolean unique)
+apedax_is_xml_node_present(xmlDocPtr doc,
+                           const gchar *node_xbase_path,
+                           const gchar *node_xpath,
+                           gboolean unique)
 {
     xmlXPathContextPtr context;
     xmlXPathObjectPtr path_object;
@@ -1009,7 +1023,8 @@ apedax_is_xml_node_present(xmlDocPtr doc, const gchar *node_xbase_path, const gc
         gwy_debug("Memory exception");
         return FALSE;
     }
-    path_object = xmlXPathEvalExpression((const xmlChar*)node_absolute_path, context);
+    path_object = xmlXPathEvalExpression((const xmlChar*)node_absolute_path,
+                                         context);
 
     if (path_object != NULL) {
         if (!xmlXPathNodeSetIsEmpty(path_object->nodesetval)) {
@@ -1030,4 +1045,5 @@ apedax_is_xml_node_present(xmlDocPtr doc, const gchar *node_xbase_path, const gc
 
     return result;
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
