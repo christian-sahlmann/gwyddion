@@ -194,7 +194,7 @@ static const XYZRasArgs xyzras_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Rastrerizes XYZ data to images."),
+    N_("Rasterizes XYZ data to images."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
