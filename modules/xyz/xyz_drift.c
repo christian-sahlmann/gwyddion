@@ -1411,7 +1411,7 @@ find_initial_diff(double px, double pv, double nv, double *nx, double *diff)
 
 //find next position within the line minimisation algorithm
 static gboolean
-find_next_pos(double px, double ppx, double pv, double ppv, double *nx, double *diff, double mindiff, double tolerance)
+find_next_pos(double px, G_GNUC_UNUSED double ppx, double pv, double ppv, double *nx, double *diff, double mindiff, double tolerance)
 {
 
    if (fabs(pv-ppv)<=tolerance) {printf("In tolerance\n"); return TRUE;} //value difference is small enough
@@ -1501,16 +1501,13 @@ reset_ranges(XYZDriftControls *controls)
 }
 
 static gdouble
-get_error(GwyXYZ *points, gint *nbfrom, gint *nbto, gint nnbs, gdouble *zdrift)
+get_error(GwyXYZ *points, gint *nbfrom, gint *nbto, gint nnbs)
 {
     gint i;
     gdouble sum = 0;
 
     /*for each neighbor, sum the squared difference after drift correction*/
     for (i=0; i<nnbs; i++) {
-//        sum += ((points[nbfrom[i]].z - zdrift[nbfrom[i]]) - (points[nbto[i]].z - zdrift[nbto[i]]))
-//              *((points[nbfrom[i]].z - zdrift[nbfrom[i]]) - (points[nbto[i]].z - zdrift[nbto[i]]));
-
         sum += (points[nbfrom[i]].z - points[nbto[i]].z)*(points[nbfrom[i]].z - points[nbto[i]].z);
     }
     return sqrt(sum)/nnbs;
@@ -1582,7 +1579,7 @@ get_bining(GwyXYZ *points, gint npoints, gint ***bin, gint **nbin, gdouble xreal
 }
 
 static gint
-find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt, gint index, gdouble *xdrift, gdouble *ydrift, gint ***bin, gint **nbin, 
+find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt, gint index, gint ***bin, gint **nbin, 
                           gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
 
@@ -1630,7 +1627,7 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
 
 
 static gint 
-find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npoints, gdouble timethreshold, gdouble posthreshold, gdouble *xdrift, gdouble *ydrift,
+find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npoints, gdouble timethreshold, gdouble posthreshold,
                gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset, gdouble neighbors)
 {
     gint i, nnbs = 0, closest;
@@ -1652,7 +1649,7 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
     fprintf(fw, "# index closest ix iy cx cy iz cz it ct tdiff\n");
 
     for (i=0; i<npoints; i+=skip) {
-        closest = find_closest_point_bining(points, time, timethreshold, posthreshold, i, xdrift, ydrift, bin, nbin, xreal, yreal, xoffset, yoffset);
+        closest = find_closest_point_bining(points, time, timethreshold, posthreshold, i, bin, nbin, xreal, yreal, xoffset, yoffset);
 
         if (closest>=0) {
             fprintf(fw, "closest %d %d    %g %g    %g %g   %g %g   %g %g    %g\n", i, closest, points[i].x, points[i].y, points[closest].x, points[closest].y, points[i].z, points[closest].z, time[i], time[closest], time[i]-time[closest]);
@@ -1696,7 +1693,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
         g_free(origparams);
         return FALSE;
     }
-/*
+
     if (fixed) {
         for (i = 0; i < n; i++) {
             if (fixed[i])
@@ -1709,7 +1706,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     ok = gwy_math_nlfit_succeeded(fitter);
     gwy_math_nlfit_free(fitter);
     g_free(origparams);
-*/
+
     return ok;
 }
 
@@ -1725,7 +1722,7 @@ get_drift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
 
 
 static void
-init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift)
+init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble *time)
 {
     gint i;
     XYZDriftArgs *args = controls->args;
@@ -1788,7 +1785,6 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
     gdouble params[3];
     gdouble errors[3];
     gboolean fixed[3];
-    gchar buffer[100];
     GwyGraphCurveModel *gcmodel;
     gboolean ok;
 
@@ -1806,7 +1802,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
                         corpoints, FALSE);
 
     //find neigbors for error evaluation
-    nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
+    nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold,
                           controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
                           controls->args->neighbors);
 
@@ -1816,7 +1812,6 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
     for (i=0; i<nnbs; i++) {
         dtime[i] = (time[nbfrom[i]]+time[nbto[i]])/2;
         drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/(time[nbto[i]] - time[nbfrom[i]]);
-        printf("%d %d     %g %g\n", nbfrom[i], nbto[i], corpoints[nbfrom[i]].z, corpoints[nbto[i]].z);
     }    
 
     gcmodel = gwy_graph_curve_model_new();
@@ -1883,12 +1878,12 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
                         corpoints, TRUE);
 
     //find neigbors for error evaluation
-    nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold, xdrift, ydrift,
+    nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold,
                           controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
                           controls->args->neighbors);
 
     //get the error
-    return get_error(corpoints, nbfrom, nbto, nnbs, zdrift);
+    return get_error(corpoints, nbfrom, nbto, nnbs);
 }
 
 static void
@@ -2155,7 +2150,7 @@ preview(XYZDriftControls *controls)
 
 
     /*remove when time is in seconds, does nothing else*/
-    init_drift(controls, rdata->timepoints, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift);
+    init_drift(controls, rdata->timepoints, rdata->npoints, rdata->time);
 
     /*estimate the drift using some fitting routine, returning filled xdrift, ydrift and zdrift arrays*/
     if (args->fit_xdrift || args->fit_ydrift || args->fit_zdrift) 
