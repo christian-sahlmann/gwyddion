@@ -440,8 +440,8 @@ neural_network_data_init(NeuralNetworkData *nndata,
          i--, p++)
         *p = (2.0*g_rand_double(myrng) - 1.0)*0.1;
 
-    if (rng)
-        g_rand_free(rng);
+    if (!rng)
+        g_rand_free(myrng);
 }
 
 static void
