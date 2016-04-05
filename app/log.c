@@ -379,6 +379,7 @@ data_log_add_valist(GwyContainer *data,
         str = g_string_new(NULL);
     g_string_printf(str, "%s(%s)@%s", function, args, optime);
     gwy_string_list_append_take(targetlog, g_string_free(str, FALSE));
+    g_free(args);
     g_free(optime);
 }
 
@@ -785,10 +786,13 @@ format_args(const gchar *prefix)
     GwyContainer *settings = gwy_app_settings_get();
     GPtrArray *values = g_ptr_array_new();
     gchar *retval;
+    guint i;
 
     gwy_container_foreach(settings, prefix, format_arg, values);
     g_ptr_array_add(values, NULL);
     retval = g_strjoinv(", ", (gchar**)values->pdata);
+    for (i = 0; i < values->len-1; i++)
+        g_free(g_ptr_array_index(values, i));
     g_ptr_array_free(values, TRUE);
 
     return retval;
