@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-03-30 02:14+0200\n"
-"PO-Revision-Date: 2016-03-30 23:38+0100\n"
+"POT-Creation-Date: 2016-04-04 02:14+0200\n"
+"PO-Revision-Date: 2016-04-05 20:17+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -157,8 +157,8 @@ msgstr "Gaussienne (RPSDF)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Gaussienne double (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:819
-#: modules/xyz/xyz_drift.c:824
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:856
+#: modules/xyz/xyz_drift.c:861
 msgid "Exponential"
 msgstr "Exponentielle"
 
@@ -1327,7 +1327,7 @@ msgid "A_dd symbol"
 msgstr "Ajouter un symbole"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:565 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:595 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Aperçu"
 
@@ -3891,7 +3891,7 @@ msgstr "Pages : "
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:756
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:789
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
@@ -5069,19 +5069,19 @@ msgid "Plot point density map"
 msgstr "Afficher la carte de densité des points"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:707
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:740
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Résolution"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:711
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:744
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:726
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:759
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
@@ -5668,7 +5668,7 @@ msgstr "Format de données"
 #: modules/process/tip_model.c:163 modules/process/wpour_mark.c:273
 #: modules/tools/linestats.c:457 modules/tools/sfunctions.c:523
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:602
+#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:632
 #: modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "Mise à jour"
@@ -6663,8 +6663,8 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1092
-#: modules/xyz/xyz_drift.c:1110 modules/xyz/xyz_drift.c:1127
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1147
+#: modules/xyz/xyz_drift.c:1165 modules/xyz/xyz_drift.c:1182
 msgid "N.A."
 msgstr "N. A."
 
@@ -7357,7 +7357,7 @@ msgstr "Générer une surface par dépôt balistique"
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
 #: modules/process/tipops.c:320 modules/process/xydenoise.c:217
 #: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
-#: modules/xyz/xyz_raster.c:1027 modules/xyz/xyz_raster.c:1043
+#: modules/xyz/xyz_raster.c:1028 modules/xyz/xyz_raster.c:1044
 msgid "Initializing..."
 msgstr "Initialisation..."
 
@@ -8682,12 +8682,12 @@ msgstr "Dérive corrigée"
 msgid "Drift"
 msgstr "Dérive"
 
-#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:383
-#: modules/xyz/xyz_drift.c:402 modules/xyz/xyz_drift.c:421
+#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:399
+#: modules/xyz/xyz_drift.c:418 modules/xyz/xyz_drift.c:437
 msgid "drift"
 msgstr "dérive"
 
-#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:393
+#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:409
 msgid "x-axis drift"
 msgstr "dérive selon l'axe x"
 
@@ -12400,18 +12400,18 @@ msgstr "Super-résolution utilisant plusieurs images d'un même objet"
 
 #: modules/process/superresolution.c:141
 msgid "Supres"
-msgstr "Super resolution"
+msgstr "Super résolution"
 
 #: modules/process/superresolution.c:421
 msgid "Correlating to determine mean shift..."
-msgstr "Corrélation en cours pourdéterminer le déplacement moyen..."
+msgstr "Corrélation en cours pour déterminer le déplacement moyen..."
 
 #: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
 msgstr "Corrélation croisée..."
 
-#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1077
-#: modules/xyz/xyz_raster.c:1117
+#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1078
+#: modules/xyz/xyz_raster.c:1118
 msgid "Interpolating..."
 msgstr "Interpolation..."
 
@@ -13719,7 +13719,7 @@ msgstr "Distribution d'amplitude cumulée"
 msgid "Peak Count"
 msgstr "Comptage des pics"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1083
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1138
 msgid "_Graph:"
 msgstr "_Graphe :"
 
@@ -14494,118 +14494,121 @@ msgstr ""
 "Le nombre de valeurs du fichier de données %d\n"
 "diffère du nombre de plans %d."
 
-#: modules/xyz/xyz_drift.c:258
+#: modules/xyz/xyz_drift.c:274
 msgid "Analyzes drift in XYZ data."
 msgstr "Analyse la dérive dans des données XYZ."
 
-#: modules/xyz/xyz_drift.c:272
+#: modules/xyz/xyz_drift.c:288
 msgid "/Analyze _drift..."
 msgstr "/Analyser la _dérive..."
 
-#: modules/xyz/xyz_drift.c:276
+#: modules/xyz/xyz_drift.c:292
 msgid "Analyze and/or remove drift"
 msgstr "Analyser et/ou supprimer la dérive"
 
-#: modules/xyz/xyz_drift.c:382 modules/xyz/xyz_drift.c:827
+#: modules/xyz/xyz_drift.c:398 modules/xyz/xyz_drift.c:864
 msgid "X drift"
 msgstr "Dérive X"
 
-#: modules/xyz/xyz_drift.c:401 modules/xyz/xyz_drift.c:828
+#: modules/xyz/xyz_drift.c:417 modules/xyz/xyz_drift.c:865
 msgid "Y drift"
 msgstr "Dérive Y"
 
-#: modules/xyz/xyz_drift.c:412
+#: modules/xyz/xyz_drift.c:428
 msgid "y-axis drift"
 msgstr "dérive selon l'axe y"
 
-#: modules/xyz/xyz_drift.c:420 modules/xyz/xyz_drift.c:829
+#: modules/xyz/xyz_drift.c:436 modules/xyz/xyz_drift.c:866
 msgid "Z drift"
 msgstr "Dérive Z"
 
-#: modules/xyz/xyz_drift.c:431
+#: modules/xyz/xyz_drift.c:447
 msgid "z-axis drift"
 msgstr "dérive selon l'axe z"
 
-#: modules/xyz/xyz_drift.c:526 modules/xyz/xyz_raster.c:340
+#: modules/xyz/xyz_drift.c:556 modules/xyz/xyz_raster.c:340
 msgid "Rasterize XYZ Data"
 msgstr "Rastériser des données XYZ"
 
-#: modules/xyz/xyz_drift.c:551 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:581 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Initialiser les pla_ges"
 
-#: modules/xyz/xyz_drift.c:760 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "Plage _X :"
 
-#: modules/xyz/xyz_drift.c:782 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:815 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "Plage _Y :"
 
-#: modules/xyz/xyz_drift.c:818 modules/xyz/xyz_drift.c:823
+#: modules/xyz/xyz_drift.c:855 modules/xyz/xyz_drift.c:860
 msgid "2nd order polynom"
 msgstr "Polynôme d'ordre 2"
 
-#: modules/xyz/xyz_drift.c:837
+#: modules/xyz/xyz_drift.c:875
 msgid "Initial values"
 msgstr "Valeurs initiales"
 
-#: modules/xyz/xyz_drift.c:845
+#: modules/xyz/xyz_drift.c:883
 msgid "_X drift:"
 msgstr "Dérive _X :"
 
-#: modules/xyz/xyz_drift.c:885 modules/xyz/xyz_drift.c:939
-#: modules/xyz/xyz_drift.c:995
+#: modules/xyz/xyz_drift.c:923 modules/xyz/xyz_drift.c:977
+#: modules/xyz/xyz_drift.c:1033
 msgid "_fit"
 msgstr "_Ajustement"
 
-#: modules/xyz/xyz_drift.c:897
+#: modules/xyz/xyz_drift.c:935
 msgid "_Y drift:"
 msgstr "Dérive _Y :"
 
-#: modules/xyz/xyz_drift.c:953
+#: modules/xyz/xyz_drift.c:991
 msgid "Z fit _type:"
 msgstr "_Type d'ajustement selon Z :"
 
-#: modules/xyz/xyz_drift.c:1020
+#: modules/xyz/xyz_drift.c:1058
 msgid "Search parameters"
 msgstr "Paramètres de recherche"
 
-#: modules/xyz/xyz_drift.c:1025
+#: modules/xyz/xyz_drift.c:1063
 msgid "_Neighbors:"
 msgstr "Voisins :"
 
-#: modules/xyz/xyz_drift.c:1041
+#: modules/xyz/xyz_drift.c:1079
 msgid "_Length threshold:"
 msgstr "Seuil de _longueur : "
 
-#: modules/xyz/xyz_drift.c:1057
+#: modules/xyz/xyz_drift.c:1098
 msgid "_Time threshold:"
 msgstr "Seuil _temporel :"
 
-#: modules/xyz/xyz_drift.c:1074
+#: modules/xyz/xyz_drift.c:1116
+msgid "_Max iterations:"
+msgstr "Nombre d'itérations _max :"
+
+#: modules/xyz/xyz_drift.c:1129
 msgid "Results"
 msgstr "Résultats"
 
-#: modules/xyz/xyz_drift.c:1088
+#: modules/xyz/xyz_drift.c:1143
 msgid "X drift:"
 msgstr "Dérive X :"
 
-#: modules/xyz/xyz_drift.c:1096 modules/xyz/xyz_drift.c:1114
-#: modules/xyz/xyz_drift.c:1131
-#, fuzzy
+#: modules/xyz/xyz_drift.c:1151 modules/xyz/xyz_drift.c:1169
+#: modules/xyz/xyz_drift.c:1186
 msgid "to inits"
 msgstr "Initialiser"
 
-#: modules/xyz/xyz_drift.c:1106
+#: modules/xyz/xyz_drift.c:1161
 msgid "Y drift:"
 msgstr "Dérive _Y :"
 
-#: modules/xyz/xyz_drift.c:1123
+#: modules/xyz/xyz_drift.c:1178
 msgid "Z drift:"
 msgstr "Dérive _Z :"
 
-#: modules/xyz/xyz_drift.c:2128 modules/xyz/xyz_raster.c:1011
+#: modules/xyz/xyz_drift.c:2198 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Les dimensions physiques sont invalides."
 
@@ -14623,7 +14626,7 @@ msgstr "Rastériser des données"
 
 #: modules/xyz/xyz_raster.c:354
 msgid "Create Image _Directly"
-msgstr "Créer _directement une image"
+msgstr "Créer _directement l'image"
 
 #: modules/xyz/xyz_raster.c:360
 msgid "XY points form a regular grid so regularisation is not necessary."
@@ -14639,7 +14642,7 @@ msgstr "Rendre les pixels carrés"
 msgid "Field"
 msgstr "Global"
 
-#: modules/xyz/xyz_raster.c:955
+#: modules/xyz/xyz_raster.c:956
 #, c-format
 msgid ""
 "Number of points: %u\n"
@@ -14650,7 +14653,7 @@ msgstr ""
 "Fusionnés car trop proches : %u\n"
 "Ajoutés sur les bords : %u"
 
-#: modules/xyz/xyz_raster.c:1089
+#: modules/xyz/xyz_raster.c:1090
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
