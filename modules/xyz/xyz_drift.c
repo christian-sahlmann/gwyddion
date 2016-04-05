@@ -1690,11 +1690,13 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     origparams = g_memdup(params, n*sizeof(gdouble));
     gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
     printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
+
+
     if (!ok) {
         g_free(origparams);
         return FALSE;
     }
-
+/*
     if (fixed) {
         for (i = 0; i < n; i++) {
             if (fixed[i])
@@ -1707,19 +1709,17 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     ok = gwy_math_nlfit_succeeded(fitter);
     gwy_math_nlfit_free(fitter);
     g_free(origparams);
-
+*/
     return ok;
 }
 
 static double
 get_drift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
 {
-    gdouble rtime = time;
-
-    if (type==0) //polynom
-       return a + b*rtime + c*rtime*rtime;
-    else if (type==1) //exponential
-       return a + b*exp(rtime/c);
+    if (type==GWY_XYZDRIFT_ZMETHOD_POLYNOM) //polynom
+       return a + b*time + c*time*time;
+    else if (type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL) //exponential
+       return a + b*exp(time/c);
     else return 0;
 }
 
@@ -1743,7 +1743,7 @@ init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble
 
 
     for (i=0; i<npoints; i++) {
-       time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this
+       time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this after hwserver produces timestamp data in seconds
     }
 }
 
@@ -1758,6 +1758,7 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
        corpoints[i].x = points[i].x - xdrift[i];
        corpoints[i].y = points[i].y - ydrift[i];
        if (correctz) corpoints[i].z = points[i].z - zdrift[i];
+       else corpoints[i].z = points[i].z;
     }
 }
 
@@ -1814,7 +1815,8 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 
     for (i=0; i<nnbs; i++) {
         dtime[i] = (time[nbfrom[i]]+time[nbto[i]])/2;
-        drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/2;
+        drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/(time[nbto[i]] - time[nbfrom[i]]);
+        printf("%d %d     %g %g\n", nbfrom[i], nbto[i], corpoints[nbfrom[i]].z, corpoints[nbto[i]].z);
     }    
 
     gcmodel = gwy_graph_curve_model_new();
