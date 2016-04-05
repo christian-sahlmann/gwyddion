@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Grain measurement tool, calculates characteristics of selected "
-       "countinous parts of mask."),
+       "coutinuous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
     "1.6",
     "David Nečas (Yeti)",
