@@ -130,7 +130,7 @@ static const DistortArgs distort_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Apllies polynomial distortion in the horizontal plane."),
+    N_("Applies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
     "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -148,7 +148,7 @@ module_register(void)
                               NULL,
                               DISTORT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Apllies polynomial distortion in the "
+                              N_("Applies polynomial distortion in the "
                                  "horizontal plane"));
 
     return TRUE;
