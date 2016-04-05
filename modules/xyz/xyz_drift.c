@@ -1688,7 +1688,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
     printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
 
-
+/*
     if (!ok) {
         g_free(origparams);
         return FALSE;
@@ -1706,7 +1706,7 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     ok = gwy_math_nlfit_succeeded(fitter);
     gwy_math_nlfit_free(fitter);
     g_free(origparams);
-
+*/
     return ok;
 }
 
@@ -1919,11 +1919,11 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbto = g_new(gint, npoints);
 
     minerr = G_MAXDOUBLE;
-    bdiff = 1e-12;
-    cdiff = 1e-15;    
+//    bdiff = 1e-12;
+//    cdiff = 1e-15;    
 
-//    bdiff = 1e-8;
-//    cdiff = 1e-12;    
+    bdiff = 1e-8;
+    cdiff = 1e-12;    
 
 
     //successively minimize all the variables
