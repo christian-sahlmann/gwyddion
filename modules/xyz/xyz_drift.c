@@ -190,6 +190,8 @@ typedef struct {
     GwyGraphModel *gmodel;
     GtkWidget *graph;
     gboolean in_update;
+
+
 } XYZDriftControls;
 
 
@@ -1669,17 +1671,21 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
 /* If you pass non-NULL fixed[] then params[] should already contain initial
  * estimates for the fixed params. */
 static gboolean
-fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
+fit_func_to_curve(gdouble *xdata, gdouble *ydata, gint ndata, const gchar *name,
                   gdouble *params, gdouble *errors, const gboolean *fixed)
 {
     GwyNLFitPreset *preset = gwy_inventory_get_item(gwy_nlfit_presets(), name);
-    const gdouble *xdata = gwy_graph_curve_model_get_xdata(gcmodel);
-    const gdouble *ydata = gwy_graph_curve_model_get_ydata(gcmodel);
-    gint ndata = gwy_graph_curve_model_get_ndata(gcmodel);
     GwyNLFitter *fitter;
     gdouble *origparams;
     gboolean ok = FALSE;
     guint i, n;
+
+
+    FILE *fw = fopen("fitdata.txt", "w");
+    for (i=0; i<ndata; i++) {
+        fprintf(fw, "%g %g\n", xdata[i], ydata[i]);
+    }
+    fclose(fw);
 
     g_return_val_if_fail(preset, FALSE);
 
@@ -1688,7 +1694,6 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
     gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
     printf("guess: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
 
-/*
     if (!ok) {
         g_free(origparams);
         return FALSE;
@@ -1701,12 +1706,15 @@ fit_func_to_curve(GwyGraphCurveModel *gcmodel, const gchar *name,
         }
     }
 
-    fitter = gwy_nlfit_preset_fit(preset, NULL, n, xdata, ydata,
+    fitter = gwy_nlfit_preset_fit(preset, NULL, ndata, xdata, ydata,
                                   params, errors, fixed);
     ok = gwy_math_nlfit_succeeded(fitter);
+    printf("fit: %g %g %g  ok %d\n", params[0], params[1], params[2], ok);
+
+
     gwy_math_nlfit_free(fitter);
     g_free(origparams);
-*/
+
     return ok;
 }
 
@@ -1716,7 +1724,7 @@ get_drift_val(gint type, gdouble a, gdouble b, gdouble c, gdouble time)
     if (type==GWY_XYZDRIFT_ZMETHOD_POLYNOM) //polynom
        return a + b*time + c*time*time;
     else if (type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL) //exponential
-       return a + b*exp(time/c);
+       return -b + b*exp(time/c);
     else return 0;
 }
 
@@ -1785,8 +1793,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
     gdouble params[3];
     gdouble errors[3];
     gboolean fixed[3];
-    GwyGraphCurveModel *gcmodel;
-    gboolean ok;
+    gboolean ok=0;
 
     gdouble timethreshold = controls->args->threshold_time; 
     gdouble posthreshold = controls->args->threshold_length; 
@@ -1814,20 +1821,17 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
         drift[i] = (corpoints[nbto[i]].z - corpoints[nbfrom[i]].z)/(time[nbto[i]] - time[nbfrom[i]]);
     }    
 
-    gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(gcmodel, dtime, drift, nnbs);
-
     if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_POLYNOM) {
-       params[0] = *bz;
-       params[1] = 2*(*cz);
-       fixed[0] = 0;
-       fixed[1] = 0; 
+        params[0] = *bz;
+        params[1] = 2*(*cz);
+        fixed[0] = 0;
+        fixed[1] = 0; 
 
-       ok = fit_func_to_curve(gcmodel, "Polynomial (order 1)", params, errors, fixed);
+        ok = fit_func_to_curve(dtime, drift, nnbs, "Polynomial (order 1)", params, errors, fixed);
 
-       *az = 0;
-       *bz = params[0];
-       *cz = params[1]/2.0;
+        *az = 0;
+        *bz = params[0];
+        *cz = params[1]/2.0;
     }
     else if (controls->args->zdrift_type==GWY_XYZDRIFT_ZMETHOD_EXPONENTIAL) {
         params[0] = 0;
@@ -1837,9 +1841,9 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
         fixed[1] = 0; 
         fixed[2] = 0;
 
-        ok = fit_func_to_curve(gcmodel, "Exponential", params, errors, fixed);
+        ok = fit_func_to_curve(dtime, drift, nnbs, "Exponential", params, errors, fixed);
 
-        *az = 0;
+        *az = params[0];
         *bz = params[1]*params[2];
         *cz = params[2];
     }
@@ -1857,7 +1861,6 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 
     g_free(dtime);
     g_free(drift);
-    //g_free(gcmodel);
 
     return ok;
 }
@@ -1901,6 +1904,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     gdouble minerr;
     gboolean done;
     gdouble cdiff, bdiff;
+    gdouble total, sofar;
 
     ax = controls->args->xdrift_a;
     bx = controls->args->xdrift_b;
@@ -1919,12 +1923,23 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbto = g_new(gint, npoints);
 
     minerr = G_MAXDOUBLE;
-//    bdiff = 1e-12;
-//    cdiff = 1e-15;    
+//    bdiff = 1e-12; //gesi, poly
+//    cdiff = 1e-15;   
+    bdiff = 1e-8;  //gesi, exp
+    cdiff = 100;
+ 
 
-    bdiff = 1e-8;
-    cdiff = 1e-12;    
+//    bdiff = 1e-8; //gen, poly
+//    cdiff = 1e-12;    
+//    bdiff = 1e-5; //gen, exp
+//    cdiff = 100;
 
+
+
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Fitting in progress...");
+    total = (gdouble)((gint)controls->args->fit_xdrift + 2*(gint)controls->args->fit_ydrift + 2*(gint)controls->args->fit_zdrift)*controls->args->iterations;
+    sofar = 0;
+    gwy_app_wait_set_fraction(sofar/total);
 
     //successively minimize all the variables
     iteration = 0;
@@ -1942,6 +1957,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
            {
                //iterate through bx
                pbx = bx;
+
                printf("bx search\n");
 
                vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
@@ -1974,6 +1990,9 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
                   intit++;
                } while (!done && intit<100);
+  
+               sofar += 1;
+               gwy_app_wait_set_fraction(sofar/total);
            }
            if (controls->args->fit_xdrift) 
            {
@@ -2011,6 +2030,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
                   intit++;
                } while (!done && intit<100);
+               sofar += 1;
+               gwy_app_wait_set_fraction(sofar/total);
            }
 
            if (controls->args->fit_ydrift) 
@@ -2049,6 +2070,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
                   intit++;
                } while (!done && intit<100);
+               sofar += 1;
+               gwy_app_wait_set_fraction(sofar/total);
            }
            if (controls->args->fit_ydrift) 
            {
@@ -2086,11 +2109,15 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
                   intit++;
                } while (!done && intit<100);
+               sofar += 1;
+               gwy_app_wait_set_fraction(sofar/total);
            }
 
 
        iteration++;
     } while (iteration<controls->args->iterations);
+
+    gwy_app_wait_finish();
 
     rdata->xdrift_a_result = ax;
     rdata->xdrift_b_result = bx;
