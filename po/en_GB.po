@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-04 02:14+0200\n"
-"PO-Revision-Date: 2016-04-05 21:18+0100\n"
+"POT-Creation-Date: 2016-04-09 02:14+0200\n"
+"PO-Revision-Date: 2016-04-10 14:55+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: None, I suppose\n"
 "Language: en_GB\n"
@@ -152,8 +152,8 @@ msgstr "Gaussian (RPSDF)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Two Gaussians (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:856
-#: modules/xyz/xyz_drift.c:861
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:858
+#: modules/xyz/xyz_drift.c:863
 msgid "Exponential"
 msgstr "Exponential"
 
@@ -1322,7 +1322,7 @@ msgid "A_dd symbol"
 msgstr "A_dd symbol"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:595 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:597 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Preview"
 
@@ -2057,41 +2057,41 @@ msgstr ""
 msgid "current-language-code|en"
 msgstr "en_GB"
 
-#: app/log.c:537
+#: app/log.c:538
 #, c-format
 msgid "Log of %s (%s)"
 msgstr "Log of %s (%s)"
 
-#: app/log.c:589 app/meta.c:224
+#: app/log.c:590 app/meta.c:224
 msgid "_Export"
 msgstr "_Export"
 
-#: app/log.c:595
+#: app/log.c:596
 msgid "Clea_r"
 msgstr "Clea_r"
 
-#: app/log.c:600 app/meta.c:240
+#: app/log.c:601 app/meta.c:240
 msgid "_Close"
 msgstr "_Close"
 
-#: app/log.c:616 modules/file/imgexport.c:3887 modules/file/rawfile.c:996
+#: app/log.c:617 modules/file/imgexport.c:3887 modules/file/rawfile.c:996
 msgid "Type"
 msgstr "Type"
 
-#: app/log.c:617
+#: app/log.c:618
 msgid "Function"
 msgstr "Function"
 
-#: app/log.c:618 modules/file/imgexport.c:2824 modules/process/neural.c:613
+#: app/log.c:619 modules/file/imgexport.c:2824 modules/process/neural.c:613
 #: modules/tools/stats.c:426
 msgid "Parameters"
 msgstr "Parameters"
 
-#: app/log.c:619
+#: app/log.c:620
 msgid "Time"
 msgstr "Time"
 
-#: app/log.c:731
+#: app/log.c:732
 msgid "Export Log"
 msgstr "Export Log"
 
@@ -2219,21 +2219,18 @@ msgid " is free software released under GNU GPL."
 msgstr " is free software released under GNU GPL."
 
 #: app/tips.c:54
-#, fuzzy
 msgid ""
 "Holding Shift restricts directions of selected lines to multiples of 15°."
 msgstr ""
 "Holding Shift restricts directions of selected lines to multiples of 15°."
 
 #: app/tips.c:59
-#, fuzzy
 msgid ""
 "Holding Shift restricts shapes of selected rectangles to perfect squares."
 msgstr ""
 "Holding Shift restricts shapes of selected rectangles to perfect squares."
 
 #: app/tips.c:64
-#, fuzzy
 msgid "Holding Shift restricts shapes of selected ellipses to perfect circles."
 msgstr ""
 "Holding Shift restricts shapes of selected ellipses to perfect circles."
@@ -2409,7 +2406,6 @@ msgid "Key ‛Z’ resets data window zoom to 1:1."
 msgstr "Key ‘Z’ resets data window zoom to 1:1."
 
 #: app/tips.c:206
-#, fuzzy
 msgid ""
 "Data with different <i>x</i> and <i>y</i> measures can be displayed either "
 "with pixel-wise or realistic aspect ratio.  The menu in data window top left "
@@ -2504,13 +2500,12 @@ msgstr ""
 "the data."
 
 #: app/tips.c:270
-#, fuzzy
 msgid ""
 "Align Rows offers to use/exclude the masked area if a mask is present on the "
 "data."
 msgstr ""
-"Plane Level offers to use/exclude the masked area if a mask is present on "
-"the data."
+"Align Rows offers to use/exclude the masked area if a mask is present on the "
+"data."
 
 #: app/tips.c:275
 msgid ""
@@ -2547,11 +2542,10 @@ msgstr ""
 "positive features."
 
 #: app/tips.c:296
-#, fuzzy
 msgid ""
 "Too small grains can be filtered out with Data Process → Grains → Filter."
 msgstr ""
-"Too small grains can be filtered out with Remove by Threshold grain function."
+"Too small grains can be filtered out with Data Process → Grains → Filter."
 
 #: app/tips.c:301
 msgid ""
@@ -2562,13 +2556,12 @@ msgstr ""
 "with a good dynamic range"
 
 #: app/tips.c:306
-#, fuzzy
 msgid ""
 "Data Process → Basic Operations → Dimensions and Units changes scales, "
 "offsets and even lateral and value units."
 msgstr ""
-"Data Process → Basic Operations → Recalibrate changes scales, offsets and "
-"even lateral and value units."
+"Data Process → Basic Operations → Dimensions and Units changes scales, "
+"offsets and even lateral and value units."
 
 #: app/tips.c:311
 msgid ""
@@ -2665,15 +2658,14 @@ msgstr ""
 "exotic functions."
 
 #: app/tips.c:384
-#, fuzzy
 msgid ""
 "Path Level tool levels misaligned rows by lining them up along manually "
 "selected lines.  If there are no large features automatic Align Rows usually "
 "works well."
 msgstr ""
 "Path Level tool levels misaligned rows by lining them up along manually "
-"selected lines.  If there are no large features automatic Median Line "
-"Correction usually works well."
+"selected lines.  If there are no large features automatic Align Rows usually "
+"works well."
 
 #: app/tips.c:390
 msgid ""
@@ -2824,9 +2816,8 @@ msgid "/Save _As..."
 msgstr "/Save _As..."
 
 #: app/toolbox.c:822
-#, fuzzy
 msgid "/_Close"
-msgstr "_Close"
+msgstr "/_Close"
 
 #: app/toolbox.c:830
 msgid "/Remo_ve All Logs"
@@ -3081,11 +3072,11 @@ msgstr "FileDescEnd has no corresponding FileDescBegin."
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "FileDescBegin has no corresponding FileDescEnd."
 
-#: modules/file/apedaxfile.c:214
+#: modules/file/apedaxfile.c:257
 msgid "Imports A.P.E. Research DAX data files."
 msgstr "Imports A.P.E. Research DAX data files."
 
-#: modules/file/apedaxfile.c:227
+#: modules/file/apedaxfile.c:272
 msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 
@@ -3694,9 +3685,8 @@ msgid "Data size %lu is not a multiple of point size %u."
 msgstr "Data size %lu is not a multiple of point size %u."
 
 #: modules/file/gxyzffile.c:381
-#, fuzzy
 msgid "Export GXYZF"
-msgstr "Export XYZ"
+msgstr "Export GXYZF"
 
 #: modules/file/gxyzffile.c:395 modules/file/xyzexport.c:238
 #: modules/file/xyzexport.c:304
@@ -3853,7 +3843,7 @@ msgstr "Pages:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:789
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:791
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Physical Dimensions"
@@ -4346,15 +4336,14 @@ msgid "Mask"
 msgstr "Mask"
 
 #: modules/file/intelliwave.c:231
-#, fuzzy
 msgid "Imports IntelliWave inteferometric ESD data."
-msgstr "Imports Intematix SDF data files."
+msgstr ""
 
 #: modules/file/intelliwave.c:244
 msgid "IntelliWave inteferometric data (.esd)"
 msgstr "IntelliWave inteferometric data (.esd)"
 
-#: modules/file/intelliwave.c:305
+#: modules/file/intelliwave.c:306
 #, c-format
 msgid ""
 "Invalid data address 0x%0x found.  File is in some unknown format version."
@@ -4995,19 +4984,19 @@ msgid "Plot point density map"
 msgstr "Plot point density map"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:740
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:742
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Resolution"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:744
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:746
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "_Horizontal size:"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:759
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:761
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "_Vertical size:"
@@ -5029,7 +5018,6 @@ msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Nearly raw raster data (NRRD) files (.nrrd)"
 
 #: modules/file/nrrdfile.c:328
-#, fuzzy
 msgid "Detached header does not refer to any data file."
 msgstr "Detached header does not refer to any data file."
 
@@ -5058,12 +5046,12 @@ msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 
 #: modules/file/nrrdfile.c:963
-#, fuzzy, c-format
+#, c-format
 msgid "Hex data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr "Hex data contain fewer values (%u) than corresponds to the sizes (%u)."
 
 #: modules/file/nrrdfile.c:1076
-#, fuzzy, c-format
+#, c-format
 msgid "Text data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Text data contain fewer values (%u) than corresponds to the sizes (%u)."
@@ -5568,7 +5556,7 @@ msgstr "Data Format"
 #: modules/process/tip_model.c:163 modules/process/wpour_mark.c:273
 #: modules/tools/linestats.c:457 modules/tools/sfunctions.c:523
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:632
+#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:634
 #: modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "_Update"
@@ -6550,8 +6538,8 @@ msgstr "It is necessary to select more data points than free fit parameters"
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1147
-#: modules/xyz/xyz_drift.c:1165 modules/xyz/xyz_drift.c:1182
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1149
+#: modules/xyz/xyz_drift.c:1167 modules/xyz/xyz_drift.c:1184
 msgid "N.A."
 msgstr "N.A."
 
@@ -6764,9 +6752,8 @@ msgid "Instant:"
 msgstr "Instant:"
 
 #: modules/graph/graph_fdfit.c:450 modules/graph/graph_fit.c:488
-#, fuzzy
 msgid "esti_mate"
-msgstr "e_stimate"
+msgstr "esti_mate"
 
 #: modules/graph/graph_fdfit.c:457 modules/graph/graph_fit.c:495
 #: modules/volume/volume_fdfit.c:543
@@ -6851,7 +6838,7 @@ msgstr "Find graph curve peaks"
 
 #: modules/graph/graph_peaks.c:168
 msgid "Prominence"
-msgstr ""
+msgstr "Prominence"
 
 #: modules/graph/graph_peaks.c:172
 msgid "Zero"
@@ -6866,9 +6853,8 @@ msgid "Graph Peaks"
 msgstr "Graph Peaks"
 
 #: modules/graph/graph_peaks.c:223
-#, fuzzy
 msgid "_Background type:"
-msgstr "_Mask creation type:"
+msgstr "_Background type:"
 
 #: modules/graph/graph_peaks.c:238
 msgid "Order peaks _by:"
@@ -6913,12 +6899,10 @@ msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Layer allowing selection of arbitrary straight lines."
 
 #: modules/layer/path.c:171
-#, fuzzy
 msgid "Layer allowing selection of a single long curve."
-msgstr "Layer allowing selection of rectangular areas."
+msgstr "Layer allowing selection of a single long curve."
 
 #: modules/layer/point.c:169
-#, fuzzy
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "invisible."
@@ -7125,9 +7109,8 @@ msgid "Similar structures averaging using autocorrelation"
 msgstr "Similar-structures averaging using autocorrelation"
 
 #: modules/process/averaging.c:67
-#, fuzzy
 msgid "/_Correct Data/_Correlation Averaging..."
-msgstr "/_Correct Data/_Correlation averaging..."
+msgstr "/_Correct Data/_Correlation Averaging..."
 
 #: modules/process/averaging.c:71
 msgid "Averaging of similar structures"
@@ -7214,7 +7197,6 @@ msgid "/_Basic Operations/_Null Offsets"
 msgstr "/_Basic Operations/_Null Offsets"
 
 #: modules/process/basicops.c:125
-#, fuzzy
 msgid "Null horizontal offsets, moving the origin to the upper left corner"
 msgstr "Null horizontal offsets, moving the origin to the upper left corner"
 
@@ -7526,14 +7508,13 @@ msgid "Data larger than detail?"
 msgstr "Data larger than detail?"
 
 #: modules/process/calcoefs_simple.c:609
-#, fuzzy, c-format
+#, c-format
 msgid "one object found"
 msgid_plural "%d objects found"
-msgstr[0] "%d objects found"
+msgstr[0] "one object found"
 msgstr[1] "%d objects found"
 
 #: modules/process/calcoefs_simple.c:614
-#, fuzzy
 msgid "Search canceled"
 msgstr "Search cancelled"
 
@@ -7811,9 +7792,8 @@ msgid "As another data"
 msgstr "As another data"
 
 #: modules/process/coerce.c:228
-#, fuzzy
 msgid "Discrete levels"
-msgstr "Discrete state"
+msgstr "Discrete levels"
 
 #: modules/process/coerce.c:232
 msgid "Entire image"
@@ -7821,7 +7801,7 @@ msgstr "Entire image"
 
 #: modules/process/coerce.c:233
 msgid "By row (identically)"
-msgstr ""
+msgstr "By row (identically)"
 
 #: modules/process/coerce.c:247
 msgid "Coerce Statistics"
@@ -7836,18 +7816,16 @@ msgid "_Template:"
 msgstr "_Template:"
 
 #: modules/process/coerce.c:328
-#, fuzzy
 msgid "Same area"
-msgstr "Surface area"
+msgstr "Same area"
 
 #: modules/process/coerce.c:331 modules/tools/filter.c:284
 msgid "_Type:"
 msgstr "_Type:"
 
 #: modules/process/coerce.c:339
-#, fuzzy
 msgid "Number of _levels:"
-msgstr "Number of _peaks:"
+msgstr "Number of _levels:"
 
 #: modules/process/coerce.c:349
 msgid "Data processing:"
@@ -8565,12 +8543,12 @@ msgstr "Drift-corrected"
 msgid "Drift"
 msgstr "Drift"
 
-#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:399
-#: modules/xyz/xyz_drift.c:418 modules/xyz/xyz_drift.c:437
+#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:401
+#: modules/xyz/xyz_drift.c:420 modules/xyz/xyz_drift.c:439
 msgid "drift"
 msgstr "drift"
 
-#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:409
+#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:411
 msgid "x-axis drift"
 msgstr "x-axis drift"
 
@@ -8785,7 +8763,6 @@ msgid "Detected st_ep"
 msgstr "Detected st_ep"
 
 #: modules/process/entropy.c:112
-#, fuzzy
 msgid "Visualizes entropy calculation for value and slope distribution."
 msgstr "Visualises entropy calculation for value and slope distribution."
 
@@ -8914,9 +8891,8 @@ msgid "Extract path selection data"
 msgstr "Extract path selection data"
 
 #: modules/process/extract_path.c:158
-#, fuzzy
 msgid "Extract Path Selection"
-msgstr "Extract to a new file"
+msgstr "Extract Path Selection"
 
 #: modules/process/extract_path.c:175
 msgid "Number of path points:"
@@ -8935,14 +8911,12 @@ msgid "Y position"
 msgstr "Y position"
 
 #: modules/process/extract_path.c:196
-#, fuzzy
 msgid "X tangent"
-msgstr "_X range:"
+msgstr "X tangent"
 
 #: modules/process/extract_path.c:200
-#, fuzzy
 msgid "Y tangent"
-msgstr "_Y range:"
+msgstr "Y tangent"
 
 #: modules/process/extract_path.c:391 modules/process/extract_path.c:403
 #: modules/process/pat_synth.c:1432 modules/tools/distance.c:146
@@ -8950,9 +8924,8 @@ msgid "Distance"
 msgstr "Distance"
 
 #: modules/process/extract_path.c:402
-#, fuzzy
 msgid "Tangent"
-msgstr "to"
+msgstr "Tangent"
 
 #: modules/process/facet-level.c:65
 msgid ""
@@ -9251,7 +9224,6 @@ msgid "Subtract an ellipse from the FFT mask"
 msgstr "Subtract an ellipse from the FFT mask"
 
 #: modules/process/fft_filter_2d.c:357
-#, fuzzy
 msgid "Subtract a rectangle from the FFT mask"
 msgstr "Subtract a rectangle from the FFT mask"
 
@@ -9884,15 +9856,13 @@ msgstr "Simple grain statistics"
 msgid "/_Grains/Select _Inscribed Discs"
 msgstr "/_Grains/Select _Inscribed Discs"
 
-# needs correction (inScribed)
 #: modules/process/grain_stat.c:80
-msgid "Create a selection visualizing discs incribed into grains"
-msgstr ""
+msgid "Create a selection visualizing discs inscribed into grains"
+msgstr "Create a selection visualising discs inscribed into grains"
 
-# Excscribed seems to be unused, should be replaced by circumscribed
 #: modules/process/grain_stat.c:84
-msgid "/_Grains/Select _Excscribed Circles"
-msgstr ""
+msgid "/_Grains/Select _Circumscribed Circles"
+msgstr "/_Grains/Select _Circumscribed Circles"
 
 #: modules/process/grain_stat.c:88
 msgid "Create a selection visualizing grain circumcircles"
@@ -10507,9 +10477,8 @@ msgstr "Lateral force simulator"
 msgid "/_Tip and Indentation/_Lateral force..."
 msgstr "/_Tip and Indentation/_Lateral force..."
 
-# needs correction, should be artifact in en_US and artefact in en_GB
 #: modules/process/latsim.c:94
-msgid "Simulate topograpy artefacts in lateral force channels"
+msgid "Simulate topograpy artifacts in lateral force channels"
 msgstr ""
 
 #: modules/process/latsim.c:135
@@ -10585,9 +10554,8 @@ msgid "Level Rotate"
 msgstr "Level Rotate"
 
 #: modules/process/level.c:149
-#, fuzzy
 msgid "Zero Mean Value"
-msgstr "Average value"
+msgstr "Zero Mean Value"
 
 #: modules/process/level_grains.c:84
 msgid ""
@@ -11349,11 +11317,11 @@ msgstr ""
 
 #: modules/process/nanoindent_adjust.c:197
 msgid "_Move data"
-msgstr ""
+msgstr "_Move data"
 
 #: modules/process/nanoindent_adjust.c:206
 msgid "_Rotate data"
-msgstr ""
+msgstr "_Rotate data"
 
 #: modules/process/nanoindent_adjust.c:215
 msgid "E_xtrapolate result data out of measured range"
@@ -11775,19 +11743,17 @@ msgstr "Scanning..."
 msgid "Computation diverged, try to change parameters"
 msgstr "Computation diverged, try to change parameters"
 
-# "Apllies" to be corrected
 #: modules/process/polydistort.c:133
-msgid "Apllies polynomial distortion in the horizontal plane."
-msgstr ""
+msgid "Applies polynomial distortion in the horizontal plane."
+msgstr "Applies polynomial distortion in the horizontal plane."
 
 #: modules/process/polydistort.c:147
 msgid "/_Distortion/Pol_ynomial..."
 msgstr "/_Distortion/Pol_ynomial..."
 
-# dito
 #: modules/process/polydistort.c:151
-msgid "Apllies polynomial distortion in the horizontal plane"
-msgstr ""
+msgid "Applies polynomial distortion in the horizontal plane"
+msgstr "Applies polynomial distortion in the horizontal plane"
 
 #: modules/process/polydistort.c:201
 msgid "Distort by Polynomial"
@@ -12033,10 +11999,9 @@ msgstr "New _width:"
 msgid "New _height:"
 msgstr "New _height:"
 
-# Change artefact (GB) to artifact (US)
 #: modules/process/scars.c:112
-msgid "Marks and/or removes scars (horizontal linear artefacts)."
-msgstr ""
+msgid "Marks and/or removes scars (horizontal linear artifacts)."
+msgstr "Marks and/or removes scars (horizontal linear artefacts)."
 
 #: modules/process/scars.c:126
 msgid "/_Correct Data/M_ark Scars..."
@@ -12868,14 +12833,12 @@ msgid "Converts data fields to XYZ data."
 msgstr "Converts data fields to XYZ data."
 
 #: modules/process/xyzize.c:55
-#, fuzzy
 msgid "/_Basic Operations/_XYZize..."
-msgstr "/_Basic Operations/_Scale..."
+msgstr "/_Basic Operations/_XYZise..."
 
 #: modules/process/xyzize.c:59
-#, fuzzy
 msgid "Convert to XYZ data"
-msgstr "Import XYZ Data"
+msgstr "Convert to XYZ data"
 
 #: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy Console"
@@ -12999,10 +12962,9 @@ msgstr "Gaussian"
 msgid "Sharpen"
 msgstr "Sharpen"
 
-# "countinous" to be corrected
 #: modules/tools/grainmeasure.c:92
 msgid ""
-"Grain measurement tool, calculates characteristics of selected countinous "
+"Grain measurement tool, calculates characteristics of selected coutinuous "
 "parts of mask."
 msgstr ""
 
@@ -13062,27 +13024,27 @@ msgstr ""
 
 #: modules/tools/icolorange.c:159
 msgid "Color Range"
-msgstr ""
+msgstr "Colour Range"
 
 #: modules/tools/icolorange.c:160
 msgid "Stretch color range to part of data"
-msgstr ""
+msgstr "Stretch colour range to part of data"
 
 #: modules/tools/icolorange.c:228
 msgid "Full color range from minimum to maximum"
-msgstr ""
+msgstr "Full colour range from minimum to maximum"
 
 #: modules/tools/icolorange.c:233
 msgid "Explicitly set fixed color range"
-msgstr ""
+msgstr "Explicitly set fixed colour range"
 
 #: modules/tools/icolorange.c:238
 msgid "Automatic color range with tails cut off"
-msgstr ""
+msgstr "Automatic colour range with tails cut off"
 
 #: modules/tools/icolorange.c:243
 msgid "Adaptive nonlinear color mapping"
-msgstr ""
+msgstr "Adaptive non-linear colour mapping"
 
 #: modules/tools/icolorange.c:284
 msgid "_default"
@@ -13154,6 +13116,8 @@ msgid ""
 "Row/column statistical function tool, mean values, medians, maxima, minima, "
 "RMS, ..., of rows or columns."
 msgstr ""
+"Row/column statistical function tool, mean values, medians, maxima, minima, "
+"RMS, ..., of rows or columns."
 
 #: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:148
 msgid "tan β<sub>0</sub>"
@@ -13361,11 +13325,11 @@ msgstr "_Radial profiles"
 
 #: modules/tools/profile.c:497
 msgid "Symmetrize _All"
-msgstr ""
+msgstr "Symmetrise _All"
 
 #: modules/tools/profile.c:502
 msgid "S_ymmetrize"
-msgstr ""
+msgstr "S_ymmetrise"
 
 #: modules/tools/profile.c:546
 msgid "_Separate profiles"
@@ -13517,7 +13481,7 @@ msgstr "Maximum height of the profile"
 
 #: modules/tools/roughness.c:426
 msgid "Spatial"
-msgstr ""
+msgstr "Spatial"
 
 #: modules/tools/roughness.c:476
 msgid "Average wavelength of the profile"
@@ -13541,15 +13505,15 @@ msgstr "Root mean square (RMS) slope"
 
 #: modules/tools/roughness.c:524
 msgid "Developed profile length"
-msgstr ""
+msgstr "Developed profile length"
 
 #: modules/tools/roughness.c:532
 msgid "Profile length ratio"
-msgstr ""
+msgstr "Profile length ratio"
 
 #: modules/tools/roughness.c:615
 msgid "Calculate surface profile parameters."
-msgstr ""
+msgstr "Calculate surface profile parameters."
 
 #: modules/tools/roughness.c:648 modules/tools/roughness.c:777
 #: modules/tools/roughness.c:1457
@@ -13580,13 +13544,13 @@ msgstr "BRC"
 msgid "Peak Count"
 msgstr "Peak Count"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1138
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1140
 msgid "_Graph:"
 msgstr "_Graph:"
 
 #: modules/tools/roughness.c:849
 msgid "C_ut-off:"
-msgstr ""
+msgstr "C_ut-off:"
 
 #: modules/tools/roughness.c:1329
 msgid "No profile selected."
@@ -13657,6 +13621,9 @@ msgid ""
 "(height distribution, correlations, PSDF, Minkowski functionals) of selected "
 "part of data."
 msgstr ""
+"Statistical function tool, calculates one-dimensional statistical functions "
+"(height distribution, correlations, PSDF, Minkowski functionals) of selected "
+"part of data."
 
 #: modules/tools/sfunctions.c:207
 msgid "Height distribution"
@@ -13720,23 +13687,23 @@ msgstr "_Separate uncertainty"
 
 #: modules/tools/spectro.c:151
 msgid "Point Spectrum, extracts point spectra to a graph."
-msgstr ""
+msgstr "Point Spectrum, extracts point spectra to a graph."
 
 #: modules/tools/spectro.c:190
 msgid "Point Spectroscopy"
-msgstr ""
+msgstr "Point Spectroscopy"
 
 #: modules/tools/spectro.c:191
 msgid "Extract and view point spectroscopy data"
-msgstr ""
+msgstr "Extract and view point spectroscopy data"
 
 #: modules/tools/spectro.c:359
 msgid "_Separate spectra"
-msgstr ""
+msgstr "_Separate spectra"
 
 #: modules/tools/spectro.c:369
 msgid "_Average spectra"
-msgstr ""
+msgstr "_Average spectra"
 
 #: modules/tools/spectro.c:508
 msgid "Spectroscopy"
@@ -13747,6 +13714,8 @@ msgid ""
 "Spot removal tool, interpolates small parts of data (displayed on a zoomed "
 "view) using selected algorithm."
 msgstr ""
+"Spot removal tool, interpolates small parts of data (displayed on a zoomed "
+"view) using selected algorithm."
 
 #: modules/tools/spotremove.c:201
 msgid "Remove Spots"
@@ -13754,11 +13723,11 @@ msgstr "Remove Spots"
 
 #: modules/tools/spotremove.c:202
 msgid "Interpolate small defects, manually selected"
-msgstr ""
+msgstr "Interpolate small defects, manually selected"
 
 #: modules/tools/spotremove.c:269
 msgid "Hyperbolic flatten"
-msgstr ""
+msgstr "Hyperbolic flatten"
 
 #: modules/tools/spotremove.c:270
 msgid "Pseudo-Laplace"
@@ -14154,50 +14123,50 @@ msgstr "K-means centre %d"
 
 #: modules/volume/volume_kmedians.c:88
 msgid "Calculates K-medians clustering on volume data."
-msgstr ""
+msgstr "Calculates K-medians clustering on volume data."
 
 #: modules/volume/volume_kmedians.c:102
 msgid "/_K-medians clustering..."
-msgstr ""
+msgstr "/_K-medians clustering..."
 
 #: modules/volume/volume_kmedians.c:106
 msgid "Calculate K-medians clustering on volume data"
-msgstr ""
+msgstr "Calculate K-medians clustering on volume data"
 
 #: modules/volume/volume_kmedians.c:145
 msgid "K-Medians"
-msgstr ""
+msgstr "K-Medians"
 
 #: modules/volume/volume_kmedians.c:392
 msgid "K-medians iteration..."
-msgstr ""
+msgstr "K-medians iteration..."
 
 #: modules/volume/volume_kmedians.c:495
 #, c-format
 msgid "K-medians cluster of %s"
-msgstr ""
+msgstr "K-medians cluster of %s"
 
 #: modules/volume/volume_kmedians.c:504
 #, c-format
 msgid "K-medians error of %s"
-msgstr ""
+msgstr "K-medians error of %s"
 
 #: modules/volume/volume_kmedians.c:546
 #, c-format
 msgid "K-medians center %d"
-msgstr ""
+msgstr "K-medians center %d"
 
 #: modules/volume/volume_linestat.c:171
 msgid "Summarizes profiles of volume data to a channel."
-msgstr ""
+msgstr "Summarises profiles of volume data to a channel."
 
 #: modules/volume/volume_linestat.c:185
 msgid "/Summarize _Profiles..."
-msgstr ""
+msgstr "/Summarise _Profiles..."
 
 #: modules/volume/volume_linestat.c:189
 msgid "Summarize profiles"
-msgstr ""
+msgstr "Summarise profiles"
 
 #: modules/volume/volume_linestat.c:249
 msgid "_Extract image"
@@ -14209,7 +14178,7 @@ msgstr "Set _preview"
 
 #: modules/volume/volume_linestat.c:284
 msgid "Summarize Volume Profiles"
-msgstr ""
+msgstr "Summarise Volume Profiles"
 
 #: modules/volume/volume_slice.c:195
 msgid "Extracts image planes and line graphs from volume data."
@@ -14241,7 +14210,7 @@ msgstr "_Base plane:"
 
 #: modules/volume/volume_slice.c:419
 msgid "Extract _multiple items"
-msgstr ""
+msgstr "Extract _multiple items"
 
 #: modules/volume/volume_slice.c:436
 msgid "Positions"
@@ -14347,134 +14316,127 @@ msgstr ""
 "The number of data file values %d\n"
 "differs from the number of planes %d."
 
-#: modules/xyz/xyz_drift.c:274
-#, fuzzy
+#: modules/xyz/xyz_drift.c:276
 msgid "Analyzes drift in XYZ data."
-msgstr "Analyse drift in XYZ data."
+msgstr "Analyses drift in XYZ data."
 
-#: modules/xyz/xyz_drift.c:288
+#: modules/xyz/xyz_drift.c:290
 msgid "/Analyze _drift..."
 msgstr "/Analyse _drift..."
 
-#: modules/xyz/xyz_drift.c:292
-#, fuzzy
+#: modules/xyz/xyz_drift.c:294
 msgid "Analyze and/or remove drift"
 msgstr "Analyse and/or remove the drift"
 
-#: modules/xyz/xyz_drift.c:398 modules/xyz/xyz_drift.c:864
+#: modules/xyz/xyz_drift.c:400 modules/xyz/xyz_drift.c:866
 msgid "X drift"
 msgstr "X drift"
 
-#: modules/xyz/xyz_drift.c:417 modules/xyz/xyz_drift.c:865
+#: modules/xyz/xyz_drift.c:419 modules/xyz/xyz_drift.c:867
 msgid "Y drift"
 msgstr "Y drift"
 
-#: modules/xyz/xyz_drift.c:428
-#, fuzzy
+#: modules/xyz/xyz_drift.c:430
 msgid "y-axis drift"
-msgstr "x-axis drift"
+msgstr "y-axis drift"
 
-#: modules/xyz/xyz_drift.c:436 modules/xyz/xyz_drift.c:866
+#: modules/xyz/xyz_drift.c:438 modules/xyz/xyz_drift.c:868
 msgid "Z drift"
 msgstr "Z drift"
 
-#: modules/xyz/xyz_drift.c:447
-#, fuzzy
+#: modules/xyz/xyz_drift.c:449
 msgid "z-axis drift"
-msgstr "x-axis drift"
+msgstr "z-axis drift"
 
-#: modules/xyz/xyz_drift.c:556 modules/xyz/xyz_raster.c:340
+#: modules/xyz/xyz_drift.c:558 modules/xyz/xyz_raster.c:340
 msgid "Rasterize XYZ Data"
 msgstr "Rasterise XYZ Data"
 
-#: modules/xyz/xyz_drift.c:581 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:583 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Reset Ran_ges"
 
-#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:795 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "_X-range:"
 
-#: modules/xyz/xyz_drift.c:815 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:817 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "_Y-range:"
 
-#: modules/xyz/xyz_drift.c:855 modules/xyz/xyz_drift.c:860
+#: modules/xyz/xyz_drift.c:857 modules/xyz/xyz_drift.c:862
 msgid "2nd order polynom"
 msgstr "2nd order polynom"
 
-#: modules/xyz/xyz_drift.c:875
+#: modules/xyz/xyz_drift.c:877
 msgid "Initial values"
 msgstr "Initial values"
 
-#: modules/xyz/xyz_drift.c:883
+#: modules/xyz/xyz_drift.c:885
 msgid "_X drift:"
 msgstr "_X drift:"
 
-#: modules/xyz/xyz_drift.c:923 modules/xyz/xyz_drift.c:977
-#: modules/xyz/xyz_drift.c:1033
+#: modules/xyz/xyz_drift.c:925 modules/xyz/xyz_drift.c:979
+#: modules/xyz/xyz_drift.c:1035
 msgid "_fit"
 msgstr "_fit"
 
-#: modules/xyz/xyz_drift.c:935
+#: modules/xyz/xyz_drift.c:937
 msgid "_Y drift:"
 msgstr "_Y drift:"
 
-#: modules/xyz/xyz_drift.c:991
+#: modules/xyz/xyz_drift.c:993
 msgid "Z fit _type:"
 msgstr "Z fit _type:"
 
-#: modules/xyz/xyz_drift.c:1058
+#: modules/xyz/xyz_drift.c:1060
 msgid "Search parameters"
 msgstr "Search parameters"
 
-#: modules/xyz/xyz_drift.c:1063
+#: modules/xyz/xyz_drift.c:1065
 msgid "_Neighbors:"
 msgstr "_Neighbours:"
 
-#: modules/xyz/xyz_drift.c:1079
+#: modules/xyz/xyz_drift.c:1081
 msgid "_Length threshold:"
 msgstr "_Length threshold:"
 
-#: modules/xyz/xyz_drift.c:1098
+#: modules/xyz/xyz_drift.c:1100
 msgid "_Time threshold:"
 msgstr "_Time threshold:"
 
-#: modules/xyz/xyz_drift.c:1116
-#, fuzzy
+#: modules/xyz/xyz_drift.c:1118
 msgid "_Max iterations:"
-msgstr "_Number of iterations:"
+msgstr "_Max iterations:"
 
-#: modules/xyz/xyz_drift.c:1129
+#: modules/xyz/xyz_drift.c:1131
 msgid "Results"
 msgstr "Results"
 
-#: modules/xyz/xyz_drift.c:1143
+#: modules/xyz/xyz_drift.c:1145
 msgid "X drift:"
 msgstr "X drift:"
 
-#: modules/xyz/xyz_drift.c:1151 modules/xyz/xyz_drift.c:1169
-#: modules/xyz/xyz_drift.c:1186
-#, fuzzy
+#: modules/xyz/xyz_drift.c:1153 modules/xyz/xyz_drift.c:1171
+#: modules/xyz/xyz_drift.c:1188
 msgid "to inits"
-msgstr "_Plot Inits"
+msgstr "to inits"
 
-#: modules/xyz/xyz_drift.c:1161
+#: modules/xyz/xyz_drift.c:1163
 msgid "Y drift:"
 msgstr "Y drift:"
 
-#: modules/xyz/xyz_drift.c:1178
+#: modules/xyz/xyz_drift.c:1180
 msgid "Z drift:"
 msgstr "Z drift:"
 
-#: modules/xyz/xyz_drift.c:2198 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:2245 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Physical dimensions are invalid."
 
-# needs correction
 #: modules/xyz/xyz_raster.c:197
-msgid "Rastrerizes XYZ data to images."
-msgstr ""
+msgid "Rasterizes XYZ data to images."
+msgstr "Rasterises XYZ data to images."
 
 #: modules/xyz/xyz_raster.c:211
 msgid "/_Rasterize..."
@@ -14485,9 +14447,8 @@ msgid "Rasterize to image"
 msgstr "Rasterise to image"
 
 #: modules/xyz/xyz_raster.c:354
-#, fuzzy
 msgid "Create Image _Directly"
-msgstr "Create a new item"
+msgstr "Create Image _Directly"
 
 #: modules/xyz/xyz_raster.c:360
 msgid "XY points form a regular grid so regularisation is not necessary."
