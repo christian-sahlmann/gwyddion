@@ -91,7 +91,7 @@ module_register(void)
                               NULL,
                               LATSIM_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Simulate topograpy artifacts in lateral force channels"));
+                              N_("Simulate topography artifacts in lateral force channels"));
 
     return TRUE;
 }
