@@ -228,7 +228,7 @@ static void          read_data_field_fringes(GwyContainer *container,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports IntelliWave inteferometric ESD data."),
+    N_("Imports IntelliWave interferometric ESD data."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti)",
@@ -241,7 +241,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("intelliwave",
-                           N_("IntelliWave inteferometric data (.esd)"),
+                           N_("IntelliWave interferometric data (.esd)"),
                            (GwyFileDetectFunc)&intw_detect,
                            (GwyFileLoadFunc)&intw_load,
                            NULL,
