@@ -222,6 +222,7 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
                              GwyInterpolationType interpolation)
 {
     GwyDataField *result;
+    gdouble min, max;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     if (data_field->xres == xres && data_field->yres == yres)
@@ -238,6 +239,14 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
         result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
     if (data_field->si_unit_z)
         result->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
+
+    /* Prevent rounding errors from introducing different values in constants
+     * field during resampling. */
+    gwy_data_field_get_min_max(data_field, &min, &max);
+    if (max <= min) {
+        gwy_data_field_fill(result, 0.5*(min + max));
+        return result;
+    }
 
     gwy_interpolation_resample_block_2d(data_field->xres, data_field->yres,
                                         data_field->xres, data_field->data,
@@ -591,15 +600,15 @@ gwy_data_field_resample(GwyDataField *data_field,
                         GwyInterpolationType interpolation)
 {
     gdouble *bdata;
+    gdouble min, max;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (data_field->xres == xres && data_field->yres == yres)
         return;
     g_return_if_fail(xres > 0 && yres > 0);
 
-    gwy_data_field_invalidate(data_field);
-
     if (interpolation == GWY_INTERPOLATION_NONE) {
+        gwy_data_field_invalidate(data_field);
         data_field->xres = xres;
         data_field->yres = yres;
         data_field->data = g_renew(gdouble, data_field->data,
@@ -607,6 +616,15 @@ gwy_data_field_resample(GwyDataField *data_field,
         return;
     }
 
+    /* Prevent rounding errors from introducing different values in constants
+     * field during resampling. */
+    gwy_data_field_get_min_max(data_field, &min, &max);
+    if (max <= min) {
+        gwy_data_field_fill(data_field, 0.5*(min + max));
+        return;
+    }
+
+    gwy_data_field_invalidate(data_field);
     bdata = g_new(gdouble, xres*yres);
     gwy_interpolation_resample_block_2d(data_field->xres, data_field->yres,
                                         data_field->xres, data_field->data,
