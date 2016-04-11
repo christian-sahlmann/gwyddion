@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-08 08:40+0300\n"
-"PO-Revision-Date: 2016-04-08 08:42+0300\n"
+"POT-Creation-Date: 2016-04-11 07:19+0300\n"
+"PO-Revision-Date: 2016-04-11 07:20+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -4385,11 +4385,11 @@ msgid "Mask"
 msgstr "Маска"
 
 #: modules/file/intelliwave.c:231
-msgid "Imports IntelliWave inteferometric ESD data."
-msgstr "Импортирует данные интерферометрии IntelliWave ESD"
+msgid "Imports IntelliWave interferometric ESD data."
+msgstr "Импортирует данные интерферометрии IntelliWave ESD."
 
 #: modules/file/intelliwave.c:244
-msgid "IntelliWave inteferometric data (.esd)"
+msgid "IntelliWave interferometric data (.esd)"
 msgstr "Данные интерферометрии IntelliWave (.esd)"
 
 #: modules/file/intelliwave.c:306
@@ -7779,7 +7779,7 @@ msgstr "Делоне"
 #: modules/process/calibrate.c:180
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr ""
-"Перекалибровывает горизонтальное разрешение скана или диапазон значений"
+"Перекалибровывает горизонтальное разрешение скана или диапазон значений."
 
 #: modules/process/calibrate.c:194
 msgid "/_Basic Operations/_Dimensions and Units..."
@@ -10582,8 +10582,8 @@ msgid "/_Tip and Indentation/_Lateral force..."
 msgstr "/_Зонд и индентация/_Латеральная сила..."
 
 #: modules/process/latsim.c:94
-msgid "Simulate topograpy artifacts in lateral force channels"
-msgstr "Моделирует артефакты топографии в каналах измерения латеральных сил"
+msgid "Simulate topography artifacts in lateral force channels"
+msgstr "Моделировать артефакты топографии в каналах измерения латеральных сил"
 
 #: modules/process/latsim.c:135
 msgid "Fw lateral force "
@@ -13082,7 +13082,7 @@ msgstr "Сделать резким"
 
 #: modules/tools/grainmeasure.c:92
 msgid ""
-"Grain measurement tool, calculates characteristics of selected coutinuous "
+"Grain measurement tool, calculates characteristics of selected continuous "
 "parts of mask."
 msgstr ""
 "Инструмент измерения зёрен, рассчитывает характеристики выбранных "
@@ -14580,8 +14580,8 @@ msgid "Create Image _Directly"
 msgstr "Создать изображение _сразу"
 
 #: modules/xyz/xyz_raster.c:360
-msgid "XY points form a regular grid so regularisation is not necessary."
-msgstr "Точки XY формируют правильную сетку поэтому регуляризация не нужна."
+msgid "XY points form a regular grid so regularization is not necessary."
+msgstr "Точки XY формируют правильную сетку, поэтому регуляризация не нужна."
 
 #: modules/xyz/xyz_raster.c:381
 msgid "Make Pixels S_quare"
@@ -14609,6 +14609,25 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "Imports IntelliWave inteferometric ESD data."
+#~ msgstr "Импортирует данные интерферометрии IntelliWave ESD"
+
+#~ msgid "IntelliWave inteferometric data (.esd)"
+#~ msgstr "Данные интерферометрии IntelliWave (.esd)"
+
+#~ msgid "Simulate topograpy artifacts in lateral force channels"
+#~ msgstr "Моделирует артефакты топографии в каналах измерения латеральных сил"
+
+#~ msgid ""
+#~ "Grain measurement tool, calculates characteristics of selected coutinuous "
+#~ "parts of mask."
+#~ msgstr ""
+#~ "Инструмент измерения зёрен, рассчитывает характеристики выбранных "
+#~ "непрерывных частей маски."
+
+#~ msgid "XY points form a regular grid so regularisation is not necessary."
+#~ msgstr "Точки XY формируют правильную сетку поэтому регуляризация не нужна."
 
 #~ msgid "Create a selection visualizing discs incribed into grains"
 #~ msgstr "Создать выделение, показывающую вписанные в зёрна диски"
