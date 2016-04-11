@@ -2,7 +2,7 @@
 Application:
 - New translation: British English (accompanied with unification of the default
   language to US English).
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 - Program messages: Are written to the log file by default on all platforms,
   on Unix in addition to the console.
 - Command line: New options --log-to-console and --no-log-to-console permit
@@ -10,6 +10,7 @@ Application:
 - Program messages: Can be displayed in the GUI using Info → Program Messages.
 - Files: The current file can be closed using Ctrl-W (or File → Close in the
   menu).
+- Tips of the day: Were updated and can be displayed on startup if enabled.
 
 Libraries:
 - libgwyddion: GwyNLFitter fit returns -1 and NULLs the covariance matrix when
@@ -34,6 +35,12 @@ Libraries:
   FFTW unavailable) overwriting the input data field was fixed.
 - libgwyprocess: New function gwy_data_field_area_renormalize() transforms
   values in just a part of data field.
+- libgwyprocess: Crash in gwy_data_field_area_get_entropy_at_scales() for data
+  fields filled with a constant value was fixed.
+- libgwyprocess: gwy_data_field_clear() no longer sets cached area to zero.
+- libgwyprocess: Resampling of constant valued data fields always produces
+  constant valued data fields.  This fixes odd rounding error patterns in
+  thumbnails for constant valued fields.
 - libgwydgets: A large number of new stock icons were added.
 - libgwydgets: The gradient can be unset using data window colour axis menu.
   The colour gradient and GL material can be unset in the 3D window as well.
@@ -86,6 +93,7 @@ Modules:
 - XYZize (new): Creates XYZ data (with regular point grid) from an image.
 - Data processing modules with preview: Data with non-square aspect ratio
   should look like in 2.43 again.
+- IntelliWave (new): Imports IntelliWave ESD data files (experimental).
 - Nano Measuring Machine: Parameters from the main DSC file are imported as
   metadata.
 - Align rows: Median difference method no longer changes the overall data tilt.
