@@ -44,17 +44,21 @@ typedef struct {
     gint j;
 } MaskedPoint;
 
-static void       gwy_data_field_finalize         (GObject *object);
-static void       gwy_data_field_serializable_init(GwySerializableIface *iface);
-static GByteArray* gwy_data_field_serialize       (GObject *obj,
-                                                   GByteArray *buffer);
-static gsize      gwy_data_field_get_size         (GObject *obj);
-static GObject*   gwy_data_field_deserialize      (const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position);
-static GObject*   gwy_data_field_duplicate_real   (GObject *object);
-static void       gwy_data_field_clone_real       (GObject *source,
-                                                   GObject *copy);
+static void        gwy_data_field_finalize         (GObject *object);
+static void        gwy_data_field_serializable_init(GwySerializableIface *iface);
+static GByteArray* gwy_data_field_serialize        (GObject *obj,
+                                                    GByteArray *buffer);
+static gsize       gwy_data_field_get_size         (GObject *obj);
+static GObject*    gwy_data_field_deserialize      (const guchar *buffer,
+                                                    gsize size,
+                                                    gsize *position);
+static GObject*    gwy_data_field_duplicate_real   (GObject *object);
+static void        gwy_data_field_clone_real       (GObject *source,
+                                                    GObject *copy);
+static void        set_cache_for_constant_field    (GwyDataField *data_field,
+                                                    gdouble value);
+static gboolean    data_field_is_constant          (GwyDataField *dfield,
+                                                    gdouble *z);
 
 static guint data_field_signals[LAST_SIGNAL] = { 0 };
 
@@ -222,7 +226,7 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
                              GwyInterpolationType interpolation)
 {
     GwyDataField *result;
-    gdouble min, max;
+    gdouble z;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     if (data_field->xres == xres && data_field->yres == yres)
@@ -242,9 +246,8 @@ gwy_data_field_new_resampled(GwyDataField *data_field,
 
     /* Prevent rounding errors from introducing different values in constants
      * field during resampling. */
-    gwy_data_field_get_min_max(data_field, &min, &max);
-    if (max <= min) {
-        gwy_data_field_fill(result, 0.5*(min + max));
+    if (data_field_is_constant(data_field, &z)) {
+        gwy_data_field_fill(result, z);
         return result;
     }
 
@@ -600,7 +603,7 @@ gwy_data_field_resample(GwyDataField *data_field,
                         GwyInterpolationType interpolation)
 {
     gdouble *bdata;
-    gdouble min, max;
+    gdouble z;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (data_field->xres == xres && data_field->yres == yres)
@@ -618,9 +621,12 @@ gwy_data_field_resample(GwyDataField *data_field,
 
     /* Prevent rounding errors from introducing different values in constants
      * field during resampling. */
-    gwy_data_field_get_min_max(data_field, &min, &max);
-    if (max <= min) {
-        gwy_data_field_fill(data_field, 0.5*(min + max));
+    if (data_field_is_constant(data_field, &z)) {
+        data_field->xres = xres;
+        data_field->yres = yres;
+        data_field->data = g_renew(gdouble, data_field->data,
+                                   data_field->xres*data_field->yres);
+        gwy_data_field_fill(data_field, z);
         return;
     }
 
@@ -634,6 +640,35 @@ gwy_data_field_resample(GwyDataField *data_field,
     data_field->data = bdata;
     data_field->xres = xres;
     data_field->yres = yres;
+}
+
+static gboolean
+data_field_is_constant(GwyDataField *data_field, gdouble *z)
+{
+    const gdouble *d = data_field->data;
+    gint k, n = data_field->xres * data_field->yres;
+
+    if (CTEST(data_field, MIN) && CTEST(data_field, MAX)) {
+        gdouble min = CVAL(data_field, MIN);
+        gdouble max = CVAL(data_field, MAX);
+        if (min == max) {
+            *z = min;
+            set_cache_for_constant_field(data_field, min);
+            return TRUE;
+        }
+    }
+
+    /* This check normally either finishes fast (there are different values)
+     * or goes to the end of the field, but then the called should save a lot
+     * of time by knowing the field is constant-valued. */
+    for (k = 0; k < n-1; k++) {
+        if (d[k] != d[k+1])
+            return FALSE;
+    }
+
+    *z = d[0];
+    set_cache_for_constant_field(data_field, d[0]);
+    return TRUE;
 }
 
 /**
@@ -1576,8 +1611,15 @@ gwy_data_field_fill(GwyDataField *data_field, gdouble value)
         *p = value;
 
     /* We can precompute stats */
+    set_cache_for_constant_field(data_field, value);
+}
+
+static void
+set_cache_for_constant_field(GwyDataField *data_field, gdouble value)
+{
     data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                         | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+                         | CBIT(MED) | CBIT(ARF) | CBIT(ART)
+                         | CBIT(ARE) | CBIT(VAR);
     CVAL(data_field, MIN) = value;
     CVAL(data_field, MAX) = value;
     CVAL(data_field, SUM) = data_field->xres * data_field->yres * value;
@@ -1585,6 +1627,8 @@ gwy_data_field_fill(GwyDataField *data_field, gdouble value)
     CVAL(data_field, MED) = value;
     CVAL(data_field, ARF) = value;
     CVAL(data_field, ART) = value;
+    CVAL(data_field, ARE) = data_field->xreal * data_field->yreal;
+    CVAL(data_field, VAR) = 0.0;
 }
 
 /**
@@ -1690,18 +1734,7 @@ gwy_data_field_clear(GwyDataField *data_field)
     gwy_clear(data_field->data, data_field->xres*data_field->yres);
 
     /* We can precompute stats */
-    data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                         | CBIT(MED) | CBIT(ARF) | CBIT(ART)
-                         | CBIT(ARE) | CBIT(VAR);
-    CVAL(data_field, MIN) = 0.0;
-    CVAL(data_field, MAX) = 0.0;
-    CVAL(data_field, SUM) = 0.0;
-    CVAL(data_field, RMS) = 0.0;
-    CVAL(data_field, MED) = 0.0;
-    CVAL(data_field, ARF) = 0.0;
-    CVAL(data_field, ART) = 0.0;
-    CVAL(data_field, ARE) = 0.0;
-    CVAL(data_field, VAR) = 0.0;
+    set_cache_for_constant_field(data_field, 0.0);
 }
 
 /**
