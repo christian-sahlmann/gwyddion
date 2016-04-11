@@ -4717,7 +4717,8 @@ bin_tree_node_free(BinTreeNode *btnode)
 static void
 bin_tree_free(BinTree *btree)
 {
-    bin_tree_node_free(btree->root);
+    if (!btree->degenerate)
+        bin_tree_node_free(btree->root);
     g_free(btree);
 }
 
