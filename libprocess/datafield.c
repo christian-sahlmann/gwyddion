@@ -334,7 +334,7 @@ gwy_data_field_deserialize(const guchar *buffer,
                            gsize size,
                            gsize *position)
 {
-    guint32 datasize;
+    guint32 datasize = 0;
     gint xres, yres;
     gdouble xreal, yreal, xoff = 0.0, yoff = 0.0, *data = NULL;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;

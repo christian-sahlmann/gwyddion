@@ -443,10 +443,12 @@ gwy_brick_deserialize(const guchar *buffer,
                       gsize size,
                       gsize *position)
 {
-    guint32 datasize;
+    guint32 datasize = 0;
     gint xres, yres, zres, i;
-    gdouble xreal, yreal, zreal, xoff = 0.0, yoff = 0.0, zoff = 0.0, *data = NULL;
-    GwySIUnit *si_unit_x = NULL, *si_unit_y = NULL, *si_unit_z = NULL, *si_unit_w = NULL;
+    gdouble xreal, yreal, zreal, xoff = 0.0, yoff = 0.0, zoff = 0.0;
+    gdouble *data = NULL;
+    GwySIUnit *si_unit_x = NULL, *si_unit_y = NULL, *si_unit_z = NULL,
+              *si_unit_w = NULL;
     GwyBrick *brick;
     GwyBrickPrivate *priv;
     GwyDataLine **calibrations = NULL;

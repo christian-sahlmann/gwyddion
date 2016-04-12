@@ -204,10 +204,10 @@ gwy_surface_deserialize(const guchar *buffer,
                         gsize size,
                         gsize *position)
 {
-    guint32 datasize;
+    guint32 datasize = 0;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;
     GwySurface *surface;
-    GwyXYZ *data;
+    GwyXYZ *data = NULL;
     GwySerializeSpec spec[] = {
         { 'o', "si_unit_xy", &si_unit_xy, NULL, },
         { 'o', "si_unit_z", &si_unit_z, NULL, },
