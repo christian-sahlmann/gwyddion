@@ -1005,7 +1005,7 @@ xyzras_do(XYZRasData *rdata,
     GwySurface *surface = rdata->surface;
     GwySetMessageFunc set_message = (window ? gwy_app_wait_set_message : NULL);
     GwySetFractionFunc set_fraction = (window ? gwy_app_wait_set_fraction : NULL);
-    gboolean ok = TRUE;
+    gboolean ok = TRUE, extended;
 
     gwy_debug("%g %g :: %g %g", args->xmin, args->xmax, args->ymin, args->ymax);
     if (!(args->xmax > args->xmin) || !(args->ymax > args->ymin)) {
@@ -1045,7 +1045,8 @@ xyzras_do(XYZRasData *rdata,
         /* [Try to] perform triangulation if either there is none yet or
          * extend_borders() reports the points have changed. */
         gwy_debug("have triangulation: %d", !!triangulation);
-        if (!triangulation || extend_borders(rdata, args, TRUE, EPSREL)) {
+        extended = extend_borders(rdata, args, TRUE, EPSREL);
+        if (!triangulation || extended) {
             gwy_debug("must triangulate");
             if (!triangulation)
                 rdata->triangulation = triangulation = gwy_triangulation_new();
@@ -1170,15 +1171,18 @@ extend_borders(XYZRasData *rdata,
      * repeat the triangulation. */
     nbase = rdata->nbasepoints;
     noldext = rdata->points->len - nbase;
+    gwy_debug("check for changes: %d", check_for_changes);
     if (check_for_changes) {
+        gwy_debug("copying %u old extpoints", noldext);
         oldextpoints = g_memdup(&g_array_index(rdata->points, GwyXYZ, nbase),
                                 noldext*sizeof(GwyXYZ));
     }
     g_array_set_size(rdata->points, nbase);
 
     if (args->exterior == GWY_EXTERIOR_BORDER_EXTEND) {
+        gwy_debug("exterior is BORDER, just reducing points to base");
         g_free(oldextpoints);
-        return FALSE;
+        return noldext > 0 || !check_for_changes;
     }
 
     gwy_surface_get_xrange(surface, &sxmin, &sxmax);
@@ -1276,15 +1280,21 @@ extend_borders(XYZRasData *rdata,
             g_array_append_val(rdata->points, pt2);
         }
     }
+    gwy_debug("after extension we have %u extpoints",
+              rdata->points->len - nbase);
 
-    if (!check_for_changes)
+    if (!check_for_changes) {
+        gwy_debug("do not check for changes, so just state expoints changed");
+        g_assert(!oldextpoints);
         return TRUE;
+    }
 
     extchanged = (noldext != rdata->points->len - nbase
                   || memcmp(&g_array_index(rdata->points, GwyXYZ, nbase),
                             oldextpoints,
                             noldext*sizeof(GwyXYZ)));
     g_free(oldextpoints);
+    gwy_debug("comparison says extchanged = %d", extchanged);
     return extchanged;
 }
 
