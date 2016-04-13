@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-09 02:14+0200\n"
-"PO-Revision-Date: 2016-04-10 14:55+0100\n"
+"POT-Creation-Date: 2016-04-13 02:14+0200\n"
+"PO-Revision-Date: 2016-04-13 23:14+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: None, I suppose\n"
 "Language: en_GB\n"
@@ -4336,12 +4336,12 @@ msgid "Mask"
 msgstr "Mask"
 
 #: modules/file/intelliwave.c:231
-msgid "Imports IntelliWave inteferometric ESD data."
-msgstr ""
+msgid "Imports IntelliWave interferometric ESD data."
+msgstr "Imports IntelliWave interferometric ESD data."
 
 #: modules/file/intelliwave.c:244
-msgid "IntelliWave inteferometric data (.esd)"
-msgstr "IntelliWave inteferometric data (.esd)"
+msgid "IntelliWave interferometric data (.esd)"
+msgstr "IntelliWave interferometric data (.esd)"
 
 #: modules/file/intelliwave.c:306
 #, c-format
@@ -10478,8 +10478,8 @@ msgid "/_Tip and Indentation/_Lateral force..."
 msgstr "/_Tip and Indentation/_Lateral force..."
 
 #: modules/process/latsim.c:94
-msgid "Simulate topograpy artifacts in lateral force channels"
-msgstr ""
+msgid "Simulate topography artifacts in lateral force channels"
+msgstr "Simulate topography artefacts in lateral force channels"
 
 #: modules/process/latsim.c:135
 msgid "Fw lateral force "
@@ -12964,9 +12964,11 @@ msgstr "Sharpen"
 
 #: modules/tools/grainmeasure.c:92
 msgid ""
-"Grain measurement tool, calculates characteristics of selected coutinuous "
+"Grain measurement tool, calculates characteristics of selected continuous "
 "parts of mask."
 msgstr ""
+"Grain measurement tool, calculates characteristics of selected continuous "
+"parts of mask."
 
 #: modules/tools/grainmeasure.c:124
 msgid "Grain Measure"
@@ -14451,8 +14453,8 @@ msgid "Create Image _Directly"
 msgstr "Create Image _Directly"
 
 #: modules/xyz/xyz_raster.c:360
-msgid "XY points form a regular grid so regularisation is not necessary."
-msgstr ""
+msgid "XY points form a regular grid so regularization is not necessary."
+msgstr "XY points form a regular grid so regularisation is not necessary."
 
 #: modules/xyz/xyz_raster.c:381
 msgid "Make Pixels S_quare"

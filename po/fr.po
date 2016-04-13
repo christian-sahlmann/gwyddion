@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-09 02:14+0200\n"
-"PO-Revision-Date: 2016-04-09 15:10+0100\n"
+"POT-Creation-Date: 2016-04-13 02:14+0200\n"
+"PO-Revision-Date: 2016-04-13 23:12+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: fr_FR\n"
@@ -4390,11 +4390,11 @@ msgid "Mask"
 msgstr "Masque"
 
 #: modules/file/intelliwave.c:231
-msgid "Imports IntelliWave inteferometric ESD data."
+msgid "Imports IntelliWave interferometric ESD data."
 msgstr "Importe les fichiers IntelliWave ESD."
 
 #: modules/file/intelliwave.c:244
-msgid "IntelliWave inteferometric data (.esd)"
+msgid "IntelliWave interferometric data (.esd)"
 msgstr "IntelliWave (.esd)"
 
 #: modules/file/intelliwave.c:306
@@ -10627,7 +10627,7 @@ msgid "/_Tip and Indentation/_Lateral force..."
 msgstr "/Sonde et indentation/Force _latérale..."
 
 #: modules/process/latsim.c:94
-msgid "Simulate topograpy artifacts in lateral force channels"
+msgid "Simulate topography artifacts in lateral force channels"
 msgstr ""
 "Simuler des artefacts de surface pour les canaux de mesure de force latérale"
 
@@ -13129,11 +13129,11 @@ msgstr "Accentuer"
 
 #: modules/tools/grainmeasure.c:92
 msgid ""
-"Grain measurement tool, calculates characteristics of selected coutinuous "
+"Grain measurement tool, calculates characteristics of selected continuous "
 "parts of mask."
 msgstr ""
-"Outil de mesure des grains, calcul les caractéristiques de parties continues "
-"d'un masque."
+"Outil de mesure des grains, calcule les caractéristiques de parties "
+"continues d'un masque."
 
 #: modules/tools/grainmeasure.c:124
 msgid "Grain Measure"
@@ -14629,7 +14629,7 @@ msgid "Create Image _Directly"
 msgstr "Créer _directement l'image"
 
 #: modules/xyz/xyz_raster.c:360
-msgid "XY points form a regular grid so regularisation is not necessary."
+msgid "XY points form a regular grid so regularization is not necessary."
 msgstr ""
 "Les points XY forment une grille régulière, aucune régularisation n'est "
 "nécessaire."
