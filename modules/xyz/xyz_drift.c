@@ -1748,7 +1748,7 @@ init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble
 
 
     for (i=0; i<npoints; i++) {
-       time[i] = (timepoints[i].z - timepoints[0].z)/1e3; //FIXME remove this after hwserver produces timestamp data in seconds
+       time[i] = (timepoints[i].z - timepoints[0].z);///1e3; //FIXME remove this after hwserver produces timestamp data in seconds
     }
 }
 
@@ -1779,6 +1779,7 @@ set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdri
        xdrift[i] = get_drift_val(args->xdrift_type, ax, bx, cx, time[i]);
        ydrift[i] = get_drift_val(args->ydrift_type, ay, by, cy, time[i]);
        zdrift[i] = get_drift_val(args->zdrift_type, az, bz, cz, time[i]);
+           // if (time[i]>5000) zdrift[i] += az;
     }
 }
 
@@ -1923,10 +1924,10 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbto = g_new(gint, npoints);
 
     minerr = G_MAXDOUBLE;
-//    bdiff = 1e-12; //gesi, poly
-//    cdiff = 1e-15;   
-    bdiff = 1e-8;  //gesi, exp
-    cdiff = 100;
+    bdiff = 1e-12; //gesi, poly
+    cdiff = 1e-15;   
+//    bdiff = 1e-8;  //gesi, exp
+//    cdiff = 500;
  
 
 //    bdiff = 1e-8; //gen, poly
@@ -1937,7 +1938,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Fitting in progress...");
-    total = (gdouble)((gint)controls->args->fit_xdrift + 2*(gint)controls->args->fit_ydrift + 2*(gint)controls->args->fit_zdrift)*controls->args->iterations;
+    total = (gdouble)(2*(gint)controls->args->fit_xdrift + 2*(gint)controls->args->fit_ydrift + (gint)controls->args->fit_zdrift)*controls->args->iterations;
     sofar = 0;
     gwy_app_wait_set_fraction(sofar/total);
 
@@ -1992,7 +1993,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                } while (!done && intit<100);
   
                sofar += 1;
-               gwy_app_wait_set_fraction(sofar/total);
+               if (!gwy_app_wait_set_fraction(sofar/total)) break;
            }
            if (controls->args->fit_xdrift) 
            {
@@ -2031,7 +2032,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                   intit++;
                } while (!done && intit<100);
                sofar += 1;
-               gwy_app_wait_set_fraction(sofar/total);
+               if (!gwy_app_wait_set_fraction(sofar/total)) break;
            }
 
            if (controls->args->fit_ydrift) 
@@ -2071,7 +2072,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                   intit++;
                } while (!done && intit<100);
                sofar += 1;
-               gwy_app_wait_set_fraction(sofar/total);
+               if (!gwy_app_wait_set_fraction(sofar/total)) break;
            }
            if (controls->args->fit_ydrift) 
            {
@@ -2110,7 +2111,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                   intit++;
                } while (!done && intit<100);
                sofar += 1;
-               gwy_app_wait_set_fraction(sofar/total);
+               if (!gwy_app_wait_set_fraction(sofar/total)) break;
            }
 
 
