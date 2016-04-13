@@ -289,6 +289,7 @@ validate_item_pass1(gpointer hash_key,
         case KEY_IS_SPS_REF:
         case KEY_IS_3D_VIEW_SIZE:
         case KEY_IS_GRAPH_VIEW_SIZE:
+        case KEY_IS_SURFACE_VIEW_SIZE:
         check_type(gvalue, G_TYPE_INT, key, errors);
         break;
 
