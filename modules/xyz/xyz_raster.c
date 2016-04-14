@@ -358,7 +358,7 @@ xyzras_dialog(XYZRasArgs *args,
                                  &controls);
 
         label = gtk_label_new(_("XY points form a regular grid "
-                                "so regularization is not necessary."));
+                                "so interpolation is not necessary."));
         gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
     }
 
