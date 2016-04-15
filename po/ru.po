@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-11 07:19+0300\n"
-"PO-Revision-Date: 2016-04-11 07:20+0300\n"
+"POT-Creation-Date: 2016-04-15 07:39+0300\n"
+"PO-Revision-Date: 2016-04-15 07:42+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -2937,65 +2937,65 @@ msgstr "Байт в позиции %d"
 msgid "%s instead of %s"
 msgstr "%s вместо %s"
 
-#: app/validate.c:388
+#: app/validate.c:389
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "отсутствует канал %d для %s"
 
-#: app/validate.c:400
+#: app/validate.c:401
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:410
+#: app/validate.c:411
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:426
+#: app/validate.c:427
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "отсутствует блок %d для %s"
 
-#: app/validate.c:442
+#: app/validate.c:443
 #, c-format
 msgid "no surface %d exists for %s"
 msgstr "отсутствует поверхность %d для %s"
 
-#: app/validate.c:497
+#: app/validate.c:498
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:680
+#: app/validate.c:681
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:681
+#: app/validate.c:682
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:682
+#: app/validate.c:683
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:683
+#: app/validate.c:684
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:684
+#: app/validate.c:685
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:685
+#: app/validate.c:686
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:686
+#: app/validate.c:687
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:687
+#: app/validate.c:688
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -12361,8 +12361,8 @@ msgstr "Поиск макс. корреляции чтобы определит�
 msgid "Cross-correlation..."
 msgstr "Взаимная корреляция..."
 
-#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1078
-#: modules/xyz/xyz_raster.c:1118
+#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1079
+#: modules/xyz/xyz_raster.c:1119
 msgid "Interpolating..."
 msgstr "Интерполяция..."
 
@@ -14265,7 +14265,7 @@ msgstr "K-срединных"
 
 #: modules/volume/volume_kmedians.c:392
 msgid "K-medians iteration..."
-msgstr "Итерация k-срединных..."
+msgstr "Итерация K-срединных..."
 
 #: modules/volume/volume_kmedians.c:495
 #, c-format
@@ -14302,7 +14302,7 @@ msgstr "_Извлечь изображение"
 
 #: modules/volume/volume_linestat.c:250
 msgid "Set _preview"
-msgstr "Установить _предпросмотр"
+msgstr "Установить изображение _предпросмотра"
 
 #: modules/volume/volume_linestat.c:284
 msgid "Summarize Volume Profiles"
@@ -14559,7 +14559,7 @@ msgstr "Дрейф по Y:"
 msgid "Z drift:"
 msgstr "Дрейф по Z:"
 
-#: modules/xyz/xyz_drift.c:2245 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:2246 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Физические размеры неверны."
 
@@ -14580,8 +14580,8 @@ msgid "Create Image _Directly"
 msgstr "Создать изображение _сразу"
 
 #: modules/xyz/xyz_raster.c:360
-msgid "XY points form a regular grid so regularization is not necessary."
-msgstr "Точки XY формируют правильную сетку, поэтому регуляризация не нужна."
+msgid "XY points form a regular grid so interpolation is not necessary."
+msgstr "Точки XY формируют правильную сетку, поэтому интерполяция не нужна."
 
 #: modules/xyz/xyz_raster.c:381
 msgid "Make Pixels S_quare"
@@ -14602,13 +14602,17 @@ msgstr ""
 "Объединено слишком близких: %u\n"
 "Добавлено на границах: %u"
 
-#: modules/xyz/xyz_raster.c:1090
+#: modules/xyz/xyz_raster.c:1091
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "XY points form a regular grid so regularization is not necessary."
+#~ msgstr ""
+#~ "Точки XY формируют правильную сетку, поэтому регуляризация не нужна."
 
 #~ msgid "Imports IntelliWave inteferometric ESD data."
 #~ msgstr "Импортирует данные интерферометрии IntelliWave ESD"
