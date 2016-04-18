@@ -287,7 +287,7 @@ module_register(void)
 {
     gwy_xyz_func_register("xyz_drift",
                           (GwyXYZFunc)&xyzdrift,
-                          N_("/Analyze _drift..."),
+                          N_("/Analyze _Drift..."),
                           NULL,
                           XYZDRIFT_RUN_MODES,
                           GWY_MENU_FLAG_XYZ,
@@ -555,7 +555,7 @@ xyzdrift_dialog(XYZDriftArgs *args,
 
     controls.mydata = gwy_container_new();
 
-    dialog = gtk_dialog_new_with_buttons(_("Rasterize XYZ Data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Analyze XYZ Drift"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
