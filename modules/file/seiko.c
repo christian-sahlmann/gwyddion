@@ -117,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD, XQT and XQP files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -246,18 +246,20 @@ read_data_field(const guchar *buffer,
                 GError **error)
 {
     enum {
-        VERSION_OFFSET  = 0x10,
-        ENDFILE_OFFSET  = 0x14,
-        DATASTART_OFFSET  = 0x18,
-        XSCALE_OFFSET = 0x98,
-        YSCALE_OFFSET = 0xa0,
-        ZSCALE_OFFSET = 0xa8,
-        ZOFFSET_OFFSET = 0xe0,
+        VERSION_OFFSET   = 0x10,
+        ENDFILE_OFFSET   = 0x14,
+        DATASTART_OFFSET = 0x18,
+        XRES_OFFSET      = 0x57a,
+        YRES_OFFSET      = 0x57c,
+        XSCALE_OFFSET    = 0x98,
+        YSCALE_OFFSET    = 0xa0,
+        ZSCALE_OFFSET    = 0xa8,
+        ZOFFSET_OFFSET   = 0xe0,
     };
     gint xres, yres;
     G_GNUC_UNUSED guint version;
-    guint n, endfile, datastart;
-    gdouble xreal, yreal, q, alpha, z0;
+    guint endfile, datastart;
+    gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     const guchar *p;
@@ -272,6 +274,18 @@ read_data_field(const guchar *buffer,
               version, endfile, datastart);
 
     if (err_SIZE_MISMATCH(error, endfile, size, TRUE))
+        return NULL;
+
+    p = buffer + XRES_OFFSET;
+    xres = gwy_get_guint16_le(&p);
+    p = buffer + YRES_OFFSET;
+    yres = gwy_get_guint16_le(&p);
+    gwy_debug("xres: %d, yres %d", xres, yres);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
+
+    if (err_SIZE_MISMATCH(error, xres*yres*sizeof(gint16), endfile - datastart,
+                          TRUE))
         return NULL;
 
     p = buffer + XSCALE_OFFSET;
@@ -290,39 +304,6 @@ read_data_field(const guchar *buffer,
     p = buffer + ZOFFSET_OFFSET;
     z0 = -q*gwy_get_gdouble_le(&p);
     gwy_debug("z0: %g", z0);
-
-    alpha = xreal/yreal;
-    n = (endfile - datastart)/2;
-    xres = (int)sqrt(n/alpha + 0.1);
-    yres = n/xres;
-    gwy_debug("1st try: xres: %d, yres: %d, size: %u vs. %u",
-              xres, yres, 2*xres*yres, endfile - datastart);
-    if (2*xres*yres != endfile - datastart) {
-        xres += 1;
-        yres = n/xres;
-        gwy_debug("2nd try: xres: %d, yres: %d, size: %u vs. %u",
-                  xres, yres, 2*xres*yres, endfile - datastart);
-    }
-    if (2*xres*yres != endfile - datastart) {
-        xres += 2;
-        yres = n/xres;
-        gwy_debug("3rd try: xres: %d, yres: %d, size: %u vs. %u",
-                  xres, yres, 2*xres*yres, endfile - datastart);
-    }
-    if (2*xres*yres != endfile - datastart) {
-        /* Square */
-        if (fabs(alpha - 1.0) > 1e-3)
-            xres = yres = (int)sqrt(n + 0.1);
-        gwy_debug("4th try: xres: %d, yres: %d, size: %u vs. %u",
-                  xres, yres, 2*xres*yres, endfile - datastart);
-    }
-    if (2*xres*yres != endfile - datastart) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
-                    _("Cannot determine scan dimensions; it seems "
-                      "non-square with an unknown side ratio."));
-        return NULL;
-    }
 
     xreal *= xres;
     yreal *= yres;
