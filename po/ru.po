@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-15 07:39+0300\n"
-"PO-Revision-Date: 2016-04-15 07:42+0300\n"
+"POT-Creation-Date: 2016-04-19 08:00+0300\n"
+"PO-Revision-Date: 2016-04-19 08:01+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -14450,8 +14450,8 @@ msgid "Analyzes drift in XYZ data."
 msgstr "Анализирует дрейф в данных XYZ."
 
 #: modules/xyz/xyz_drift.c:290
-msgid "/Analyze _drift..."
-msgstr "/_Анализировать дрейф..."
+msgid "/Analyze _Drift..."
+msgstr "/Анализировать _дрейф..."
 
 #: modules/xyz/xyz_drift.c:294
 msgid "Analyze and/or remove drift"
@@ -14477,9 +14477,9 @@ msgstr "Дрейф Z"
 msgid "z-axis drift"
 msgstr "дрейф оси z"
 
-#: modules/xyz/xyz_drift.c:558 modules/xyz/xyz_raster.c:340
-msgid "Rasterize XYZ Data"
-msgstr "Растеризовать данные XYZ"
+#: modules/xyz/xyz_drift.c:558
+msgid "Analyze XYZ Drift"
+msgstr "Анализировать дрейф в данных XYZ"
 
 #: modules/xyz/xyz_drift.c:583 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
@@ -14575,6 +14575,10 @@ msgstr "/_Растеризовать..."
 msgid "Rasterize to image"
 msgstr "Растеризовать в изображение"
 
+#: modules/xyz/xyz_raster.c:340
+msgid "Rasterize XYZ Data"
+msgstr "Растеризовать данные XYZ"
+
 #: modules/xyz/xyz_raster.c:354
 msgid "Create Image _Directly"
 msgstr "Создать изображение _сразу"
@@ -14609,6 +14613,9 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "/Analyze _drift..."
+#~ msgstr "/_Анализировать дрейф..."
 
 #~ msgid "XY points form a regular grid so regularization is not necessary."
 #~ msgstr ""
