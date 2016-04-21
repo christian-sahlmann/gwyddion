@@ -80,20 +80,17 @@ typedef struct {
     gint xres;
     gint yres;
 
-    gdouble xdrift_a;
     gdouble xdrift_b;
     gdouble xdrift_c;
-    gdouble ydrift_a;
     gdouble ydrift_b;
     gdouble ydrift_c;
-    gdouble zdrift_a;
     gdouble zdrift_b;
     gdouble zdrift_c;
     gint zdrift_average;
   
-    gint fit_xdrift;
-    gint fit_ydrift;
-    gint fit_zdrift;
+    gboolean fit_xdrift;
+    gboolean fit_ydrift;
+    gboolean fit_zdrift;
     GwyXYZDriftZType zdrift_type;
     GwyXYZDriftXYType xdrift_type;
     GwyXYZDriftXYType ydrift_type;
@@ -130,13 +127,10 @@ typedef struct {
     gdouble *zdrift;
     gdouble *time;
 
-    gdouble xdrift_a_result;
     gdouble xdrift_b_result;
     gdouble xdrift_c_result;
-    gdouble ydrift_a_result;
     gdouble ydrift_b_result;
     gdouble ydrift_c_result;
-    gdouble zdrift_a_result;
     gdouble zdrift_b_result;
     gdouble zdrift_c_result;
 
@@ -153,17 +147,14 @@ typedef struct {
     GtkWidget *ymax;
     GtkObject *xres;
     GtkObject *yres;
-    GtkWidget *xdrift_a;
     GtkWidget *xdrift_b;
     GtkWidget *xdrift_c;
     GtkWidget *xdrift_type;
 
-    GtkWidget *ydrift_a;
     GtkWidget *ydrift_b;
     GtkWidget *ydrift_c;
     GtkWidget *ydrift_type;
 
-    GtkWidget *zdrift_a;
     GtkWidget *zdrift_b;
     GtkWidget *zdrift_c;
     GtkObject *zdrift_average;
@@ -263,7 +254,7 @@ static void          correct_drift          (GwyXYZ *points,
 
 static const XYZDriftArgs xyzdrift_defaults = {
     512, 512,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0, 0, 0, 0, 0, 0, 2,
     1, 10, 100, 10,
     /* Interface only. */
@@ -476,39 +467,30 @@ upload_values(XYZDriftControls *controls, gboolean x, gboolean y, gboolean z)
 
 
     if (x) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_a_result);
-        gtk_entry_set_text(GTK_ENTRY(controls->xdrift_a), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->xdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->xdrift_c), buffer);
 
-        controls->args->xdrift_a = rdata->xdrift_a_result;
         controls->args->xdrift_b = rdata->xdrift_b_result;
         controls->args->xdrift_c = rdata->xdrift_c_result;
     }
     if (y) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_a_result);
-        gtk_entry_set_text(GTK_ENTRY(controls->ydrift_a), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->ydrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->ydrift_c), buffer);
 
-        controls->args->ydrift_a = rdata->ydrift_a_result;
         controls->args->ydrift_b = rdata->ydrift_b_result;
         controls->args->ydrift_c = rdata->ydrift_c_result;
     }
 
     if (z) {
-        g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_a_result);
-        gtk_entry_set_text(GTK_ENTRY(controls->zdrift_a), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_b_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_b), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.4g", rdata->zdrift_c_result);
         gtk_entry_set_text(GTK_ENTRY(controls->zdrift_c), buffer);
 
-        controls->args->zdrift_a = rdata->zdrift_a_result;
         controls->args->zdrift_b = rdata->zdrift_b_result;
         controls->args->zdrift_c = rdata->zdrift_c_result;
     }
@@ -655,22 +637,16 @@ xyzdrift_dialog(XYZDriftArgs *args,
     g_signal_connect_swapped(controls.ymax, "activate",
                              G_CALLBACK(ymax_changed), &controls);
 
-    g_signal_connect_swapped(controls.xdrift_a, "activate",
-                     G_CALLBACK(xdrift_changed), &controls);
     g_signal_connect_swapped(controls.xdrift_b, "activate",
                      G_CALLBACK(xdrift_changed), &controls);
     g_signal_connect_swapped(controls.xdrift_c, "activate",
                      G_CALLBACK(xdrift_changed), &controls);
 
-    g_signal_connect_swapped(controls.ydrift_a, "activate",
-                     G_CALLBACK(ydrift_changed), &controls);
     g_signal_connect_swapped(controls.ydrift_b, "activate",
                      G_CALLBACK(ydrift_changed), &controls);
     g_signal_connect_swapped(controls.ydrift_c, "activate",
                      G_CALLBACK(ydrift_changed), &controls);
 
-    g_signal_connect_swapped(controls.zdrift_a, "activate",
-                     G_CALLBACK(zdrift_changed), &controls);
     g_signal_connect_swapped(controls.zdrift_b, "activate",
                      G_CALLBACK(zdrift_changed), &controls);
     g_signal_connect_swapped(controls.zdrift_c, "activate",
@@ -887,38 +863,26 @@ construct_options(XYZDriftControls *controls,
                             GWY_HSCALE_WIDGET);
     row++;
 
-    label = gtk_label_new("a = ");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-
-    controls->xdrift_a = gtk_entry_new();
-    gwy_widget_set_activate_on_unfocus(controls->xdrift_a, TRUE);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_a), 12);
-    gtk_table_attach(table, controls->xdrift_a, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     label = gtk_label_new("b = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, row, row+1,
+    gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->xdrift_b = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->xdrift_b, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_b), 12);
-    gtk_table_attach(table, controls->xdrift_b, 3, 4, row, row+1,
+    gtk_table_attach(table, controls->xdrift_b, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 4, 5, row, row+1,
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->xdrift_c = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->xdrift_c, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->xdrift_c), 12);
-    gtk_table_attach(table, controls->xdrift_c, 5, 6, row, row+1,
+    gtk_table_attach(table, controls->xdrift_c, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
 
@@ -926,7 +890,7 @@ construct_options(XYZDriftControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_xdrift),
                                  args->fit_xdrift);
     gtk_table_attach(GTK_TABLE(table), controls->fit_xdrift,
-                     6, 7, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     4, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
 
@@ -939,37 +903,26 @@ construct_options(XYZDriftControls *controls,
                             GWY_HSCALE_WIDGET);
     row++;
 
-    label = gtk_label_new("a = ");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    controls->ydrift_a = gtk_entry_new();
-    gwy_widget_set_activate_on_unfocus(controls->ydrift_a, TRUE);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_a), 12);
-    gtk_table_attach(table, controls->ydrift_a, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     label = gtk_label_new("b = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, row, row+1,
+    gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->ydrift_b = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->ydrift_b, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_b), 12);
-    gtk_table_attach(table, controls->ydrift_b, 3, 4, row, row+1,
+    gtk_table_attach(table, controls->ydrift_b, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 4, 5, row, row+1,
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->ydrift_c = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->ydrift_c, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->ydrift_c), 12);
-    gtk_table_attach(table, controls->ydrift_c, 5, 6, row, row+1,
+    gtk_table_attach(table, controls->ydrift_c, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
 
@@ -980,7 +933,7 @@ construct_options(XYZDriftControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_ydrift),
                                  args->fit_ydrift);
     gtk_table_attach(GTK_TABLE(table), controls->fit_ydrift,
-                     6, 7, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     4, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
 
@@ -996,37 +949,26 @@ construct_options(XYZDriftControls *controls,
     row++;
 
 
-    label = gtk_label_new("a = ");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    controls->zdrift_a = gtk_entry_new();
-    gwy_widget_set_activate_on_unfocus(controls->zdrift_a, TRUE);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_a), 12);
-    gtk_table_attach(table, controls->zdrift_a, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
     label = gtk_label_new("b = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, row, row+1,
+    gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->zdrift_b = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->zdrift_b, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_b), 12);
-    gtk_table_attach(table, controls->zdrift_b, 3, 4, row, row+1,
+    gtk_table_attach(table, controls->zdrift_b, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(" c = ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 4, 5, row, row+1,
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls->zdrift_c = gtk_entry_new();
     gwy_widget_set_activate_on_unfocus(controls->zdrift_c, TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(controls->zdrift_c), 12);
-    gtk_table_attach(table, controls->zdrift_c, 5, 6, row, row+1,
+    gtk_table_attach(table, controls->zdrift_c, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
 
@@ -1036,7 +978,7 @@ construct_options(XYZDriftControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_zdrift),
                                  args->fit_zdrift);
     gtk_table_attach(GTK_TABLE(table), controls->fit_zdrift,
-                     6, 7, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     4, 5, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     /*
@@ -1062,12 +1004,13 @@ construct_options(XYZDriftControls *controls,
     row++;
 
 
-    label = gtk_label_new_with_mnemonic(_("_Neighbors:"));
+    label = gtk_label_new_with_mnemonic(_("_Neighbors used:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->neighbors = gtk_adjustment_new(args->neighbors, 1, 100, 1, 10, 0);
+    controls->neighbors = gtk_adjustment_new(args->neighbors, 0.1, 100, 0.1, 1, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->neighbors), 0, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -1082,7 +1025,7 @@ construct_options(XYZDriftControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->threshold_length = gtk_adjustment_new(args->threshold_length, 0, 1000, 1, 100, 0);
+    controls->threshold_length = gtk_adjustment_new(args->threshold_length/controls->rdata->xymag, 0, 1000, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->threshold_length), 0, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
@@ -1347,7 +1290,6 @@ xdrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->xdrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_a)));
     args->xdrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_b)));
     args->xdrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->xdrift_c)));
 }
@@ -1358,7 +1300,6 @@ ydrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->ydrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_a)));
     args->ydrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_b)));
     args->ydrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->ydrift_c)));
 }
@@ -1369,7 +1310,6 @@ zdrift_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
-    args->zdrift_a = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_a)));
     args->zdrift_b = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_b)));
     args->zdrift_c = atof(gtk_entry_get_text(GTK_ENTRY(controls->zdrift_c)));
     //args->zdrift_average = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zdrift_average));
@@ -1386,12 +1326,10 @@ zdrift_type_changed(G_GNUC_UNUSED GtkWidget *combo, XYZDriftControls *controls)
 
 
     if (controls->args->zdrift_type == GWY_XYZDRIFT_ZMETHOD_AVERAGE) {
-        gtk_widget_set_sensitive(controls->zdrift_a, FALSE);
         gtk_widget_set_sensitive(controls->zdrift_b, FALSE);
         gtk_widget_set_sensitive(controls->zdrift_c, FALSE);
         //gtk_widget_set_sensitive(controls->zdrift_average_spin, TRUE);
     } else {
-        gtk_widget_set_sensitive(controls->zdrift_a, TRUE);
         gtk_widget_set_sensitive(controls->zdrift_b, TRUE);
         gtk_widget_set_sensitive(controls->zdrift_c, TRUE);
         //gtk_widget_set_sensitive(controls->zdrift_average_spin, FALSE);
@@ -1736,13 +1674,10 @@ init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble
     XYZDriftArgs *args = controls->args;
     XYZDriftData *rdata = controls->rdata;
 
-    rdata->xdrift_a_result = args->xdrift_a;
     rdata->xdrift_b_result = args->xdrift_b;
     rdata->xdrift_c_result = args->xdrift_c;
-    rdata->ydrift_a_result = args->ydrift_a;
     rdata->ydrift_b_result = args->ydrift_b;
     rdata->ydrift_c_result = args->ydrift_c;
-    rdata->zdrift_a_result = args->zdrift_a;
     rdata->zdrift_b_result = args->zdrift_b;
     rdata->zdrift_c_result = args->zdrift_c;
 
@@ -1774,23 +1709,22 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
 
 static void
 set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
-          gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz)
+          gdouble bx, gdouble cx, gdouble by, gdouble cy, gdouble bz, gdouble cz)
 {
     gint i;
     XYZDriftArgs *args = controls->args;
 
     for (i=0; i<npoints; i++) {
-       xdrift[i] = get_drift_val(args->xdrift_type, ax, bx, cx, time[i]);
-       ydrift[i] = get_drift_val(args->ydrift_type, ay, by, cy, time[i]);
-       /*if (time[i]>5000)*/ zdrift[i] = get_drift_val(args->zdrift_type, az, bz, cz, time[i]);
-       //else zdrift[i] = get_drift_val(args->zdrift_type, ax, bx, cx, time[i]);
+       xdrift[i] = get_drift_val(args->xdrift_type, 0, bx, cx, time[i]);
+       ydrift[i] = get_drift_val(args->ydrift_type, 0, by, cy, time[i]);
+       zdrift[i] = get_drift_val(args->zdrift_type, 0, bz, cz, time[i]);
     }
 }
 
 
 static gboolean
 get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
-                  gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble *az, gdouble *bz, gdouble *cz, gint *nbfrom, gint *nbto)
+                  gdouble bx, gdouble cx, gdouble by, gdouble cy, gdouble *bz, gdouble *cz, gint *nbfrom, gint *nbto)
 {
     gint nnbs;
     gint i;
@@ -1807,7 +1741,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 
     //set drift arrays
     set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
-                    ax, bx, cx, ay, by, cy, *az, *bz, *cz);
+                    bx, cx, by, cy, *bz, *cz);
 
     //correct xy data (corpoints) for drift, don't correct z as this will be fitted
     correct_drift(points, npoints, xdrift, ydrift, zdrift,
@@ -1834,7 +1768,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 
         ok = fit_func_to_curve(dtime, drift, nnbs, "Polynomial (order 1)", params, errors, fixed);
 
-        *az = 0;
+        //*az = 0;
         *bz = params[0];
         *cz = params[1]/2.0;
     }
@@ -1848,12 +1782,12 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 
         ok = fit_func_to_curve(dtime, drift, nnbs, "Exponential", params, errors, fixed);
 
-        *az = params[0];
+        //*az = params[0];
         *bz = params[1]*params[2];
         *cz = params[2];
     }
 
-    printf("Fitting completed with %d: %g %g %g\n", ok, *az, *bz, *cz);  
+    printf("Fitting completed with %d: %g %g\n", ok, *bz, *cz);  
 
 
     for (i=0; i<nnbs; i++) {
@@ -1871,7 +1805,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
 }
 static gdouble
 get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
-                  gdouble ax, gdouble bx, gdouble cx, gdouble ay, gdouble by, gdouble cy, gdouble az, gdouble bz, gdouble cz, gint *nbfrom, gint *nbto)
+                  gdouble bx, gdouble cx, gdouble by, gdouble cy, gdouble bz, gdouble cz, gint *nbfrom, gint *nbto)
 {
     gint nnbs;
     gdouble timethreshold = controls->args->threshold_time; 
@@ -1879,7 +1813,7 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
 
     //set drift arrays
     set_drift(controls, npoints, time, xdrift, ydrift, zdrift, 
-                    ax, bx, cx, ay, by, cy, az, bz, cz);
+                     bx, cx, by, cy, bz, cz);
 
     //correct xyz data (corpoints) for drift
     correct_drift(points, npoints, xdrift, ydrift, zdrift,
@@ -1901,25 +1835,21 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     gint iteration, intit;
     gint *nbfrom, *nbto;
     gdouble tolerance = 1e-18;
-    gdouble ax, ay, az, bx, by, bz, cx, cy, cz, next;
-    gdouble pax, pay, pbx, pby, pcx, pcy;
-    gdouble vax, vay, vbx, vby, vcx, vcy;
-    gdouble vpax, vpay, vpbx, vpby, vpcx, vpcy;
+    gdouble bx, by, bz, cx, cy, cz, next;
+    gdouble pbx, pby, pcx, pcy;
+    gdouble vbx, vby, vcx, vcy;
+    gdouble vpbx, vpby, vpcx, vpcy;
     gdouble mindiff, diff;
-    gdouble minerr;
     gboolean done;
     gdouble cdiff, bdiff;
     gdouble total, sofar;
 
-    ax = controls->args->xdrift_a;
     bx = controls->args->xdrift_b;
     cx = controls->args->xdrift_c;
 
-    ay = controls->args->ydrift_a;
     by = controls->args->ydrift_b;
     cy = controls->args->ydrift_c;
 
-    az = controls->args->zdrift_a;
     bz = controls->args->zdrift_b;
     cz = controls->args->zdrift_c;
 
@@ -1927,7 +1857,6 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbfrom = g_new(gint, npoints);
     nbto = g_new(gint, npoints);
 
-    minerr = G_MAXDOUBLE;
     bdiff = 1e-12; //gesi, poly
     cdiff = 1e-15;   
 //    bdiff = 1e-8;  //gesi, exp
@@ -1954,7 +1883,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                printf("cz search\n");
 
                get_zdrift(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                  ax, bx, cx, ay, by, cy, &az, &bz, &cz, nbfrom, nbto);
+                  bx, cx, by, cy, &bz, &cz, nbfrom, nbto);
            }
 
 
@@ -1966,14 +1895,14 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                printf("bx search\n");
 
                vpbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                      bx, cx, by, cy, bz, cz, nbfrom, nbto);
  
                diff = bdiff;
                mindiff = diff/100;
                bx = pbx+diff;
 
                vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pbx, vpbx, bx, vbx, diff);
 
@@ -1985,7 +1914,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                       vpbx = vbx;
                       bx = next;
                       vbx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                       printf("minimum search: pbx %g vpbx %g bx %g vbx %g    diff %g  go to %g\n", pbx, vpbx, bx, vbx, diff, next);
                   } else  {
@@ -2006,14 +1935,14 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                printf("cx search\n");
 
                vpcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                      bx, cx, by, cy, bz, cz, nbfrom, nbto);
  
                diff = cdiff;
                mindiff = diff/100;
                cx = pcx+diff;
 
                vcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pcx, vpcx, cx, vcx, diff);
 
@@ -2025,7 +1954,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                       vpcx = vcx;
                       cx = next;
                       vcx = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                       printf("minimum search: pcx %g vpcx %g cx %g vcx %g    diff %g  go to %g\n", pcx, vpcx, cx, vcx, diff, next);
                   } else  {
@@ -2046,14 +1975,14 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                printf("by search\n");
 
                vpby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                      bx, cx, by, cy, bz, cz, nbfrom, nbto);
  
                diff = bdiff;
                mindiff = bdiff/100;
                by = pby+diff;
 
                vby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pby, vpby, by, vby, diff);
 
@@ -2065,7 +1994,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                       vpby = vby;
                       by = next;
                       vby = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                       printf("minimum search: pby %g vpby %g by %g vby %g    diff %g  go to %g\n", pby, vpby, by, vby, diff, next);
                   } else  {
@@ -2085,14 +2014,14 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                printf("cy search\n");
 
                vpcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                      ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                      bx, cx, by, cy, bz, cz, nbfrom, nbto);
  
                diff = cdiff;
                mindiff = cdiff/100;
                cy = pcy+diff;
 
                vcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                printf("start finding minimum at %g (value %g)  %g  (value %g)  with diff %g\n", pcy, vpcy, cy, vcy, diff);
 
@@ -2104,7 +2033,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
                       vpcy = vcy;
                       cy = next;
                       vcy = get_xydrift_error(controls, points, corpoints, npoints, time, xdrift, ydrift, zdrift,
-                         ax, bx, cx, ay, by, cy, az, bz, cz, nbfrom, nbto);
+                         bx, cx, by, cy, bz, cz, nbfrom, nbto);
 
                       printf("minimum search: pcy %g vpcy %g cy %g vcy %g    diff %g  go to %g\n", pcy, vpcy, cy, vcy, diff, next);
                   } else  {
@@ -2124,21 +2053,18 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
     gwy_app_wait_finish();
 
-    rdata->xdrift_a_result = ax;
     rdata->xdrift_b_result = bx;
     rdata->xdrift_c_result = cx;
-    rdata->ydrift_a_result = ay;
     rdata->ydrift_b_result = by;
     rdata->ydrift_c_result = cy;
-    rdata->zdrift_a_result = az;
     rdata->zdrift_b_result = bz;
     rdata->zdrift_c_result = cz;
 
     
-    printf("Resulting drifts: x %g %g %g    y %g %g %g    z %g %g %g\n", 
-                              rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result,
-                              rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result,
-                              rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result
+    printf("Resulting drifts: x %g %g    y %g %g    z %g %g\n", 
+                              rdata->xdrift_b_result, rdata->xdrift_c_result,
+                              rdata->ydrift_b_result, rdata->ydrift_c_result,
+                              rdata->zdrift_b_result, rdata->zdrift_c_result
                               );
 
 
@@ -2174,10 +2100,10 @@ preview(XYZDriftControls *controls)
     args->fit_zdrift = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_zdrift));
 
 
-    printf("todo: x (%g %g %g %d), y (%g %g %g %d), z %d (%g %g %g %d) (%d)   nbs %g   thresholds %g %g\n", 
-                args->xdrift_a, args->xdrift_b, args->xdrift_c, args->fit_xdrift,
-                args->ydrift_a, args->ydrift_b, args->ydrift_c, args->fit_ydrift,
-                args->zdrift_type, args->zdrift_a, args->zdrift_b, args->zdrift_c, args->fit_zdrift, args->zdrift_average,
+    printf("todo: x (%g %g %d), y (%g %g %d), z (%g %g %d) (%d)   nbs %g   thresholds %g %g\n", 
+                args->xdrift_b, args->xdrift_c, args->fit_xdrift,
+                args->ydrift_b, args->ydrift_c, args->fit_ydrift,
+                args->zdrift_b, args->zdrift_c, args->fit_zdrift, args->zdrift_average,
                 args->neighbors, args->threshold_length, args->threshold_time);
 
 
@@ -2191,18 +2117,18 @@ preview(XYZDriftControls *controls)
 
     /*correct data for drift, creating corpoints from points*/
     set_drift(controls, rdata->npoints, rdata->time, rdata->xdrift, rdata->ydrift, rdata->zdrift, 
-                    rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result, 
-                    rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result, 
-                    rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result);
+                    rdata->xdrift_b_result, rdata->xdrift_c_result, 
+                    rdata->ydrift_b_result, rdata->ydrift_c_result, 
+                    rdata->zdrift_b_result, rdata->zdrift_c_result);
 
     correct_drift(rdata->points, rdata->npoints, rdata->xdrift, rdata->ydrift, rdata->zdrift,
                   rdata->corpoints, TRUE);
 
-    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->xdrift_a_result, rdata->xdrift_b_result, rdata->xdrift_c_result);
+    g_snprintf(buffer, sizeof(buffer), "b = %g,  c = %g", rdata->xdrift_b_result, rdata->xdrift_c_result);
     gtk_label_set_text(GTK_LABEL(controls->result_x), buffer); 
-    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->ydrift_a_result, rdata->ydrift_b_result, rdata->ydrift_c_result);
+    g_snprintf(buffer, sizeof(buffer), "b = %g,  c = %g", rdata->ydrift_b_result, rdata->ydrift_c_result);
     gtk_label_set_text(GTK_LABEL(controls->result_y), buffer); 
-    g_snprintf(buffer, sizeof(buffer), "a = %g,  b = %g,  c = %g", rdata->zdrift_a_result, rdata->zdrift_b_result, rdata->zdrift_c_result);
+    g_snprintf(buffer, sizeof(buffer), "b = %g,  c = %g", rdata->zdrift_b_result, rdata->zdrift_c_result);
     gtk_label_set_text(GTK_LABEL(controls->result_z), buffer); 
 
 
@@ -2327,12 +2253,43 @@ initialize_ranges(const XYZDriftData *rdata,
 
 static const gchar xres_key[]          = "/module/xyz_drift/xres";
 static const gchar yres_key[]          = "/module/xyz_drift/yres";
+static const gchar xdrift_b_key[]          = "/module/xyz_drift/xdrift_b";
+static const gchar xdrift_c_key[]          = "/module/xyz_drift/xdrift_c";
+static const gchar ydrift_b_key[]          = "/module/xyz_drift/ydrift_b";
+static const gchar ydrift_c_key[]          = "/module/xyz_drift/ydrift_c";
+static const gchar zdrift_b_key[]          = "/module/xyz_drift/zdrift_b";
+static const gchar zdrift_c_key[]          = "/module/xyz_drift/zdrift_c";
+static const gchar fit_xdrift_key[]          = "/module/xyz_drift/fit_xdrift";
+static const gchar fit_ydrift_key[]          = "/module/xyz_drift/fit_ydrift";
+static const gchar fit_zdrift_key[]          = "/module/xyz_drift/fit_zdrift";
+static const gchar graph_type_key[]          = "/module/xyz_drift/graph_type";
+static const gchar threshold_time_key[]          = "/module/xyz_drift/threshold_time";
+static const gchar threshold_length_key[]          = "/module/xyz_drift/threshold_length";
+static const gchar neighbors_key[]          = "/module/xyz_drift/neighbors";
+static const gchar iterations_key[]          = "/module/xyz_drift/iterations";
+static const gchar xdrift_type_key[]          = "/module/xyz_drift/xdrift_type_key";
+static const gchar ydrift_type_key[]          = "/module/xyz_drift/ydrift_type_key";
+static const gchar zdrift_type_key[]          = "/module/xyz_drift/zdrift_type_key";
 
 static void
 xyzdrift_sanitize_args(XYZDriftArgs *args)
 {
+    args->fit_xdrift = !!args->fit_xdrift;
+    args->fit_ydrift = !!args->fit_ydrift;
+    args->fit_zdrift = !!args->fit_zdrift;
+
+    args->iterations = CLAMP(args->iterations, 1, 100);
+    args->xdrift_type = MIN(args->xdrift_type, GWY_XYZDRIFT_METHOD_EXPONENTIAL);
+    args->ydrift_type = MIN(args->ydrift_type, GWY_XYZDRIFT_METHOD_EXPONENTIAL);
+    args->zdrift_type = MIN(args->zdrift_type, GWY_XYZDRIFT_ZMETHOD_AVERAGE);
+    args->graph_type = MIN(args->graph_type, GWY_XYZDRIFT_GRAPH_Z);
+ 
     args->xres = CLAMP(args->xres, 2, 16384);
     args->yres = CLAMP(args->yres, 2, 16384);
+
+    args->threshold_time = CLAMP(args->threshold_time, 0, 10000);
+    args->neighbors = CLAMP(args->neighbors, 0.1, 100);
+
 }
 
 static void
@@ -2341,8 +2298,25 @@ xyzdrift_load_args(GwyContainer *container,
 {
     *args = xyzdrift_defaults;
 
+    gwy_container_gis_boolean_by_name(container, fit_xdrift_key, &args->fit_xdrift);
+    gwy_container_gis_boolean_by_name(container, fit_ydrift_key, &args->fit_ydrift);
+    gwy_container_gis_boolean_by_name(container, fit_zdrift_key, &args->fit_zdrift);
     gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
     gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
+    gwy_container_gis_int32_by_name(container, iterations_key, &args->iterations);
+    gwy_container_gis_enum_by_name(container, xdrift_type_key, &args->xdrift_type);
+    gwy_container_gis_enum_by_name(container, ydrift_type_key, &args->ydrift_type);
+    gwy_container_gis_enum_by_name(container, zdrift_type_key, &args->zdrift_type);
+    gwy_container_gis_enum_by_name(container, graph_type_key, &args->graph_type);
+    gwy_container_gis_double_by_name(container, xdrift_b_key, &args->xdrift_b);
+    gwy_container_gis_double_by_name(container, xdrift_c_key, &args->xdrift_c);
+    gwy_container_gis_double_by_name(container, ydrift_b_key, &args->ydrift_b);
+    gwy_container_gis_double_by_name(container, ydrift_c_key, &args->ydrift_c);
+    gwy_container_gis_double_by_name(container, zdrift_b_key, &args->zdrift_b);
+    gwy_container_gis_double_by_name(container, zdrift_c_key, &args->zdrift_c);
+    gwy_container_gis_double_by_name(container, threshold_time_key, &args->threshold_time);
+    gwy_container_gis_double_by_name(container, threshold_length_key, &args->threshold_length);
+    gwy_container_gis_double_by_name(container, neighbors_key, &args->neighbors);
 
     xyzdrift_sanitize_args(args);
 }
@@ -2351,8 +2325,26 @@ static void
 xyzdrift_save_args(GwyContainer *container,
                  XYZDriftArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, fit_xdrift_key, args->fit_xdrift);
+    gwy_container_set_boolean_by_name(container, fit_ydrift_key, args->fit_ydrift);
+    gwy_container_set_boolean_by_name(container, fit_zdrift_key, args->fit_zdrift);
     gwy_container_set_int32_by_name(container, xres_key, args->xres);
     gwy_container_set_int32_by_name(container, yres_key, args->yres);
+    gwy_container_set_int32_by_name(container, iterations_key, args->iterations);
+    gwy_container_set_enum_by_name(container, xdrift_type_key, args->xdrift_type);
+    gwy_container_set_enum_by_name(container, ydrift_type_key, args->ydrift_type);
+    gwy_container_set_enum_by_name(container, zdrift_type_key, args->zdrift_type);
+    gwy_container_set_enum_by_name(container, graph_type_key, args->graph_type);
+    gwy_container_set_double_by_name(container, xdrift_b_key, args->xdrift_b);
+    gwy_container_set_double_by_name(container, xdrift_c_key, args->xdrift_c);
+    gwy_container_set_double_by_name(container, ydrift_b_key, args->ydrift_b);
+    gwy_container_set_double_by_name(container, ydrift_c_key, args->ydrift_c);
+    gwy_container_set_double_by_name(container, zdrift_b_key, args->zdrift_b);
+    gwy_container_set_double_by_name(container, zdrift_c_key, args->zdrift_c);
+    gwy_container_set_double_by_name(container, threshold_time_key, args->threshold_time);
+    gwy_container_set_double_by_name(container, threshold_length_key, args->threshold_length);
+    gwy_container_set_double_by_name(container, neighbors_key, args->neighbors);
+
 }
 
 
