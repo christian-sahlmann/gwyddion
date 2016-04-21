@@ -1762,7 +1762,11 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
     for (i=0; i<npoints; i++) {
        corpoints[i].x = points[i].x - xdrift[i];
        corpoints[i].y = points[i].y - ydrift[i];
-       if (correctz) corpoints[i].z = points[i].z - zdrift[i];
+       if (correctz) {
+           // if (i<40000)  corpoints[i].z = 0.7*points[i].z - zdrift[i];
+           // else corpoints[i].z = points[i].z - zdrift[i];
+           corpoints[i].z = points[i].z - zdrift[i];
+       }
        else corpoints[i].z = points[i].z;
     }
 }
@@ -1778,8 +1782,8 @@ set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdri
     for (i=0; i<npoints; i++) {
        xdrift[i] = get_drift_val(args->xdrift_type, ax, bx, cx, time[i]);
        ydrift[i] = get_drift_val(args->ydrift_type, ay, by, cy, time[i]);
-       zdrift[i] = get_drift_val(args->zdrift_type, az, bz, cz, time[i]);
-           // if (time[i]>5000) zdrift[i] += az;
+       /*if (time[i]>5000)*/ zdrift[i] = get_drift_val(args->zdrift_type, az, bz, cz, time[i]);
+       //else zdrift[i] = get_drift_val(args->zdrift_type, ax, bx, cx, time[i]);
     }
 }
 
