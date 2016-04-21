@@ -73,18 +73,6 @@ gdouble **_gwy_morph_lib_dreflect(gdouble **surface,
                                   gint surf_ysiz);
 
 G_GNUC_INTERNAL
-gdouble **_gwy_morph_lib_ddilation(gdouble **surface,
-                                   gint surf_xsiz,
-                                   gint surf_ysiz,
-                                   gdouble **tip,
-                                   gint tip_xsiz,
-                                   gint tip_ysiz,
-                                   gint xc,
-                                   gint yc,
-                                   GwySetFractionFunc set_fraction,
-                                   GwySetMessageFunc set_message);
-
-G_GNUC_INTERNAL
 gdouble **_gwy_morph_lib_derosion(gdouble **image,
                                   gint im_xsiz,
                                   gint im_ysiz,
