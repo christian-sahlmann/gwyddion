@@ -41,6 +41,7 @@ Libraries:
 - libgwyprocess: Resampling of constant valued data fields always produces
   constant valued data fields.  This fixes odd rounding error patterns in
   thumbnails for constant valued fields.
+- libgwyprocess: Tip dilation and erosion functions were optimised.
 - libgwydgets: A large number of new stock icons were added.
 - libgwydgets: The gradient can be unset using data window colour axis menu.
   The colour gradient and GL material can be unset in the 3D window as well.
@@ -118,6 +119,10 @@ Modules:
 - Mark disconnected: The operation is undoable now.
 - XYZ export: Can export both channels and XYZ data.
 - APE DAX: Complete metadata are imported, miscellaneous other improvements.
+- Seiko: Image resolutions should be correct for all files, with no guessing
+  involved.
+- OME TIFF: Data split to several files can be loaded at least file by file
+  now, instead of getting a cryptic error message.
 
 
 2.44 (2016-01-11)
