@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -465,39 +465,6 @@ gint
 gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 {
     return preset->nparams;
-}
-
-
-static gdouble**
-datafield_to_field(GwyDataField *datafield, gboolean maxzero)
-{
-    gdouble **ret;
-    gint col, row;
-    gdouble max;
-
-    max = maxzero ? gwy_data_field_get_max(datafield) : 0.0;
-
-    ret = _gwy_morph_lib_dallocmatrix(datafield->yres, datafield->xres);
-    for (row = 0; row < datafield->yres; row++) {
-        for (col = 0; col < datafield->xres; col++) {
-            ret[row][col] = datafield->data[col + datafield->xres*row] - max;
-        }
-    }
-    return ret;
-}
-
-static GwyDataField*
-field_to_datafield(gdouble **field, GwyDataField *ret)
-{
-    gint col, row;
-    for (row = 0; row < ret->yres; row++) {
-        for (col = 0; col < ret->xres; col++) {
-            ret->data[col  + ret->xres*row] = field[row][col];
-        }
-    }
-
-    gwy_data_field_invalidate(ret);
-    return ret;
 }
 
 static gint**
