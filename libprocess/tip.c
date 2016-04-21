@@ -629,6 +629,45 @@ get_right_tip_field(GwyDataField *tip,
                                         GWY_INTERPOLATION_BSPLINE);
 }
 
+static inline gdouble
+tip_convolve_interior(const gdouble *src, gint xres,
+                      const gdouble *tip, gint txres, gint tyres)
+{
+    gdouble hmax = -G_MAXDOUBLE;
+    gint i, j;
+
+    for (i = 0; i < tyres; i++) {
+        const gdouble *srcrow = src + i*xres;
+        for (j = txres; j; j--) {
+            gdouble h = *(srcrow++) + *(tip++);
+            if (h > hmax)
+                hmax = h;
+        }
+    }
+    return hmax;
+}
+
+static inline gdouble
+tip_convolve_border(const gdouble *src, gint xres, gint yres,
+                    const gdouble *tip, gint txres, gint tyres,
+                    gint j, gint i)
+{
+    gint ioff = tyres/2, joff = txres/2;
+    gdouble hmax = -G_MAXDOUBLE;
+    gint ii, jj;
+
+    for (ii = 0; ii < tyres; ii++) {
+        gint isrc = CLAMP(i + ii - ioff, 0, yres-1);
+        for (jj = 0; jj < txres; jj++) {
+            gint jsrc = CLAMP(j + jj - joff, 0, xres-1);
+            gdouble h = src[isrc*xres + jsrc] + *(tip++);
+            if (h > hmax)
+                hmax = h;
+        }
+    }
+    return hmax;
+}
+
 /**
  * gwy_tip_dilation:
  * @tip: Tip data.
@@ -637,9 +676,11 @@ get_right_tip_field(GwyDataField *tip,
  * @set_fraction: Function that sets fraction to output (or %NULL).
  * @set_message: Function that sets message to output (or %NULL).
  *
- * Performs tip convolution (dilation) algorithm published by Villarrubia. This
- * function converts all fields into form requested by "morph_lib.c" library,
- * that is almost identical with original Villarubia's library.
+ * Performs the tip convolution algorithm published by Villarrubia, which is
+ * equivalent to morphological dilation operation.
+ *
+ * If the operation is aborted the size and contents of @result field is
+ * undefined.
  *
  * Returns: Dilated surface data, i.e. @result, on success.  May return %NULL
  *          if aborted.
@@ -651,41 +692,66 @@ gwy_tip_dilation(GwyDataField *tip,
                  GwySetFractionFunc set_fraction,
                  GwySetMessageFunc set_message)
 {
-    gdouble **ftip;
-    gdouble **fsurface;
-    gdouble **fresult;
-    GwyDataField *buffertip;
+    gint txres, tyres, xres, yres, ioff, joff, i, j;
+    const gdouble *sdata, *tdata;
+    gdouble *data;
+    GTimer *timer = NULL;
+    gdouble tprev = 0.0, t;
 
-    /*if tip and surface have different spacings, make new, resampled tip*/
-    buffertip = get_right_tip_field(tip, surface);
-    /*invert tip (as necessary by dilation algorithm)*/
-    gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(tip), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(surface), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(result), NULL);
 
-    /*make auxiliary data arrays expected by Villarubia's algorithms*/
-    ftip = datafield_to_field(buffertip, TRUE);
-    fsurface = datafield_to_field(surface, FALSE);
-
-    fresult = _gwy_morph_lib_ddilation(fsurface, surface->xres, surface->yres,
-                                       ftip, buffertip->xres, buffertip->yres,
-                                       buffertip->xres/2, buffertip->yres/2,
-                                       set_fraction, set_message);
-
-    /*convert result back from auxiliary array*/
-    if (fresult) {
-        gwy_data_field_resample(result, surface->xres, surface->yres,
-                                GWY_INTERPOLATION_NONE);
-        result = field_to_datafield(fresult, result);
+    if (set_message)
+        set_message(_("Dilation..."));
+    if (set_fraction) {
+        set_fraction(0.0);
+        timer = g_timer_new();
     }
-    else
-        result = NULL;
 
-    /*free auxiliary data arrays*/
-    g_object_unref(buffertip);
-    _gwy_morph_lib_dfreematrix(ftip);
-    _gwy_morph_lib_dfreematrix(fsurface);
-    if (fresult)
-        _gwy_morph_lib_dfreematrix(fresult);
+    gwy_data_field_resample(result, surface->xres, surface->yres,
+                            GWY_INTERPOLATION_NONE);
+    gwy_data_field_invalidate(result);
 
+    txres = tip->xres;
+    tyres = tip->yres;
+    xres = surface->xres;
+    yres = surface->yres;
+    sdata = surface->data;
+    tdata = tip->data;
+    data = result->data;
+    ioff = tyres/2;
+    joff = txres/2;
+
+    for (i = 0; i < yres; i++) {
+        gboolean row_inside = (i >= ioff && i + tyres-ioff <= yres);
+        for (j = 0; j < xres; j++) {
+            gboolean col_inside = (j >= joff && j + txres-joff <= xres);
+            if (row_inside && col_inside) {
+                const gdouble *src = sdata + (i - ioff)*xres + (j - joff);
+                data[i*xres + j] = tip_convolve_interior(src, xres,
+                                                         tdata, txres, tyres);
+            }
+            else {
+                data[i*xres + j] = tip_convolve_border(sdata, xres, yres,
+                                                       tdata, txres, tyres,
+                                                       j, i);
+            }
+        }
+
+        if (set_fraction) {
+            t = g_timer_elapsed(timer, NULL);
+            if (t - tprev >= 0.1) {
+                if (!set_fraction((i + 1.0)/yres)) {
+                    g_timer_destroy(timer);
+                    return NULL;
+                }
+                tprev = t;
+            }
+        }
+    }
+
+    g_timer_destroy(timer);
     return result;
 }
 
