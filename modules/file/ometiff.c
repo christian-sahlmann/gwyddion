@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2013 David Necas (Yeti).
+ *  Copyright (C) 2013-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
+
+/* TODO: Proper support for split data.  We read the UUIDs and filenames but
+ * do not actually attempt to load any other files. */
 
 /* TODO: Some metadata.  The specs define some but it's quite scattered and
  * I'm not going to implement it without having any files with such metadata. */
@@ -81,6 +84,9 @@ typedef struct {
     guint firstt;
     guint firstc;
     guint planecount;
+    gchar *filename;
+    gchar *uuid;
+    gboolean ignored;
 } OMEData;
 
 typedef struct {
@@ -90,6 +96,7 @@ typedef struct {
 
 typedef struct {
     GString *path;
+    gchar *uuid;
     guint ndirs;
     IFDAssignment *ifdmap;
     /* From Pixels (or possibly Image) element */
@@ -117,6 +124,7 @@ static GwyContainer* ome_load               (const gchar *filename,
 static GwyContainer* ome_load_tiff          (const GwyTIFF *tiff,
                                              const gchar *filename,
                                              GError **error);
+static void          ome_file_free          (OMEFile *omefile);
 static void          start_element          (GMarkupParseContext *context,
                                              const gchar *element_name,
                                              const gchar **attribute_names,
@@ -145,7 +153,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OME-TIFF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2013",
 };
@@ -379,21 +387,36 @@ ome_load_tiff(const GwyTIFF *tiff, const gchar *filename, GError **error)
 fail:
     g_free(title);
     g_free(comment);
-    g_free(omefile.ifdmap);
     if (reader) {
         gwy_tiff_image_reader_free(reader);
         reader = NULL;
     }
-    if (omefile.data)
-        g_array_free(omefile.data, TRUE);
-    if (omefile.meta)
-        g_hash_table_destroy(omefile.meta);
+    ome_file_free(&omefile);
     if (key)
         g_string_free(key, TRUE);
     if (context)
         g_markup_parse_context_free(context);
 
     return container;
+}
+
+static void
+ome_file_free(OMEFile *omefile)
+{
+    guint i;
+
+    g_free(omefile->ifdmap);
+    g_free(omefile->uuid);
+    if (omefile->data) {
+        for (i = 0; i < omefile->data->len; i++) {
+            OMEData *data = &g_array_index(omefile->data, OMEData, i);
+            g_free(data->filename);
+            g_free(data->uuid);
+        }
+        g_array_free(omefile->data, TRUE);
+    }
+    if (omefile->meta)
+        g_hash_table_destroy(omefile->meta);
 }
 
 static void
@@ -432,9 +455,20 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     }
 
     /* Just read the values here, validate them later. */
-    if (gwy_stramong(omefile->path->str,
-                     "/OME/Image", "/OME/Image/Pixels",
-                     NULL)) {
+    if (gwy_strequal(omefile->path->str, "/OME")) {
+        for (i = 0; attribute_names[i]; i++) {
+            const gchar *name = attribute_names[i], *val = attribute_values[i];
+            if (gwy_strequal(name, "UUID")) {
+                g_free(omefile->uuid);
+                omefile->uuid = g_strdup(val);
+                gwy_debug("file uuid: %s", omefile->uuid);
+            }
+        }
+    }
+    else if (gwy_stramong(omefile->path->str,
+                          "/OME/Image",
+                          "/OME/Image/Pixels",
+                          NULL)) {
         for (i = 0; attribute_names[i]; i++) {
             const gchar *name = attribute_names[i], *val = attribute_values[i];
             if (gwy_strequal(name, "DimensionOrder")) {
@@ -462,9 +496,10 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 omefile->dt = g_ascii_strtod(val, NULL);
         }
     }
-    if (gwy_stramong(omefile->path->str,
-                     "/OME/Image/TiffData", "/OME/Image/Pixels/TiffData",
-                     NULL)) {
+    else if (gwy_stramong(omefile->path->str,
+                          "/OME/Image/TiffData",
+                          "/OME/Image/Pixels/TiffData",
+                          NULL)) {
         OMEData data;
         gboolean have_ifd = FALSE, have_planecount = FALSE;
 
@@ -491,8 +526,25 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
         if (!have_planecount) {
             data.planecount = have_ifd ? 1: omefile->ndirs;
         }
+        gwy_debug("have ifd: %d (%d)", have_ifd, data.ifd);
+        gwy_debug("have planecount: %d (%d)", have_planecount, data.planecount);
 
         g_array_append_val(omefile->data, data);
+    }
+    else if (gwy_stramong(omefile->path->str,
+                          "/OME/Image/TiffData/UUID",
+                          "/OME/Image/Pixels/TiffData/UUID",
+                          NULL)) {
+        OMEData *data = &g_array_index(omefile->data, OMEData,
+                                       omefile->data->len-1);
+
+        for (i = 0; attribute_names[i]; i++) {
+            const gchar *name = attribute_names[i], *val = attribute_values[i];
+            if (gwy_strequal(name, "FileName")) {
+                g_free(data->filename);
+                data->filename = g_strdup(val);
+            }
+        }
     }
 }
 
@@ -523,20 +575,31 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
     const gchar *path = omefile->path->str;
     gchar *val;
 
-    if (!gwy_stramong(path,
+    if (gwy_stramong(path,
                       "/OME/Image/AcquisitionDate",
                       "/OME/Image/Description",
-                      NULL))
-        return;
-
-    val = g_strndup(value, value_len);
-    g_strstrip(val);
-    if (*val) {
-        gwy_debug("%s <%s>", path, val);
-        g_hash_table_replace(omefile->meta, g_strdup(path), val);
+                      NULL)) {
+        val = g_strndup(value, value_len);
+        g_strstrip(val);
+        if (*val) {
+            gwy_debug("%s <%s>", path, val);
+            g_hash_table_replace(omefile->meta, g_strdup(path), val);
+        }
+        else
+            g_free(val);
     }
-    else
-        g_free(val);
+    else if (gwy_stramong(path,
+                          "/OME/Image/TiffData/UUID",
+                          "/OME/Image/Pixels/TiffData/UUID",
+                          NULL)) {
+        OMEData *data = &g_array_index(omefile->data, OMEData,
+                                       omefile->data->len-1);
+
+        g_free(data->uuid);
+        data->uuid = g_strndup(value, value_len);
+        g_strstrip(data->uuid);
+        gwy_debug("data uuid: %s", data->uuid);
+    }
 }
 
 static gboolean
@@ -545,14 +608,36 @@ assign_tiff_directories(OMEFile *omefile,
 {
     guint i, j;
 
+    /* Skip image data with different UUIDs because they are presumably in
+     * other files and we cannot handle that.  In the case we skip absolutely
+     * everything then unskip everything, cross fingers and proceeed... */
+    j = 0;
+    for (i = 0; i < omefile->data->len; i++) {
+        OMEData *data = &g_array_index(omefile->data, OMEData, i);
+        if (omefile->uuid
+            && data->uuid
+            && !gwy_strequal(omefile->uuid, data->uuid))
+            data->ignored = TRUE;
+        else
+            j++;
+    }
+    if (j == omefile->data->len) {
+        for (i = 0; i < omefile->data->len; i++)
+            g_array_index(omefile->data, OMEData, i).ignored = FALSE;
+    }
+
     for (i = 0; i < omefile->data->len; i++) {
         guint z, t, c, ifd;
         OMEData *data = &g_array_index(omefile->data, OMEData, i);
+
+        if (data->ignored)
+            continue;
 
         z = data->firstz;
         t = data->firstt;
         c = data->firstc;
         ifd = data->ifd;
+        gwy_debug("[data%u] z=%d, t=%d, c=%d, ifd=%d", i, z, t, c, ifd);
 
         for (j = 0; j < data->planecount; j++) {
             IFDAssignment *assignment = omefile->ifdmap + ifd;
