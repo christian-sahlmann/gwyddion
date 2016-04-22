@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2015 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2015-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Converts datafield to 3D volume data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -134,7 +134,7 @@ create_brick_from_datafield(GwyDataField *dfield)
     for (lev = 0; lev < zres; lev++) {
         for (row = 0; row < yres; row++) {
             for (col = 0; col < xres; col++) {
-                if (ddata[col + xres*row] < lev*zreal/zres + offset)
+                if (ddata[col + xres*row] >= lev*zreal/zres + offset)
                     bdata[col + xres*row + xres*yres*lev] = 1;
 
             }
