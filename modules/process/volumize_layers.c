@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id: volumize_layers.c 14879 2013-04-15 21:04:16Z yeti-dn $
- *  Copyright (C) 2015 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2015-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Converts all datafields to 3D volume data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -183,23 +183,15 @@ volumize_layers(GwyContainer *data, GwyRunType run)
         ddata = gwy_data_field_get_data(dfield);
 
         for (row = 0; row < yres; row++) {
-            for (col = 0; col < xres; col++) {
-                 bdata[col + xres*row + xres*yres*i] = (ddata[col + xres*row]);
-
-            }
+            for (col = 0; col < xres; col++)
+                bdata[col + xres*row + xres*yres*i] = ddata[col + xres*row];
         }
-
     }
-
 
     gwy_brick_resample(brick, args.xres, args.yres, args.zres,
                        GWY_INTERPOLATION_ROUND);
-    gwy_data_field_resample(dfield, args.xres, args.yres,
-                            GWY_INTERPOLATION_ROUND);
-
     newid = gwy_app_data_browser_add_brick(brick, dfield, data, TRUE);
     g_object_unref(brick);
-    g_object_unref(dfield);
     gwy_app_volume_log_add(data, -1, newid, "proc::volumize_layers", NULL);
 }
 
