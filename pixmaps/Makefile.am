@@ -4,6 +4,8 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Present in svn but not included in the tarball now:
+# gwy_hough-24.png
+# gwy_local_slope-24.png
 # gwy_presentation_attach-24.png
 # gwy_presentation_edge_canny-24.png
 # gwy_presentation_edge_harris_corner-24.png
@@ -34,7 +36,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.34: pygwy
 # Since 2.37: correct_affine extend mark_with synthetic_columnar synthetic_domains synthetic_lattice synthetic_line_noise synthetic_noise synthetic_objects synthetic_particles synthetic_pattern synthetic_waves
 # Since 2.38: synthetic_diffusion
-# Since 2.45: convolution distribution_angle distribution_slope entropy graph_fd fft_filter_2d fft_2d find_peaks grain_correlation grain_exscribed_circle grain_inscribed_circle grains_edge graph_align graph_cut graph_dos graph_export_ascii graph_export_png graph_export_vector graph_filter hough level_flatten_base level_median load_debug load_info load_warning local_slope mask_distribute mask_extract mask_morph mask_thin measure_lattice neural_apply neural_train psd_section psdf_log_phi synthetic_ballistic_deposition synthetic_brownian_motion synthetic_spectral tilt tip_dilation tip_erosion tip_estimation tip_map tip_model tip_pid volume volume_calibrate volume_dimensions volume_invert volumize_layers zero_mean
+# Since 2.45: convolution distribution_angle distribution_slope entropy graph_fd fft_filter_2d fft_2d find_peaks grain_correlation grain_exscribed_circle grain_inscribed_circle grains_edge graph_align graph_cut graph_dos graph_export_ascii graph_export_png graph_export_vector graph_filter level_flatten_base level_median load_debug load_info load_warning mask_distribute mask_extract mask_morph mask_thin measure_lattice neural_apply neural_train psdf_log_phi psdf_section synthetic_ballistic_deposition synthetic_brownian_motion synthetic_spectral tilt tip_dilation tip_erosion tip_estimation tip_map tip_model tip_pid volume volume_calibrate volume_dimensions volume_invert volumize_layers zero_mean
 #
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -169,8 +171,8 @@ pixmapdata_DATA = \
 	gwy_polynom_level-24.png \
 	gwy_polynom-24.png \
 	gwy_profile-24.png \
-	gwy_psd_section-24.png \
 	gwy_psdf_log_phi-24.png \
+	gwy_psdf_section-24.png \
 	gwy_pygwy-24.png \
 	gwy_remove_under_mask-24.png \
 	gwy_rotate_180-24.png \
