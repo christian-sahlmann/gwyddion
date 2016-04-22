@@ -507,6 +507,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_FIND_PEAKS:
+ *
+ * The "Find-Peaks" stock icon.
+ * <inlinegraphic fileref="gwy_find_peaks-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
  * GWY_STOCK_FIX_ZERO:
  *
  * The "Fix-Zero" stock icon.
@@ -728,8 +737,6 @@ file_to_icon_source(const gchar *path,
  *
  * The "Graph-Level" stock icon.
  * <inlinegraphic fileref="gwy_graph_level-24.png" format="PNG"/>
- *
- * Since: 2.45
  **/
 
 /**
@@ -1217,186 +1224,6 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
- * GWY_STOCK_PRESENTATION_ATTACH:
- *
- * The "Presentation-Attach" stock icon.
- * <inlinegraphic fileref="gwy_presentation_attach-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_CANNY:
- *
- * The "Presentation-Edge-Canny" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_canny-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_HARRIS_CORNER:
- *
- * The "Presentation-Edge-Harris-Corner" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_harris_corner-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_HOUGH:
- *
- * The "Presentation-Edge-Hough" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_hough-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_INCLINATION:
- *
- * The "Presentation-Edge-Inclination" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_inclination-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_LAPLACE_GAUSS:
- *
- * The "Presentation-Edge-Laplace-Gauss" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_laplace_gauss-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_LOCAL_NON_LINEARITY:
- *
- * The "Presentation-Edge-Local-Non-Linearity" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_local_non_linearity-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_PREWITT:
- *
- * The "Presentation-Edge-Prewitt" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_prewitt-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_RMS:
- *
- * The "Presentation-Edge-RMS" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_rms-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_RMS_EDGE:
- *
- * The "Presentation-Edge-RMS-Edge" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_rms_edge-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_SOBEL:
- *
- * The "Presentation-Edge-Sobel" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_sobel-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_STEP:
- *
- * The "Presentation-Edge-Step" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_step-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EDGE_ZERO_CROSSING:
- *
- * The "Presentation-Edge-Zero-Crossing" stock icon.
- * <inlinegraphic fileref="gwy_presentation_edge_zero_crossing-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_EXTRACT:
- *
- * The "Presentation-Extract" stock icon.
- * <inlinegraphic fileref="gwy_presentation_extract-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_LOCAL_CONTRAST:
- *
- * The "Presentation-Local-Contrast" stock icon.
- * <inlinegraphic fileref="gwy_presentation_local_contrast-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_LOG:
- *
- * The "Presentation-Log" stock icon.
- * <inlinegraphic fileref="gwy_presentation_log-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_RANK:
- *
- * The "Presentation-Rank" stock icon.
- * <inlinegraphic fileref="gwy_presentation_rank-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_REMOVE:
- *
- * The "Presentation-Remove" stock icon.
- * <inlinegraphic fileref="gwy_presentation_remove-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_SEM:
- *
- * The "Presentation-Sem" stock icon.
- * <inlinegraphic fileref="gwy_presentation_sem-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
- * GWY_STOCK_PRESENTATION_SHADING:
- *
- * The "Presentation-Shading" stock icon.
- * <inlinegraphic fileref="gwy_presentation_shading-24.png" format="PNG"/>
- *
- * Since: 2.45
- **/
-
-/**
  * GWY_STOCK_PROFILE:
  *
  * The "Profile" stock icon.
@@ -1779,6 +1606,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Volumize-Layers" stock icon.
  * <inlinegraphic fileref="gwy_volumize_layers-24.png" format="PNG"/>
+ *
+ * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_ZERO_MEAN:
+ *
+ * The "Zero-Mean" stock icon.
+ * <inlinegraphic fileref="gwy_zero_mean-24.png" format="PNG"/>
  *
  * Since: 2.45
  **/
