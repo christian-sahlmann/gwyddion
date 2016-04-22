@@ -807,8 +807,6 @@ file_to_icon_source(const gchar *path,
  *
  * The "Hough" stock icon.
  * <inlinegraphic fileref="gwy_hough-24.png" format="PNG"/>
- *
- * Since: 2.45
  **/
 
 /**
@@ -921,8 +919,6 @@ file_to_icon_source(const gchar *path,
  *
  * The "Local-Slope" stock icon.
  * <inlinegraphic fileref="gwy_local_slope-24.png" format="PNG"/>
- *
- * Since: 2.45
  **/
 
 /**
@@ -1240,10 +1236,10 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
- * GWY_STOCK_PSD_SECTION:
+ * GWY_STOCK_PSDF_SECTION:
  *
- * The "PSD-Section" stock icon.
- * <inlinegraphic fileref="gwy_psd_section-24.png" format="PNG"/>
+ * The "PSDF-Section" stock icon.
+ * <inlinegraphic fileref="gwy_psdf_section-24.png" format="PNG"/>
  *
  * Since: 2.45
  **/

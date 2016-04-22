@@ -150,7 +150,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_POLYNOM_LEVEL                  "gwy_polynom_level"
 #define GWY_STOCK_PROFILE                        "gwy_profile"
 #define GWY_STOCK_PSDF_LOG_PHI                   "gwy_psdf_log_phi"
-#define GWY_STOCK_PSD_SECTION                    "gwy_psd_section"
+#define GWY_STOCK_PSDF_SECTION                   "gwy_psdf_section"
 #define GWY_STOCK_PYGWY                          "gwy_pygwy"
 #define GWY_STOCK_REMOVE_UNDER_MASK              "gwy_remove_under_mask"
 #define GWY_STOCK_ROTATE                         "gwy_rotate"
