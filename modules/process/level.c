@@ -107,7 +107,7 @@ module_register(void)
     gwy_process_func_register("zero_mean",
                               &level_func,
                               N_("/_Level/Zero _Mean Value"),
-                              NULL,
+                              GWY_STOCK_ZERO_MEAN,
                               LEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Shift mean data value to zero"));

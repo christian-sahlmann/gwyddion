@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -94,7 +95,7 @@ module_register(void)
     gwy_process_func_register("median-bg",
                               (GwyProcessFunc)&median,
                               N_("/_Level/_Median Level..."),
-                              NULL,
+                              GWY_STOCK_LEVEL_MEDIAN,
                               MEDIANBG_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Level data by local median subtraction"));

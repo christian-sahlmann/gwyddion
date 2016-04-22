@@ -28,6 +28,7 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/grains.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
@@ -55,7 +56,7 @@ module_register(void)
     gwy_process_func_register("flatten_base",
                               (GwyProcessFunc)&flatten_base,
                               N_("/_Level/Flatten _Base"),
-                              NULL,
+                              GWY_STOCK_LEVEL_FLATTEN_BASE,
                               FLATTEN_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Flatten base of surface with positive features"));

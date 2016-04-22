@@ -63,7 +63,7 @@ module_register(void)
     gwy_volume_func_register("volume_invert",
                               (GwyVolumeFunc)&volume_invert,
                               N_("/_Invert value"),
-                              NULL,
+                              GWY_STOCK_VOLUME_INVERT,
                               VOLUME_INVERT_RUN_MODES,
                               GWY_MENU_FLAG_VOLUME,
                               N_("Invert value in volume data"));

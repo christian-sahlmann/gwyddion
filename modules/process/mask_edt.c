@@ -27,6 +27,7 @@
 #include <libprocess/grains.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -113,7 +114,7 @@ module_register(void)
     gwy_process_func_register("mask_thin",
                               (GwyProcessFunc)&mask_thin,
                               N_("/_Mask/Thi_n"),
-                              NULL,
+                              GWY_STOCK_MASK_THIN,
                               MASKTHIN_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Thin mask"));

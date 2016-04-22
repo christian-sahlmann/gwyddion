@@ -113,7 +113,7 @@ module_register(void)
     gwy_process_func_register("grain_cross",
                               (GwyProcessFunc)&grain_cross,
                               N_("/_Grains/_Correlate..."),
-                              GWY_STOCK_GRAINS_GRAPH,
+                              GWY_STOCK_GRAIN_CORRELATION,
                               CROSS_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Correlate grain characteristics"));

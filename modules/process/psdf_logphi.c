@@ -89,7 +89,7 @@ module_register(void)
     gwy_process_func_register("psdf_logphi",
                               (GwyProcessFunc)&psdflp,
                               N_("/_Statistics/_Log-Phi PSDF..."),
-                              GWY_STOCK_FFT,
+                              GWY_STOCK_PSDF_LOG_PHI,
                               PSDFLP_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Compute PSDF in Log-Phi coordinates"));

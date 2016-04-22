@@ -28,6 +28,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
@@ -173,7 +174,7 @@ module_register(void)
     gwy_process_func_register("slope_dist",
                               (GwyProcessFunc)&slope_dist,
                               N_("/_Statistics/_Slope Distribution..."),
-                              NULL,
+                              GWY_STOCK_DISTRIBUTION_SLOPE,
                               SLOPE_DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Calculate angular slope distribution"));

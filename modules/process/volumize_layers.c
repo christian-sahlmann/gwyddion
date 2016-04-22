@@ -97,7 +97,7 @@ module_register(void)
     gwy_process_func_register("volumize_layers",
                               (GwyProcessFunc)&volumize_layers,
                               N_("/_Basic Operations/Volumize Layers..."),
-                              NULL,
+                              GWY_STOCK_VOLUMIZE_LAYERS,
                               VOLUMIZE_LAYERS_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Convert all datafields to 3D data"));

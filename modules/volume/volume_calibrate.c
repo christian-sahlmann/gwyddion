@@ -187,7 +187,7 @@ module_register(void)
     gwy_volume_func_register("volcal",
                              (GwyVolumeFunc)&volcal,
                              N_("/_Dimensions and Units..."),
-                             GWY_STOCK_DATA_MEASURE,
+                             GWY_STOCK_VOLUME_DIMENSIONS,
                              VOLCAL_RUN_MODES,
                              GWY_MENU_FLAG_VOLUME,
                              N_("Change physical dimensions, units "

@@ -28,6 +28,7 @@
 #include <libprocess/grains.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
@@ -128,7 +129,7 @@ module_register(void)
     gwy_process_func_register("mask_morph",
                               (GwyProcessFunc)&mask_morph,
                               N_("/_Mask/Morphological Operation..."),
-                              NULL,
+                              GWY_STOCK_MASK_MORPH,
                               MASKMORPH_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Morphological operation with mask"));

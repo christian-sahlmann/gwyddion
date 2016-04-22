@@ -141,7 +141,7 @@ module_register(void)
     gwy_graph_func_register("graph_peaks",
                             (GwyGraphFunc)&graph_peaks,
                             N_("/Find _Peaks..."),
-                            NULL,
+                            GWY_STOCK_FIND_PEAKS,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Find graph curve peaks"));
 

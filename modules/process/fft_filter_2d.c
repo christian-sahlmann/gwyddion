@@ -170,7 +170,7 @@ module_register(void)
     gwy_process_func_register("fft_filter_2d",
                               (GwyProcessFunc)&run_main,
                               N_("/_Correct Data/_2D FFT Filtering..."),
-                              NULL,
+                              GWY_STOCK_FFT_FILTER_2D,
                               FFTF_2D_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Two-dimensional FFT filtering"));

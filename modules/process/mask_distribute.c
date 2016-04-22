@@ -24,6 +24,7 @@
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -98,7 +99,7 @@ module_register(void)
     gwy_process_func_register("mask_distribute",
                               (GwyProcessFunc)&mask_distribute,
                               N_("/_Mask/_Distribute..."),
-                              NULL,
+                              GWY_STOCK_MASK_DISTRIBUTE,
                               MASKDIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Distribute mask to other channels"));

@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libprocess/level.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 #include "preview.h"
@@ -114,7 +115,7 @@ module_register(void)
     gwy_process_func_register("angle_dist",
                               (GwyProcessFunc)&angle_dist,
                               N_("/_Statistics/An_gle Distribution..."),
-                              NULL,
+                              GWY_STOCK_DISTRIBUTION_ANGLE,
                               ANGLE_DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Calculate two-dimensional angle "

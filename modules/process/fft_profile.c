@@ -138,7 +138,7 @@ module_register(void)
     gwy_process_func_register("fft_profile",
                               (GwyProcessFunc)&fft_profile,
                               N_("/_Statistics/_PSDF Section..."),
-                              GWY_STOCK_GRAPH_HALFGAUSS,
+                              GWY_STOCK_PSDF_SECTION,
                               PROF_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Read radial PSDF sections"));

@@ -30,6 +30,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwynullstore.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
@@ -115,7 +116,7 @@ module_register(void)
     gwy_volume_func_register("volume_zcal",
                              (GwyVolumeFunc)&zcal,
                              N_("/_Z-Calibration..."),
-                             NULL,
+                             GWY_STOCK_VOLUME_CALIBRATE,
                              ZCAL_RUN_MODES,
                              GWY_MENU_FLAG_VOLUME,
                              N_("Manage z-axis calibration"));
