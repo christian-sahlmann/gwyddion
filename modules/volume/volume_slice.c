@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2015 David Necas (Yeti).
+ *  Copyright (C) 2015-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -194,7 +194,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Extracts image planes and line graphs from volume data."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti)",
     "2015",
 };
@@ -452,6 +452,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 NULL);
     label = gtk_label_new(controls.xvf->units);
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
@@ -471,6 +472,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                 NULL);
     label = gtk_label_new(controls.yvf->units);
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
@@ -497,6 +499,7 @@ slice_dialog(SliceArgs *args, GwyContainer *data, gint id)
                                                     NULL);
     }
     label = gtk_label_new(controls.zvf->units);
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      4, 5, row, row+1, GTK_FILL, 0, 0, 0);
