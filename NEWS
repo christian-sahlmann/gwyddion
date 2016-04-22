@@ -123,6 +123,11 @@ Modules:
   involved.
 - OME TIFF: Data split to several files can be loaded at least file by file
   now, instead of getting a cryptic error message.
+- Volumize layers: Memory handling error causing a crash after closing the
+  volumized data was fixed.  Units are set properly and can be controlled
+  in the module dialogue.
+- Volumize: The created volume data are now 1 under the surface (inside the
+  material) and 0 above the surface (outside the material).
 
 
 2.44 (2016-01-11)
