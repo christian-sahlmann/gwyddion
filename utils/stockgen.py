@@ -127,4 +127,6 @@ sincs = read_since(makefile)
 update_macros(imgs)
 update_documentation(imgs, sincs)
 # Check for unused since declarations, they are typos
-assert not sincs
+if sincs:
+    print 'Unused since:', sincs
+    sys.exit(1)
