@@ -49,6 +49,7 @@ edge	presentations	edge
 ellipse	selections
 entropy	statistical-analysis	entropy
 extend	basic-operations	extend
+extract_path	edit-extended	extract-path-selection
 ezdfile	managing-files
 facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
@@ -88,6 +89,7 @@ graph_fdfit	graph-processing
 graph_filter	graph-processing
 graph_fit	graph-processing	graph-fit
 graph_level	graph-processing	graph-level
+graph_peaks	graph-processing	graph-peaks
 graph_stats	graph-processing
 gsffile	gsf
 gwyfile	managing-files
@@ -100,6 +102,7 @@ icolorange	color-map	color-range
 igorfile	managing-files
 imgexport	image-export
 immerse	multidata	immerse
+intelliwave	managing-files
 intematix	managing-files
 iso28600	managing-files
 jeol	managing-files
@@ -169,6 +172,7 @@ opengps	managing-files
 otsu_threshold	grain-analysis	grain-threshold-otsu
 outliers	editing-correction	mask-of-outliers
 pathlevel	editing-correction	path-level
+path	selections
 pat_synth	synthetic	pattern-synthesis
 pixmap	specific-data-import	pixmap-file-import
 pltfile	managing-files
@@ -178,9 +182,9 @@ point	selections
 polydistort	edit-extended	polynomial-distort
 polylevel	leveling-and-background	polynomial-level
 presentationops	presentations	presentationops
+princetonspe	managing-files
 profile	basic-operations	profile
 psdf_logphi	fourier-transform	psdf-log-phi
-princetonspe	managing-files
 psia	managing-files
 pt3file	managing-files
 quesant	managing-files
@@ -224,6 +228,7 @@ spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
 stpfile	managing-files
+straighten_path	edit-extended	straighten-path
 surffile	managing-files
 tescan	managing-files
 threshold	basic-operations	limit-range
@@ -243,8 +248,8 @@ volume_kmedians	volume-data-processing	volume-clustering
 volume_linestat	volume-data-processing	volume-linestat
 volume_slice	volume-data-processing	volume-slice
 volume_zcal	volume-data-processing	volume-zcalibration
-volumize_layers	volume-data
-volumize	volume-data
+volumize	basic-operations	volumize
+volumize_layers	basic-operations	volumize-layers
 vtkfile	managing-files
 wave_synth	synthetic	wave-synthesis
 win_stm	managing-files
@@ -256,5 +261,7 @@ wsffile	managing-files
 wsxmfile	managing-files
 xydenoise	edit-extended	xy-denoise
 xyzexport	managing-files
+xyzize	basic-operations	xyzize
+xyz_raster	xyz-data-processing	xyz-rasterize
 zeiss	managing-files
 zemax	managing-files
