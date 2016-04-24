@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-13 02:14+0200\n"
-"PO-Revision-Date: 2016-04-13 23:14+0100\n"
+"POT-Creation-Date: 2016-04-22 02:14+0200\n"
+"PO-Revision-Date: 2016-04-24 13:14+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: None, I suppose\n"
 "Language: en_GB\n"
@@ -152,8 +152,8 @@ msgstr "Gaussian (RPSDF)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Two Gaussians (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:858
-#: modules/xyz/xyz_drift.c:863
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:834
+#: modules/xyz/xyz_drift.c:839
 msgid "Exponential"
 msgstr "Exponential"
 
@@ -682,11 +682,11 @@ msgstr "Octagonal"
 msgid "distance|Euclidean"
 msgstr "Euclidean"
 
-#: libprocess/morph_lib.c:169 libprocess/morph_lib.c:461
+#: libprocess/morph_lib.c:169 libprocess/tip.c:674
 msgid "Dilation..."
 msgstr "Dilation..."
 
-#: libprocess/morph_lib.c:235 libprocess/morph_lib.c:528
+#: libprocess/morph_lib.c:235 libprocess/tip.c:807
 msgid "Erosion..."
 msgstr "Erosion..."
 
@@ -694,23 +694,23 @@ msgstr "Erosion..."
 msgid "Certainty map..."
 msgstr "Certainty map..."
 
-#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:764
+#: libprocess/morph_lib.c:406 libprocess/morph_lib.c:554
 #, c-format
 msgid "Iterating estimate (iteration %d)..."
 msgstr "Iterating estimate (iteration %d)..."
 
-#: libprocess/morph_lib.c:625 libprocess/morph_lib.c:787
+#: libprocess/morph_lib.c:415 libprocess/morph_lib.c:577
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
 msgstr[0] "One image location led to refinement"
 msgstr[1] "%d image locations led to refinement"
 
-#: libprocess/morph_lib.c:725
+#: libprocess/morph_lib.c:515
 msgid "Searching for local maxima..."
 msgstr "Searching for local maxima..."
 
-#: libprocess/morph_lib.c:747
+#: libprocess/morph_lib.c:537
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
@@ -753,16 +753,16 @@ msgstr "Symmetrical"
 msgid "Cone"
 msgstr "Cone"
 
-#: libprocess/tip.c:879 libprocess/tip.c:907 libprocess/tip.c:956
-#: libprocess/tip.c:983
+#: libprocess/tip.c:992 libprocess/tip.c:1020 libprocess/tip.c:1069
+#: libprocess/tip.c:1096
 msgid "Converting fields"
 msgstr "Converting fields"
 
-#: libprocess/tip.c:889
+#: libprocess/tip.c:1002
 msgid "Starting partial estimation"
 msgstr "Starting partial estimation"
 
-#: libprocess/tip.c:966
+#: libprocess/tip.c:1079
 msgid "Starting full estimation"
 msgstr "Starting full estimation"
 
@@ -1322,7 +1322,7 @@ msgid "A_dd symbol"
 msgstr "A_dd symbol"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:597 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:579 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Preview"
 
@@ -2893,65 +2893,65 @@ msgstr "byte at position %d"
 msgid "%s instead of %s"
 msgstr "%s instead of %s"
 
-#: app/validate.c:388
+#: app/validate.c:389
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "no channel %d exists for %s"
 
-#: app/validate.c:400
+#: app/validate.c:401
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "no graph %d exists for %s"
 
-#: app/validate.c:410
+#: app/validate.c:411
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "no spectra %d exists for %s"
 
-#: app/validate.c:426
+#: app/validate.c:427
 #, c-format
 msgid "no brick %d exists for %s"
 msgstr "no brick %d exists for %s"
 
-#: app/validate.c:442
+#: app/validate.c:443
 #, c-format
 msgid "no surface %d exists for %s"
 msgstr "no surface %d exists for %s"
 
-#: app/validate.c:497
+#: app/validate.c:498
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count is %d for %s"
 
-#: app/validate.c:680
+#: app/validate.c:681
 msgid "Invalid item key format"
 msgstr "Invalid item key format"
 
-#: app/validate.c:681
+#: app/validate.c:682
 msgid "Item key contains invalid characters"
 msgstr "Item key contains invalid characters"
 
-#: app/validate.c:682
+#: app/validate.c:683
 msgid "Item key does not belong to any known data"
 msgstr "Item key does not belong to any known data"
 
-#: app/validate.c:683
+#: app/validate.c:684
 msgid "Wrong data item id"
 msgstr "Wrong data item id"
 
-#: app/validate.c:684
+#: app/validate.c:685
 msgid "Unexpected data item type"
 msgstr "Unexpected data item type"
 
-#: app/validate.c:685
+#: app/validate.c:686
 msgid "String value is not valid UTF-8"
 msgstr "String value is not valid UTF-8"
 
-#: app/validate.c:686
+#: app/validate.c:687
 msgid "Object has several references"
 msgstr "Object has several references"
 
-#: app/validate.c:687
+#: app/validate.c:688
 msgid "Secondary data item has no primary data"
 msgstr "Secondary data item has no primary data"
 
@@ -3843,7 +3843,7 @@ msgstr "Pages:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:791
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:767
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Physical Dimensions"
@@ -4495,13 +4495,13 @@ msgid "Olympus LEXT OLS4000 (.lext)"
 msgstr "Olympus LEXT OLS4000 (.lext)"
 
 #: modules/file/lextfile.c:163 modules/file/nanoscan.c:672
-#: modules/file/ometiff.c:422
+#: modules/file/ometiff.c:445
 #, c-format
 msgid "Top-level element is not ‘%s’."
 msgstr "Top-level element is not ‘%s’."
 
 #: modules/file/lextfile.c:260 modules/file/nanoscan.c:267
-#: modules/file/ometiff.c:257
+#: modules/file/ometiff.c:265
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "XML parsing failed: %s"
@@ -4984,19 +4984,19 @@ msgid "Plot point density map"
 msgstr "Plot point density map"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:742
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:718
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Resolution"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:746
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:722
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "_Horizontal size:"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:761
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:737
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "_Vertical size:"
@@ -5156,20 +5156,20 @@ msgstr "Imports OLS data files."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/ometiff.c:146
+#: modules/file/ometiff.c:154
 msgid "Imports OME-TIFF data files."
 msgstr "Imports OME-TIFF data files."
 
-#: modules/file/ometiff.c:159
+#: modules/file/ometiff.c:167
 msgid "Open Microscopy OME-TIFF (.ome.tiff)"
 msgstr "Open Microscopy OME-TIFF (.ome.tiff)"
 
-#: modules/file/ometiff.c:565
+#: modules/file/ometiff.c:650
 #, c-format
 msgid "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
 msgstr "ZTC coordinates (%u,%u,%u) fall outside the given ranges."
 
-#: modules/file/ometiff.c:573
+#: modules/file/ometiff.c:658
 msgid ""
 "The OME TIFF header specifies more TIFF directories than there are in the "
 "file."
@@ -5177,7 +5177,7 @@ msgstr ""
 "The OME TIFF header specifies more TIFF directories than there are in the "
 "file."
 
-#: modules/file/ometiff.c:584
+#: modules/file/ometiff.c:669
 #, c-format
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 msgstr "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
@@ -5556,7 +5556,7 @@ msgstr "Data Format"
 #: modules/process/tip_model.c:163 modules/process/wpour_mark.c:273
 #: modules/tools/linestats.c:457 modules/tools/sfunctions.c:523
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:634
+#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:616
 #: modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "_Update"
@@ -6008,14 +6008,6 @@ msgstr "Imports Seiko XQB, XQD, XQT and XQP files."
 #: modules/file/seiko.c:131
 msgid "Seiko files (.xqb, .xqd, .xqt, .xqp)"
 msgstr "Seiko files (.xqb, .xqd, .xqt, .xqp)"
-
-#: modules/file/seiko.c:322
-msgid ""
-"Cannot determine scan dimensions; it seems non-square with an unknown side "
-"ratio."
-msgstr ""
-"Cannot determine scan dimensions; it seems non-square with an unknown side "
-"ratio."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -6538,8 +6530,8 @@ msgstr "It is necessary to select more data points than free fit parameters"
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1149
-#: modules/xyz/xyz_drift.c:1167 modules/xyz/xyz_drift.c:1184
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1092
+#: modules/xyz/xyz_drift.c:1110 modules/xyz/xyz_drift.c:1127
 msgid "N.A."
 msgstr "N.A."
 
@@ -8543,12 +8535,12 @@ msgstr "Drift-corrected"
 msgid "Drift"
 msgstr "Drift"
 
-#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:401
-#: modules/xyz/xyz_drift.c:420 modules/xyz/xyz_drift.c:439
+#: modules/process/drift.c:614 modules/xyz/xyz_drift.c:392
+#: modules/xyz/xyz_drift.c:411 modules/xyz/xyz_drift.c:430
 msgid "drift"
 msgstr "drift"
 
-#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:411
+#: modules/process/drift.c:620 modules/xyz/xyz_drift.c:402
 msgid "x-axis drift"
 msgstr "x-axis drift"
 
@@ -11301,19 +11293,19 @@ msgstr ""
 
 #: modules/process/nanoindent_adjust.c:107
 msgid "Adjust two nanoindentation imprints"
-msgstr ""
+msgstr "Adjust two nanoindentation imprints"
 
 #: modules/process/nanoindent_adjust.c:160
 msgid "Imprints adjustment"
-msgstr ""
+msgstr "Imprints adjustment"
 
 #: modules/process/nanoindent_adjust.c:175
 msgid "_Indentor model imprint:"
-msgstr ""
+msgstr "_Indentor model imprint:"
 
 #: modules/process/nanoindent_adjust.c:186
 msgid "Imprint to be _adjusted:"
-msgstr ""
+msgstr "Imprint to be _adjusted:"
 
 #: modules/process/nanoindent_adjust.c:197
 msgid "_Move data"
@@ -11325,16 +11317,17 @@ msgstr "_Rotate data"
 
 #: modules/process/nanoindent_adjust.c:215
 msgid "E_xtrapolate result data out of measured range"
-msgstr ""
+msgstr "E_xtrapolate result data out of measured range"
 
 #: modules/process/nanoindent_adjust.c:295
 msgid ""
 "Tip has different range/resolution ratio than image. Tip will be resampled."
 msgstr ""
+"Tip has different range/resolution ratio than image. Tip will be resampled."
 
 #: modules/process/nanoindent_adjust.c:334
 msgid "Immersed detail data"
-msgstr ""
+msgstr "Immersed detail data"
 
 #: modules/process/neural.c:207
 msgid "Neural network SPM data processing"
@@ -12228,6 +12221,7 @@ msgstr "Straightened"
 msgid ""
 "Simple supres operations with two data fields (or a data field and a scalar)."
 msgstr ""
+"Simple supres operations with two data fields (or a data field and a scalar)."
 
 #: modules/process/superresolution.c:98
 msgid "/M_ultidata/_Super-resolution..."
@@ -12235,22 +12229,22 @@ msgstr ""
 
 #: modules/process/superresolution.c:102
 msgid "Super resolution of multiple images of same object"
-msgstr ""
+msgstr "Super resolution of multiple images of same object"
 
 #: modules/process/superresolution.c:141
 msgid "Supres"
-msgstr ""
+msgstr "Supres"
 
 #: modules/process/superresolution.c:421
 msgid "Correlating to determine mean shift..."
-msgstr ""
+msgstr "Correlating to determine mean shift..."
 
 #: modules/process/superresolution.c:511
 msgid "Cross-correlation..."
-msgstr ""
+msgstr "Cross-correlation..."
 
-#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1078
-#: modules/xyz/xyz_raster.c:1118
+#: modules/process/superresolution.c:554 modules/xyz/xyz_raster.c:1079
+#: modules/xyz/xyz_raster.c:1119
 msgid "Interpolating..."
 msgstr "Interpolating..."
 
@@ -13546,7 +13540,7 @@ msgstr "BRC"
 msgid "Peak Count"
 msgstr "Peak Count"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1140
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1083
 msgid "_Graph:"
 msgstr "_Graph:"
 
@@ -14318,121 +14312,121 @@ msgstr ""
 "The number of data file values %d\n"
 "differs from the number of planes %d."
 
-#: modules/xyz/xyz_drift.c:276
+#: modules/xyz/xyz_drift.c:267
 msgid "Analyzes drift in XYZ data."
 msgstr "Analyses drift in XYZ data."
 
-#: modules/xyz/xyz_drift.c:290
-msgid "/Analyze _drift..."
-msgstr "/Analyse _drift..."
+#: modules/xyz/xyz_drift.c:281
+msgid "/Analyze _Drift..."
+msgstr "/Analyse _Drift..."
 
-#: modules/xyz/xyz_drift.c:294
+#: modules/xyz/xyz_drift.c:285
 msgid "Analyze and/or remove drift"
 msgstr "Analyse and/or remove the drift"
 
-#: modules/xyz/xyz_drift.c:400 modules/xyz/xyz_drift.c:866
+#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:842
 msgid "X drift"
 msgstr "X drift"
 
-#: modules/xyz/xyz_drift.c:419 modules/xyz/xyz_drift.c:867
+#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:843
 msgid "Y drift"
 msgstr "Y drift"
 
-#: modules/xyz/xyz_drift.c:430
+#: modules/xyz/xyz_drift.c:421
 msgid "y-axis drift"
 msgstr "y-axis drift"
 
-#: modules/xyz/xyz_drift.c:438 modules/xyz/xyz_drift.c:868
+#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:844
 msgid "Z drift"
 msgstr "Z drift"
 
-#: modules/xyz/xyz_drift.c:449
+#: modules/xyz/xyz_drift.c:440
 msgid "z-axis drift"
 msgstr "z-axis drift"
 
-#: modules/xyz/xyz_drift.c:558 modules/xyz/xyz_raster.c:340
-msgid "Rasterize XYZ Data"
-msgstr "Rasterise XYZ Data"
+#: modules/xyz/xyz_drift.c:540
+msgid "Analyze XYZ Drift"
+msgstr "Analyse XYZ Drift"
 
-#: modules/xyz/xyz_drift.c:583 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:565 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Reset Ran_ges"
 
-#: modules/xyz/xyz_drift.c:795 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:771 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "_X-range:"
 
-#: modules/xyz/xyz_drift.c:817 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "_Y-range:"
 
-#: modules/xyz/xyz_drift.c:857 modules/xyz/xyz_drift.c:862
+#: modules/xyz/xyz_drift.c:833 modules/xyz/xyz_drift.c:838
 msgid "2nd order polynom"
 msgstr "2nd order polynom"
 
-#: modules/xyz/xyz_drift.c:877
+#: modules/xyz/xyz_drift.c:853
 msgid "Initial values"
 msgstr "Initial values"
 
-#: modules/xyz/xyz_drift.c:885
+#: modules/xyz/xyz_drift.c:861
 msgid "_X drift:"
 msgstr "_X drift:"
 
-#: modules/xyz/xyz_drift.c:925 modules/xyz/xyz_drift.c:979
-#: modules/xyz/xyz_drift.c:1035
+#: modules/xyz/xyz_drift.c:889 modules/xyz/xyz_drift.c:932
+#: modules/xyz/xyz_drift.c:977
 msgid "_fit"
 msgstr "_fit"
 
-#: modules/xyz/xyz_drift.c:937
+#: modules/xyz/xyz_drift.c:901
 msgid "_Y drift:"
 msgstr "_Y drift:"
 
-#: modules/xyz/xyz_drift.c:993
+#: modules/xyz/xyz_drift.c:946
 msgid "Z fit _type:"
 msgstr "Z fit _type:"
 
-#: modules/xyz/xyz_drift.c:1060
+#: modules/xyz/xyz_drift.c:1002
 msgid "Search parameters"
 msgstr "Search parameters"
 
-#: modules/xyz/xyz_drift.c:1065
-msgid "_Neighbors:"
-msgstr "_Neighbours:"
+#: modules/xyz/xyz_drift.c:1007
+msgid "_Neighbors used:"
+msgstr "_Neighbours used:"
 
-#: modules/xyz/xyz_drift.c:1081
+#: modules/xyz/xyz_drift.c:1024
 msgid "_Length threshold:"
 msgstr "_Length threshold:"
 
-#: modules/xyz/xyz_drift.c:1100
+#: modules/xyz/xyz_drift.c:1043
 msgid "_Time threshold:"
 msgstr "_Time threshold:"
 
-#: modules/xyz/xyz_drift.c:1118
+#: modules/xyz/xyz_drift.c:1061
 msgid "_Max iterations:"
 msgstr "_Max iterations:"
 
-#: modules/xyz/xyz_drift.c:1131
+#: modules/xyz/xyz_drift.c:1074
 msgid "Results"
 msgstr "Results"
 
-#: modules/xyz/xyz_drift.c:1145
+#: modules/xyz/xyz_drift.c:1088
 msgid "X drift:"
 msgstr "X drift:"
 
-#: modules/xyz/xyz_drift.c:1153 modules/xyz/xyz_drift.c:1171
-#: modules/xyz/xyz_drift.c:1188
+#: modules/xyz/xyz_drift.c:1096 modules/xyz/xyz_drift.c:1114
+#: modules/xyz/xyz_drift.c:1131
 msgid "to inits"
 msgstr "to inits"
 
-#: modules/xyz/xyz_drift.c:1163
+#: modules/xyz/xyz_drift.c:1106
 msgid "Y drift:"
 msgstr "Y drift:"
 
-#: modules/xyz/xyz_drift.c:1180
+#: modules/xyz/xyz_drift.c:1123
 msgid "Z drift:"
 msgstr "Z drift:"
 
-#: modules/xyz/xyz_drift.c:2245 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:2176 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Physical dimensions are invalid."
 
@@ -14448,13 +14442,17 @@ msgstr "/_Rasterise..."
 msgid "Rasterize to image"
 msgstr "Rasterise to image"
 
+#: modules/xyz/xyz_raster.c:340
+msgid "Rasterize XYZ Data"
+msgstr "Rasterise XYZ Data"
+
 #: modules/xyz/xyz_raster.c:354
 msgid "Create Image _Directly"
 msgstr "Create Image _Directly"
 
 #: modules/xyz/xyz_raster.c:360
-msgid "XY points form a regular grid so regularization is not necessary."
-msgstr "XY points form a regular grid so regularisation is not necessary."
+msgid "XY points form a regular grid so interpolation is not necessary."
+msgstr "XY points form a regular grid so interpolation is not necessary."
 
 #: modules/xyz/xyz_raster.c:381
 msgid "Make Pixels S_quare"
@@ -14475,13 +14473,20 @@ msgstr ""
 "Merged as too close: %u\n"
 "Added on the boundaries: %u"
 
-#: modules/xyz/xyz_raster.c:1090
+#: modules/xyz/xyz_raster.c:1091
 msgid ""
 "XYZ data regularization failed due to numerical instability or was "
 "interrupted."
 msgstr ""
 "XYZ data regularisation failed due to numerical instability or was "
 "interrupted."
+
+#~ msgid ""
+#~ "Cannot determine scan dimensions; it seems non-square with an unknown "
+#~ "side ratio."
+#~ msgstr ""
+#~ "Cannot determine scan dimensions; it seems non-square with an unknown "
+#~ "side ratio."
 
 #~ msgid "/_Close..."
 #~ msgstr "/_Close..."
