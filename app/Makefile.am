@@ -108,7 +108,7 @@ AM_LDFLAGS = $(darwin_ldflags)
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 14:1:14
+libversion = -version-info 15:0:15
 #libversion = -release @LIBRARY_RELEASE@
 libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ $(win32_libs) -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
