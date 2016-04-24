@@ -79,7 +79,7 @@ my_invert_value(GwyContainer *data,
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "my_invert_value", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 ]]></programlisting></informalexample>
   <para>
@@ -287,7 +287,7 @@ my_invert_value(GwyContainer *data,
     gwy_app_undo_qcheckpointv(data, 1, &quark);
     gwy_data_field_multiply(dfield, -1.0);
     gwy_data_field_data_changed(dfield);
-    gwy_app_channel_log_add(data, id, id, "my_invert_value", NULL);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 ]]></programlisting></informalexample>
    <para>
@@ -326,7 +326,7 @@ my_invert_value(GwyContainer *data,
    <para>
      When we perform a data modification, it should be logged to the data
      operation log.  A new log entry can be added with
-     gwy_app_channel_log_add(), where @id is the numeric identifier of the
+     gwy_app_channel_log_add_proc(), where @id is the numeric identifier of the
      data field in the container.  If the source and target of the operation
      is the same, we just pass the same identifier twice.  If new data are
      created the two identifier can differ, as described in the
