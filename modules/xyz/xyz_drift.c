@@ -170,6 +170,8 @@ typedef struct {
     GtkObject *iterations;
 
     gdouble fraction;
+    gdouble bdiff;
+    gdouble cdiff;
 
     GtkWidget *view;
     GtkWidget *do_preview;
@@ -254,7 +256,7 @@ static const XYZDriftArgs xyzdrift_defaults = {
     512, 512,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0, 0, 0, 0, 0, 0, 2,
-    1, 10, 10, 10,
+    1, 10, 0.1, 10,
     /* Interface only. */
     0.0, 0.0, 0.0, 0.0
 };
@@ -532,6 +534,7 @@ xyzdrift_dialog(XYZDriftArgs *args,
 
     controls.args = args;
     controls.rdata = rdata;
+    controls.bdiff = controls.cdiff = 1e-15;
 
     controls.mydata = gwy_container_new();
 
@@ -1012,7 +1015,7 @@ construct_options(XYZDriftControls *controls,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls->neighbors = gtk_adjustment_new(args->neighbors, 0.1, 100, 0.1, 1, 0);
+    controls->neighbors = gtk_adjustment_new(args->neighbors*100, 0.1, 100, 0.1, 1, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->neighbors), 0, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
@@ -1342,7 +1345,7 @@ zdrift_type_changed(G_GNUC_UNUSED GtkWidget *combo, XYZDriftControls *controls)
 }
 
 //check if the difference is large enough, eventually increase it
-static gboolean
+/*static gboolean
 find_initial_diff(double px, double pv, double nv, double *nx, double *diff)
 {
    if (nv==pv) {
@@ -1352,7 +1355,7 @@ find_initial_diff(double px, double pv, double nv, double *nx, double *diff)
    }
    return TRUE;
 }
-
+*/
 //find next position within the line minimisation algorithm
 static gboolean
 find_next_pos(double px, G_GNUC_UNUSED double ppx, double pv, double ppv, double *nx, double *diff, double mindiff, double tolerance)
@@ -1626,7 +1629,7 @@ fit_func_to_curve(gdouble *xdata, gdouble *ydata, gint ndata, const gchar *name,
     guint i, n;
 
 
-    /*
+   /* 
     FILE *fw = fopen("fitdata.txt", "w");
     for (i=0; i<ndata; i++) {
         fprintf(fw, "%g %g\n", xdata[i], ydata[i]);
@@ -1728,6 +1731,30 @@ set_drift(XYZDriftControls *controls, gint npoints, gdouble *time, gdouble *xdri
     }
 }
 
+static gboolean
+check_nbs_errors(GtkWidget *window, gint nnbs)
+{
+
+    GtkWidget *dialog;
+
+    if (nnbs==0) {
+        dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+                                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                                  GTK_MESSAGE_ERROR,
+                                  GTK_BUTTONS_CLOSE,
+                                  "No neighbors found");
+        gtk_dialog_run (GTK_DIALOG (dialog));
+        gtk_widget_destroy (dialog); 
+        return FALSE;
+    }
+
+    if (nnbs==-1) {
+        return FALSE;
+    }
+
+    return TRUE;
+
+}
 
 static gboolean
 get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint npoints, gdouble *time, gdouble *xdrift, gdouble *ydrift, gdouble *zdrift,
@@ -1758,8 +1785,9 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
     nnbs = find_neighbors(nbfrom, nbto, corpoints, time, npoints, timethreshold, posthreshold,
                           controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
                           controls->args->neighbors, controls->fraction);
-    if (nnbs==-1) return FALSE;
 
+    if (!check_nbs_errors(controls->dialog, nnbs)) return FALSE;
+    
     dtime = g_new(gdouble, nnbs);
     drift = g_new(gdouble, nnbs);
 
@@ -1837,7 +1865,9 @@ get_xydrift_error(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints,
                           controls->args->xmax - controls->args->xmin, controls->args->ymax - controls->args->ymin, controls->args->xmin, controls->args->ymin, 
                           controls->args->neighbors, controls->fraction);
 
-    if (nnbs == -1) return -1;
+    //printf("%d neighbors for parameter; %g %g\n", nnbs, timethreshold, posthreshold);
+
+    if (!check_nbs_errors(controls->dialog, nnbs)) return -1;
 
 
     //get the error
@@ -1856,8 +1886,8 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     gdouble vbx, vby, vcx, vcy;
     gdouble vpbx, vpby, vpcx, vpcy;
     gdouble mindiff, diff;
+    gdouble bdiff, cdiff;
     gboolean done;
-    gdouble cdiff, bdiff;
     gdouble total, sofar;
 
     bx = controls->args->xdrift_b;
@@ -1872,8 +1902,11 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     nbfrom = g_new(gint, npoints);
     nbto = g_new(gint, npoints);
 
-    bdiff = 1e-12; //gesi, poly
-    cdiff = 1e-15;   
+    bdiff = controls->bdiff;
+    cdiff = controls->cdiff;
+
+//    bdiff = 1e-12; //gesi, poly
+//    cdiff = 1e-15;   
 //    bdiff = 1e-8;  //gesi, exp
 //    cdiff = 500;
  
@@ -2133,6 +2166,9 @@ guess(XYZDriftControls *controls)
     args->threshold_length = 2.0*xspan/args->xres;
     args->threshold_time = timespan/10;
 
+    controls->bdiff = 1e-20;
+    controls->cdiff = 1e-20;
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_length), args->threshold_length/controls->rdata->xymag);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_time), args->threshold_time);
 
@@ -2345,7 +2381,7 @@ xyzdrift_sanitize_args(XYZDriftArgs *args)
     args->yres = CLAMP(args->yres, 2, 16384);
 
     args->threshold_time = CLAMP(args->threshold_time, 0, 10000);
-    args->neighbors = CLAMP(args->neighbors, 0.1, 100);
+    args->neighbors = CLAMP(args->neighbors, 0.001, 1);
 
 }
 
