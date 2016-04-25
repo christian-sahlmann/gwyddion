@@ -78,12 +78,14 @@ MKENUM_NAME = gwyapptypes
 MKENUM_ID = GWY_APP_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/data-browser.h \
+	$(srcdir)/gwymoduleutils-file.h \
+	$(srcdir)/gwyplaintool.h \
+	$(srcdir)/gwytool.h \
 	$(srcdir)/help.h \
 	$(srcdir)/logging.h \
 	$(srcdir)/menu.h \
-	$(srcdir)/gwymoduleutils-file.h \
-	$(srcdir)/gwyplaintool.h \
-	$(srcdir)/settings.h
+	$(srcdir)/settings.h \
+	$(srcdir)/validate.h
 include $(top_srcdir)/utils/mkenum.mk
 
 if OS_DARWIN
