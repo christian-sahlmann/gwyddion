@@ -72,9 +72,6 @@ typedef enum {
 } GwyXYZDriftGraphType;
 
 
-
-
-
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
     gint xres;
@@ -106,9 +103,6 @@ typedef struct {
     gdouble xmax;
     gdouble ymin;
     gdouble ymax;
-
-
-    
 
 } XYZDriftArgs;
 
@@ -179,6 +173,7 @@ typedef struct {
 
     GtkWidget *view;
     GtkWidget *do_preview;
+    GtkWidget *guess;
     GtkWidget *error;
     GwyGraphModel *gmodel;
     GtkWidget *graph;
@@ -234,6 +229,7 @@ static void          graph_changed          (GtkWidget *combo,
                                              XYZDriftControls *controls);
 static void          reset_ranges           (XYZDriftControls *controls);
 static void          preview                (XYZDriftControls *controls);
+static void          guess                  (XYZDriftControls *controls);
 static GwyDataField* xyzdrift_do              (XYZDriftData *rdata,
                                              const XYZDriftArgs *args,
                                              GtkWindow *dialog,
@@ -258,7 +254,7 @@ static const XYZDriftArgs xyzdrift_defaults = {
     512, 512,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0, 0, 0, 0, 0, 0, 2,
-    1, 10, 100, 10,
+    1, 10, 10, 10,
     /* Interface only. */
     0.0, 0.0, 0.0, 0.0
 };
@@ -350,7 +346,7 @@ xyzdrift(GwyContainer *data, GwyRunType run)
           rdata.timepoints = rdata.timesurface->data;
           rdata.ntimepoints = rdata.timesurface->n;
           tsfound = 1;
-          printf("Timestamp found in channel %d\n", i);
+          //printf("Timestamp found in channel %d\n", i);
           break;
        }
        i++;
@@ -525,7 +521,7 @@ xyzdrift_dialog(XYZDriftArgs *args,
               GwyContainer *data,
               gint id)
 {
-    GtkWidget *dialog, *vbox, *align, *label, *hbox, *button;
+    GtkWidget *dialog, *vbox, *align, *label, *hbox, *button, *hbox2;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkTable *table;
@@ -611,12 +607,15 @@ xyzdrift_dialog(XYZDriftArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
 
+    hbox2 = gtk_hbox_new(TRUE, 0);
 
-
-
+    controls.guess = gtk_button_new_with_mnemonic(_("_Guess parameters"));
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.guess, TRUE, TRUE, 0);
 
     controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
-    gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.do_preview, TRUE, TRUE, 0);
+
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
 
     controls.error = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.error), 0.0, 0.0);
@@ -626,6 +625,9 @@ xyzdrift_dialog(XYZDriftArgs *args,
 
     g_signal_connect_swapped(controls.do_preview, "clicked",
                              G_CALLBACK(preview), &controls);
+    g_signal_connect_swapped(controls.guess, "clicked",
+                             G_CALLBACK(guess), &controls);
+
     g_signal_connect_swapped(controls.xres, "value-changed",
                              G_CALLBACK(xres_changed), &controls);
     g_signal_connect_swapped(controls.yres, "value-changed",
@@ -1403,6 +1405,10 @@ threshold_changed(XYZDriftControls *controls,
 {
     XYZDriftArgs *args = controls->args;
 
+    if (controls->in_update)
+        return;
+
+
     args->threshold_length = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_length))*controls->rdata->xymag;
     args->threshold_time = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_time));
 }
@@ -1490,7 +1496,6 @@ get_bining(GwyXYZ *points, gint npoints, gint ***bin, gint **nbin, gdouble xreal
         }
     }
 
-
     //eval how much space to allocate
     for (k=0; k<npoints; k++) {
         get_bin(points[k].x, points[k].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
@@ -1517,19 +1522,16 @@ get_bining(GwyXYZ *points, gint npoints, gint ***bin, gint **nbin, gdouble xreal
         bin[bi][bj][nbin[bi][bj]] = k;
         nbin[bi][bj]++;
     }
-
 }
 
 static gint
 find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt, gint index, gint ***bin, gint **nbin, 
                           gdouble xreal, gdouble yreal, gdouble xoffset, gdouble yoffset)
 {
-
     gint bi, bj, i, j, k, bindex;
     int closest = -1;
     double mindist = G_MAXDOUBLE;
     double sdist, spt = pt*pt;
-
 
     //get actual bin
     get_bin(points[index].x, points[index].y, &bi, &bj, xreal, yreal, xoffset, yoffset);
@@ -1557,14 +1559,11 @@ find_closest_point_bining(GwyXYZ *points, gdouble *time, gdouble tt, gdouble pt,
                         }
                      }
                   }  
-
             }
         }
     }
-    
 
     return closest;
-
 }
 
 
@@ -1576,8 +1575,6 @@ find_neighbors(gint *nbfrom, gint *nbto, GwyXYZ *points, gdouble *time, gint npo
     gint skip = (gint)CLAMP((1.0/neighbors), 1, npoints);
     gint ***bin, **nbin;
     //FILE *fw = fopen("nbs.txt", "w");
-
-    
 
     bin = g_new(gint**, NBIN);
     for (i=0; i<NBIN; i++) bin[i] = g_new(gint*, NBIN);
@@ -1695,7 +1692,7 @@ init_drift(XYZDriftControls *controls, GwyXYZ *timepoints, gint npoints, gdouble
 
 
     for (i=0; i<npoints; i++) {
-       time[i] = (timepoints[i].z - timepoints[0].z);///1e3; //FIXME remove this after hwserver produces timestamp data in seconds
+       time[i] = (timepoints[i].z - timepoints[0].z);
     }
 }
 
@@ -1710,8 +1707,6 @@ correct_drift(GwyXYZ *points, gint npoints, gdouble *xdrift, gdouble *ydrift, gd
        corpoints[i].x = points[i].x - xdrift[i];
        corpoints[i].y = points[i].y - ydrift[i];
        if (correctz) {
-           // if (i<40000)  corpoints[i].z = 0.7*points[i].z - zdrift[i];
-           // else corpoints[i].z = points[i].z - zdrift[i];
            corpoints[i].z = points[i].z - zdrift[i];
        }
        else corpoints[i].z = points[i].z;
@@ -1874,7 +1869,6 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
     bz = controls->args->zdrift_b;
     cz = controls->args->zdrift_c;
 
-
     nbfrom = g_new(gint, npoints);
     nbto = g_new(gint, npoints);
 
@@ -1888,8 +1882,6 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 //    cdiff = 1e-12;    
 //    bdiff = 1e-5; //gen, exp
 //    cdiff = 100;
-
-
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Fitting in progress...");
     total = (gdouble)(2*(gint)controls->args->fit_xdrift + 2*(gint)controls->args->fit_ydrift + (gint)controls->args->fit_zdrift)*controls->args->iterations;
@@ -2125,6 +2117,28 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 
 }
 
+
+static void
+guess(XYZDriftControls *controls)
+{
+    gdouble timespan, xspan;
+    XYZDriftArgs *args = controls->args;
+    XYZDriftData *rdata = controls->rdata;
+
+    timespan = rdata->timepoints[rdata->npoints-1].z - rdata->timepoints[0].z;
+    xspan = args->xmax - args->xmin; 
+
+    controls->in_update = 1;
+
+    args->threshold_length = 2.0*xspan/args->xres;
+    args->threshold_time = timespan/10;
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_length), args->threshold_length/controls->rdata->xymag);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_time), args->threshold_time);
+
+    controls->in_update = 0;
+
+}
  
 
 static void
