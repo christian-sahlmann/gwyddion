@@ -359,7 +359,7 @@ xyzdrift(GwyContainer *data, GwyRunType run)
                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                   GTK_MESSAGE_ERROR,
                                   GTK_BUTTONS_CLOSE,
-                                  "No timestamp channel found, either called 'Timestamp' or having units in seconds.");
+                                  _("No timestamp channel found, either called 'Timestamp' or having units in seconds."));
        gtk_dialog_run (GTK_DIALOG (dialog));
        gtk_widget_destroy (dialog);
        return;
@@ -1742,7 +1742,7 @@ check_nbs_errors(GtkWidget *window, gint nnbs)
                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                   GTK_MESSAGE_ERROR,
                                   GTK_BUTTONS_CLOSE,
-                                  "No neighbors found");
+                                  _("No neighbors found"));
         gtk_dialog_run (GTK_DIALOG (dialog));
         gtk_widget_destroy (dialog); 
         return FALSE;
@@ -1802,7 +1802,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
         fixed[0] = 0;
         fixed[1] = 0; 
 
-        ok = fit_func_to_curve(dtime, drift, nnbs, "Polynomial (order 1)", params, errors, fixed);
+        ok = fit_func_to_curve(dtime, drift, nnbs, _("Polynomial (order 1)"), params, errors, fixed);
 
         //*az = 0;
         *bz = params[0];
@@ -1816,7 +1816,7 @@ get_zdrift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gint n
         fixed[1] = 0; 
         fixed[2] = 0;
 
-        ok = fit_func_to_curve(dtime, drift, nnbs, "Exponential", params, errors, fixed);
+        ok = fit_func_to_curve(dtime, drift, nnbs, _("Exponential"), params, errors, fixed);
 
         //*az = params[0];
         *bz = params[1]*params[2];
@@ -1916,7 +1916,7 @@ estimate_drift(XYZDriftControls *controls, GwyXYZ *points, GwyXYZ *corpoints, gi
 //    bdiff = 1e-5; //gen, exp
 //    cdiff = 100;
 
-    gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Fitting in progress...");
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Fitting in progress..."));
     total = (gdouble)(2*(gint)controls->args->fit_xdrift + 2*(gint)controls->args->fit_ydrift + (gint)controls->args->fit_zdrift)*controls->args->iterations;
     controls->fraction = sofar = 0;
     gwy_app_wait_set_fraction(sofar/total);
