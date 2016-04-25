@@ -2,24 +2,17 @@
   browser is to blame.
 - Modules:
   - implement sparse laplacian data interpolation
-  - fore/back detection, connected area splitting
   - polynomial leveling with disjoint z0
-  - profiles along arbitrary curves
   - nanoindentation
 - Selection on logarithmic graphs doesn't work
 - Surf file: units and scales are botched
-- 3D:
-  light source grid not visible on some machines?
 - Fix copied channel naming (identical)
 - Fix enum documentation after rename, write missing
   libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType, GwyDWTDenoiseType,
               GwyTipType
   libgwydgets: GwyGraphStatusType, GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
-- Invent some initialization for Laplace solver so that it can only converge
-  for near final state
 - Display whether data are unchanged/modified/new somewhere
 - Swap undo levels to disk
-- Make keyboard zoom shortcuts work in graphs, 3D
 - Add some guessing to Rawfile
 - Use gtk_paint_* to keep style in widgets.
