@@ -2163,8 +2163,8 @@ guess(XYZDriftControls *controls)
 
     controls->in_update = 1;
 
-    args->threshold_length = 2.0*xspan/args->xres;
-    args->threshold_time = timespan/10;
+    args->threshold_length = 4.0*xspan/args->xres;
+    args->threshold_time = timespan/20;
 
     controls->bdiff = 1e-20;
     controls->cdiff = 1e-20;
