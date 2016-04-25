@@ -65,10 +65,15 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/app/gwymoduleutils-file.h \
 	$(top_srcdir)/app/gwymoduleutils.h \
 	$(top_srcdir)/app/gwyplaintool.h \
+	$(top_srcdir)/app/help.h \
+	$(top_srcdir)/app/log.h \
+	$(top_srcdir)/app/logging.h \
 	$(top_srcdir)/app/menu.h \
+	$(top_srcdir)/app/meta.h \
 	$(top_srcdir)/app/resource-editor.h \
 	$(top_srcdir)/app/settings.h \
 	$(top_srcdir)/app/undo.h \
+	$(top_srcdir)/app/validate.h \
 	$(top_srcdir)/app/wait.h \
 	$(top_srcdir)/libdraw/gwydraw.h \
 	$(top_srcdir)/libdraw/gwyglmaterial.h \
