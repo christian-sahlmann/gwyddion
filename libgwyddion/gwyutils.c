@@ -1872,22 +1872,24 @@ gwy_fopen(const gchar *filename, const gchar *mode)
     FILE *stream;
     int save_errno;
 
-    if (wfilename == NULL)
-    {
+    if (!wfilename) {
         errno = EINVAL;
         return NULL;
     }
 
     wmode = g_utf8_to_utf16(mode, -1, NULL, NULL, NULL);
 
-    if (wmode == NULL)
-    {
+    if (!wmode) {
         g_free(wfilename);
         errno = EINVAL;
         return NULL;
     }
 
+    /*
     save_errno = _wfopen_s(&stream, wfilename, wmode);
+    */
+    stream = _wfopen(wfilename, wmode);
+    save_errno = errno;
 
     g_free(wfilename);
     g_free(wmode);
