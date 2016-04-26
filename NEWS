@@ -110,6 +110,7 @@ Modules:
   some graph functionality being broken.
 - WSxM: Files starting ‘WSxM file copyright WSxM solutions’ are also
   recognised now.  Single-precision files are loaded correctly.
+- Nanoscantech: Support for files using UTF-8 encoding was added.
 - GWYXYZF: Byte order handling was corrected to follow the specification.
 - GWYXYZF, Raw XZY: The data are loaded a native XYZ data instead of being
   regularised to image upon import.
