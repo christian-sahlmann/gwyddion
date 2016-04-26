@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-23 09:05+0300\n"
-"PO-Revision-Date: 2016-04-23 09:05+0300\n"
+"POT-Creation-Date: 2016-04-26 09:38+0300\n"
+"PO-Revision-Date: 2016-04-26 09:40+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -160,8 +160,8 @@ msgstr "Гауссиана (РФСПМ)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Две гауссианы (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:834
-#: modules/xyz/xyz_drift.c:839
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:841
+#: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
@@ -185,7 +185,7 @@ msgstr "Экспоненциальная (РФСПМ)"
 msgid "Polynomial (order 0)"
 msgstr "Полиномиальная (порядка 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1667
+#: libgwyddion/gwynlfitpreset.c:1667 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "Полиномиальная (порядка 1)"
 
@@ -1331,7 +1331,7 @@ msgid "A_dd symbol"
 msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:579 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:580 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -3891,7 +3891,7 @@ msgstr "Страницы:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:767
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:774
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
@@ -5046,19 +5046,19 @@ msgid "Plot point density map"
 msgstr "Строить карту плотности точек"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:718
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:725
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:722
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:729
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:737
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:744
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
@@ -5629,7 +5629,7 @@ msgstr "Формат данных"
 #: modules/process/wpour_mark.c:273 modules/tools/linestats.c:457
 #: modules/tools/sfunctions.c:523 modules/tools/stats.c:460
 #: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
-#: modules/xyz/xyz_drift.c:616 modules/xyz/xyz_raster.c:443
+#: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "О_бновить"
 
@@ -6616,8 +6616,8 @@ msgstr ""
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1092
-#: modules/xyz/xyz_drift.c:1110 modules/xyz/xyz_drift.c:1127
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1099
+#: modules/xyz/xyz_drift.c:1117 modules/xyz/xyz_drift.c:1134
 msgid "N.A."
 msgstr "недоступно"
 
@@ -13661,7 +13661,7 @@ msgstr "ООК"
 msgid "Peak Count"
 msgstr "Число пиков"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1083
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1090
 msgid "_Graph:"
 msgstr "_График:"
 
@@ -14449,11 +14449,19 @@ msgstr "/Анализировать _дрейф..."
 msgid "Analyze and/or remove drift"
 msgstr "Анализировать и/или удалить дрейф"
 
-#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:842
+#: modules/xyz/xyz_drift.c:362
+msgid ""
+"No timestamp channel found, either called 'Timestamp' or having units in "
+"seconds."
+msgstr ""
+"Не найдено канала с временными метками, либо названного 'Timestamp', либо "
+"имеющего единицы измерения в секундах."
+
+#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:849
 msgid "X drift"
 msgstr "Дрейф X"
 
-#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:843
+#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:850
 msgid "Y drift"
 msgstr "Дрейф Y"
 
@@ -14461,7 +14469,7 @@ msgstr "Дрейф Y"
 msgid "y-axis drift"
 msgstr "дрейф оси y"
 
-#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:844
+#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:851
 msgid "Z drift"
 msgstr "Дрейф Z"
 
@@ -14469,89 +14477,101 @@ msgstr "Дрейф Z"
 msgid "z-axis drift"
 msgstr "дрейф оси z"
 
-#: modules/xyz/xyz_drift.c:540
+#: modules/xyz/xyz_drift.c:541
 msgid "Analyze XYZ Drift"
 msgstr "Анализировать дрейф в данных XYZ"
 
-#: modules/xyz/xyz_drift.c:565 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:566 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Сбросить _диапазоны"
 
-#: modules/xyz/xyz_drift.c:771 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:615
+msgid "_Guess parameters"
+msgstr "О_ценка параметров"
+
+#: modules/xyz/xyz_drift.c:778 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:800 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/xyz/xyz_drift.c:833 modules/xyz/xyz_drift.c:838
+#: modules/xyz/xyz_drift.c:840 modules/xyz/xyz_drift.c:845
 msgid "2nd order polynom"
 msgstr "Полином второго порядка"
 
-#: modules/xyz/xyz_drift.c:853
+#: modules/xyz/xyz_drift.c:860
 msgid "Initial values"
 msgstr "Начальные значения"
 
-#: modules/xyz/xyz_drift.c:861
+#: modules/xyz/xyz_drift.c:868
 msgid "_X drift:"
 msgstr "Дрейф по _X:"
 
-#: modules/xyz/xyz_drift.c:889 modules/xyz/xyz_drift.c:932
-#: modules/xyz/xyz_drift.c:977
+#: modules/xyz/xyz_drift.c:896 modules/xyz/xyz_drift.c:939
+#: modules/xyz/xyz_drift.c:984
 msgid "_fit"
 msgstr "_Аппрокс."
 
-#: modules/xyz/xyz_drift.c:901
+#: modules/xyz/xyz_drift.c:908
 msgid "_Y drift:"
 msgstr "Дрейф по _Y:"
 
-#: modules/xyz/xyz_drift.c:946
+#: modules/xyz/xyz_drift.c:953
 msgid "Z fit _type:"
 msgstr "_Тип аппрокс. Z:"
 
-#: modules/xyz/xyz_drift.c:1002
+#: modules/xyz/xyz_drift.c:1009
 msgid "Search parameters"
 msgstr "Параметры поиска"
 
-#: modules/xyz/xyz_drift.c:1007
+#: modules/xyz/xyz_drift.c:1014
 msgid "_Neighbors used:"
 msgstr "Сосе_дей использовано:"
 
-#: modules/xyz/xyz_drift.c:1024
+#: modules/xyz/xyz_drift.c:1031
 msgid "_Length threshold:"
 msgstr "Порог _длины:"
 
-#: modules/xyz/xyz_drift.c:1043
+#: modules/xyz/xyz_drift.c:1050
 msgid "_Time threshold:"
 msgstr "Порог _времени:"
 
-#: modules/xyz/xyz_drift.c:1061
+#: modules/xyz/xyz_drift.c:1068
 msgid "_Max iterations:"
 msgstr "_Макс. число шагов:"
 
-#: modules/xyz/xyz_drift.c:1074
+#: modules/xyz/xyz_drift.c:1081
 msgid "Results"
 msgstr "Результаты"
 
-#: modules/xyz/xyz_drift.c:1088
+#: modules/xyz/xyz_drift.c:1095
 msgid "X drift:"
 msgstr "Дрейф по X:"
 
-#: modules/xyz/xyz_drift.c:1096 modules/xyz/xyz_drift.c:1114
-#: modules/xyz/xyz_drift.c:1131
+#: modules/xyz/xyz_drift.c:1103 modules/xyz/xyz_drift.c:1121
+#: modules/xyz/xyz_drift.c:1138
 msgid "to inits"
 msgstr "по отн. к начальному"
 
-#: modules/xyz/xyz_drift.c:1106
+#: modules/xyz/xyz_drift.c:1113
 msgid "Y drift:"
 msgstr "Дрейф по Y:"
 
-#: modules/xyz/xyz_drift.c:1123
+#: modules/xyz/xyz_drift.c:1130
 msgid "Z drift:"
 msgstr "Дрейф по Z:"
 
-#: modules/xyz/xyz_drift.c:2176 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:1745
+msgid "No neighbors found"
+msgstr "Не найдено соседей"
+
+#: modules/xyz/xyz_drift.c:1919
+msgid "Fitting in progress..."
+msgstr "Идёт аппроксимация..."
+
+#: modules/xyz/xyz_drift.c:2269 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Физические размеры неверны."
 
