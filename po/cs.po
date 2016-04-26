@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-26 02:14+0200\n"
+"POT-Creation-Date: 2016-04-26 11:07+0200\n"
 "PO-Revision-Date: 2016-04-26 08:05+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -4453,7 +4453,7 @@ msgid "File does not contain grid dimensions."
 msgstr "Soubor neobsahuje rozměry mřížky."
 
 #: modules/file/jpkscan.c:570 modules/file/nanoobserver.c:193
-#: modules/file/nanoscantech.c:201 modules/file/opengps.c:209
+#: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip nedokáže otevřít soubor coby soubor ZIP."
@@ -4829,11 +4829,11 @@ msgstr "NanoScan XML soubory (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Chybná velikost Base64-zakódovaných dat."
 
-#: modules/file/nanoscantech.c:125
+#: modules/file/nanoscantech.c:129
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Načítá datové soubory NanoScanTech .nstdat."
 
-#: modules/file/nanoscantech.c:138
+#: modules/file/nanoscantech.c:142
 msgid "NanoScanTech data (.nstdat)"
 msgstr "NanoScanTech data (.nstdat)"
 

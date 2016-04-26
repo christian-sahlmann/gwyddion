@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-22 02:14+0200\n"
+"POT-Creation-Date: 2016-04-26 11:07+0200\n"
 "PO-Revision-Date: 2016-04-24 13:12+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -157,8 +157,8 @@ msgstr "Gaussienne (RPSDF)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Gaussienne double (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:834
-#: modules/xyz/xyz_drift.c:839
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:841
+#: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "Exponentielle"
 
@@ -182,7 +182,7 @@ msgstr "Exponentielle (RPSDF)"
 msgid "Polynomial (order 0)"
 msgstr "Polynôme (ordre 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1667
+#: libgwyddion/gwynlfitpreset.c:1667 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "Polynôme (ordre 1)"
 
@@ -449,9 +449,9 @@ msgstr "Identifiant"
 msgid "Position"
 msgstr "Position"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:409
-#: modules/file/imgexport.c:4323 modules/process/curvature.c:762
-#: modules/tools/level3.c:468 modules/tools/readvalue.c:297
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4323
+#: modules/process/curvature.c:762 modules/tools/level3.c:468
+#: modules/tools/readvalue.c:297
 msgid "Value"
 msgstr "Valeur"
 
@@ -905,7 +905,7 @@ msgstr "Angle lum_ière θ :"
 #: libgwydgets/gwy3dwindow.c:1070 libgwydgets/gwy3dwindow.c:1240
 #: modules/file/hdrimage.cc:2213 modules/file/imgexport.c:4458
 #: modules/file/pixmap.c:789 modules/file/rawfile.c:424
-#: modules/process/angle_dist.c:171 modules/process/bdep_synth.c:341
+#: modules/process/angle_dist.c:172 modules/process/bdep_synth.c:341
 #: modules/process/calcoefs_new.c:352 modules/process/calibrate.c:391
 #: modules/process/col_synth.c:377 modules/process/correct_affine.c:301
 #: modules/process/curvature.c:615 modules/process/cwt.c:135
@@ -922,18 +922,18 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/latsim.c:158 modules/process/level.c:245
 #: modules/process/linematch.c:804 modules/process/lno_synth.c:433
 #: modules/process/local_contrast.c:130 modules/process/mark_disconn.c:208
-#: modules/process/mask_distribute.c:151 modules/process/measure_lattice.c:256
-#: modules/process/median-bg.c:179 modules/process/noise_synth.c:336
+#: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
+#: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
 #: modules/process/pid.c:199 modules/process/polydistort.c:209
 #: modules/process/polylevel.c:373 modules/process/psdf_logphi.c:249
 #: modules/process/rank.c:158 modules/process/rotate.c:258
 #: modules/process/scale.c:196 modules/process/scars.c:448
 #: modules/process/semsim.c:211 modules/process/shade.c:208
-#: modules/process/slope_dist.c:275 modules/process/sphere-revolve.c:218
+#: modules/process/slope_dist.c:276 modules/process/sphere-revolve.c:218
 #: modules/process/straighten_path.c:248 modules/process/tilt.c:161
 #: modules/process/tip_model.c:166 modules/process/unrotate.c:220
-#: modules/process/volumize_layers.c:215 modules/process/wave_synth.c:349
+#: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
 #: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
 #: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
 #: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
@@ -1105,11 +1105,11 @@ msgstr "<b>Te_xte du label</b>"
 msgid "Set Curve Color"
 msgstr "Régler la couleur de courbe"
 
-#: libgwydgets/gwygraphareadialog.c:556 modules/process/mask_morph.c:178
+#: libgwydgets/gwygraphareadialog.c:556 modules/process/mask_morph.c:179
 msgid "Square"
 msgstr "Carré"
 
-#: libgwydgets/gwygraphareadialog.c:558 modules/process/mask_morph.c:179
+#: libgwydgets/gwygraphareadialog.c:558 modules/process/mask_morph.c:180
 msgid "Diamond"
 msgstr "Losange"
 
@@ -1149,7 +1149,7 @@ msgstr "Triangle droite"
 msgid "Full square"
 msgstr "Carré plein"
 
-#: libgwydgets/gwygraphareadialog.c:568 modules/process/mask_morph.c:176
+#: libgwydgets/gwygraphareadialog.c:568 modules/process/mask_morph.c:177
 msgid "Disc"
 msgstr "Disque"
 
@@ -1277,8 +1277,7 @@ msgstr "Courbe :"
 msgid "Method:"
 msgstr "Méthode :"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592
-#: modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
 msgid "Angle"
 msgstr "Angle"
 
@@ -1327,7 +1326,7 @@ msgid "A_dd symbol"
 msgstr "Ajouter un symbole"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:579 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:580 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Aperçu"
 
@@ -3160,7 +3159,7 @@ msgstr "Exporter au format texte"
 #: modules/process/fft_filter_1d.c:261 modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:255 modules/process/grain_mark.c:338
 #: modules/process/grain_wshed.c:252 modules/process/linematch.c:852
-#: modules/process/mark_disconn.c:279 modules/process/slope_dist.c:366
+#: modules/process/mark_disconn.c:279 modules/process/slope_dist.c:367
 #: modules/process/tip_blind.c:357 modules/process/wpour_mark.c:354
 #: modules/tools/spotremove.c:322 modules/tools/stats.c:403
 #: modules/xyz/xyz_raster.c:628
@@ -3891,7 +3890,7 @@ msgstr "Pages : "
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:767
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:774
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
@@ -3910,9 +3909,9 @@ msgstr "Largeur :"
 #: modules/process/calcoefs_simple.c:391 modules/process/calcoefs_simple.c:458
 #: modules/process/calcoefs_view.c:511 modules/process/calcoefs_view.c:549
 #: modules/process/calibrate.c:466 modules/process/calibrate.c:549
-#: modules/process/dimensions.h:161 modules/volume/volume_calibrate.c:414
-#: modules/volume/volume_calibrate.c:441 modules/volume/volume_calibrate.c:468
-#: modules/volume/volume_calibrate.c:546
+#: modules/process/dimensions.h:161 modules/process/volumize_layers.c:259
+#: modules/volume/volume_calibrate.c:414 modules/volume/volume_calibrate.c:441
+#: modules/volume/volume_calibrate.c:468 modules/volume/volume_calibrate.c:546
 msgid "verb|Change"
 msgstr "Changer"
 
@@ -3936,7 +3935,7 @@ msgstr "Échelle _Z (par unité d'échantillon) :"
 #: modules/file/rawfile.c:1386 modules/process/calcoefs_new.c:800
 #: modules/process/calcoefs_simple.c:1197 modules/process/calcoefs_view.c:1380
 #: modules/process/calibrate.c:979 modules/process/dimensions.h:195
-#: modules/volume/volume_calibrate.c:1017
+#: modules/process/volumize_layers.c:315 modules/volume/volume_calibrate.c:1017
 msgid "Change Units"
 msgstr "Changer les unités"
 
@@ -3944,7 +3943,7 @@ msgstr "Changer les unités"
 #: modules/file/rawfile.c:1400 modules/process/calcoefs_new.c:813
 #: modules/process/calcoefs_simple.c:1210 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:993 modules/process/dimensions.h:208
-#: modules/volume/volume_calibrate.c:1031
+#: modules/process/volumize_layers.c:329 modules/volume/volume_calibrate.c:1031
 msgid "New _units:"
 msgstr "Nouvelles _unités :"
 
@@ -4502,7 +4501,7 @@ msgid "File does not contain grid dimensions."
 msgstr "Le fichier ne contient pas les dimensions de la grille."
 
 #: modules/file/jpkscan.c:570 modules/file/nanoobserver.c:193
-#: modules/file/nanoscantech.c:201 modules/file/opengps.c:209
+#: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip n'arrive pas à ouvrir le fichier en tant que fichier ZIP."
@@ -4891,11 +4890,11 @@ msgstr "NanoScan XML (.xml)"
 msgid "Wrong size of Base64 encoded data."
 msgstr "Les données codées en base 64 n'ont pas la bonne dimension."
 
-#: modules/file/nanoscantech.c:125
+#: modules/file/nanoscantech.c:129
 msgid "Imports NanoScanTech .nstdat files."
 msgstr "Importe les fichiers NanoScanTech."
 
-#: modules/file/nanoscantech.c:138
+#: modules/file/nanoscantech.c:142
 msgid "NanoScanTech data (.nstdat)"
 msgstr "NanoScanTech (.nstdat)"
 
@@ -5069,19 +5068,19 @@ msgid "Plot point density map"
 msgstr "Afficher la carte de densité des points"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:718
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:725
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Résolution"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:722
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:729
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:737
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:744
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
@@ -5655,20 +5654,19 @@ msgstr "Format de données"
 
 #: modules/file/rawfile.c:567 modules/process/arithmetic.c:234
 #: modules/process/calcoefs_view.c:320 modules/process/coerce.c:250
-#: modules/process/convolution_filter.c:236
-#: modules/process/deposit_synth.c:639 modules/process/drift.c:242
-#: modules/process/edge.c:635 modules/process/entropy.c:178
-#: modules/process/fft_filter_1d.c:183 modules/process/grain_edge.c:210
-#: modules/process/grain_filter.c:313 modules/process/grain_mark.c:244
-#: modules/process/grain_wshed.c:164 modules/process/mark_disconn.c:205
-#: modules/process/mark_with.c:195 modules/process/polydistort.c:204
-#: modules/process/scars.c:445 modules/process/slope_dist.c:272
-#: modules/process/straighten_path.c:197 modules/process/synth.h:509
-#: modules/process/tip_model.c:163 modules/process/wpour_mark.c:273
-#: modules/tools/linestats.c:457 modules/tools/sfunctions.c:523
-#: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
-#: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:616
-#: modules/xyz/xyz_raster.c:443
+#: modules/process/convolution_filter.c:236 modules/process/deposit_synth.c:639
+#: modules/process/drift.c:242 modules/process/edge.c:635
+#: modules/process/entropy.c:178 modules/process/fft_filter_1d.c:183
+#: modules/process/grain_edge.c:210 modules/process/grain_filter.c:313
+#: modules/process/grain_mark.c:244 modules/process/grain_wshed.c:164
+#: modules/process/mark_disconn.c:205 modules/process/mark_with.c:195
+#: modules/process/polydistort.c:204 modules/process/scars.c:445
+#: modules/process/slope_dist.c:273 modules/process/straighten_path.c:197
+#: modules/process/synth.h:509 modules/process/tip_model.c:163
+#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:457
+#: modules/tools/sfunctions.c:523 modules/tools/stats.c:460
+#: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
+#: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "Mise à jour"
 
@@ -6520,7 +6518,7 @@ msgstr "Exporter au format XYZ"
 #: modules/process/entropy.c:214 modules/process/facet-level.c:207
 #: modules/process/level.c:259 modules/process/linematch.c:906
 #: modules/process/neural.c:596 modules/process/polylevel.c:491
-#: modules/process/slope_dist.c:417 modules/tools/filter.c:300
+#: modules/process/slope_dist.c:418 modules/tools/filter.c:300
 #: modules/tools/profile.c:595 modules/tools/sfunctions.c:505
 #: modules/tools/stats.c:390
 msgid "Masking Mode"
@@ -6654,8 +6652,8 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1092
-#: modules/xyz/xyz_drift.c:1110 modules/xyz/xyz_drift.c:1127
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1099
+#: modules/xyz/xyz_drift.c:1117 modules/xyz/xyz_drift.c:1134
 msgid "N.A."
 msgstr "N. A."
 
@@ -7110,7 +7108,7 @@ msgstr "Calculer la fonction d' autocorrélation 2D"
 msgid "2D ACF"
 msgstr "Fonction d'autocorrélation 2D"
 
-#: modules/process/angle_dist.c:101
+#: modules/process/angle_dist.c:102
 msgid ""
 "Calculates two-dimensional distribution of angles, that is projections of "
 "slopes to all directions."
@@ -7118,45 +7116,45 @@ msgstr ""
 "Calcule la distribution bi-dimensionnelle des angles, i.e. la projection des "
 "pentes dans toutes les directions."
 
-#: modules/process/angle_dist.c:116
+#: modules/process/angle_dist.c:117
 msgid "/_Statistics/An_gle Distribution..."
 msgstr "/_Statistiques/Distribution an_gulaire..."
 
-#: modules/process/angle_dist.c:120
+#: modules/process/angle_dist.c:121
 msgid "Calculate two-dimensional angle distribution"
 msgstr "Calculer la distribution angulaire bi-dimensionnelle"
 
-#: modules/process/angle_dist.c:148
+#: modules/process/angle_dist.c:149
 msgid "Computing angle distribution..."
 msgstr "Calcul de la distribution angulaire..."
 
-#: modules/process/angle_dist.c:159
+#: modules/process/angle_dist.c:160
 msgid "Angle distribution"
 msgstr "Distribution  angulaire"
 
-#: modules/process/angle_dist.c:170
+#: modules/process/angle_dist.c:171
 msgid "Angle Distribution"
 msgstr "Distribution  angulaire"
 
-#: modules/process/angle_dist.c:187 modules/process/slope_dist.c:372
+#: modules/process/angle_dist.c:188 modules/process/slope_dist.c:373
 msgid "Output _size:"
 msgstr "Taille de _sortie :"
 
-#: modules/process/angle_dist.c:192 modules/process/grain_wshed.c:206
+#: modules/process/angle_dist.c:193 modules/process/grain_wshed.c:206
 msgid "_Number of steps:"
 msgstr "_Nombre de pas :"
 
-#: modules/process/angle_dist.c:197 modules/process/slope_dist.c:379
+#: modules/process/angle_dist.c:198 modules/process/slope_dist.c:380
 msgid "_Logarithmic value scale"
 msgstr "Échelle _logarithmique"
 
-#: modules/process/angle_dist.c:203 modules/process/entropy.c:231
-#: modules/process/slope_dist.c:389
+#: modules/process/angle_dist.c:204 modules/process/entropy.c:231
+#: modules/process/slope_dist.c:390
 msgid "Use local plane _fitting"
 msgstr "Utiliser l'ajustement du plan local"
 
-#: modules/process/angle_dist.c:212 modules/process/entropy.c:242
-#: modules/process/slope_dist.c:400
+#: modules/process/angle_dist.c:213 modules/process/entropy.c:242
+#: modules/process/slope_dist.c:401
 msgid "_Plane size:"
 msgstr "Taille du _plan :"
 
@@ -7718,7 +7716,7 @@ msgstr "Rogner aux données réelles"
 #: modules/process/fft_filter_1d.c:299 modules/process/grain_edge.c:290
 #: modules/process/grain_filter.c:347 modules/process/grain_mark.c:372
 #: modules/process/mark_with.c:318 modules/process/polydistort.c:315
-#: modules/process/scars.c:536 modules/process/slope_dist.c:406
+#: modules/process/scars.c:536 modules/process/slope_dist.c:407
 #: modules/process/synth.h:513 modules/volume/volume_extract.c:424
 #: modules/volume/volume_extract.c:505 modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
@@ -8330,7 +8328,7 @@ msgstr "Afficher le graphe"
 #: modules/process/curvature.c:685 modules/process/drift.c:337
 #: modules/process/fft_profile.c:310 modules/process/fractal.c:328
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:885
-#: modules/process/slope_dist.c:348 modules/tools/linestats.c:434
+#: modules/process/slope_dist.c:349 modules/tools/linestats.c:434
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:475 modules/tools/spectro.c:382
 #: modules/volume/volume_slice.c:397
@@ -8340,7 +8338,7 @@ msgstr "_Graphe cible :"
 #: modules/process/curvature.c:691 modules/process/drift.c:343
 #: modules/process/fft_profile.c:316 modules/process/fractal.c:334
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:892
-#: modules/process/slope_dist.c:354 modules/tools/linestats.c:440
+#: modules/process/slope_dist.c:355 modules/tools/linestats.c:440
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:481 modules/tools/spectro.c:388
 #: modules/volume/volume_slice.c:405
@@ -8599,7 +8597,7 @@ msgid "Output Options"
 msgstr "Options de sortie"
 
 #: modules/process/domain_synth.c:523 modules/process/fft_filter_2d.c:591
-#: modules/process/mask_edt.c:376 modules/process/slope_dist.c:322
+#: modules/process/mask_edt.c:377 modules/process/slope_dist.c:323
 #: modules/volume/volume_linestat.c:432 modules/volume/volume_slice.c:383
 msgid "Output type:"
 msgstr "Type de sortie :"
@@ -9079,7 +9077,7 @@ msgstr "Met à niveau les données pour que les facettes pointent vers le haut"
 msgid "Facet Level"
 msgstr "Niveau des facettes"
 
-#: modules/process/facet-level.c:144 modules/process/flatten_base.c:250
+#: modules/process/facet-level.c:144 modules/process/flatten_base.c:251
 msgid "Facet-leveling..."
 msgstr "Mise à niveau des facettes..."
 
@@ -9131,7 +9129,7 @@ msgstr "Com_biner avec le masque existant"
 
 #: modules/process/facet_analysis.c:398 modules/process/grain_edge.c:276
 #: modules/process/grain_mark.c:358 modules/process/mark_disconn.c:301
-#: modules/process/mark_with.c:230 modules/process/mask_morph.c:209
+#: modules/process/mark_with.c:230 modules/process/mask_morph.c:210
 msgid "Operation:"
 msgstr "Opération :"
 
@@ -9392,7 +9390,7 @@ msgid "_Undo"
 msgstr "_Annuler"
 
 #: modules/process/fft_filter_2d.c:499 modules/tools/maskedit.c:548
-#: modules/volume/volume_zcal.c:172
+#: modules/volume/volume_zcal.c:173
 msgid "_Remove"
 msgstr "Supprimer"
 
@@ -9662,19 +9660,19 @@ msgstr ""
 "\n"
 "Matrice de corrélation\n"
 
-#: modules/process/flatten_base.c:43
+#: modules/process/flatten_base.c:44
 msgid "Levels the flat base of a surface with positive features."
 msgstr "Met à niveau la base plane d'une surface ayant des éléments en relief."
 
-#: modules/process/flatten_base.c:57
+#: modules/process/flatten_base.c:58
 msgid "/_Level/Flatten _Base"
 msgstr "/Niveau/Aplanir la _base"
 
-#: modules/process/flatten_base.c:61
+#: modules/process/flatten_base.c:62
 msgid "Flatten base of surface with positive features"
 msgstr "Aplanir la base d'une surface ayant des éléments en relief"
 
-#: modules/process/flatten_base.c:275
+#: modules/process/flatten_base.c:276
 msgid "Polynomial leveling..."
 msgstr "Mise à niveau par polynôme..."
 
@@ -10718,7 +10716,7 @@ msgstr ""
 "Mise à niveau des grains individuels, en interpolant les décalages à l'aide "
 "d'une interpolation laplacienne."
 
-#: modules/process/level_grains.c:225 modules/process/median-bg.c:166
+#: modules/process/level_grains.c:225 modules/process/median-bg.c:167
 #: modules/process/polylevel.c:293 modules/process/polylevel.c:417
 #: modules/process/sphere-revolve.c:200
 msgid "Background"
@@ -10733,7 +10731,7 @@ msgid "Quantity to level:"
 msgstr "Quantité à mettre à niveau :"
 
 #: modules/process/level_grains.c:270 modules/process/linematch.c:866
-#: modules/process/median-bg.c:216 modules/process/polylevel.c:482
+#: modules/process/median-bg.c:217 modules/process/polylevel.c:482
 #: modules/process/sphere-revolve.c:263
 msgid "E_xtract background"
 msgstr "E_xtraire l'arrière-plan"
@@ -11017,143 +11015,143 @@ msgstr "M_aximum :"
 msgid "Operand"
 msgstr "Opérande"
 
-#: modules/process/mask_distribute.c:86
+#: modules/process/mask_distribute.c:87
 msgid "Distributes masks to other channels."
 msgstr "Distribue les masques vers d'autres canaux."
 
-#: modules/process/mask_distribute.c:100
+#: modules/process/mask_distribute.c:101
 msgid "/_Mask/_Distribute..."
 msgstr "/_Masque/_Distribuer..."
 
-#: modules/process/mask_distribute.c:104
+#: modules/process/mask_distribute.c:105
 msgid "Distribute mask to other channels"
 msgstr "Distribuer le masque vers d'autres canaux"
 
-#: modules/process/mask_distribute.c:140
+#: modules/process/mask_distribute.c:141
 msgid "Channels within the file"
 msgstr "Canaux dans le fichier"
 
-#: modules/process/mask_distribute.c:141
+#: modules/process/mask_distribute.c:142
 msgid "Channels in all files"
 msgstr "Canaux dans tous les fichiers"
 
-#: modules/process/mask_distribute.c:150
+#: modules/process/mask_distribute.c:151
 msgid "Distribute Mask"
 msgstr "Distribuer le masque"
 
-#: modules/process/mask_distribute.c:165
+#: modules/process/mask_distribute.c:166
 msgid "Distribute to:"
 msgstr "Distribuer vers :"
 
-#: modules/process/mask_distribute.c:178
+#: modules/process/mask_distribute.c:179
 msgid "Preserve existing masks"
 msgstr "Conserver les masques existants"
 
-#: modules/process/mask_edt.c:94
+#: modules/process/mask_edt.c:95
 msgid "Performs simple and true Euclidean distance transforms of masks."
 msgstr "Applique une transformée de distance aux masques."
 
-#: modules/process/mask_edt.c:108
+#: modules/process/mask_edt.c:109
 msgid "/_Mask/Distanc_e Transform..."
 msgstr "/_Masque/Transformé_e de distance..."
 
-#: modules/process/mask_edt.c:112
+#: modules/process/mask_edt.c:113
 msgid "Distance transform of mask"
 msgstr "Transformée de distance du masque"
 
-#: modules/process/mask_edt.c:115
+#: modules/process/mask_edt.c:116
 msgid "/_Mask/Thi_n"
 msgstr "/_Masque/Affiner"
 
-#: modules/process/mask_edt.c:119
+#: modules/process/mask_edt.c:120
 msgid "Thin mask"
 msgstr "Affiner le masque"
 
-#: modules/process/mask_edt.c:329 modules/process/mask_edt.c:351
+#: modules/process/mask_edt.c:330 modules/process/mask_edt.c:352
 msgid "Distance Transform"
 msgstr "Carte de distances"
 
-#: modules/process/mask_edt.c:339
+#: modules/process/mask_edt.c:340
 msgid "Interior"
 msgstr "Intérieur"
 
-#: modules/process/mask_edt.c:340
+#: modules/process/mask_edt.c:341
 msgid "Exterior"
 msgstr "Exterieur"
 
-#: modules/process/mask_edt.c:341
+#: modules/process/mask_edt.c:342
 msgid "Two-sided"
 msgstr "Les deux côtés"
 
-#: modules/process/mask_edt.c:372 modules/tools/maskedit.c:634
+#: modules/process/mask_edt.c:373 modules/tools/maskedit.c:634
 msgid "_Distance type:"
 msgstr "Type de _distance :"
 
-#: modules/process/mask_edt.c:393 modules/tools/maskedit.c:640
+#: modules/process/mask_edt.c:394 modules/tools/maskedit.c:640
 msgid "Shrink from _border"
 msgstr "Éroder à partir du _bord"
 
-#: modules/process/mask_morph.c:116
+#: modules/process/mask_morph.c:117
 msgid "Performs basic morphological operations with masks."
 msgstr "Applique des opérations morphologiques basiques avec les masques."
 
-#: modules/process/mask_morph.c:130
+#: modules/process/mask_morph.c:131
 msgid "/_Mask/Morphological Operation..."
 msgstr "/_Masque/Opération morphologique..."
 
-#: modules/process/mask_morph.c:134
+#: modules/process/mask_morph.c:135
 msgid "Morphological operation with mask"
 msgstr "Opération morphologique avec un masque"
 
-#: modules/process/mask_morph.c:168
+#: modules/process/mask_morph.c:169
 msgid "Erosion"
 msgstr "Érosion"
 
-#: modules/process/mask_morph.c:169
+#: modules/process/mask_morph.c:170
 msgid "Dilation"
 msgstr "Dilatation"
 
-#: modules/process/mask_morph.c:170 modules/tools/filter.c:242
+#: modules/process/mask_morph.c:171 modules/tools/filter.c:242
 msgid "filter|Opening"
 msgstr "Ouverture"
 
-#: modules/process/mask_morph.c:171 modules/tools/filter.c:243
+#: modules/process/mask_morph.c:172 modules/tools/filter.c:243
 msgid "filter|Closing"
 msgstr "Fermeture"
 
-#: modules/process/mask_morph.c:172 modules/tools/filter.c:244
+#: modules/process/mask_morph.c:173 modules/tools/filter.c:244
 msgid "ASF Opening"
 msgstr "Ouverture ASF"
 
-#: modules/process/mask_morph.c:173 modules/tools/filter.c:245
+#: modules/process/mask_morph.c:174 modules/tools/filter.c:245
 msgid "ASF Closing"
 msgstr "Fermeture ASF"
 
-#: modules/process/mask_morph.c:177
+#: modules/process/mask_morph.c:178
 msgid "Octagon"
 msgstr "Octogone"
 
-#: modules/process/mask_morph.c:180
+#: modules/process/mask_morph.c:181
 msgid "Another mask"
 msgstr "Autre masque"
 
-#: modules/process/mask_morph.c:191
+#: modules/process/mask_morph.c:192
 msgid "Morphological Operation"
 msgstr "Opération morphologique"
 
-#: modules/process/mask_morph.c:223
+#: modules/process/mask_morph.c:224
 msgid "Structuring element:"
 msgstr "Élément structurant : "
 
-#: modules/process/mask_morph.c:237 modules/tools/maskedit.c:524
+#: modules/process/mask_morph.c:238 modules/tools/maskedit.c:524
 msgid "_Radius:"
 msgstr "_Rayon :"
 
-#: modules/process/mask_morph.c:248
+#: modules/process/mask_morph.c:249
 msgid "_Mask:"
 msgstr "_Masque : "
 
-#: modules/process/mask_morph.c:257
+#: modules/process/mask_morph.c:258
 msgid "_Trim empty borders"
 msgstr "_Tronquer les bords vides"
 
@@ -11317,31 +11315,31 @@ msgstr "Angle :"
 msgid "Lattice Parameters"
 msgstr "Paramètres de maille"
 
-#: modules/process/median-bg.c:82
+#: modules/process/median-bg.c:83
 msgid "Subtracts background using a rank-based algorithm."
 msgstr "Soustrait l'arrière plan à partir d'un algorithme de tri (médiane)."
 
-#: modules/process/median-bg.c:96
+#: modules/process/median-bg.c:97
 msgid "/_Level/_Median Level..."
 msgstr "/Niveaux/Niveau médian..."
 
-#: modules/process/median-bg.c:100
+#: modules/process/median-bg.c:101
 msgid "Level data by local median subtraction"
 msgstr "Ajuste les données en soustrayant la médiane"
 
-#: modules/process/median-bg.c:145
+#: modules/process/median-bg.c:146
 msgid "Median-leveling..."
 msgstr "Nivelage médian..."
 
-#: modules/process/median-bg.c:178
+#: modules/process/median-bg.c:179
 msgid "Median Level"
 msgstr "Niveau médian"
 
-#: modules/process/median-bg.c:198 modules/process/sphere-revolve.c:237
+#: modules/process/median-bg.c:199 modules/process/sphere-revolve.c:237
 msgid "Real _radius:"
 msgstr "_Rayon réel :"
 
-#: modules/process/median-bg.c:208 modules/process/sphere-revolve.c:247
+#: modules/process/median-bg.c:209 modules/process/sphere-revolve.c:247
 msgid "_Pixel radius:"
 msgstr "Rayon du _pixel :"
 
@@ -12248,7 +12246,7 @@ msgstr "Ombrage"
 msgid "_Mix:"
 msgstr "_Mixage : "
 
-#: modules/process/slope_dist.c:160
+#: modules/process/slope_dist.c:161
 msgid ""
 "Calculates one- or two-dimensional distribution of slopes or graph of their "
 "angular distribution."
@@ -12256,51 +12254,51 @@ msgstr ""
 "Calcule la distribution uni ou bi-dimensionnelle des pentes ou affiche la "
 "distribution angulaire."
 
-#: modules/process/slope_dist.c:175
+#: modules/process/slope_dist.c:176
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Statistiques/Di_stribution des pentes..."
 
-#: modules/process/slope_dist.c:179
+#: modules/process/slope_dist.c:180
 msgid "Calculate angular slope distribution"
 msgstr "Calculer la distribution des pentes"
 
-#: modules/process/slope_dist.c:220
+#: modules/process/slope_dist.c:221
 msgid "Slope distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/slope_dist.c:252
+#: modules/process/slope_dist.c:253
 msgid "_Two-dimensional distribution"
 msgstr "Dis_tribution bi-dimensionnelle"
 
-#: modules/process/slope_dist.c:253
+#: modules/process/slope_dist.c:254
 msgid "Directional (φ) _graph"
 msgstr "_Graphe directionnel (φ) "
 
-#: modules/process/slope_dist.c:254
+#: modules/process/slope_dist.c:255
 msgid "_Inclination (θ) graph"
 msgstr "Graphe d'_inclinaison (θ)"
 
-#: modules/process/slope_dist.c:255
+#: modules/process/slope_dist.c:256
 msgid "Inclination (gra_dient) graph"
 msgstr "Graphe d'inclinaison (gradient)"
 
-#: modules/process/slope_dist.c:269
+#: modules/process/slope_dist.c:270
 msgid "Slope Distribution"
 msgstr "Distribution des pentes"
 
-#: modules/process/slope_dist.c:754
+#: modules/process/slope_dist.c:755
 msgid "Angular Slope Distribution"
 msgstr "Distribution angulaires des pentes"
 
-#: modules/process/slope_dist.c:762 modules/process/tilt.c:179
+#: modules/process/slope_dist.c:763 modules/process/tilt.c:179
 msgid "Slopes"
 msgstr "Pentes"
 
-#: modules/process/slope_dist.c:823 modules/process/slope_dist.c:892
+#: modules/process/slope_dist.c:824 modules/process/slope_dist.c:893
 msgid "Inclination Distribution"
 msgstr "Distribution des inclinaisons"
 
-#: modules/process/slope_dist.c:831 modules/process/slope_dist.c:900
+#: modules/process/slope_dist.c:832 modules/process/slope_dist.c:901
 msgid "Inclinations"
 msgstr "Inclinaisons"
 
@@ -12512,7 +12510,7 @@ msgstr "Angle"
 msgid "_X:"
 msgstr "_X :"
 
-#: modules/process/tilt.c:194 modules/volume/volume_slice.c:462
+#: modules/process/tilt.c:194 modules/volume/volume_slice.c:463
 msgid "_Y:"
 msgstr "_Y :"
 
@@ -12760,37 +12758,37 @@ msgstr "/Opérations _basiques/Convertir en données volumiques..."
 msgid "Convert datafield to 3D data"
 msgstr "Convertir le champ de données en données 3D"
 
-#: modules/process/volumize_layers.c:85
+#: modules/process/volumize_layers.c:86
 msgid "Converts all datafields to 3D volume data."
 msgstr "Convertit un champ de données en données volumiques 3D"
 
-#: modules/process/volumize_layers.c:99
+#: modules/process/volumize_layers.c:100
 msgid "/_Basic Operations/Volumize Layers..."
 msgstr "/Opérations _basiques/Convertir les couches en données volumiques..."
 
-#: modules/process/volumize_layers.c:103
+#: modules/process/volumize_layers.c:104
 msgid "Convert all datafields to 3D data"
 msgstr "Convertir tous les champs de données en données volumiques 3D"
 
-#: modules/process/volumize_layers.c:159
+#: modules/process/volumize_layers.c:153
 msgid "All datafields must have same resolution to make a volume from them."
 msgstr ""
 "Tous les champs doivent avoir les mêmes résolutions pour pouvoir les "
 "convertir un volume."
 
-#: modules/process/volumize_layers.c:214
+#: modules/process/volumize_layers.c:220
 msgid "Volumize layers"
 msgstr "Transformer les couches en données volumiques"
 
-#: modules/process/volumize_layers.c:235
+#: modules/process/volumize_layers.c:240
 msgid "_X resolution:"
 msgstr "Résolution _X :"
 
-#: modules/process/volumize_layers.c:241
+#: modules/process/volumize_layers.c:245
 msgid "_Y resolution:"
 msgstr "Résolution _Y :"
 
-#: modules/process/volumize_layers.c:247
+#: modules/process/volumize_layers.c:250
 msgid "_Z resolution:"
 msgstr "Résolution _Z :"
 
@@ -13710,7 +13708,7 @@ msgstr "Distribution d'amplitude cumulée"
 msgid "Peak Count"
 msgstr "Comptage des pics"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1083
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1090
 msgid "_Graph:"
 msgstr "_Graphe :"
 
@@ -14164,17 +14162,17 @@ msgstr "Section Y pour y : %d"
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr "Section Z pour Z = %g %s (#%d)"
 
-#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1260
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1263
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr "Graphe X pour y : %d z : %d"
 
-#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1269
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1272
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr "Graphe Y pour x : %d z : %d"
 
-#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1251
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1254
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr "Graphe Z pour x : %d y : %d"
@@ -14384,83 +14382,83 @@ msgstr "Extraire plusieurs élé_ments"
 msgid "Positions"
 msgstr "Positions"
 
-#: modules/volume/volume_slice.c:481
+#: modules/volume/volume_slice.c:483
 msgid "_Z:"
 msgstr "_Z :"
 
-#: modules/volume/volume_slice.c:1152
+#: modules/volume/volume_slice.c:1155
 #, c-format
 msgid "Z slice at %.*f%s%s (#%d)"
 msgstr "Section Z %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1163
+#: modules/volume/volume_slice.c:1166
 #, c-format
 msgid "Y slice at %.*f%s%s (#%d)"
 msgstr "Section Y %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1174
+#: modules/volume/volume_slice.c:1177
 #, c-format
 msgid "X slice at %.*f%s%s (#%d)"
 msgstr "Section X %.*f%s%s (#%d)"
 
-#: modules/volume/volume_slice.c:1303
+#: modules/volume/volume_slice.c:1306
 msgid "Volume Z graphs"
 msgstr "Graphes volumiques Z"
 
-#: modules/volume/volume_slice.c:1310
+#: modules/volume/volume_slice.c:1313
 msgid "Volume X graphs"
 msgstr "Graphes volumiques X"
 
-#: modules/volume/volume_slice.c:1317
+#: modules/volume/volume_slice.c:1320
 msgid "Volume Y graphs"
 msgstr "Graphes volumiques Y"
 
-#: modules/volume/volume_zcal.c:103
+#: modules/volume/volume_zcal.c:104
 msgid "Attaches, extracts and removes volume data z-axis calibration."
 msgstr ""
 "Attache, extrait et supprimer la calibration selon z de données volumiques."
 
-#: modules/volume/volume_zcal.c:117
+#: modules/volume/volume_zcal.c:118
 msgid "/_Z-Calibration..."
 msgstr "/Calibration selon _Z..."
 
-#: modules/volume/volume_zcal.c:121
+#: modules/volume/volume_zcal.c:122
 msgid "Manage z-axis calibration"
 msgstr "Gérer la calibration selon Z"
 
-#: modules/volume/volume_zcal.c:171
+#: modules/volume/volume_zcal.c:172
 msgid "_Extract to a graph"
 msgstr "_Extraire vers un graphe"
 
-#: modules/volume/volume_zcal.c:173
+#: modules/volume/volume_zcal.c:174
 msgid "_Attach from file"
 msgstr "_Attacher à partir d'un fichier"
 
-#: modules/volume/volume_zcal.c:185 modules/volume/volume_zcal.c:224
+#: modules/volume/volume_zcal.c:186 modules/volume/volume_zcal.c:225
 msgid "Volume Z Calibration"
 msgstr "Calibration volumique selon Z"
 
-#: modules/volume/volume_zcal.c:204
+#: modules/volume/volume_zcal.c:205
 msgid "Z-calibration action:"
 msgstr "Action de la calibration selon Z :"
 
-#: modules/volume/volume_zcal.c:356
+#: modules/volume/volume_zcal.c:357
 msgid "Calibration from file"
 msgstr "Calibration à partir d'un fichier"
 
-#: modules/volume/volume_zcal.c:358 modules/volume/volume_zcal.c:439
+#: modules/volume/volume_zcal.c:359 modules/volume/volume_zcal.c:440
 msgid "Z-calibration curve"
 msgstr "Courbe de calibration _Z :"
 
-#: modules/volume/volume_zcal.c:403
+#: modules/volume/volume_zcal.c:404
 msgid "Index"
 msgstr "Indice"
 
-#: modules/volume/volume_zcal.c:404
+#: modules/volume/volume_zcal.c:405
 msgid "Z axis value"
 msgstr "Valeur selon Z"
 
-#: modules/volume/volume_zcal.c:489
+#: modules/volume/volume_zcal.c:490
 msgid ""
 "Calibration data file must have\n"
 "exactly one column."
@@ -14468,7 +14466,7 @@ msgstr ""
 "Le fichier de calibration ne doit avoir\n"
 "qu'une seule colonne."
 
-#: modules/volume/volume_zcal.c:507
+#: modules/volume/volume_zcal.c:508
 msgid ""
 "File does not contain any\n"
 "readable data."
@@ -14476,7 +14474,7 @@ msgstr ""
 "Le fichier ne contient pas\n"
 "de données lisibles."
 
-#: modules/volume/volume_zcal.c:515
+#: modules/volume/volume_zcal.c:516
 #, c-format
 msgid ""
 "The number of data file values %d\n"
@@ -14497,11 +14495,17 @@ msgstr "/Analyser la _dérive..."
 msgid "Analyze and/or remove drift"
 msgstr "Analyser et/ou supprimer la dérive"
 
-#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:842
+#: modules/xyz/xyz_drift.c:362
+msgid ""
+"No timestamp channel found, either called 'Timestamp' or having units in "
+"seconds."
+msgstr ""
+
+#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:849
 msgid "X drift"
 msgstr "Dérive X"
 
-#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:843
+#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:850
 msgid "Y drift"
 msgstr "Dérive Y"
 
@@ -14509,7 +14513,7 @@ msgstr "Dérive Y"
 msgid "y-axis drift"
 msgstr "dérive selon l'axe y"
 
-#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:844
+#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:851
 msgid "Z drift"
 msgstr "Dérive Z"
 
@@ -14517,89 +14521,103 @@ msgstr "Dérive Z"
 msgid "z-axis drift"
 msgstr "dérive selon l'axe z"
 
-#: modules/xyz/xyz_drift.c:540
+#: modules/xyz/xyz_drift.c:541
 msgid "Analyze XYZ Drift"
 msgstr "Analyser la dérive de données XYZ"
 
-#: modules/xyz/xyz_drift.c:565 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:566 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Initialiser les pla_ges"
 
-#: modules/xyz/xyz_drift.c:771 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:615
+#, fuzzy
+msgid "_Guess parameters"
+msgstr "Paramètres de rugosité"
+
+#: modules/xyz/xyz_drift.c:778 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "Plage _X :"
 
-#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:800 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "Plage _Y :"
 
-#: modules/xyz/xyz_drift.c:833 modules/xyz/xyz_drift.c:838
+#: modules/xyz/xyz_drift.c:840 modules/xyz/xyz_drift.c:845
 msgid "2nd order polynom"
 msgstr "Polynôme d'ordre 2"
 
-#: modules/xyz/xyz_drift.c:853
+#: modules/xyz/xyz_drift.c:860
 msgid "Initial values"
 msgstr "Valeurs initiales"
 
-#: modules/xyz/xyz_drift.c:861
+#: modules/xyz/xyz_drift.c:868
 msgid "_X drift:"
 msgstr "Dérive _X :"
 
-#: modules/xyz/xyz_drift.c:889 modules/xyz/xyz_drift.c:932
-#: modules/xyz/xyz_drift.c:977
+#: modules/xyz/xyz_drift.c:896 modules/xyz/xyz_drift.c:939
+#: modules/xyz/xyz_drift.c:984
 msgid "_fit"
 msgstr "_Ajustement"
 
-#: modules/xyz/xyz_drift.c:901
+#: modules/xyz/xyz_drift.c:908
 msgid "_Y drift:"
 msgstr "Dérive _Y :"
 
-#: modules/xyz/xyz_drift.c:946
+#: modules/xyz/xyz_drift.c:953
 msgid "Z fit _type:"
 msgstr "_Type d'ajustement selon Z :"
 
-#: modules/xyz/xyz_drift.c:1002
+#: modules/xyz/xyz_drift.c:1009
 msgid "Search parameters"
 msgstr "Paramètres de recherche"
 
-#: modules/xyz/xyz_drift.c:1007
+#: modules/xyz/xyz_drift.c:1014
 msgid "_Neighbors used:"
 msgstr "Voisi_ns utilisés :"
 
-#: modules/xyz/xyz_drift.c:1024
+#: modules/xyz/xyz_drift.c:1031
 msgid "_Length threshold:"
 msgstr "Seuil de _longueur : "
 
-#: modules/xyz/xyz_drift.c:1043
+#: modules/xyz/xyz_drift.c:1050
 msgid "_Time threshold:"
 msgstr "Seuil _temporel :"
 
-#: modules/xyz/xyz_drift.c:1061
+#: modules/xyz/xyz_drift.c:1068
 msgid "_Max iterations:"
 msgstr "Nombre d'itérations _max :"
 
-#: modules/xyz/xyz_drift.c:1074
+#: modules/xyz/xyz_drift.c:1081
 msgid "Results"
 msgstr "Résultats"
 
-#: modules/xyz/xyz_drift.c:1088
+#: modules/xyz/xyz_drift.c:1095
 msgid "X drift:"
 msgstr "Dérive X :"
 
-#: modules/xyz/xyz_drift.c:1096 modules/xyz/xyz_drift.c:1114
-#: modules/xyz/xyz_drift.c:1131
+#: modules/xyz/xyz_drift.c:1103 modules/xyz/xyz_drift.c:1121
+#: modules/xyz/xyz_drift.c:1138
 msgid "to inits"
 msgstr "Initialiser"
 
-#: modules/xyz/xyz_drift.c:1106
+#: modules/xyz/xyz_drift.c:1113
 msgid "Y drift:"
 msgstr "Dérive _Y :"
 
-#: modules/xyz/xyz_drift.c:1123
+#: modules/xyz/xyz_drift.c:1130
 msgid "Z drift:"
 msgstr "Dérive _Z :"
 
-#: modules/xyz/xyz_drift.c:2176 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:1745
+#, fuzzy
+msgid "No neighbors found"
+msgstr "Voisi_ns utilisés :"
+
+#: modules/xyz/xyz_drift.c:1919
+msgid "Fitting in progress..."
+msgstr ""
+
+#: modules/xyz/xyz_drift.c:2269 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Les dimensions physiques sont invalides."
 
