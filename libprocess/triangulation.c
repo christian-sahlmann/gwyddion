@@ -965,9 +965,9 @@ find_the_other_neighbour_(const Triangulator *triangulator,
 }
 
 static inline gboolean
-move_triangle_a_(const Triangulator *triangulator,
-                 gconstpointer points, gsize point_size,
-                 Triangle *triangle)
+move_triangle_a_pts(const Triangulator *triangulator,
+                    gconstpointer points, gsize point_size,
+                    Triangle *triangle)
 {
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ib, triangle->ic, &triangle->ia)) {
@@ -979,9 +979,9 @@ move_triangle_a_(const Triangulator *triangulator,
 }
 
 static inline gboolean
-move_triangle_b_(const Triangulator *triangulator,
-                 gconstpointer points, gsize point_size,
-                 Triangle *triangle)
+move_triangle_b_pts(const Triangulator *triangulator,
+                    gconstpointer points, gsize point_size,
+                    Triangle *triangle)
 {
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ic, triangle->ia, &triangle->ib)) {
@@ -993,9 +993,9 @@ move_triangle_b_(const Triangulator *triangulator,
 }
 
 static inline gboolean
-move_triangle_c_(const Triangulator *triangulator,
-                 gconstpointer points, gsize point_size,
-                 Triangle *triangle)
+move_triangle_c_pts(const Triangulator *triangulator,
+                    gconstpointer points, gsize point_size,
+                    Triangle *triangle)
 {
     if (find_the_other_neighbour_(triangulator, points, point_size,
                                   triangle->ia, triangle->ib, &triangle->ic)) {
@@ -1258,10 +1258,10 @@ find_nearest_side(const Triangulation *triangulation,
  * contains the point.  If the right triangle is nearby, it is also found
  * reasonably fast. */
 static gboolean
-ensure_triangle_(const Triangulator *triangulator,
-                 gconstpointer points, gsize point_size,
-                 Triangle *triangle,
-                 const GwyXY *pt)
+ensure_triangle_pts(const Triangulator *triangulator,
+                    gconstpointer points, gsize point_size,
+                    Triangle *triangle,
+                    const GwyXY *pt)
 {
     gboolean moved;
     guint iter;
@@ -1270,19 +1270,19 @@ ensure_triangle_(const Triangulator *triangulator,
     while (!triangle_contains_point(triangle, pt)) {
         if (triangle->da <= triangle->db) {
             if (triangle->da <= triangle->dc)
-                moved = move_triangle_a_(triangulator, points, point_size,
-                                         triangle);
+                moved = move_triangle_a_pts(triangulator, points, point_size,
+                                            triangle);
             else
-                moved = move_triangle_c_(triangulator, points, point_size,
-                                         triangle);
+                moved = move_triangle_c_pts(triangulator, points, point_size,
+                                            triangle);
         }
         else {
             if (triangle->db <= triangle->dc)
-                moved = move_triangle_b_(triangulator, points, point_size,
-                                         triangle);
+                moved = move_triangle_b_pts(triangulator, points, point_size,
+                                            triangle);
             else
-                moved = move_triangle_c_(triangulator, points, point_size,
-                                         triangle);
+                moved = move_triangle_c_pts(triangulator, points, point_size,
+                                            triangle);
         }
 
         if (!moved)
@@ -1493,7 +1493,7 @@ triangulate(const PointList *pointlist, GwySetFractionFunc set_fraction)
         NeighbourBlock *nb;
         gboolean in;
 
-        if (i % 200 == 0
+        if (i % 20 == 0
             && set_fraction
             && !set_fraction(0.9*i/pointlist->npoints))
             goto fail;
@@ -1505,8 +1505,8 @@ triangulate(const PointList *pointlist, GwySetFractionFunc set_fraction)
                             pointlist->points, sizeof(GwyXY),
                             &triangle, i-1);
         /* Find the enclosing or the nearest (for outside points) triangle */
-        in = ensure_triangle_(triangulator, pointlist->points, sizeof(GwyXY),
-                              &triangle, pointlist->points + i);
+        in = ensure_triangle_pts(triangulator, pointlist->points, sizeof(GwyXY),
+                                 &triangle, pointlist->points + i);
         if (G_UNLIKELY(triangle.ia == UNDEF))
             goto fail;
         /* Put the three points to the queue as their neighbourhood needs

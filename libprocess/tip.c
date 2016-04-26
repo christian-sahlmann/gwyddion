@@ -662,9 +662,7 @@ gwy_tip_dilation(GwyDataField *tip,
     gint txres, tyres, xres, yres, ioff, joff, i, j;
     const gdouble *sdata, *tdata;
     gdouble *data;
-    GTimer *timer = NULL;
     GwyDataField *mytip;
-    gdouble tprev = 0.0, t;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(tip), NULL);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(surface), NULL);
@@ -672,10 +670,8 @@ gwy_tip_dilation(GwyDataField *tip,
 
     if (set_message)
         set_message(_("Dilation..."));
-    if (set_fraction) {
+    if (set_fraction)
         set_fraction(0.0);
-        timer = g_timer_new();
-    }
 
     gwy_data_field_resample(result, surface->xres, surface->yres,
                             GWY_INTERPOLATION_NONE);
@@ -711,20 +707,12 @@ gwy_tip_dilation(GwyDataField *tip,
             }
         }
 
-        if (set_fraction) {
-            t = g_timer_elapsed(timer, NULL);
-            if (t - tprev >= 0.15) {
-                if (!set_fraction((i + 1.0)/yres)) {
-                    g_timer_destroy(timer);
-                    g_object_unref(mytip);
-                    return NULL;
-                }
-                tprev = t;
-            }
+        if (set_fraction && !set_fraction((i + 1.0)/yres)) {
+            g_object_unref(mytip);
+            return NULL;
         }
     }
 
-    g_timer_destroy(timer);
     g_object_unref(mytip);
     return result;
 }
@@ -796,8 +784,6 @@ gwy_tip_erosion(GwyDataField *tip,
     const gdouble *sdata, *tdata;
     GwyDataField *mytip;
     gdouble *data;
-    GTimer *timer = NULL;
-    gdouble tprev = 0.0, t;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(tip), NULL);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(surface), NULL);
@@ -805,10 +791,8 @@ gwy_tip_erosion(GwyDataField *tip,
 
     if (set_message)
         set_message(_("Erosion..."));
-    if (set_fraction) {
+    if (set_fraction)
         set_fraction(0.0);
-        timer = g_timer_new();
-    }
 
     gwy_data_field_resample(result, surface->xres, surface->yres,
                             GWY_INTERPOLATION_NONE);
@@ -845,20 +829,12 @@ gwy_tip_erosion(GwyDataField *tip,
             }
         }
 
-        if (set_fraction) {
-            t = g_timer_elapsed(timer, NULL);
-            if (t - tprev >= 0.15) {
-                if (!set_fraction((i + 1.0)/yres)) {
-                    g_timer_destroy(timer);
-                    g_object_unref(mytip);
-                    return NULL;
-                }
-                tprev = t;
-            }
+        if (set_fraction && !set_fraction((i + 1.0)/yres)) {
+            g_object_unref(mytip);
+            return NULL;
         }
     }
 
-    g_timer_destroy(timer);
     g_object_unref(mytip);
     return result;
 }
