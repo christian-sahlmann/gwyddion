@@ -67,7 +67,8 @@
 #define MAGIC1 "lsdlsd"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define EXTENSION ".nstdat"
-#define NST4DHEADER_SIZE (4 + 4 + 4 + 4 + 14*8)
+#define NST4DHEADER_SIZE (4 + 4 + 4 + 4 + 14 * 8)
+#define UTF8_BOM "\xEF\xBB\xBF"
 
 typedef enum {
     Vertical   = 0,
@@ -110,12 +111,15 @@ static GwyContainer*  nst_load            (const gchar *filename,
                                            GError **error);
 static GwyDataField*  nst_read_3d         (const gchar *buffer,
                                            gsize size,
+                                           gboolean is_utf,
                                            GwyContainer **metadata,
                                            gchar **title);
 static GwyGraphModel* nst_read_2d         (const gchar *buffer,
-                                           guint channel);
+                                           guint channel,
+                                           gboolean is_utf);
 static GwyBrick*      nst_read_4d         (const gchar *buffer,
                                            gsize datasize,
+                                           gboolean is_utf,
                                            GwyContainer **metadata,
                                            gchar **title);
 
@@ -124,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti), Daniil Bratashov (dn2010), Antony Kikaxa",
     "2012",
 };
@@ -189,7 +193,7 @@ nst_load(const gchar *filename,
     GwyZipFile zipfile;
     guint channelno = 0;
     gint xres, yres;
-    gboolean status;
+    gboolean status, is_utf;
     gchar *buffer, *line, *p, *title, *strkey, *filename_curr;
     gchar *titlestr = NULL;
     gsize size = 0;
@@ -218,11 +222,17 @@ nst_load(const gchar *filename,
             }
             p = buffer;
             line = gwy_str_next_line(&p);
+            is_utf = g_str_has_prefix(line, UTF8_BOM);
+            if (is_utf) {
+                gwy_debug("UTF8 file content");
+                line += 3;
+            }
             g_strstrip(line);
             if (gwy_strequal(line, "3d")) {
                 gwy_debug("3d: %u", channelno);
                 titlestr = NULL;
-                dfield = nst_read_3d(p, size, &metadata, &titlestr);
+                dfield = nst_read_3d(p, size, is_utf,
+                                     &metadata, &titlestr);
                 if (dfield) {
                     strkey = g_strdup_printf("/%d/data",
                                              channelno);
@@ -262,7 +272,7 @@ nst_load(const gchar *filename,
             }
             else if (gwy_strequal(line, "2d")) {
                 gwy_debug("2d: %d", channelno);
-                gmodel = nst_read_2d(p, channelno);
+                gmodel = nst_read_2d(p, channelno, is_utf);
                 if (gmodel) {
                     strkey = g_strdup_printf("/0/graph/graph/%d",
                                              channelno+1);
@@ -274,7 +284,8 @@ nst_load(const gchar *filename,
             }
             else if (gwy_strequal(line, "4d")) {
                 gwy_debug("4d: %u", channelno);
-                brick = nst_read_4d(p, size, &metadata, &titlestr);
+                brick = nst_read_4d(p, size, is_utf,
+                                    &metadata, &titlestr);
                 if (brick) {
                     strkey = g_strdup_printf("/brick/%d",
                                              channelno);
@@ -358,13 +369,14 @@ split_to_nparts(const gchar *str, const gchar *sep, guint n)
 }
 
 static inline gchar*
-decode_string(const gchar *s)
+decode_string(const gchar *s, gboolean is_utf)
 {
-    return g_convert(s, -1, "UTF-8", "cp1251", NULL, NULL, NULL);
+    return g_convert(s, -1, "UTF-8", is_utf ? "UTF-8" : "cp1251",
+                     NULL, NULL, NULL);
 }
 
 static GwyDataField *
-nst_read_3d(const gchar *buffer, gsize size,
+nst_read_3d(const gchar *buffer, gsize size, gboolean is_utf,
             GwyContainer **metadata, gchar **title)
 {
     GwyDataField *dfield = NULL;
@@ -435,7 +447,7 @@ nst_read_3d(const gchar *buffer, gsize size,
         else if (g_str_has_prefix(line, "XCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = decode_string(lineparts[1]);
+            unit = decode_string(lineparts[1], is_utf);
             siunitxy = gwy_si_unit_new_parse(unit, &power10xy);
             g_free(unit);
             x = atoi(lineparts[2]);
@@ -446,7 +458,7 @@ nst_read_3d(const gchar *buffer, gsize size,
         else if (g_str_has_prefix(line, "ZCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = decode_string(lineparts[1]);
+            unit = decode_string(lineparts[1], is_utf);
             siunitz = gwy_si_unit_new_parse(unit, &power10z);
             g_free(unit);
             z = atoi(lineparts[2]);
@@ -471,7 +483,7 @@ nst_read_3d(const gchar *buffer, gsize size,
         else if (g_str_has_prefix(line, "Name")) {
             if (!(lineparts = split_to_nparts(line, " ", 2)))
                 goto fail;
-            *title = decode_string(lineparts[1]);
+            *title = decode_string(lineparts[1], is_utf);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "Attributes")) {
@@ -482,8 +494,8 @@ nst_read_3d(const gchar *buffer, gsize size,
             linecur = 0;
             while ((key = attributes[linecur])
                    && (value = attributes[linecur+1])) {
-                key = decode_string(key);
-                value = decode_string(value);
+                key = decode_string(key, is_utf);
+                value = decode_string(value, is_utf);
                 gwy_debug("%s: %s", key, value);
                 gwy_container_set_const_string_by_name(meta, key, value);
 
@@ -556,7 +568,7 @@ fail:
 }
 
 static GwyGraphModel*
-nst_read_2d(const gchar *buffer, guint channel)
+nst_read_2d(const gchar *buffer, guint channel, gboolean is_utf)
 {
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
@@ -637,13 +649,13 @@ nst_read_2d(const gchar *buffer, guint channel)
                 goto fail;
             if (framename)
                 g_free(framename);
-            framename = decode_string(lineparts[1]);
+            framename = decode_string(lineparts[1], is_utf);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = decode_string(lineparts[1]);
+            unit = decode_string(lineparts[1], is_utf);
             siunitx = gwy_si_unit_new_parse(unit, &power10x);
             g_free(unit);
             x = atoi(lineparts[2]);
@@ -654,7 +666,7 @@ nst_read_2d(const gchar *buffer, guint channel)
         else if (g_str_has_prefix(line, "YCUnit")) {
             if (!(lineparts = split_to_nparts(line, " ", 3)))
                 goto fail;
-            unit = decode_string(lineparts[1]);
+            unit = decode_string(lineparts[1], is_utf);
             siunity = gwy_si_unit_new_parse(unit, &power10y);
             g_free(unit);
             y = atoi(lineparts[2]);
@@ -670,8 +682,8 @@ nst_read_2d(const gchar *buffer, guint channel)
             linecur = 0;
             while ((key = attributes[linecur])
                    && (value = attributes[linecur+1])) {
-                key = decode_string(key);
-                value = decode_string(value);
+                key = decode_string(key, is_utf);
+                value = decode_string(value, is_utf);
                 gwy_debug("%s: %s", key, value);
 
                 if (g_str_has_prefix(key, "Name")) {
@@ -738,7 +750,7 @@ fail:
 }
 
 static GwyBrick*
-nst_read_4d(const gchar *buffer, gsize datasize,
+nst_read_4d(const gchar *buffer, gsize datasize, gboolean is_utf,
             GwyContainer **metadata, gchar **title)
 {
     GwyBrick *brick = NULL, *brick_cropped = NULL;
@@ -896,8 +908,8 @@ nst_read_4d(const gchar *buffer, gsize datasize,
             linecur = 0;
             while ((key = attributes[linecur])
                    && (value = attributes[linecur+1])) {
-                key = decode_string(key);
-                value = decode_string(value);
+                key = decode_string(key, is_utf);
+                value = decode_string(value, is_utf);
                 gwy_debug("%s: %s", key, value);
                 gwy_container_set_const_string_by_name(meta, key, value);
 
