@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-23 02:14+0200\n"
-"PO-Revision-Date: 2016-04-23 13:13+0200\n"
+"POT-Creation-Date: 2016-04-26 02:14+0200\n"
+"PO-Revision-Date: 2016-04-26 08:05+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -152,8 +152,8 @@ msgstr "Gaussovka (RPSDF)"
 msgid "Two Gaussians (PSDF)"
 msgstr "Dvě gaussovky (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:834
-#: modules/xyz/xyz_drift.c:839
+#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:841
+#: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "Exponenciála"
 
@@ -177,7 +177,7 @@ msgstr "Exponenciála (RPSDF)"
 msgid "Polynomial (order 0)"
 msgstr "Polynom (stupeň 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1667
+#: libgwyddion/gwynlfitpreset.c:1667 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "Polynom (stupeň 1)"
 
@@ -1323,7 +1323,7 @@ msgid "A_dd symbol"
 msgstr "_Přidat symbol"
 
 #: libgwydgets/gwyscitext.c:274 modules/file/rawfile.c:553
-#: modules/xyz/xyz_drift.c:579 modules/xyz/xyz_raster.c:405
+#: modules/xyz/xyz_drift.c:580 modules/xyz/xyz_raster.c:405
 msgid "Preview"
 msgstr "Náhled"
 
@@ -3855,7 +3855,7 @@ msgstr "Strany:"
 
 #: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
-#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:767
+#: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:774
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Fyzické rozměry"
@@ -5001,19 +5001,19 @@ msgid "Plot point density map"
 msgstr "Vykreslit mapu hustoty bodů"
 
 #: modules/file/nmmxyz.c:519 modules/file/rawfile.c:626
-#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:718
+#: modules/process/dimensions.h:445 modules/xyz/xyz_drift.c:725
 #: modules/xyz/xyz_raster.c:517
 msgid "Resolution"
 msgstr "Rozlišení"
 
 #: modules/file/nmmxyz.c:523 modules/file/rawfile.c:631
-#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:722
+#: modules/process/dimensions.h:451 modules/xyz/xyz_drift.c:729
 #: modules/xyz/xyz_raster.c:521
 msgid "_Horizontal size:"
 msgstr "_Vodorovný rozměr:"
 
 #: modules/file/nmmxyz.c:539 modules/file/rawfile.c:638
-#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:737
+#: modules/process/dimensions.h:454 modules/xyz/xyz_drift.c:744
 #: modules/xyz/xyz_raster.c:536
 msgid "_Vertical size:"
 msgstr "_Svislý rozměr:"
@@ -5577,7 +5577,7 @@ msgstr "Formát dat"
 #: modules/process/wpour_mark.c:273 modules/tools/linestats.c:457
 #: modules/tools/sfunctions.c:523 modules/tools/stats.c:460
 #: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
-#: modules/xyz/xyz_drift.c:616 modules/xyz/xyz_raster.c:443
+#: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
 msgid "_Update"
 msgstr "_Aktualizovat"
 
@@ -6559,8 +6559,8 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 #: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
 #: modules/tools/roughness.c:979 modules/tools/stats.c:709
 #: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1092
-#: modules/xyz/xyz_drift.c:1110 modules/xyz/xyz_drift.c:1127
+#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1099
+#: modules/xyz/xyz_drift.c:1117 modules/xyz/xyz_drift.c:1134
 msgid "N.A."
 msgstr "nelze použít"
 
@@ -13569,7 +13569,7 @@ msgstr "BRC"
 msgid "Peak Count"
 msgstr "Počet peaků"
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1083
+#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1090
 msgid "_Graph:"
 msgstr "_Graf:"
 
@@ -14353,11 +14353,19 @@ msgstr "/Analyzovat _drift..."
 msgid "Analyze and/or remove drift"
 msgstr "Analyzovat anebo odstranit drift"
 
-#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:842
+#: modules/xyz/xyz_drift.c:362
+msgid ""
+"No timestamp channel found, either called 'Timestamp' or having units in "
+"seconds."
+msgstr ""
+"Nebyl nalezen žádný kanál s časovou značkou, ať už nazvaný ‚Timestamp‘ nebo "
+"s hodnotami v sekundách."
+
+#: modules/xyz/xyz_drift.c:391 modules/xyz/xyz_drift.c:849
 msgid "X drift"
 msgstr "X-ový drift"
 
-#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:843
+#: modules/xyz/xyz_drift.c:410 modules/xyz/xyz_drift.c:850
 msgid "Y drift"
 msgstr "Y-ový drift"
 
@@ -14365,7 +14373,7 @@ msgstr "Y-ový drift"
 msgid "y-axis drift"
 msgstr "drift podél y"
 
-#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:844
+#: modules/xyz/xyz_drift.c:429 modules/xyz/xyz_drift.c:851
 msgid "Z drift"
 msgstr "Z-ový drift"
 
@@ -14373,89 +14381,101 @@ msgstr "Z-ový drift"
 msgid "z-axis drift"
 msgstr "drift podél z"
 
-#: modules/xyz/xyz_drift.c:540
+#: modules/xyz/xyz_drift.c:541
 msgid "Analyze XYZ Drift"
 msgstr "Analyzovat XYZ drift"
 
-#: modules/xyz/xyz_drift.c:565 modules/xyz/xyz_raster.c:391
+#: modules/xyz/xyz_drift.c:566 modules/xyz/xyz_raster.c:391
 msgid "Reset Ran_ges"
 msgstr "Resetovat roz_sahy"
 
-#: modules/xyz/xyz_drift.c:771 modules/xyz/xyz_raster.c:570
+#: modules/xyz/xyz_drift.c:615
+msgid "_Guess parameters"
+msgstr "O_dhadnout parametry"
+
+#: modules/xyz/xyz_drift.c:778 modules/xyz/xyz_raster.c:570
 msgid "_X-range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/xyz/xyz_drift.c:793 modules/xyz/xyz_raster.c:592
+#: modules/xyz/xyz_drift.c:800 modules/xyz/xyz_raster.c:592
 msgid "_Y-range:"
 msgstr "_Y-ový rozsah:"
 
-#: modules/xyz/xyz_drift.c:833 modules/xyz/xyz_drift.c:838
+#: modules/xyz/xyz_drift.c:840 modules/xyz/xyz_drift.c:845
 msgid "2nd order polynom"
 msgstr "Polynom druhého řádu"
 
-#: modules/xyz/xyz_drift.c:853
+#: modules/xyz/xyz_drift.c:860
 msgid "Initial values"
 msgstr "Počáteční hodnoty"
 
-#: modules/xyz/xyz_drift.c:861
+#: modules/xyz/xyz_drift.c:868
 msgid "_X drift:"
 msgstr "_X drift:"
 
-#: modules/xyz/xyz_drift.c:889 modules/xyz/xyz_drift.c:932
-#: modules/xyz/xyz_drift.c:977
+#: modules/xyz/xyz_drift.c:896 modules/xyz/xyz_drift.c:939
+#: modules/xyz/xyz_drift.c:984
 msgid "_fit"
 msgstr "_fitovat"
 
-#: modules/xyz/xyz_drift.c:901
+#: modules/xyz/xyz_drift.c:908
 msgid "_Y drift:"
 msgstr "_Y drift:"
 
-#: modules/xyz/xyz_drift.c:946
+#: modules/xyz/xyz_drift.c:953
 msgid "Z fit _type:"
 msgstr "_Typ fitu Z:"
 
-#: modules/xyz/xyz_drift.c:1002
+#: modules/xyz/xyz_drift.c:1009
 msgid "Search parameters"
 msgstr "Parametry hledání"
 
-#: modules/xyz/xyz_drift.c:1007
+#: modules/xyz/xyz_drift.c:1014
 msgid "_Neighbors used:"
 msgstr "Použití _sousedé:"
 
-#: modules/xyz/xyz_drift.c:1024
+#: modules/xyz/xyz_drift.c:1031
 msgid "_Length threshold:"
 msgstr "_Délkový práh:"
 
-#: modules/xyz/xyz_drift.c:1043
+#: modules/xyz/xyz_drift.c:1050
 msgid "_Time threshold:"
 msgstr "Ča_sový práh:"
 
-#: modules/xyz/xyz_drift.c:1061
+#: modules/xyz/xyz_drift.c:1068
 msgid "_Max iterations:"
 msgstr "_Počet iterací:"
 
-#: modules/xyz/xyz_drift.c:1074
+#: modules/xyz/xyz_drift.c:1081
 msgid "Results"
 msgstr "Výsledky"
 
-#: modules/xyz/xyz_drift.c:1088
+#: modules/xyz/xyz_drift.c:1095
 msgid "X drift:"
 msgstr "X drift:"
 
-#: modules/xyz/xyz_drift.c:1096 modules/xyz/xyz_drift.c:1114
-#: modules/xyz/xyz_drift.c:1131
+#: modules/xyz/xyz_drift.c:1103 modules/xyz/xyz_drift.c:1121
+#: modules/xyz/xyz_drift.c:1138
 msgid "to inits"
 msgstr "do odhadů"
 
-#: modules/xyz/xyz_drift.c:1106
+#: modules/xyz/xyz_drift.c:1113
 msgid "Y drift:"
 msgstr "Y drift:"
 
-#: modules/xyz/xyz_drift.c:1123
+#: modules/xyz/xyz_drift.c:1130
 msgid "Z drift:"
 msgstr "Z drift:"
 
-#: modules/xyz/xyz_drift.c:2176 modules/xyz/xyz_raster.c:1012
+#: modules/xyz/xyz_drift.c:1745
+msgid "No neighbors found"
+msgstr "Nebyli nalezeni žádní sousedé"
+
+#: modules/xyz/xyz_drift.c:1919
+msgid "Fitting in progress..."
+msgstr "Probíhá fitování..."
+
+#: modules/xyz/xyz_drift.c:2269 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
 msgstr "Fyzické rozměry jsou neplatné."
 
