@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -308,12 +308,11 @@ plot_correlated(GwyDataField *retfield, gint xsize, gint ysize,
 static void
 maskcor_do(MaskcorArgs *args)
 {
-    enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *dfield, *kernel, *retfield, *score;
     GwyContainer *data, *kerneldata;
     GwyComputationState *state;
     GQuark quark;
-    gint newid, work, wpi;
+    gint newid;
 
     kerneldata = gwy_app_data_browser_get(args->kernel.datano);
     quark = gwy_app_get_data_key_for_id(args->kernel.id);
@@ -331,20 +330,13 @@ maskcor_do(MaskcorArgs *args)
                            _("Initializing..."));
         state = gwy_data_field_correlate_init(dfield, kernel, retfield);
         gwy_app_wait_set_message(_("Correlating..."));
-        work = 0;
-        wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
-        wpi = MIN(wpi, WORK_PER_UPDATE);
         do {
             gwy_data_field_correlate_iteration(state);
-            work += wpi;
-            if (work > WORK_PER_UPDATE) {
-                work -= WORK_PER_UPDATE;
-                if (!gwy_app_wait_set_fraction(state->fraction)) {
-                    gwy_data_field_correlate_finalize(state);
-                    gwy_app_wait_finish();
-                    g_object_unref(retfield);
-                    return;
-                }
+            if (!gwy_app_wait_set_fraction(state->fraction)) {
+                gwy_data_field_correlate_finalize(state);
+                gwy_app_wait_finish();
+                g_object_unref(retfield);
+                return;
             }
         } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
         gwy_data_field_correlate_finalize(state);

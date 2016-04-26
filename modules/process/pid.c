@@ -401,7 +401,7 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
                 return 0;
             }
 
-            if (trow>=0) {
+            if (trow >= 0) {
                 if (!revdir) {
                     dfw[row*xres + col] = zpos;
                     dffw[row*xres + col] = force;
@@ -413,15 +413,13 @@ run_pid(GwyDataField *dfield, GwyContainer *data, gint id, GwyDataField *fw, Gwy
             }
 
         }
-        if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) return 0;
+        if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres))
+            return 0;
     }
     gwy_app_wait_finish();
 
-
     return 1;
 }
-
-
 
 static void
 pid_dialog_update(PIDControls *controls,

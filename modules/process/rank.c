@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Enhances local contrast using a rank transform."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2014",
 };
@@ -250,7 +250,7 @@ rank_do(GwyContainer *data, RankArgs *args)
     gdouble *show;
     gint xres, yres, i, j, size, id;
     gint *xsize;
-    guint count, step;
+    guint count;
     gdouble q;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
@@ -279,16 +279,14 @@ rank_do(GwyContainer *data, RankArgs *args)
         xsize[i + args->size] = (gint)floor(x);
     }
 
-    step = MAX(10000, xres*yres/100);
     count = 0;
     q = 1.0/(xres*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
             show[i*xres + j] = local_rank(dfield, args->size, xsize, j, i);
-            if ((++count) % step == 0) {
-                if (!gwy_app_wait_set_fraction(q*count))
-                    goto cancelled;
-            }
+            count++;
+            if (count % 20 == 19 && !gwy_app_wait_set_fraction(q*count))
+                goto cancelled;
         }
     }
 

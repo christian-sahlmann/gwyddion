@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crops non-intersecting regions of two images."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -303,16 +303,10 @@ static gboolean
 get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
                       GwyDataField *score, GwyAppDataId *op1)
 {
-    enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;
     GwyContainer *data;
     gboolean ok = FALSE;
-    int work, wpi;
 
-    work = 0;
-    wpi = gwy_data_field_get_xres(kernel_field)
-          *gwy_data_field_get_yres(kernel_field);
-    wpi = MIN(wpi, WORK_PER_UPDATE);
     state = gwy_data_field_correlate_init(data_field, kernel_field, score);
 
     /* FIXME */
@@ -324,12 +318,8 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
         goto get_score_fail;
     do {
         gwy_data_field_correlate_iteration(state);
-        work += wpi;
-        if (work > WORK_PER_UPDATE) {
-            work -= WORK_PER_UPDATE;
-            if (!gwy_app_wait_set_fraction(state->fraction))
-                goto get_score_fail;
-        }
+        if (!gwy_app_wait_set_fraction(state->fraction))
+            goto get_score_fail;
     } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
     ok = TRUE;
 

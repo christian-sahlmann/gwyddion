@@ -214,7 +214,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -1060,16 +1060,10 @@ static gboolean
 get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
                       GwyDataField *score, MergeArgs *args)
 {
-    enum { WORK_PER_UPDATE = 50000000 };
     GwyComputationState *state;
     GwyContainer *data;
     gboolean ok = FALSE;
-    int work, wpi;
 
-    work = 0;
-    wpi = gwy_data_field_get_xres(kernel_field)
-          *gwy_data_field_get_yres(kernel_field);
-    wpi = MIN(wpi, WORK_PER_UPDATE);
     state = gwy_data_field_correlate_init(data_field, kernel_field, score);
 
     /* FIXME */
@@ -1081,12 +1075,8 @@ get_score_iteratively(GwyDataField *data_field, GwyDataField *kernel_field,
         goto get_score_fail;
     do {
         gwy_data_field_correlate_iteration(state);
-        work += wpi;
-        if (work > WORK_PER_UPDATE) {
-            work -= WORK_PER_UPDATE;
-            if (!gwy_app_wait_set_fraction(state->fraction))
-                goto get_score_fail;
-        }
+        if (!gwy_app_wait_set_fraction(state->fraction))
+            goto get_score_fail;
     } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
     ok = TRUE;
 

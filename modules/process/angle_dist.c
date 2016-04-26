@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates two-dimensional distribution of angles, "
        "that is projections of slopes to all directions."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -407,11 +407,9 @@ count_angles(gint n, gdouble *xder, gdouble *yder,
 
             count[yider*size + xider]++;
         }
-        if (i % 4096 == 0) {
-            if (!gwy_app_wait_set_fraction((gdouble)i/n)) {
-                ok = FALSE;
-                break;
-            }
+        if (!gwy_app_wait_set_fraction((gdouble)i/n)) {
+            ok = FALSE;
+            break;
         }
     }
 

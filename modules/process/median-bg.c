@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -345,11 +345,9 @@ median_background(gint size,
             }
             rdata[i*xres + j] = gwy_math_median(n, buffer);
         }
-        if (i % 10 == 0
-            && !gwy_app_wait_set_fraction((gdouble)i/yres)) {
+        if (!gwy_app_wait_set_fraction((gdouble)i/yres)) {
             g_free(circle);
             g_object_unref(rfield);
-
             return NULL;
         }
     }
