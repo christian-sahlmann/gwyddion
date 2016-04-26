@@ -33,6 +33,8 @@ static GtkWidget *progress = NULL;
 static GtkWidget *label = NULL;
 static gchar *message_prefix = NULL;
 static gboolean cancelled = FALSE;
+static GTimer *timer = NULL;
+static gdouble last_update_time = 0.0;
 
 /**
  * gwy_app_wait_start:
@@ -55,6 +57,12 @@ gwy_app_wait_start(GtkWindow *window,
                    "at once.");
         return;
     }
+
+    last_update_time = -1e38;
+    if (!timer)
+        timer = g_timer_new();
+    else
+        g_timer_start(timer);
 
     cancelled = FALSE;
     gwy_app_wait_create_dialog(window, message);
@@ -143,6 +151,7 @@ gwy_app_wait_set_message(const gchar *message)
 
     while (gtk_events_pending())
         gtk_main_iteration();
+
     if (cancelled)
         return FALSE;
 
@@ -158,6 +167,7 @@ gwy_app_wait_set_message(const gchar *message)
     while (gtk_events_pending())
         gtk_main_iteration();
 
+    last_update_time = -1e38;
     return !cancelled;
 }
 
@@ -203,11 +213,17 @@ gboolean
 gwy_app_wait_set_fraction(gdouble fraction)
 {
     gchar buf[8];
+    gdouble t;
 
     g_return_val_if_fail(dialog, FALSE);
 
+    t = g_timer_elapsed(timer, NULL);
+    if (t < last_update_time + 0.15)
+        return TRUE;
+
     while (gtk_events_pending())
         gtk_main_iteration();
+
     if (cancelled)
         return FALSE;
 
@@ -222,6 +238,7 @@ gwy_app_wait_set_fraction(gdouble fraction)
     while (gtk_events_pending())
         gtk_main_iteration();
 
+    last_update_time = g_timer_elapsed(timer, NULL);
     return !cancelled;
 }
 
