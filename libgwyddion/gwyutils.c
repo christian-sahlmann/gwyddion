@@ -1885,7 +1885,8 @@ gwy_fopen(const gchar *filename, const gchar *mode)
         return NULL;
     }
 
-    /*
+    /* See "Security Enhancements in the CRT".  But it breaks in WinXP and that
+     * we would rather avoid.
     save_errno = _wfopen_s(&stream, wfilename, wmode);
     */
     stream = _wfopen(wfilename, wmode);
