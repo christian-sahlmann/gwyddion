@@ -22,7 +22,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-jpk-image-scan">
@@ -32,8 +32,14 @@
  *   </magic>
  *   <glob pattern="*.jpk"/>
  *   <glob pattern="*.JPK"/>
+ *   <glob pattern="*.jpk-force"/>
+ *   <glob pattern="*.JPK-FORCE"/>
+ *   <glob pattern="*.jpk-force-map"/>
+ *   <glob pattern="*.JPK-FORCE-MAP"/>
  *   <glob pattern="*.jpk-qi-image"/>
  *   <glob pattern="*.JPK-QI-IMAGE"/>
+ *   <glob pattern="*.jpk-qi-data"/>
+ *   <glob pattern="*.JPK-QI-DATA"/>
  * </mime-type>
  **/
 
@@ -71,9 +77,22 @@
 #define MAGIC_FORCE2 "header.properties"
 #define MAGIC_FORCE2_SIZE (sizeof(MAGIC_FORCE2)-1)
 
+typedef enum {
+    JPK_FORCE_UNKNOWN = 0,
+    JPK_FORCE_CURVES,
+    /* The following two types are essentially the same for our purposes. */
+    JPK_FORCE_MAP,
+    JPK_FORCE_QI,
+} JPKForceFileType;
+
 typedef struct {
     GHashTable *header_properties;
-    /* The backend storage for all the hash tables. */
+    GHashTable *shared_header_properties;
+    JPKForceFileType type;
+    guint nids;
+    guint *ids;
+    /* The backend storage for all the hash tables.  We must keep those we
+     * created hashes from because the strings point directly to the buffers. */
     GSList *buffers;
 } JPKForceFile;
 
@@ -117,6 +136,11 @@ static GHashTable*   jpk_parse_header_properties(GwyZipFile zipfile,
                                                  JPKForceFile *jpkfile,
                                                  const gchar *path,
                                                  GError **error);
+static guint*        jpk_enumerate_segments     (GwyZipFile zipfile,
+                                                 guint *nids);
+static guint*        jpk_enumerate_map_segments (GwyZipFile zipfile,
+                                                 guint *nids);
+static void          jpk_force_file_free        (JPKForceFile *jpkfile);
 #endif
 
 static GwyModuleInfo module_info = {
@@ -540,20 +564,6 @@ jpkforce_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
-static void
-jpk_force_file_free(JPKForceFile *jpkfile)
-{
-    GSList *l;
-
-    if (jpkfile->header_properties)
-        g_hash_table_destroy(jpkfile->header_properties);
-
-    while ((l = jpkfile->buffers)) {
-        jpkfile->buffers = g_slist_next(l);
-        g_slist_free_1(l);
-    }
-}
-
 static GwyContainer*
 jpkforce_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
@@ -572,9 +582,24 @@ jpkforce_load(const gchar *filename,
     }
 
     gwy_clear(&jpkfile, 1);
+
+    /* The main properties must exist. */
     if (!(jpkfile.header_properties
           = jpk_parse_header_properties(zipfile, &jpkfile, "", error)))
         goto fail;
+
+    /* Optional. */
+    jpkfile.shared_header_properties
+        = jpk_parse_header_properties(zipfile, &jpkfile, "shared-data", NULL);
+
+    if ((jpkfile.ids = jpk_enumerate_segments(zipfile, &jpkfile.nids)))
+        jpkfile.type = JPK_FORCE_CURVES;
+    else if ((jpkfile.ids = jpk_enumerate_map_segments(zipfile, &jpkfile.nids)))
+        jpkfile.type = JPK_FORCE_MAP;
+    else {
+        err_NO_DATA(error);
+        goto fail;
+    }
 
     err_NO_DATA(error);
 
@@ -583,6 +608,131 @@ fail:
     jpk_force_file_free(&jpkfile);
 
     return container;
+}
+
+static int
+compare_uint(gconstpointer a, gconstpointer b)
+{
+    const guint ia = *(const guint*)a;
+    const guint ib = *(const guint*)b;
+
+    if (ia < ib)
+        return -1;
+    if (ia > ib)
+        return 1;
+    return 0;
+}
+
+static int
+compare_uint2(gconstpointer a, gconstpointer b)
+{
+    const guint ia = *(const guint*)a;
+    const guint ib = *(const guint*)b;
+    const guint iaa = *((const guint*)a + 1);
+    const guint ibb = *((const guint*)b + 1);
+
+    if (ia < ib)
+        return -1;
+    if (ia > ib)
+        return 1;
+    if (iaa < ibb)
+        return -1;
+    if (iaa > ibb)
+        return 1;
+    return 0;
+}
+
+static guint*
+jpk_enumerate_segments(GwyZipFile zipfile, guint *nids)
+{
+    GRegex *shp_regex;
+    GArray *ids;
+
+    if (!gwyzip_first_file(zipfile, NULL))
+        return NULL;
+
+    ids = g_array_new(FALSE, FALSE, sizeof(gint));
+    shp_regex = g_regex_new("^segments/([0-9]+)/segment-header.properties$",
+                            G_REGEX_OPTIMIZE, 0, NULL);
+    do {
+        gchar *filename = NULL;
+
+        if (gwyzip_get_current_filename(zipfile, &filename, NULL)) {
+            GMatchInfo *info;
+
+            if (g_regex_match(shp_regex, filename, 0, &info)) {
+                gchar *s;
+                guint id;
+
+                s = g_match_info_fetch(info, 1);
+                id = atoi(s);
+                g_free(s);
+                g_array_append_val(ids, id);
+                g_match_info_free(info);
+                gwy_debug("segment: %s -> %u", filename, id);
+            }
+            g_free(filename);
+        }
+    } while (gwyzip_next_file(zipfile, NULL));
+
+    g_regex_unref(shp_regex);
+
+    if (!ids->len) {
+        g_array_free(ids, TRUE);
+        return NULL;
+    }
+
+    g_array_sort(ids, compare_uint);
+    *nids = ids->len;
+    return (guint*)g_array_free(ids, FALSE);
+}
+
+static guint*
+jpk_enumerate_map_segments(GwyZipFile zipfile, guint *nids)
+{
+    GRegex *shp_regex;
+    GArray *ids;
+
+    if (!gwyzip_first_file(zipfile, NULL))
+        return NULL;
+
+    ids = g_array_new(FALSE, FALSE, 2*sizeof(gint));
+    shp_regex = g_regex_new("^index/([0-9]+)/segments"
+                            "/([0-9]+)/segment-header.properties$",
+                            G_REGEX_OPTIMIZE, 0, NULL);
+    do {
+        gchar *filename = NULL;
+
+        if (gwyzip_get_current_filename(zipfile, &filename, NULL)) {
+            GMatchInfo *info;
+
+            if (g_regex_match(shp_regex, filename, 0, &info)) {
+                gchar *s;
+                guint id[2], j;
+
+                for (j = 1; j <= 2; j++) {
+                    s = g_match_info_fetch(info, j);
+                    id[j-1] = atoi(s);
+                    g_free(s);
+                }
+                g_array_append_val(ids, id);
+                g_match_info_free(info);
+                gwy_debug("map segment: %s -> %u,%u", filename, id[0], id[1]);
+            }
+            g_free(filename);
+        }
+    } while (gwyzip_next_file(zipfile, NULL));
+
+    g_regex_unref(shp_regex);
+
+    if (!ids->len) {
+        g_array_free(ids, TRUE);
+        return NULL;
+    }
+
+    g_array_sort(ids, compare_uint2);
+    *nids = ids->len;
+    return (guint*)g_array_free(ids, FALSE);
 }
 
 static GHashTable*
@@ -617,10 +767,28 @@ jpk_parse_header_properties(GwyZipFile zipfile, JPKForceFile *jpkfile,
     parser.key_value_separator = "=";
     hash = gwy_text_header_parse((gchar*)contents, &parser, NULL, error);
     if (hash) {
-        gwy_debug("header.properties has %u entries", g_hash_table_size(hash));
+        gwy_debug("%s/header.properties has %u entries",
+                  path, g_hash_table_size(hash));
     }
 
     return hash;
+}
+
+static void
+jpk_force_file_free(JPKForceFile *jpkfile)
+{
+    GSList *l;
+
+    if (jpkfile->header_properties)
+        g_hash_table_destroy(jpkfile->header_properties);
+
+    if (jpkfile->shared_header_properties)
+        g_hash_table_destroy(jpkfile->shared_header_properties);
+
+    while ((l = jpkfile->buffers)) {
+        jpkfile->buffers = g_slist_next(l);
+        g_slist_free_1(l);
+    }
 }
 #endif
 
