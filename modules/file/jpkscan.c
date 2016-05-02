@@ -91,6 +91,11 @@ typedef struct {
     JPKForceFileType type;
     guint nids;
     guint *ids;
+    guint nchannels;
+    GQuark *channel_names;
+    /* For maps/QI */
+    guint xres;
+    guint yres;
     /* The backend storage for all the hash tables.  We must keep those we
      * created hashes from because the strings point directly to the buffers. */
     GSList *buffers;
@@ -135,6 +140,10 @@ static GwyContainer* jpkforce_load              (const gchar *filename,
 static GHashTable*   jpk_parse_header_properties(GwyZipFile zipfile,
                                                  JPKForceFile *jpkfile,
                                                  const gchar *path,
+                                                 GError **error);
+static gboolean      jpk_enumerate_channels     (JPKForceFile *jpkfile,
+                                                 GError **error);
+static gboolean      check_segment_ids          (JPKForceFile *jpkfile,
                                                  GError **error);
 static guint*        jpk_enumerate_segments     (GwyZipFile zipfile,
                                                  guint *nids);
@@ -601,6 +610,11 @@ jpkforce_load(const gchar *filename,
         goto fail;
     }
 
+    if (!check_segment_ids(&jpkfile, error))
+        goto fail;
+    if (!jpk_enumerate_channels(&jpkfile, error))
+        goto fail;
+
     err_NO_DATA(error);
 
 fail:
@@ -640,6 +654,63 @@ compare_uint2(gconstpointer a, gconstpointer b)
     if (iaa > ibb)
         return 1;
     return 0;
+}
+
+/* XXX XXX XXX: Does not work; the channel list is actually in each
+ * individual segment header. */
+static gboolean
+jpk_enumerate_channels(JPKForceFile *jpkfile, GError **error)
+{
+    const gchar *s;
+    gchar **fields;
+    guint i, n;
+
+    g_assert(jpkfile->header_properties);
+    s = g_hash_table_lookup(jpkfile->header_properties, "channels.list");
+    if (!s) {
+        err_MISSING_FIELD(error, "channels.list");
+        return FALSE;
+    }
+
+    fields = g_strsplit(s, " ", -1);
+    n = g_strv_length(fields);
+    if (!n) {
+        g_free(fields);
+        err_NO_DATA(error);
+        return NULL;
+    }
+
+    jpkfile->nchannels = n;
+    jpkfile->channel_names = g_new(GQuark, n);
+    for (i = 0; i < n; i++) {
+        jpkfile->channel_names[i] = g_quark_from_string(fields[i]);
+        gwy_debug("channel[%u] = <%s>", i, fields[i]);
+    }
+    g_strfreev(fields);
+
+    return TRUE;
+}
+
+static gboolean
+check_segment_ids(JPKForceFile *jpkfile, GError **error)
+{
+    guint i, nids = jpkfile->nids;
+
+    if (jpkfile->type == JPK_FORCE_CURVES) {
+        for (i = 0; i < nids; i++) {
+            if (jpkfile->ids[i] != i) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Segment numbers are not contiguous."));
+                return FALSE;
+            }
+        }
+        return TRUE;
+    }
+
+    /* TODO, assign xres and yres */
+
+    return TRUE;
 }
 
 static guint*
@@ -778,6 +849,9 @@ static void
 jpk_force_file_free(JPKForceFile *jpkfile)
 {
     GSList *l;
+
+    g_free(jpkfile->channel_names);
+    g_free(jpkfile->ids);
 
     if (jpkfile->header_properties)
         g_hash_table_destroy(jpkfile->header_properties);
