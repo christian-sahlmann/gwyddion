@@ -79,11 +79,21 @@
 
 typedef enum {
     JPK_FORCE_UNKNOWN = 0,
+    /* This is just some graphs (curves). */
     JPK_FORCE_CURVES,
-    /* The following two types are essentially the same for our purposes. */
+    /* This includes coordinates that may or may not be on a regular grid.
+     * If they are not, we must load it as SPS.  Otherwise we can load it
+     * as volume data. */
     JPK_FORCE_MAP,
+    /* This is always on a fine grid and should be loaded as volume data. */
     JPK_FORCE_QI,
 } JPKForceFileType;
+
+typedef struct {
+    GHashTable *header_properties;
+    /* Concatenated data of all channels. */
+    gdouble *data;
+} JPKForceData;
 
 typedef struct {
     GHashTable *header_properties;
@@ -91,9 +101,13 @@ typedef struct {
     JPKForceFileType type;
     guint nids;
     guint *ids;
+    guint nsegs;
+    guint npoints;
     guint nchannels;
     GQuark *channel_names;
+    JPKForceData *data;
     /* For maps/QI */
+    GHashTable **point_header_properties;
     guint xres;
     guint yres;
     /* The backend storage for all the hash tables.  We must keep those we
@@ -132,24 +146,28 @@ static void          meta_store_double   (GwyContainer *container,
                                           const gchar *unit);
 
 #ifdef HAVE_GWYZIP
-static gint          jpkforce_detect            (const GwyFileDetectInfo *fileinfo,
-                                                 gboolean only_name);
-static GwyContainer* jpkforce_load              (const gchar *filename,
-                                                 GwyRunType mode,
-                                                 GError **error);
-static GHashTable*   jpk_parse_header_properties(GwyZipFile zipfile,
-                                                 JPKForceFile *jpkfile,
-                                                 const gchar *path,
-                                                 GError **error);
-static gboolean      jpk_enumerate_channels     (JPKForceFile *jpkfile,
-                                                 GError **error);
-static gboolean      check_segment_ids          (JPKForceFile *jpkfile,
-                                                 GError **error);
-static guint*        jpk_enumerate_segments     (GwyZipFile zipfile,
-                                                 guint *nids);
-static guint*        jpk_enumerate_map_segments (GwyZipFile zipfile,
-                                                 guint *nids);
-static void          jpk_force_file_free        (JPKForceFile *jpkfile);
+static gint          jpkforce_detect        (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* jpkforce_load          (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static GHashTable*   parse_header_properties(GwyZipFile zipfile,
+                                             JPKForceFile *jpkfile,
+                                             const gchar *path,
+                                             GError **error);
+static gboolean      enumerate_channels     (JPKForceFile *jpkfile,
+                                             GHashTable *header_properties,
+                                             gboolean needslist,
+                                             GError **error);
+static gboolean      analyse_segment_ids    (JPKForceFile *jpkfile,
+                                             GError **error);
+static gboolean      analyse_map_segment_ids(JPKForceFile *jpkfile,
+                                             GError **error);
+static gboolean      enumerate_segments     (GwyZipFile zipfile,
+                                             JPKForceFile *jpkfile);
+static gboolean      enumerate_map_segments (GwyZipFile zipfile,
+                                             JPKForceFile *jpkfile);
+static void          jpk_force_file_free    (JPKForceFile *jpkfile);
 #endif
 
 static GwyModuleInfo module_info = {
@@ -593,26 +611,33 @@ jpkforce_load(const gchar *filename,
     gwy_clear(&jpkfile, 1);
 
     /* The main properties must exist. */
-    if (!(jpkfile.header_properties
-          = jpk_parse_header_properties(zipfile, &jpkfile, "", error)))
+    if (!(jpkfile.header_properties = parse_header_properties(zipfile, &jpkfile,
+                                                              "", error)))
         goto fail;
 
     /* Optional. */
     jpkfile.shared_header_properties
-        = jpk_parse_header_properties(zipfile, &jpkfile, "shared-data", NULL);
+        = parse_header_properties(zipfile, &jpkfile, "shared-data", NULL);
 
-    if ((jpkfile.ids = jpk_enumerate_segments(zipfile, &jpkfile.nids)))
+    if (enumerate_segments(zipfile, &jpkfile)) {
         jpkfile.type = JPK_FORCE_CURVES;
-    else if ((jpkfile.ids = jpk_enumerate_map_segments(zipfile, &jpkfile.nids)))
+        if (!analyse_segment_ids(&jpkfile, error))
+            goto fail;
+    }
+    else if (enumerate_map_segments(zipfile, &jpkfile)) {
         jpkfile.type = JPK_FORCE_MAP;
+        if (gwyzip_locate_file(zipfile, "data-image.jpk-qi-image", TRUE, NULL))
+            jpkfile.type = JPK_FORCE_QI;
+        if (!analyse_map_segment_ids(&jpkfile, error))
+            goto fail;
+    }
     else {
         err_NO_DATA(error);
         goto fail;
     }
 
-    if (!check_segment_ids(&jpkfile, error))
-        goto fail;
-    if (!jpk_enumerate_channels(&jpkfile, error))
+    if (!enumerate_channels(&jpkfile, jpkfile.shared_header_properties, FALSE,
+                            error))
         goto fail;
 
     err_NO_DATA(error);
@@ -656,22 +681,47 @@ compare_uint2(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-/* XXX XXX XXX: Does not work; the channel list is actually in each
- * individual segment header. */
 static gboolean
-jpk_enumerate_channels(JPKForceFile *jpkfile, GError **error)
+enumerate_channels(JPKForceFile *jpkfile, GHashTable *header_properties,
+                   gboolean needslist, GError **error)
 {
-    const gchar *s;
+    const gchar *s, *ss;
     gchar **fields;
-    guint i, n;
+    guint i, n, len;
 
-    g_assert(jpkfile->header_properties);
-    s = g_hash_table_lookup(jpkfile->header_properties, "channels.list");
-    if (!s) {
+    if (!header_properties
+        || !(s = g_hash_table_lookup(header_properties, "channels.list"))) {
+        if (!needslist || jpkfile->channel_names)
+            return TRUE;
         err_MISSING_FIELD(error, "channels.list");
         return FALSE;
     }
 
+    /* If we already have some channel list, check if it matches. */
+    if (jpkfile->channel_names) {
+        n = jpkfile->nchannels;
+        for (i = 0; i < n; i++) {
+            ss = g_quark_to_string(jpkfile->channel_names[i]);
+            len = strlen(ss);
+            if (memcmp(s, ss, len) != 0 || s[len] != ' ') {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Non-uniform channel lists are not supported."));
+                return FALSE;
+            }
+            s += len+1;
+        }
+        if (*s) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Non-uniform channel lists are not supported."));
+            return FALSE;
+        }
+        /* There is a perfect match. */
+        return TRUE;
+    }
+
+    /* There is no channel yet list so construct it from what we found. */
     fields = g_strsplit(s, " ", -1);
     n = g_strv_length(fields);
     if (!n) {
@@ -692,35 +742,70 @@ jpk_enumerate_channels(JPKForceFile *jpkfile, GError **error)
 }
 
 static gboolean
-check_segment_ids(JPKForceFile *jpkfile, GError **error)
+err_IRREGULAR_NUMBERING(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR,
+                GWY_MODULE_FILE_ERROR_DATA,
+                _("Non-uniform point and/or segment numbering "
+                  "is not supported."));
+    return FALSE;
+}
+
+static gboolean
+analyse_segment_ids(JPKForceFile *jpkfile, GError **error)
 {
     guint i, nids = jpkfile->nids;
 
-    if (jpkfile->type == JPK_FORCE_CURVES) {
-        for (i = 0; i < nids; i++) {
-            if (jpkfile->ids[i] != i) {
-                g_set_error(error, GWY_MODULE_FILE_ERROR,
-                            GWY_MODULE_FILE_ERROR_DATA,
-                            _("Segment numbers are not contiguous."));
-                return FALSE;
-            }
-        }
-        return TRUE;
+    g_assert(jpkfile->type == JPK_FORCE_CURVES);
+    for (i = 0; i < nids; i++) {
+        if (jpkfile->ids[i] != i)
+            return err_IRREGULAR_NUMBERING(error);
     }
 
-    /* TODO, assign xres and yres */
-
+    jpkfile->nsegs = nids;
+    jpkfile->npoints = 1;
     return TRUE;
 }
 
-static guint*
-jpk_enumerate_segments(GwyZipFile zipfile, guint *nids)
+static gboolean
+analyse_map_segment_ids(JPKForceFile *jpkfile, GError **error)
+{
+    guint i, j, k, nids = jpkfile->nids;
+    guint nsegs, npoints, idx0, idx;
+
+    g_assert(jpkfile->type == JPK_FORCE_MAP || jpkfile->type == JPK_FORCE_QI);
+    idx0 = jpkfile->ids[0];
+    for (i = 1; i < nids; i++) {
+        idx = jpkfile->ids[2*i];
+        if (idx != idx0)
+            break;
+    }
+    nsegs = i;
+    if (nids % nsegs != 0)
+        return err_IRREGULAR_NUMBERING(error);
+
+    npoints = nids/nsegs;
+    for (i = 0; i < npoints; i++) {
+        for (j = 0; j < nsegs; j++) {
+            k = i*nsegs + j;
+            if (jpkfile->ids[2*k] != i || jpkfile->ids[2*k + 1] != j)
+                return err_IRREGULAR_NUMBERING(error);
+        }
+    }
+
+    jpkfile->nsegs = nsegs;
+    jpkfile->npoints = npoints;
+    return TRUE;
+}
+
+static gboolean
+enumerate_segments(GwyZipFile zipfile, JPKForceFile *jpkfile)
 {
     GRegex *shp_regex;
     GArray *ids;
 
     if (!gwyzip_first_file(zipfile, NULL))
-        return NULL;
+        return FALSE;
 
     ids = g_array_new(FALSE, FALSE, sizeof(gint));
     shp_regex = g_regex_new("^segments/([0-9]+)/segment-header.properties$",
@@ -750,22 +835,23 @@ jpk_enumerate_segments(GwyZipFile zipfile, guint *nids)
 
     if (!ids->len) {
         g_array_free(ids, TRUE);
-        return NULL;
+        return FALSE;
     }
 
     g_array_sort(ids, compare_uint);
-    *nids = ids->len;
-    return (guint*)g_array_free(ids, FALSE);
+    jpkfile->nids = ids->len;
+    jpkfile->ids = (guint*)g_array_free(ids, FALSE);
+    return TRUE;
 }
 
-static guint*
-jpk_enumerate_map_segments(GwyZipFile zipfile, guint *nids)
+static gboolean
+enumerate_map_segments(GwyZipFile zipfile, JPKForceFile *jpkfile)
 {
     GRegex *shp_regex;
     GArray *ids;
 
     if (!gwyzip_first_file(zipfile, NULL))
-        return NULL;
+        return FALSE;
 
     ids = g_array_new(FALSE, FALSE, 2*sizeof(gint));
     shp_regex = g_regex_new("^index/([0-9]+)/segments"
@@ -798,17 +884,18 @@ jpk_enumerate_map_segments(GwyZipFile zipfile, guint *nids)
 
     if (!ids->len) {
         g_array_free(ids, TRUE);
-        return NULL;
+        return FALSE;
     }
 
     g_array_sort(ids, compare_uint2);
-    *nids = ids->len;
-    return (guint*)g_array_free(ids, FALSE);
+    jpkfile->nids = ids->len;
+    jpkfile->ids = (guint*)g_array_free(ids, FALSE);
+    return TRUE;
 }
 
 static GHashTable*
-jpk_parse_header_properties(GwyZipFile zipfile, JPKForceFile *jpkfile,
-                            const gchar *path, GError **error)
+parse_header_properties(GwyZipFile zipfile, JPKForceFile *jpkfile,
+                        const gchar *path, GError **error)
 {
     GwyTextHeaderParser parser;
     GHashTable *hash;
@@ -849,6 +936,7 @@ static void
 jpk_force_file_free(JPKForceFile *jpkfile)
 {
     GSList *l;
+    guint i;
 
     g_free(jpkfile->channel_names);
     g_free(jpkfile->ids);
@@ -858,6 +946,23 @@ jpk_force_file_free(JPKForceFile *jpkfile)
 
     if (jpkfile->shared_header_properties)
         g_hash_table_destroy(jpkfile->shared_header_properties);
+
+    if (jpkfile->point_header_properties) {
+        for (i = 0; i < jpkfile->npoints; i++) {
+            if (jpkfile->point_header_properties[i])
+                g_hash_table_destroy(jpkfile->point_header_properties[i]);
+        }
+        g_free(jpkfile->point_header_properties);
+    }
+
+    if (jpkfile->data) {
+        for (i = 0; i < jpkfile->nids; i++) {
+            if (jpkfile->data[i].header_properties)
+                g_hash_table_destroy(jpkfile->data[i].header_properties);
+            g_free(jpkfile->data[i].data);
+        }
+        g_free(jpkfile->data);
+    }
 
     while ((l = jpkfile->buffers)) {
         jpkfile->buffers = g_slist_next(l);
