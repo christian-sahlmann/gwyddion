@@ -176,7 +176,7 @@ run_noninteractive(GEdgeArgs *args,
             gwy_data_field_grains_intersect(existing_mask, mfield);
         gwy_data_field_data_changed(existing_mask);
     }
-    else if (mfield) {
+    else if (mfield && existing_mask) {
         gwy_data_field_copy(mfield, existing_mask, FALSE);
         gwy_data_field_data_changed(existing_mask);
     }
