@@ -715,9 +715,9 @@ def parse_makefiles():
                 fullpath = os.path.join(root, name)                                 
                 parse_makefile(root, fullpath)
                 
-    #print '####################################################################                        
+    #print '####################################################################'                        
     #print projs
-    #print '####################################################################        
+    #print '####################################################################'        
 
 ################################################################################             
 def fixed_writexml(self, writer, indent="", addindent="", newl=""):
@@ -820,7 +820,8 @@ def get_project_path(path, project_name):
 # output example: ./msvc2015/gwyddion/libgwyddion/libgwyddion2.vcxproj
 
 def create_vcxproj(path, name, sources, headers, definitions, configuration_type):
-    newpath = os.path.join('$(SolutionDir)..\\', path)
+    #newpath = os.path.join('$(SolutionDir)..\\', path)
+    newpath = os.path.join('$(SolutionDir)..', path)
     
     post_build_event_files_to_copy_win32_string = ' \n'.join(post_build_event_files_to_copy_win32)
     post_build_event_files_to_copy_x64_string = ' \n'.join(post_build_event_files_to_copy_x64)
