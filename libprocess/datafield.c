@@ -467,7 +467,7 @@ gwy_data_field_data_changed(GwyDataField *data_field)
  * gwy_data_field_copy:
  * @src: Source data field.
  * @dest: Destination data field.
- * @nondata_too: Whether non-data (units) should be compied too.
+ * @nondata_too: Whether non-data (units) should be copied too.
  *
  * Copies the contents of an already allocated data field to a data field
  * of the same size.
