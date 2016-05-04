@@ -44,6 +44,10 @@ static gdouble last_update_time = 0.0;
  * Starts waiting for a window @window, creating a dialog with a progress bar.
  *
  * Waiting is global, there can be only one at a time.
+ *
+ * Do not forget to call gwy_app_wait_finish() when the computation is finished
+ * (or cancelled).  You should also call gwy_app_wait_set_fraction() or
+ * gwy_app_wait_set_message() regularly to leave the GUI responsive.
  **/
 void
 gwy_app_wait_start(GtkWindow *window,
@@ -141,6 +145,8 @@ gwy_app_wait_create_dialog(GtkWindow *window,
  * See also gwy_app_wait_set_message_prefix() which makes this function more
  * usable directly as a callback.
  *
+ * This function lets the Gtk+ main loop to run.
+ *
  * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
  *          meanwhile.
  **/
@@ -179,6 +185,8 @@ gwy_app_wait_set_message(const gchar *message)
  *
  * The prefix will take effect in the next gwy_app_wait_set_message() call.
  *
+ * This function lets the Gtk+ main loop to run.
+ *
  * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
  *          meanwhile.
  **/
@@ -205,6 +213,13 @@ gwy_app_wait_set_message_prefix(const gchar *prefix)
  * @fraction: The progress of the operation, as a number from 0 to 1.
  *
  * Sets the amount of progress the progress bar on the dialog displays.
+ *
+ * This function may let the Gtk+ main loop to run.  It used to let the main
+ * loop to run always.  Since version 2.46 it performs automated rate-limiting
+ * and only does so if sufficient time has passed since the last main loop
+ * invocation.  Therefore, you can call it 10000 times per second without
+ * fearing that the program will spend all time updating the GUI and no time in
+ * the calculation.
  *
  * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
  *          meanwhile.
@@ -328,6 +343,29 @@ gwy_app_wait_cursor_finish(GtkWindow *window)
  * SECTION:wait
  * @title: wait
  * @short_description: Informing the world we are busy
+ *
+ * The waiting functions implement a simple single-thread approach to
+ * performing a long computation while keeping the GUI responsive.
+ *
+ * The typical basic usage is as follows:
+ * |[
+ * gboolean cancelled = FALSE;
+ *
+ * gwy_app_wait_start(window, _("Evaluating..."));
+ * for (i = 0; i < n_iters; i++) {
+ *     do_one_calculation_iteration();
+ *     if (!gwy_app_wait_set_fraction((i + 1.0)/n_iters)) {
+ *         cancelled = TRUE;
+ *         break;
+ *     }
+ * }
+ * gwy_app_wait_finish();
+ *
+ * if (cancelled)
+ *     handle_cancelled_computation();
+ * else
+ *     do_something_with_result();
+ * ]|
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
