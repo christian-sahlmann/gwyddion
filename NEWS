@@ -1,3 +1,9 @@
+2.46 (0000-00-00)
+Libraries:
+- libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
+  Gtk+ main loop is let to run.
+
+
 2.45 (2016-04-26)
 Application:
 - New translation: British English (accompanied with unification of the default
