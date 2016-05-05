@@ -1015,7 +1015,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_x64_string
     module_path = os.path.join('gwyddion', 'modules')
-    if(path.startswith(module_path) and name not in excluded_projects_x64):
+    if(path.startswith('modules') and name not in excluded_projects_x64):
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
@@ -1039,7 +1039,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_win32_string
     module_path = os.path.join('gwyddion', 'modules')
-    if(path.startswith(module_path) and (name not in excluded_projects_win32)):
+    if(path.startswith('modules') and (name not in excluded_projects_win32)):
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
@@ -1063,7 +1063,7 @@ def create_vcxproj(path, name, sources, headers, definitions, configuration_type
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = post_build_event_files_to_copy_x64_string
     module_path = os.path.join('gwyddion', 'modules')
-    if(path.startswith(module_path) and name not in excluded_projects_x64):
+    if(path.startswith('modules') and name not in excluded_projects_x64):
         PostBuildEvent = SubElement(ItemDefinitionGroup, "PostBuildEvent")
         Command = SubElement(PostBuildEvent, "Command")
         Command.text = modules_copy_command_string.format(post_build_event_modules_run_dir)
@@ -1183,8 +1183,8 @@ def create_vcxproj_filters(path, name, sources, headers, definitions):
 #       which are needed for 'make' commands        
 #       first run explicitly './autogen.sh' and 'make'
 # example:
-# command: make -C /home/temp/gwyddion/libgwyddion libgwyddion2.def  
-# output:  /home/temp/gwyddion/libgwyddion/libgwyddion2.def 
+# command: make -C $HOME/gwyddion/libgwyddion libgwyddion2.def  
+# output:  $HOME/gwyddion/libgwyddion/libgwyddion2.def 
 
 def create_def_file(path, name, definitions):
     for v in definitions:
