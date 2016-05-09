@@ -181,7 +181,7 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
 {
     gint i, j, k, m, xres, yres, zres;
     GwyDataField *hfield;
-    gdouble sum;
+    gdouble sum, jsum, h, x, y, theta;
     gdouble *bp, *mp, *hp;
 
     xres = gwy_brick_get_xres(brick);
@@ -192,16 +192,38 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
 
     hfield = gwy_data_field_new_alike(mask, TRUE);
     hp = gwy_data_field_get_data(hfield);
+    mp = gwy_data_field_get_data(mask);
+    jsum = 0;
+    
+    grad[0] = 0;
+    for (k = 1; k < zres; k++) {
+		grad[k] = thetas[k] * lambda / m;
+	}
 
     for (i = 0; i < yres; i++)
         for (j = 0; j < xres; j++) {
             sum = 0;
             for (k = 0; k < zres; k++) {
-                sum += *(bp + k *(xres * yres) + i * xres + j)
-                                                            * thetas[k];
+				x = *(bp + k *(xres * yres) + i * xres + j);
+                sum += x * thetas[k];
             }
-            *(hp + i * xres + j) = sigmoid(sum);
+            h = sigmoid(sum);
+            *(hp + i * xres + j) = h;
+            y = *(mp + i * xres + j);
+            jsum += -log(h)*y - log(1-h)*(1-y);
+            for (k = 0; k < zres; k++) {
+				x = *(bp + k *(xres * yres) + i * xres + j);
+				grad[k] += 1.0 / m * x * (h - y);
+			}
         }
-
-    return 0.0;
+    jsum /= m;
+    
+    sum = 0;
+    for (k = 1; k < zres; k++) {
+		theta = *(thetas + k);
+		sum += theta * theta;
+	} 
+	jsum += sum * lambda/2.0/m;
+	
+    return jsum;
 }
