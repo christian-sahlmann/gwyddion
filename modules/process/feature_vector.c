@@ -194,17 +194,17 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
     hp = gwy_data_field_get_data(hfield);
     mp = gwy_data_field_get_data(mask);
     jsum = 0;
-    
+
     grad[0] = 0;
     for (k = 1; k < zres; k++) {
-		grad[k] = thetas[k] * lambda / m;
-	}
+        grad[k] = thetas[k] * lambda / m;
+    }
 
     for (i = 0; i < yres; i++)
         for (j = 0; j < xres; j++) {
             sum = 0;
             for (k = 0; k < zres; k++) {
-				x = *(bp + k *(xres * yres) + i * xres + j);
+                x = *(bp + k *(xres * yres) + i * xres + j);
                 sum += x * thetas[k];
             }
             h = sigmoid(sum);
@@ -212,18 +212,44 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
             y = *(mp + i * xres + j);
             jsum += -log(h)*y - log(1-h)*(1-y);
             for (k = 0; k < zres; k++) {
-				x = *(bp + k *(xres * yres) + i * xres + j);
-				grad[k] += 1.0 / m * x * (h - y);
-			}
+                x = *(bp + k *(xres * yres) + i * xres + j);
+                grad[k] += 1.0 / m * x * (h - y);
+            }
         }
     jsum /= m;
-    
+
     sum = 0;
     for (k = 1; k < zres; k++) {
-		theta = *(thetas + k);
-		sum += theta * theta;
-	} 
-	jsum += sum * lambda/2.0/m;
-	
+        theta = *(thetas + k);
+        sum += theta * theta;
+    }
+    jsum += sum * lambda/2.0/m;
+
+    g_object_unref(hfield);
+
     return jsum;
+}
+
+static void
+predict(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
+{
+    gint i, j, k, xres, yres, zres;
+    gdouble sum, x;
+    gdouble *bp, *mp;
+
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    zres = gwy_brick_get_zres(brick);
+    bp = gwy_brick_get_data(brick);
+    mp = gwy_data_field_get_data(mask);
+
+    for (i = 0; i < yres; i++)
+        for (j = 0; j < yres; j++) {
+            sum = 0;
+            for (k = 0; k < zres; k++) {
+                x = *(bp + k *(xres * yres) + i * xres + j);
+                sum += x * thetas[k];
+            }
+            *(mp + i * xres + j) = (sigmoid(sum) > 0.5) ? 1.0 : 0.0;
+        }
 }
