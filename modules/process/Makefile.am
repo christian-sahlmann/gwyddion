@@ -41,7 +41,6 @@ process_LTLIBRARIES = \
 	facet-level.la \
 	facet_analysis.la \
 	fbm_synth.la \
-	feature_vector.la \
 	fft.la \
 	fft_filter_1d.la \
 	fft_filter_2d.la \
@@ -71,6 +70,7 @@ process_LTLIBRARIES = \
 	linematch.la \
 	lno_synth.la \
 	local_contrast.la \
+	logistic.la \
 	mark_disconn.la \
 	mark_with.la \
 	maskcor.la \
@@ -167,7 +167,6 @@ extract_path_la_SOURCES        = extract_path.c
 facet_analysis_la_SOURCES      = facet_analysis.c preview.h
 facet_level_la_SOURCES         = facet-level.c preview.h
 fbm_synth_la_SOURCES           = fbm_synth.c dimensions.h synth.h preview.h
-feature_vector_la_SOURCES      = feature_vector.c
 fft_filter_1d_la_SOURCES       = fft_filter_1d.c preview.h
 fft_filter_2d_la_SOURCES       = fft_filter_2d.c preview.h
 fft_profile_la_SOURCES         = fft_profile.c preview.h
@@ -197,6 +196,7 @@ linecorrect_la_SOURCES         = linecorrect.c
 linematch_la_SOURCES           = linematch.c preview.h
 lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h preview.h
 local_contrast_la_SOURCES      = local_contrast.c preview.h
+logistic_la_SOURCES            = logistic.c
 mark_disconn_la_SOURCES        = mark_disconn.c preview.h
 mark_with_la_SOURCES           = mark_with.c preview.h
 maskcor_la_SOURCES             = maskcor.c

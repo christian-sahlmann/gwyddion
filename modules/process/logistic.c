@@ -33,18 +33,35 @@
 #include <app/gwyapp.h>
 #include <string.h>
 
-#define FEATURE_VECTOR_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define LOGISTIC_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
 
 static gboolean module_register              (void);
-static void     create_feature_vector        (GwyContainer *data,
+static void     logistic_run                 (GwyContainer *data,
                                               GwyRunType run);
+static void     create_feature_vector        (GwyDataField *dfield,
+                                              GwyBrick *features);
+static gdouble  cost_function                (GwyBrick *brick,
+                                              GwyDataField *mask,
+                                              gdouble *thetas,
+                                              gdouble *grad,
+                                              gdouble lambda);
+static void     train_logistic               (GwyBrick *features,
+                                              GwyDataField *mfield,
+                                              gdouble *thetas,
+                                              gdouble lambda);
+static void     predict                      (GwyBrick *brick,
+                                              gdouble *thetas,
+                                              GwyDataField *dfield);
+static void     predict_mask                 (GwyBrick *brick,
+                                              gdouble *thetas,
+                                              GwyDataField *mask);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Converts datafield to feature vector volume data."),
+    N_("Mark grain by logistic regression."),
     "Daniil Bratashov <dn2010@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
@@ -56,30 +73,39 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_process_func_register("feature_vector",
-                              (GwyProcessFunc)&create_feature_vector,
-                              N_("/_Statistics/Feature _Vector..."),
+    gwy_process_func_register("logistic_regression",
+                              (GwyProcessFunc)&logistic_run,
+                              N_("/_Grains/Logistic _Regression..."),
                               GWY_STOCK_VOLUMIZE_LAYERS,
                               FEATURE_VECTOR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Create feature vector from datafield"));
+                              N_("Mark grains by logistic regression"));
 
     return TRUE;
 }
 
 static void
-create_feature_vector(GwyContainer *data, GwyRunType run)
+logistic_run(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield = NULL, *feature0 = NULL, *feature = NULL;
-    GwyBrick *features = NULL;
-    gdouble max, min, avg, xreal, yreal, size;
-    gdouble *fdata, *bdata;
-    gint id, newid, xres, yres, z, zres, i, ngauss;
+    GwyDataField *dfield, *mfield;
+    gint id;
 
-    g_return_if_fail(run & FEATURE_VECTOR_RUN_MODES);
+    g_return_if_fail(run & LOGISTIC_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      0);
+
+}
+
+static void
+create_feature_vector(GwyDataField *dfield, GwyBrick *features)
+{
+    GwyDataField *feature0 = NULL, *feature = NULL;
+    gdouble max, min, avg, xreal, yreal, size;
+    gdouble *fdata, *bdata;
+    gint xres, yres, z, zres, i, ngauss;
+
     feature0 = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(feature0);
     yres = gwy_data_field_get_yres(feature0);
@@ -162,17 +188,53 @@ create_feature_vector(GwyContainer *data, GwyRunType run)
         z++;
         g_object_unref(feature);
     }
-
-    newid = gwy_app_data_browser_add_brick(features, feature0, data, TRUE);
-    g_object_unref(features);
     g_object_unref(feature0);
-    gwy_app_volume_log_add(data, -1, newid, "proc::feature_vector", NULL);
 }
 
 static inline gdouble
 sigmoid(gdouble z)
 {
     return 1.0/(1.0 + exp(-z));
+}
+
+static void
+train_logistic(GwyBrick *features, GwyDataField *mfield,
+gdouble *thetas, gdouble lambda)
+{
+    gdouble *grad;
+    gdouble epsilon, alpha, cost;
+    gint i, iter, maxiter, zres;
+    gboolean converged = FALSE;
+
+    zres = gwy_brick_get_zres(features);
+    thetas = g_malloc(zres * sizeof(gdouble));
+    grad = g_malloc(zres * sizeof(gdouble));
+    for (i = 0; i < zres; i++) {
+        thetas[i] = 0.0;
+    }
+    epsilon = 1E-12;
+    alpha = 10.0;
+    iter = 0;
+    maxiter = 10000;
+    while(!converged) {
+        cost = cost_function(features, mfield, thetas, grad, lambda);
+
+        converged = TRUE;
+        for (i = 0;  i < zres; i++) {
+            thetas[i] -= alpha * grad[i];
+            if (grad[i] > epsilon)
+                converged = FALSE;
+        }
+        if (iter >= maxiter)
+            converged = TRUE;
+        fprintf(stderr, "iter=%d cost=%g\n", iter, cost);
+        iter++;
+    }
+    for (i = 0; i < zres; i++) {
+        fprintf(stderr,"thetas[%d] = %g\n", i, thetas[i]);
+    }
+
+    g_free(grad);
 }
 
 static gdouble
@@ -231,7 +293,31 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
 }
 
 static void
-predict(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
+predict(GwyBrick *brick, gdouble *thetas, GwyDataField *dfield)
+{
+    gint i, j, k, xres, yres, zres;
+    gdouble sum, x;
+    gdouble *bp, *dp;
+
+    xres = gwy_brick_get_xres(brick);
+    yres = gwy_brick_get_yres(brick);
+    zres = gwy_brick_get_zres(brick);
+    bp = gwy_brick_get_data(brick);
+    dp = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < yres; i++)
+        for (j = 0; j < yres; j++) {
+            sum = 0;
+            for (k = 0; k < zres; k++) {
+                x = *(bp + k *(xres * yres) + i * xres + j);
+                sum += x * thetas[k];
+            }
+            *(dp + i * xres + j) = sigmoid(sum);
+        }
+}
+
+static void
+predict_mask(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
 {
     gint i, j, k, xres, yres, zres;
     gdouble sum, x;
