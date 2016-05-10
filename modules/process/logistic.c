@@ -146,10 +146,10 @@ logistic_run(GwyContainer *data, GwyRunType run)
         train_logistic(features, mfield, thetas, 1.0);
     }
     else {
-		if (!mfield) {
-			mfield = gwy_data_field_new_alike(dfield, TRUE);
-		}
-		gwy_app_undo_qcheckpointv(data, 1, &quark);
+        if (!mfield) {
+            mfield = gwy_data_field_new_alike(dfield, TRUE);
+        }
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
         predict_mask(features, thetas, mfield);
         gwy_container_set_object(data, quark, mfield);
         g_object_unref(mfield);
@@ -470,7 +470,7 @@ predict_mask(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
     mp = gwy_data_field_get_data(mask);
 
     for (i = 0; i < yres; i++)
-        for (j = 0; j < yres; j++) {
+        for (j = 0; j < xres; j++) {
             sum = 0;
             for (k = 0; k < zres; k++) {
                 x = *(bp + k *(xres * yres) + i * xres + j);
@@ -527,27 +527,28 @@ logistic_reset_args(LogisticArgs *args)
     gdouble *p;
     gint i;
 
-    thetas[0] = 1.07809;
-    thetas[1] = 1.01996;
-    thetas[2] = 2.60382;
-    thetas[3] = 0.422441;
-    thetas[4] = 0.233872;
-    thetas[5] = 1.0463;
-    thetas[6] = 2.17761;
-    thetas[7] = 0.481702;
-    thetas[8] = 0.208224;
-    thetas[9] = 1.09839;
-    thetas[10] = 0.492677;
-    thetas[11] = 0.552776;
-    thetas[12] = 0.0580511;
-    thetas[13] = 0.884072;
-    thetas[14] = -6.00732;
-    thetas[15] = -0.236311;
-    thetas[16] = -0.830669;
-    thetas[17] = -1.25033;
-    thetas[18] = -16.3652;
-    thetas[19] = -2.18641;
-    thetas[20] = 0.582437;
+    thetas[0] = 0.696281;
+    thetas[1] = 0.977141;
+    thetas[2] = 2.22777;
+    thetas[3] = 0.251672;
+    thetas[4] = 0.148008;
+    thetas[5] = 2.31752;
+    thetas[6] = 1.98054;
+    thetas[7] = 0.574854;
+    thetas[8] = 0.324779;
+    thetas[9] = 2.8506;
+    thetas[10] = 2.34766;
+    thetas[11] = 1.34413;
+    thetas[12] = 0.000876439;
+    thetas[13] = 2.33006;
+    thetas[14] = -13.1964;
+    thetas[15] = -0.256855;
+    thetas[16] = -1.24291;
+    thetas[17] = -6.15057;
+    thetas[18] = -47.6137;
+    thetas[19] = -5.38088;
+    thetas[20] = 1.67821;
+
 
     p = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < NFEATURES; i++) {
