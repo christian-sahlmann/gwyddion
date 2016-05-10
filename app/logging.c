@@ -147,6 +147,10 @@ gwy_app_setup_logging(GwyAppLoggingFlags flags)
 void
 _gwy_app_log_start_message_capture(void)
 {
+    /* No message_history indicates no logging setup.  Be no-op then. */
+    if (!log_setup.message_history)
+        return;
+
     g_return_if_fail(log_setup.capturing_from == G_MAXUINT);
     flush_last_message(&log_setup);
     log_setup.capturing_from = log_setup.message_history->len;
@@ -158,6 +162,10 @@ _gwy_app_log_get_captured_messages(guint *nmesg)
     GwyAppLogMessage *messages;
     guint capturing_from = log_setup.capturing_from, i, n;
     GArray *message_history = log_setup.message_history;
+
+    /* No message_history indicates no logging setup.  Be no-op then. */
+    if (!log_setup.message_history)
+        return NULL;
 
     g_return_val_if_fail(log_setup.capturing_from != G_MAXUINT, NULL);
     log_setup.capturing_from = G_MAXUINT;
@@ -182,6 +190,10 @@ _gwy_app_log_get_captured_messages(guint *nmesg)
 void
 _gwy_app_log_discard_captured_messages(void)
 {
+    /* No message_history indicates no logging setup.  Be no-op then. */
+    if (!log_setup.message_history)
+        return NULL;
+
     g_return_if_fail(log_setup.capturing_from != G_MAXUINT);
     log_setup.capturing_from = G_MAXUINT;
 }
