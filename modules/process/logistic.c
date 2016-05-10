@@ -29,19 +29,44 @@
 #include <libprocess/filters.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include <string.h>
 
 #define LOGISTIC_RUN_MODES GWY_RUN_INTERACTIVE
 
+#define NFEATURES (1 + 4 * 5)
 #define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
+
+enum {
+    RESPONSE_RESET   = 1,
+};
+
+typedef enum {
+    LOGISTIC_MODE_TRAIN,
+    LOGISTIC_MODE_USE
+} LogisticMode;
+
+typedef struct {
+    LogisticMode mode;
+    gint zres;
+    GwyDataLine *thetas;
+} LogisticArgs;
+
+typedef struct {
+    LogisticArgs *args;
+    GSList *mode;
+    GtkWidget *dialog;
+} LogisticControls;
 
 static gboolean module_register              (void);
 static void     logistic_run                 (GwyContainer *data,
                                               GwyRunType run);
+static void     logistic_dialog              (GwyContainer *data,
+                                              LogisticArgs *args);
 static void     create_feature_vector        (GwyDataField *dfield,
-                                              GwyBrick *features);
+                                              GwyBrick **features);
 static gdouble  cost_function                (GwyBrick *brick,
                                               GwyDataField *mask,
                                               gdouble *thetas,
@@ -57,6 +82,17 @@ static void     predict                      (GwyBrick *brick,
 static void     predict_mask                 (GwyBrick *brick,
                                               gdouble *thetas,
                                               GwyDataField *mask);
+static void     logistic_mode_changed        (GtkWidget *button,
+                                              LogisticControls *controls);
+static void     logistic_values_update       (LogisticControls *controls,
+                                              LogisticArgs *args);
+static void     logistic_dialog_update       (LogisticControls *controls,
+                                              LogisticArgs *args);
+static void     logistic_load_args           (GwyContainer *settings,
+                                              LogisticArgs *args);
+static void     logistic_save_args           (GwyContainer *settings,
+                                              LogisticArgs *args);
+static void     logistic_reset_args          (LogisticArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -76,8 +112,8 @@ module_register(void)
     gwy_process_func_register("logistic_regression",
                               (GwyProcessFunc)&logistic_run,
                               N_("/_Grains/Logistic _Regression..."),
-                              GWY_STOCK_VOLUMIZE_LAYERS,
-                              FEATURE_VECTOR_RUN_MODES,
+                              GWY_STOCK_GRAINS,
+                              LOGISTIC_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Mark grains by logistic regression"));
 
@@ -88,18 +124,122 @@ static void
 logistic_run(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield;
+    GwyBrick *features;
     gint id;
+    LogisticArgs args;
+    gdouble *thetas;
+    GQuark quark;
 
     g_return_if_fail(run & LOGISTIC_RUN_MODES);
+    logistic_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_MASK_FIELD_KEY, &quark,
                                      0);
-
+    logistic_dialog(data, &args);
+    create_feature_vector(dfield, &features);
+    if (!features)
+        fprintf(stderr, "Features creation failed!\n");
+    thetas = gwy_data_line_get_data(args.thetas);
+    if (args.mode == LOGISTIC_MODE_TRAIN) {
+        train_logistic(features, mfield, thetas, 1.0);
+    }
+    else {
+		if (!mfield) {
+			mfield = gwy_data_field_new_alike(dfield, TRUE);
+		}
+		gwy_app_undo_qcheckpointv(data, 1, &quark);
+        predict_mask(features, thetas, mfield);
+        gwy_container_set_object(data, quark, mfield);
+        g_object_unref(mfield);
+    }
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 static void
-create_feature_vector(GwyDataField *dfield, GwyBrick *features)
+logistic_dialog(GwyContainer *data, LogisticArgs *args)
+{
+    GtkWidget *dialog, *table, *hbox, *button;
+    gint response, row;
+    LogisticControls controls;
+
+    controls.args = args;
+
+    dialog = gtk_dialog_new_with_buttons(_("Logistic Regression"),
+                                         NULL, 0, NULL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("_Reset"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+                                    GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
+    controls.dialog = dialog;
+
+    hbox = gtk_hbox_new(FALSE, 2);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(table), TRUE, TRUE, 4);
+    row = 0;
+
+    controls.mode = gwy_radio_buttons_createl(G_CALLBACK(logistic_mode_changed),
+                                              &controls, args->mode,
+                                              _("_Train logistic regression"),
+                                              LOGISTIC_MODE_TRAIN,
+                                              _("_Use trained regression"),
+                                              LOGISTIC_MODE_USE,
+                                              NULL);
+    button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_TRAIN);
+    gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_USE);
+    gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+    logistic_dialog_update(&controls, args);
+    gtk_widget_show_all(dialog);
+
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            logistic_values_update(&controls, args);
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            logistic_reset_args(args);
+            logistic_dialog_update(&controls, args);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    logistic_values_update(&controls, args);
+    logistic_save_args(gwy_app_settings_get(), args);
+    gtk_widget_destroy(dialog);
+}
+
+static void
+create_feature_vector(GwyDataField *dfield, GwyBrick **features)
 {
     GwyDataField *feature0 = NULL, *feature = NULL;
     gdouble max, min, avg, xreal, yreal, size;
@@ -121,9 +261,9 @@ create_feature_vector(GwyDataField *dfield, GwyBrick *features)
     avg = gwy_data_field_get_avg(feature0);
     gwy_data_field_add(feature0, -avg);
 
-    features = gwy_brick_new(xres, yres, zres,
-                             xreal, yreal, zres, TRUE);
-    bdata = gwy_brick_get_data(features);
+    *features = gwy_brick_new(xres, yres, zres,
+                              xreal, yreal, zres, TRUE);
+    bdata = gwy_brick_get_data(*features);
     fdata = gwy_data_field_get_data(feature0);
     memmove(bdata, fdata, xres * yres * sizeof(gdouble));
     z++;
@@ -339,3 +479,80 @@ predict_mask(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
             *(mp + i * xres + j) = (sigmoid(sum) > 0.5) ? 1.0 : 0.0;
         }
 }
+
+static void
+logistic_mode_changed(G_GNUC_UNUSED GtkWidget *button,
+                      LogisticControls *controls)
+{
+    controls->args->mode = gwy_radio_buttons_get_current(controls->mode);
+}
+
+static void
+logistic_values_update(LogisticControls *controls,
+                       LogisticArgs *args)
+{
+    args = controls->args;
+}
+
+static void
+logistic_dialog_update(LogisticControls *controls,
+                       LogisticArgs *args)
+{
+    controls->args = args;
+}
+static const gchar thetas_key[]  = "/module/logistic/thetas";
+
+static void
+logistic_load_args(GwyContainer *settings,
+                   LogisticArgs *args)
+{
+    if (!gwy_container_gis_object_by_name(settings,
+                                          thetas_key, &args->thetas)) {
+        args->thetas = gwy_data_line_new(NFEATURES, NFEATURES, TRUE);
+    }
+}
+
+static void
+logistic_save_args(GwyContainer *settings,
+                   LogisticArgs *args)
+{
+    gwy_container_set_object_by_name(settings,
+                                     thetas_key, args->thetas);
+}
+
+static void
+logistic_reset_args(LogisticArgs *args)
+{
+    gdouble thetas[NFEATURES];
+    gdouble *p;
+    gint i;
+
+    thetas[0] = 1.07809;
+    thetas[1] = 1.01996;
+    thetas[2] = 2.60382;
+    thetas[3] = 0.422441;
+    thetas[4] = 0.233872;
+    thetas[5] = 1.0463;
+    thetas[6] = 2.17761;
+    thetas[7] = 0.481702;
+    thetas[8] = 0.208224;
+    thetas[9] = 1.09839;
+    thetas[10] = 0.492677;
+    thetas[11] = 0.552776;
+    thetas[12] = 0.0580511;
+    thetas[13] = 0.884072;
+    thetas[14] = -6.00732;
+    thetas[15] = -0.236311;
+    thetas[16] = -0.830669;
+    thetas[17] = -1.25033;
+    thetas[18] = -16.3652;
+    thetas[19] = -2.18641;
+    thetas[20] = 0.582437;
+
+    p = gwy_data_line_get_data(args->thetas);
+    for (i = 0; i < NFEATURES; i++) {
+        *(p++) = thetas[i];
+    }
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
