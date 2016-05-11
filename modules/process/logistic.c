@@ -355,7 +355,7 @@ gdouble *thetas, gdouble lambda)
         thetas[i] = 0.0;
         oldgrad[i] = 0.0;
     }
-    epsilon = 1E-12;
+    epsilon = 1E-5;
     alpha = 10.0;
     iter = 0;
     maxiter = 10000;
@@ -368,23 +368,32 @@ gdouble *thetas, gdouble lambda)
         }
 
         if (sum > 0) {
-            alpha *= 2;
+            alpha *= 1.05;
         }
-        if (sum < 0) {
-            alpha /= 10.0;
+        else if (sum < 0) {
+            alpha /= 2.0;
+            for (i = 0; i < zres; i++) {
+                grad[i] += oldgrad[i];
+            }
         }
 
         converged = TRUE;
         for (i = 0;  i < zres; i++) {
             thetas[i] -= alpha * grad[i];
-            if (grad[i] > epsilon)
+            if (fabs(grad[i]) > epsilon) {
                 converged = FALSE;
+            }
+            oldgrad[i] = grad[i];
         }
-        if (iter >= maxiter)
+
+        if (iter >= maxiter) {
             converged = TRUE;
-        fprintf(stderr, "iter=%d cost=%g\n", iter, cost);
+        }
+        fprintf(stderr, "iter=%d cost=%g grad[0] = %g grad[20] = %g alpha=%g\n",
+                iter, cost, grad[0], grad[20], alpha);
         iter++;
     }
+
     for (i = 0; i < zres; i++) {
         fprintf(stderr,"thetas[%d] = %g\n", i, thetas[i]);
     }
@@ -543,28 +552,27 @@ logistic_reset_args(LogisticArgs *args)
     gdouble *p;
     gint i;
 
-    thetas[0] = 0.696281;
-    thetas[1] = 0.977141;
-    thetas[2] = 2.22777;
-    thetas[3] = 0.251672;
-    thetas[4] = 0.148008;
-    thetas[5] = 2.31752;
-    thetas[6] = 1.98054;
-    thetas[7] = 0.574854;
-    thetas[8] = 0.324779;
-    thetas[9] = 2.8506;
-    thetas[10] = 2.34766;
-    thetas[11] = 1.34413;
-    thetas[12] = 0.000876439;
-    thetas[13] = 2.33006;
-    thetas[14] = -13.1964;
-    thetas[15] = -0.256855;
-    thetas[16] = -1.24291;
-    thetas[17] = -6.15057;
-    thetas[18] = -47.6137;
-    thetas[19] = -5.38088;
-    thetas[20] = 1.67821;
-
+	thetas[0] = 0.680713;
+	thetas[1] = 0.943851;
+	thetas[2] = 1.85387;
+	thetas[3] = 0.150737;
+	thetas[4] = 0.132222;
+	thetas[5] = 1.9739;
+	thetas[6] = 1.39092;
+	thetas[7] = 0.586287;
+	thetas[8] = 0.239113;
+	thetas[9] = 2.50995;
+	thetas[10] = 2.7295;
+	thetas[11] = 0.747129;
+	thetas[12] = -0.165275;
+	thetas[13] = 1.91496;
+	thetas[14] = -13.5871;
+	thetas[15] = -1.12795;
+	thetas[16] = -0.797953;
+	thetas[17] = -5.97306;
+	thetas[18] = -39.9018;
+	thetas[19] = -3.61498;
+	thetas[20] = 1.00738;
 
     p = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < NFEATURES; i++) {
