@@ -155,6 +155,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
         g_object_unref(mfield);
     }
     gwy_app_channel_log_add_proc(data, id, id);
+    g_object_unref(features);
 }
 
 static void
@@ -341,16 +342,18 @@ static void
 train_logistic(GwyBrick *features, GwyDataField *mfield,
 gdouble *thetas, gdouble lambda)
 {
-    gdouble *grad;
-    gdouble epsilon, alpha, cost;
+    gdouble *grad, *oldgrad;
+    gdouble epsilon, alpha, cost, sum;
     gint i, iter, maxiter, zres;
     gboolean converged = FALSE;
 
     zres = gwy_brick_get_zres(features);
     thetas = g_malloc(zres * sizeof(gdouble));
     grad = g_malloc(zres * sizeof(gdouble));
+    oldgrad = g_malloc(zres * sizeof(gdouble));
     for (i = 0; i < zres; i++) {
         thetas[i] = 0.0;
+        oldgrad[i] = 0.0;
     }
     epsilon = 1E-12;
     alpha = 10.0;
@@ -358,6 +361,18 @@ gdouble *thetas, gdouble lambda)
     maxiter = 10000;
     while(!converged) {
         cost = cost_function(features, mfield, thetas, grad, lambda);
+
+        sum = 0;
+        for (i = 0; i < zres; i++) {
+            sum += grad[i]*oldgrad[i];
+        }
+
+        if (sum > 0) {
+            alpha *= 2;
+        }
+        if (sum < 0) {
+            alpha /= 10.0;
+        }
 
         converged = TRUE;
         for (i = 0;  i < zres; i++) {
@@ -375,6 +390,7 @@ gdouble *thetas, gdouble lambda)
     }
 
     g_free(grad);
+    g_free(oldgrad);
 }
 
 static gdouble
