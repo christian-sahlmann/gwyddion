@@ -60,39 +60,38 @@ typedef struct {
     GtkWidget *dialog;
 } LogisticControls;
 
-static gboolean module_register              (void);
-static void     logistic_run                 (GwyContainer *data,
-                                              GwyRunType run);
-static void     logistic_dialog              (GwyContainer *data,
-                                              LogisticArgs *args);
-static void     create_feature_vector        (GwyDataField *dfield,
-                                              GwyBrick **features);
-static gdouble  cost_function                (GwyBrick *brick,
-                                              GwyDataField *mask,
-                                              gdouble *thetas,
-                                              gdouble *grad,
-                                              gdouble lambda);
-static void     train_logistic               (GwyBrick *features,
-                                              GwyDataField *mfield,
-                                              gdouble *thetas,
-                                              gdouble lambda);
-static void     predict                      (GwyBrick *brick,
-                                              gdouble *thetas,
-                                              GwyDataField *dfield);
-static void     predict_mask                 (GwyBrick *brick,
-                                              gdouble *thetas,
-                                              GwyDataField *mask);
-static void     logistic_mode_changed        (GtkWidget *button,
-                                              LogisticControls *controls);
-static void     logistic_values_update       (LogisticControls *controls,
-                                              LogisticArgs *args);
-static void     logistic_dialog_update       (LogisticControls *controls,
-                                              LogisticArgs *args);
-static void     logistic_load_args           (GwyContainer *settings,
-                                              LogisticArgs *args);
-static void     logistic_save_args           (GwyContainer *settings,
-                                              LogisticArgs *args);
-static void     logistic_reset_args          (LogisticArgs *args);
+static gboolean module_register         (void);
+static void      logistic_run           (GwyContainer *data,
+                                         GwyRunType run);
+static void      logistic_dialog        (GwyContainer *data,
+                                         LogisticArgs *args);
+static GwyBrick* create_feature_vector  (GwyDataField *dfield);
+static gdouble   cost_function          (GwyBrick *brick,
+                                         GwyDataField *mask,
+                                         gdouble *thetas,
+                                         gdouble *grad,
+                                         gdouble lambda);
+static void      train_logistic         (GwyBrick *features,
+                                         GwyDataField *mfield,
+                                         gdouble *thetas,
+                                         gdouble lambda);
+static void      predict                (GwyBrick *brick,
+                                         gdouble *thetas,
+                                         GwyDataField *dfield);
+static void      predict_mask           (GwyBrick *brick,
+                                         gdouble *thetas,
+                                         GwyDataField *mask);
+static void      logistic_mode_changed  (GtkWidget *button,
+                                         LogisticControls *controls);
+static void      logistic_values_update (LogisticControls *controls,
+                                         LogisticArgs *args);
+static void      logistic_dialog_update (LogisticControls *controls,
+                                         LogisticArgs *args);
+static void      logistic_load_args     (GwyContainer *settings,
+                                         LogisticArgs *args);
+static void      logistic_save_args     (GwyContainer *settings,
+                                         LogisticArgs *args);
+static void      logistic_reset_args    (LogisticArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -138,7 +137,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
                                      GWY_APP_MASK_FIELD_KEY, &quark,
                                      0);
     logistic_dialog(data, &args);
-    create_feature_vector(dfield, &features);
+    features = create_feature_vector(dfield);
     if (!features)
         fprintf(stderr, "Features creation failed!\n");
     thetas = gwy_data_line_get_data(args.thetas);
@@ -239,9 +238,10 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
     gtk_widget_destroy(dialog);
 }
 
-static void
-create_feature_vector(GwyDataField *dfield, GwyBrick **features)
+static GwyBrick *
+create_feature_vector(GwyDataField *dfield)
 {
+    GwyBrick *features = NULL;
     GwyDataField *feature0 = NULL, *feature = NULL;
     gdouble max, min, avg, xreal, yreal, size;
     gdouble *fdata, *bdata;
@@ -262,9 +262,9 @@ create_feature_vector(GwyDataField *dfield, GwyBrick **features)
     avg = gwy_data_field_get_avg(feature0);
     gwy_data_field_add(feature0, -avg);
 
-    *features = gwy_brick_new(xres, yres, zres,
+    features = gwy_brick_new(xres, yres, zres,
                               xreal, yreal, zres, TRUE);
-    bdata = gwy_brick_get_data(*features);
+    bdata = gwy_brick_get_data(features);
     fdata = gwy_data_field_get_data(feature0);
     memmove(bdata, fdata, xres * yres * sizeof(gdouble));
     z++;
@@ -330,6 +330,8 @@ create_feature_vector(GwyDataField *dfield, GwyBrick **features)
         g_object_unref(feature);
     }
     g_object_unref(feature0);
+
+    return features;
 }
 
 static inline gdouble
@@ -552,27 +554,27 @@ logistic_reset_args(LogisticArgs *args)
     gdouble *p;
     gint i;
 
-	thetas[0] = 0.680713;
-	thetas[1] = 0.943851;
-	thetas[2] = 1.85387;
-	thetas[3] = 0.150737;
-	thetas[4] = 0.132222;
-	thetas[5] = 1.9739;
-	thetas[6] = 1.39092;
-	thetas[7] = 0.586287;
-	thetas[8] = 0.239113;
-	thetas[9] = 2.50995;
-	thetas[10] = 2.7295;
-	thetas[11] = 0.747129;
-	thetas[12] = -0.165275;
-	thetas[13] = 1.91496;
-	thetas[14] = -13.5871;
-	thetas[15] = -1.12795;
-	thetas[16] = -0.797953;
-	thetas[17] = -5.97306;
-	thetas[18] = -39.9018;
-	thetas[19] = -3.61498;
-	thetas[20] = 1.00738;
+    thetas[0] = 1.25099;
+    thetas[1] = 1.41348;
+    thetas[2] = 1.41405;
+    thetas[3] = -0.283954;
+    thetas[4] = -0.0738085;
+    thetas[5] = 2.95126;
+    thetas[6] = -0.157917;
+    thetas[7] = 0.0817234;
+    thetas[8] = 0.0388422;
+    thetas[9] = 3.60457;
+    thetas[10] = 3.18731;
+    thetas[11] = 3.92896;
+    thetas[12] = 0.434874;
+    thetas[13] = 2.02171;
+    thetas[14] = -24.9334;
+    thetas[15] = 0.116424;
+    thetas[16] = 0.0659015;
+    thetas[17] = -8.54693;
+    thetas[18] = -38.0947;
+    thetas[19] = -6.55105;
+    thetas[20] = 1.31064;
 
     p = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < NFEATURES; i++) {
