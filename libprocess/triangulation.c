@@ -1575,6 +1575,9 @@ triangulate(const PointList *pointlist, GwySetFractionFunc set_fraction)
                     goto fail;
             }
         }
+        /* Point was somehow removed from all neighbourhoods. */
+        if (G_UNLIKELY(!wspace->len))
+            goto fail;
 
         /* Append an empty zero-length block, reintegrate_workspace() will fix
          * it to the required size. */
