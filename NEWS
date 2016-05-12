@@ -1,5 +1,9 @@
 2.46 (0000-00-00)
 Libraries:
+- libprocess: An obscure case of GwyTriangulation failure now fails gracefully
+  instead of on a failed assertion.
+- libgwyapp: Critical _gwy_app_log_start_message_capture() error when opening
+  files from standalone Python scripts was fixed.
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
   Gtk+ main loop is let to run.
 
