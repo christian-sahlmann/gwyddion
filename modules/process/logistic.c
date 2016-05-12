@@ -138,8 +138,6 @@ logistic_run(GwyContainer *data, GwyRunType run)
                                      0);
     logistic_dialog(data, &args);
     features = create_feature_vector(dfield);
-    if (!features)
-        fprintf(stderr, "Features creation failed!\n");
     thetas = gwy_data_line_get_data(args.thetas);
     if (args.mode == LOGISTIC_MODE_TRAIN) {
         train_logistic(features, mfield, thetas, 1.0);
@@ -160,7 +158,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
 static void
 logistic_dialog(GwyContainer *data, LogisticArgs *args)
 {
-    GtkWidget *dialog, *table, *hbox, *button;
+    GtkWidget *dialog, *table, *button;
     gint response, row;
     LogisticControls controls;
 
@@ -179,16 +177,12 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
-    hbox = gtk_hbox_new(FALSE, 2);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
-
-    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
-    gtk_table_set_row_spacings(table, 2);
-    gtk_table_set_col_spacings(table, 6);
+    table = gtk_table_new(2, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(table), TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       TRUE, TRUE, 4);
     row = 0;
 
     controls.mode = gwy_radio_buttons_createl(G_CALLBACK(logistic_mode_changed),
@@ -199,11 +193,13 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
                                               LOGISTIC_MODE_USE,
                                               NULL);
     button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_TRAIN);
-    gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1, 
+                     GTK_FILL, 0, 0, 0);
     row++;
 
     button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_USE);
-    gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1,
+                     GTK_FILL, 0, 0, 0);
     row++;
     logistic_dialog_update(&controls, args);
     gtk_widget_show_all(dialog);
@@ -257,7 +253,7 @@ create_feature_vector(GwyDataField *dfield)
     z = 0;
     max = gwy_data_field_get_max(feature0);
     min = gwy_data_field_get_min(feature0);
-    g_return_if_fail(max - min > 0.0);
+    g_return_val_if_fail(max - min > 0.0, NULL);
     gwy_data_field_multiply(feature0, 1.0/(max - min));
     avg = gwy_data_field_get_avg(feature0);
     gwy_data_field_add(feature0, -avg);
@@ -274,7 +270,7 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_filter_gaussian(feature, size * FWHM2SIGMA);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
-        g_return_if_fail(max - min > 0.0);
+        g_return_val_if_fail(max - min > 0.0, NULL);
         gwy_data_field_multiply(feature, 1.0/(max - min));
         avg = gwy_data_field_get_avg(feature);
         gwy_data_field_add(feature, -avg);
@@ -285,7 +281,7 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_filter_laplacian(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
-        g_return_if_fail(max - min > 0.0);
+        g_return_val_if_fail(max - min > 0.0, NULL);
         gwy_data_field_multiply(feature, 1.0/(max - min));
         avg = gwy_data_field_get_avg(feature);
         gwy_data_field_add(feature, -avg);
@@ -297,7 +293,7 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
-        g_return_if_fail(max - min > 0.0);
+        g_return_val_if_fail(max - min > 0.0, NULL);
         gwy_data_field_multiply(feature, 1.0/(max - min));
         avg = gwy_data_field_get_avg(feature);
         gwy_data_field_add(feature, -avg);
@@ -309,7 +305,7 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_VERTICAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
-        g_return_if_fail(max - min > 0.0);
+        g_return_val_if_fail(max - min > 0.0, NULL);
         gwy_data_field_multiply(feature, 1.0/(max - min));
         avg = gwy_data_field_get_avg(feature);
         gwy_data_field_add(feature, -avg);
@@ -318,7 +314,7 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
-        g_return_if_fail(max - min > 0.0);
+        g_return_val_if_fail(max - min > 0.0, NULL);
         gwy_data_field_multiply(feature, 1.0/(max - min));
         avg = gwy_data_field_get_avg(feature);
         gwy_data_field_add(feature, -avg);
@@ -536,6 +532,7 @@ logistic_load_args(GwyContainer *settings,
     if (!gwy_container_gis_object_by_name(settings,
                                           thetas_key, &args->thetas)) {
         args->thetas = gwy_data_line_new(NFEATURES, NFEATURES, TRUE);
+        logistic_reset_args(args);
     }
 }
 
