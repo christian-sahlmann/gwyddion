@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Converts data fields to XYZ data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -104,7 +104,7 @@ xyzize(GwyContainer *data, GwyRunType run)
 
     newid = gwy_app_data_browser_add_surface(surface, data, TRUE);
     g_object_unref(surface);
-    gwy_app_volume_log_add(data, -1, newid, "proc::xyzize", NULL);
+    gwy_app_xyz_log_add(data, -1, newid, "proc::xyzize", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
