@@ -101,6 +101,7 @@ typedef struct {
     GRegex *segment_regex;
     GRegex *index_segment_regex;
     GString *str;
+    GString *sstr;
 
     GHashTable *header_properties;
     GHashTable *shared_header_properties;
@@ -164,6 +165,11 @@ static gboolean      read_curve_data        (GwyZipFile zipfile,
                                              GError **error);
 static guint         find_segment_npoints   (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
+                                             GError **error);
+static const gchar*  lookup_property        (JPKForceFile *jpkfile,
+                                             GHashTable *header_properties,
+                                             const gchar *key,
+                                             gboolean fail_if_not_found,
                                              GError **error);
 static gboolean      enumerate_channels     (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
@@ -639,6 +645,7 @@ jpkforce_load(const gchar *filename,
     }
 
     jpkfile.str = g_string_new(NULL);
+    jpkfile.sstr = g_string_new(NULL);
     jpkfile.segment_regex
         = g_regex_new("^segments/([0-9]+)/(.*)$", G_REGEX_OPTIMIZE, 0, NULL);
     jpkfile.index_segment_regex
@@ -894,6 +901,56 @@ find_segment_npoints(JPKForceFile *jpkfile,
     return npts;
 }
 
+static const gchar*
+lookup_property(JPKForceFile *jpkfile,
+                GHashTable *header_properties, const gchar *key,
+                gboolean fail_if_not_found, GError **error)
+{
+    GString *sstr = jpkfile->sstr;
+    const gchar *s, *dot;
+    guint len;
+
+    /* Direct lookup. */
+    if ((s = g_hash_table_lookup(header_properties, key)))
+        return s;
+
+    /* If there are shared properties and a *-reference we have a second
+     * chance. */
+    if (jpkfile->shared_header_properties) {
+        g_string_assign(sstr, key);
+        while ((dot = strrchr(sstr->str, '.'))) {
+            len = dot - sstr->str;
+            g_string_truncate(sstr, len+1);
+            g_string_append_c(sstr, '*');
+            if ((s = g_hash_table_lookup(header_properties, sstr->str)))
+                break;
+            g_string_truncate(sstr, len);
+        }
+    }
+
+    /* Not found or we have zero prefix. */
+    if (!s || !len)
+        goto fail;
+
+    /* Try to look it up in the shared properties.  The part just before .*
+     * is the beginning of the property name in the shared properties.  */
+    g_string_truncate(sstr, len);
+    if ((dot = strrchr(sstr->str, '.')))
+        g_string_erase(sstr, 0, dot+1 - sstr->str);
+    g_string_append_c(sstr, '.');
+    g_string_append(sstr, s);
+    g_string_append(sstr, key + len);
+    gwy_debug("shared properties key <%s>", sstr->str);
+
+    if ((s = g_hash_table_lookup(jpkfile->shared_header_properties, sstr->str)))
+        return s;
+
+fail:
+    if (fail_if_not_found)
+        err_MISSING_FIELD(error, key);
+    return NULL;
+}
+
 static gboolean
 enumerate_channels(JPKForceFile *jpkfile, GHashTable *header_properties,
                    gboolean needslist, GError **error)
@@ -1126,6 +1183,8 @@ jpk_force_file_free(JPKForceFile *jpkfile)
 
     if (jpkfile->str)
         g_string_free(jpkfile->str, TRUE);
+    if (jpkfile->sstr)
+        g_string_free(jpkfile->sstr, TRUE);
 
     if (jpkfile->header_properties)
         g_hash_table_destroy(jpkfile->header_properties);
