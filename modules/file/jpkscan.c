@@ -100,8 +100,8 @@ typedef struct {
 typedef struct {
     GRegex *segment_regex;
     GRegex *index_segment_regex;
-    GString *str;
-    GString *sstr;
+    GString *str;     /* General scratch buffer. */
+    GString *sstr;    /* Inner scratch buffer for lookup_property(). */
 
     GHashTable *header_properties;
     GHashTable *shared_header_properties;
@@ -163,8 +163,20 @@ static GwyContainer* jpkforce_load          (const gchar *filename,
 static gboolean      read_curve_data        (GwyZipFile zipfile,
                                              JPKForceFile *jpkfile,
                                              GError **error);
+static gboolean      read_raw_data          (GwyZipFile zipfile,
+                                             JPKForceFile *jpkfile,
+                                             JPKForceData *data,
+                                             const gchar *datatype,
+                                             guint i,
+                                             GError **error);
 static guint         find_segment_npoints   (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
+                                             GError **error);
+static const gchar*  lookup_channel_property(JPKForceFile *jpkfile,
+                                             GHashTable *header_properties,
+                                             const gchar *subkey,
+                                             guint i,
+                                             gboolean fail_if_not_found,
                                              GError **error);
 static const gchar*  lookup_property        (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
@@ -807,8 +819,8 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
     }
 
     do {
-        GHashTable *hash;
         gchar *filename = NULL, *suffix = NULL;
+        GHashTable *hash;
         guint id, i, ndata;
         gboolean ok;
 
@@ -831,33 +843,64 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
 
         hash = parse_header_properties(zipfile, jpkfile, error);
         jpkfile->data[id].header_properties = hash;
-        if (!hash || !enumerate_channels(jpkfile, hash, TRUE, error))
-            return FALSE;
-
-        if (!(ndata = find_segment_npoints(jpkfile, hash, error)))
+        if (!hash
+            || !enumerate_channels(jpkfile, hash, TRUE, error)
+            || !(ndata = find_segment_npoints(jpkfile, hash, error)))
             return FALSE;
 
         gwy_debug("%u, npts = %u", id, ndata);
         jpkfile->data[id].ndata = ndata;
         jpkfile->data[id].data = g_new(gdouble, ndata*jpkfile->nchannels);
         /* Expect corresponding data files next. */
-        /* TODO: Use channel.FOO.data.file.name instead of just the channel
-         * name. */
         /* TOOD: Data type and conversion. */
         for (i = 0; i < jpkfile->nchannels; i++) {
+            const gchar *datafilename, *datatype;
+
+            /* FIXME: The documentation says "data.type" but we find it
+             * as "lcd-info.type" for some reason. */
+            if (!(datatype = lookup_channel_property(jpkfile, hash,
+                                                     "lcd-info.type",
+                                                     i, TRUE, error)))
+                return FALSE;
+
+            gwy_debug("data.type %s", datatype);
+            if (gwy_strequal(datatype, "constant-data")) {
+                /* TODO: handle constant data. */
+                continue;
+            }
+
+            if (gwy_strequal(datatype, "raster-data")) {
+                /* TODO: handle ramp data. */
+                continue;
+            }
+
+            /* Otherwise we have actual data and expect a file name. */
             if (!gwyzip_next_file(zipfile, error))
                 return FALSE;
 
-            g_string_printf(str, "segments/%u/channels/%s.dat",
-                            id, jpkfile->channel_names[i]);
+            if (!(datafilename = lookup_channel_property(jpkfile, hash,
+                                                         "data.file.name",
+                                                         i, TRUE, error)))
+                return FALSE;
+
+            g_string_printf(str, "segments/%u/%s", id, datafilename);
             if (!gwyzip_get_current_filename(zipfile, &filename, error))
                 return FALSE;
+            gwy_debug("expecting file <%s>, found <%s>", str->str, filename);
             if (!gwy_strequal(filename, str->str)) {
                 err_DATA_FILE_NAME(error, str->str, filename);
                 g_free(filename);
                 return FALSE;
             }
+
             /* TODO: Read the data. */
+            /* TODO: Set seen_data accordingly (if we actualy keep that
+             * mechanism). */
+            if (!read_raw_data(zipfile, jpkfile, jpkfile->data + id,
+                               datatype, i, error)) {
+                g_free(filename);
+                return FALSE;
+            }
             g_free(filename);
         }
     } while (gwyzip_next_file(zipfile, NULL));
@@ -867,27 +910,109 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
     return FALSE;
 }
 
-/* TODO: Implement general lookups that can resolve references to shared
- * header properties. */
+static gboolean
+read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
+              JPKForceData *data, const gchar *datatype, guint i,
+              GError **error)
+{
+    static const gchar encoder_key[] = "lcd-info.encoder.type";
+    GwyRawDataType rawtype;
+    GHashTable *hash = data->header_properties;
+    const gchar *encoder = "";
+    gsize size;
+    guchar *bytes;
+
+    if (gwy_stramong(datatype, "float-data", "float", NULL))
+        rawtype = GWY_RAW_DATA_FLOAT;
+    else if (gwy_stramong(datatype, "double-data", "double", NULL))
+        rawtype = GWY_RAW_DATA_DOUBLE;
+    else if (gwy_stramong(datatype, "short-data", "memory-short-data", "short",
+                          NULL)) {
+        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+                                                i, TRUE, error)))
+            return FALSE;
+        if (gwy_stramong(encoder, "unsignedshort", "unsignedshort-limited",
+                         NULL))
+            rawtype = GWY_RAW_DATA_UINT16;
+        else if (gwy_stramong(encoder, "signedshort", "signedshort-limited",
+                              NULL))
+            rawtype = GWY_RAW_DATA_SINT16;
+        else {
+            err_UNSUPPORTED(error, "data.encoder.type");
+            return FALSE;
+        }
+    }
+    else if (gwy_stramong(datatype, "integer-data", "memory-integer-data",
+                          NULL)) {
+        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+                                                i, TRUE, error)))
+            return FALSE;
+        if (gwy_stramong(encoder, "unsignedinteger", "unsignedinteger-limited",
+                         NULL))
+            rawtype = GWY_RAW_DATA_UINT32;
+        else if (gwy_stramong(encoder, "signedinteger", "signedinteger-limited",
+                              NULL))
+            rawtype = GWY_RAW_DATA_SINT32;
+        else {
+            err_UNSUPPORTED(error, "data.encoder.type");
+            return FALSE;
+        }
+    }
+    else if (gwy_stramong(datatype, "long-data", "memory-long-data", "long",
+                          NULL)) {
+        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+                                                i, TRUE, error)))
+            return FALSE;
+        if (gwy_stramong(encoder, "unsignedlong", "unsignedlong-limited",
+                         NULL))
+            rawtype = GWY_RAW_DATA_UINT64;
+        else if (gwy_stramong(encoder, "signedlong", "signedlong-limited",
+                              NULL))
+            rawtype = GWY_RAW_DATA_SINT64;
+        else {
+            err_UNSUPPORTED(error, "data.encoder.type");
+            return FALSE;
+        }
+    }
+    else {
+        err_UNSUPPORTED(error, "data.type");
+        return FALSE;
+    }
+
+    if (!(bytes = gwyzip_get_file_content(zipfile, &size, error)))
+        return FALSE;
+
+    if (err_SIZE_MISMATCH(error, data->ndata*gwy_raw_data_size(rawtype), size,
+                          TRUE)) {
+        g_free(bytes);
+        return FALSE;
+    }
+
+    /* TODO: Apply actual conversion factors.  Although we might want to do
+     * that later. */
+    gwy_convert_raw_data(bytes, data->ndata, 1, rawtype,
+                         GWY_BYTE_ORDER_BIG_ENDIAN,
+                         data->data + i*data->ndata, 1.0, 0.0);
+    g_free(bytes);
+    gwy_debug("read %u (%s,%s) data points",
+              data->ndata, datatype, encoder);
+    return TRUE;
+}
+
 static guint
 find_segment_npoints(JPKForceFile *jpkfile,
                      GHashTable *header_properties, GError **error)
 {
-    GString *str = jpkfile->str;
     guint i, npts = 0;
     const gchar *s;
 
     for (i = 0; i < jpkfile->nchannels; i++) {
-        g_string_printf(str, "channel.%s.data.num-points",
-                        jpkfile->channel_names[i]);
-        s = g_hash_table_lookup(header_properties, str->str);
-        if (!s) {
-            err_MISSING_FIELD(error, str->str);
+        if (!(s = lookup_channel_property(jpkfile, header_properties,
+                                          "data.num-points", i, TRUE, error)))
             return 0;
-        }
         if (i) {
             if (atoi(s) != npts) {
-                err_INVALID(error, str->str);
+                err_INVALID(error, jpkfile->str->str);
                 return 0;
             }
         }
@@ -901,6 +1026,26 @@ find_segment_npoints(JPKForceFile *jpkfile,
     return npts;
 }
 
+static const gchar*
+lookup_channel_property(JPKForceFile *jpkfile,
+                        GHashTable *header_properties, const gchar *subkey,
+                        guint i,
+                        gboolean fail_if_not_found, GError **error)
+{
+    GString *str = jpkfile->str;
+
+    g_return_val_if_fail(i < jpkfile->nchannels, NULL);
+    g_string_assign(str, "channel.");
+    g_string_append(str, jpkfile->channel_names[i]);
+    g_string_append_c(str, '.');
+    g_string_append(str, subkey);
+
+    return lookup_property(jpkfile, header_properties, str->str,
+                           fail_if_not_found, error);
+}
+
+/* Look up a property in provided @header_properties and, failing that, in
+ * the shared properties. */
 static const gchar*
 lookup_property(JPKForceFile *jpkfile,
                 GHashTable *header_properties, const gchar *key,
