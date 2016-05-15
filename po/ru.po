@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-26 11:07+0200\n"
-"PO-Revision-Date: 2016-04-26 09:40+0300\n"
+"POT-Creation-Date: 2016-05-15 18:13+0300\n"
+"PO-Revision-Date: 2016-05-15 18:17+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -690,11 +690,11 @@ msgstr "Октагональное"
 msgid "distance|Euclidean"
 msgstr "Евклидово"
 
-#: libprocess/morph_lib.c:169 libprocess/tip.c:674
+#: libprocess/morph_lib.c:169 libprocess/tip.c:672
 msgid "Dilation..."
 msgstr "Расширение..."
 
-#: libprocess/morph_lib.c:235 libprocess/tip.c:807
+#: libprocess/morph_lib.c:235 libprocess/tip.c:793
 msgid "Erosion..."
 msgstr "Эрозия..."
 
@@ -702,12 +702,12 @@ msgstr "Эрозия..."
 msgid "Certainty map..."
 msgstr "Карта достоверности..."
 
-#: libprocess/morph_lib.c:406 libprocess/morph_lib.c:554
+#: libprocess/morph_lib.c:406 libprocess/morph_lib.c:553
 #, c-format
 msgid "Iterating estimate (iteration %d)..."
 msgstr "Идёт циклическая оценка (цикл %d)..."
 
-#: libprocess/morph_lib.c:415 libprocess/morph_lib.c:577
+#: libprocess/morph_lib.c:415 libprocess/morph_lib.c:574
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
@@ -715,11 +715,11 @@ msgstr[0] "%d участок изображения был уточнён"
 msgstr[1] "%d участка изображения было уточнено"
 msgstr[2] "%d участков изображения было уточнено"
 
-#: libprocess/morph_lib.c:515
+#: libprocess/morph_lib.c:514
 msgid "Searching for local maxima..."
 msgstr "Идёт поиск локальных максимумов..."
 
-#: libprocess/morph_lib.c:537
+#: libprocess/morph_lib.c:536
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
@@ -763,20 +763,20 @@ msgstr "Симметричный"
 msgid "Cone"
 msgstr "Конический"
 
-#: libprocess/tip.c:992 libprocess/tip.c:1020 libprocess/tip.c:1069
-#: libprocess/tip.c:1096
+#: libprocess/tip.c:968 libprocess/tip.c:996 libprocess/tip.c:1045
+#: libprocess/tip.c:1072
 msgid "Converting fields"
 msgstr "Преобразуются поля"
 
-#: libprocess/tip.c:1002
+#: libprocess/tip.c:978
 msgid "Starting partial estimation"
 msgstr "Запускается частичная оценка"
 
-#: libprocess/tip.c:1079
+#: libprocess/tip.c:1055
 msgid "Starting full estimation"
 msgstr "Запускается полная оценка"
 
-#: libprocess/triangulation.c:2082 modules/process/calcoefs_view.c:793
+#: libprocess/triangulation.c:2085 modules/process/calcoefs_view.c:793
 #: modules/process/lat_synth.c:1134
 msgid "Triangulating..."
 msgstr "Производится триангуляция..."
@@ -926,23 +926,23 @@ msgstr "Уг_ол θ света:"
 #: modules/process/hough.c:179 modules/process/lat_synth.c:523
 #: modules/process/latsim.c:158 modules/process/level.c:245
 #: modules/process/linematch.c:804 modules/process/lno_synth.c:433
-#: modules/process/local_contrast.c:130 modules/process/mark_disconn.c:208
-#: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
-#: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
-#: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
-#: modules/process/pid.c:199 modules/process/polydistort.c:209
-#: modules/process/polylevel.c:373 modules/process/psdf_logphi.c:249
-#: modules/process/rank.c:158 modules/process/rotate.c:258
-#: modules/process/scale.c:196 modules/process/scars.c:448
-#: modules/process/semsim.c:211 modules/process/shade.c:208
-#: modules/process/slope_dist.c:276 modules/process/sphere-revolve.c:218
-#: modules/process/straighten_path.c:248 modules/process/tilt.c:161
-#: modules/process/tip_model.c:166 modules/process/unrotate.c:220
-#: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
-#: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
-#: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
-#: modules/volume/volume_slice.c:291
+#: modules/process/local_contrast.c:130 modules/process/logistic.c:170
+#: modules/process/mark_disconn.c:208 modules/process/mask_distribute.c:152
+#: modules/process/measure_lattice.c:256 modules/process/median-bg.c:180
+#: modules/process/noise_synth.c:336 modules/process/obj_synth.c:438
+#: modules/process/pat_synth.c:385 modules/process/pid.c:199
+#: modules/process/polydistort.c:209 modules/process/polylevel.c:373
+#: modules/process/psdf_logphi.c:249 modules/process/rank.c:158
+#: modules/process/rotate.c:258 modules/process/scale.c:196
+#: modules/process/scars.c:448 modules/process/semsim.c:211
+#: modules/process/shade.c:208 modules/process/slope_dist.c:276
+#: modules/process/sphere-revolve.c:218 modules/process/straighten_path.c:248
+#: modules/process/tilt.c:161 modules/process/tip_model.c:166
+#: modules/process/unrotate.c:220 modules/process/volumize_layers.c:221
+#: modules/process/wave_synth.c:349 modules/process/wpour_mark.c:278
+#: modules/volume/volume_calibrate.c:370 modules/volume/volume_extract.c:331
+#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
+#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:291
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -2999,7 +2999,7 @@ msgstr "Несколько ссылок на объект"
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
-#: app/wait.c:94
+#: app/wait.c:106
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
@@ -4474,27 +4474,40 @@ msgstr "Файлы данных JEOL (.tif)"
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr "Тип данных неизвестен. Пожалуйста сообщите о нём разработчикам."
 
-#: modules/file/jpkscan.c:125
+#: modules/file/jpkscan.c:207
 msgid "Imports JPK image scans."
 msgstr "Импортирует изображения сканирований JPK."
 
-#: modules/file/jpkscan.c:138
+#: modules/file/jpkscan.c:220
 msgid "JPK image scans (.jpk, .jpk-qi-image)"
 msgstr "Сканы изображений JPK (.jpk, .jpk-qi-image)"
 
-#: modules/file/jpkscan.c:145
+#: modules/file/jpkscan.c:227
 msgid "JPK force curves (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 msgstr "Силовые кривые JPK (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 
-#: modules/file/jpkscan.c:211
+#: modules/file/jpkscan.c:293
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/jpkscan.c:570 modules/file/nanoobserver.c:193
+#: modules/file/jpkscan.c:638 modules/file/nanoobserver.c:193
 #: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
+
+#: modules/file/jpkscan.c:709
+msgid "Non-uniform point and/or segment numbering is not supported."
+msgstr "Неупорядоченная нумерация точек и/или сегментов не поддерживается."
+
+#: modules/file/jpkscan.c:718
+msgid "Non-uniform channel lists are not supported."
+msgstr "Неупорядоченные списки каналов не поддерживаются."
+
+#: modules/file/jpkscan.c:726
+#, c-format
+msgid "Data file %s was found instead of expected %s."
+msgstr "Файл данных %s был найден вместо ожидаемого %s."
 
 #: modules/file/jspmfile.c:188
 msgid "Imports JEOL JSPM data files."
@@ -7300,8 +7313,8 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
 #: modules/process/lat_synth.c:453 modules/process/mark_disconn.c:148
-#: modules/process/mark_disconn.c:373 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:321 modules/process/merge.c:1078
+#: modules/process/mark_disconn.c:373 modules/process/maskcor.c:330
+#: modules/process/mcrop.c:315 modules/process/merge.c:1072
 #: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1286
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
@@ -7599,8 +7612,8 @@ msgstr[2] "найдено %d объектов"
 msgid "Search canceled"
 msgstr "Поиск отменён"
 
-#: modules/process/calcoefs_simple.c:638 modules/process/maskcor.c:333
-#: modules/process/mcrop.c:323 modules/process/merge.c:1080
+#: modules/process/calcoefs_simple.c:638 modules/process/maskcor.c:332
+#: modules/process/mcrop.c:317 modules/process/merge.c:1074
 msgid "Correlating..."
 msgstr "Поиск корреляции..."
 
@@ -7850,7 +7863,7 @@ msgstr ""
 
 #: modules/process/coerce.c:173
 msgid "/S_ynthetic/Co_erce..."
-msgstr "/Син_тез/_Задать..."
+msgstr "/Син_тез/_Задать статистику..."
 
 #: modules/process/coerce.c:177
 msgid "Enforce prescribed statistical properties"
@@ -7901,7 +7914,7 @@ msgstr "_Шаблон:"
 
 #: modules/process/coerce.c:328
 msgid "Same area"
-msgstr "Та же область"
+msgstr "Одинаковая площадь"
 
 #: modules/process/coerce.c:331 modules/tools/filter.c:284
 msgid "_Type:"
@@ -10862,6 +10875,31 @@ msgstr "Размер _ядра:"
 msgid "Blending _depth:"
 msgstr "_Глубина смешения:"
 
+#: modules/process/logistic.c:99
+#, fuzzy
+msgid "Mark grain by logistic regression."
+msgstr "Пометить зёрна с помощью логистической регрессии."
+
+#: modules/process/logistic.c:113
+msgid "/_Grains/Logistic _Regression..."
+msgstr "/_Зёрна/_Логистическая регрессия..."
+
+#: modules/process/logistic.c:117
+msgid "Mark grains by logistic regression"
+msgstr "Пометить зёрна с помощью логистической регрессии"
+
+#: modules/process/logistic.c:167
+msgid "Logistic Regression"
+msgstr "Логистическая регрессия"
+
+#: modules/process/logistic.c:190
+msgid "_Train logistic regression"
+msgstr "_Обучить регрессию"
+
+#: modules/process/logistic.c:192
+msgid "_Use trained regression"
+msgstr "_Использовать регрессию"
+
 #: modules/process/mark_disconn.c:104
 msgid "Creates mask of values disconnected to the rest."
 msgstr "Создаёт маску значений, не связанных с остальными."
@@ -11140,7 +11178,7 @@ msgstr "Помеченные объекты"
 msgid "Correlation maxima"
 msgstr "Максимумы корреляции"
 
-#: modules/process/maskcor.c:174 modules/process/maskcor.c:364
+#: modules/process/maskcor.c:174 modules/process/maskcor.c:356
 msgid "Correlation score"
 msgstr "Степень корреляции"
 
