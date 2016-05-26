@@ -217,7 +217,7 @@ crosscor_dialog(CrosscorArgs *args)
     row++;
 
     controls.search_area_x = gtk_adjustment_new(args->search_x,
-                                                0.0, 100.0, 1, 5, 0);
+                                                0.0, 200.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Width:"), "px",
                             controls.search_area_x, 0);
 
@@ -228,7 +228,7 @@ crosscor_dialog(CrosscorArgs *args)
     row++;
 
     controls.search_area_y = gtk_adjustment_new(args->search_y,
-                                                0.0, 100.0, 1, 5, 0);
+                                                0.0, 200.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("H_eight:"), "px",
                             controls.search_area_y, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
