@@ -94,7 +94,9 @@ typedef struct {
     /* Concatenated data of all channels. */
     guint ndata;
     gdouble *data;
-    gboolean *seen_data;
+    const gchar *segment_style;   /* This is extend, retract, pause. */
+    const gchar *segment_type;    /* This is a more detailed type. */
+    gchar *segment_name;
 } JPKForceData;
 
 typedef struct {
@@ -172,6 +174,7 @@ static gboolean      read_raw_data          (GwyZipFile zipfile,
 static guint         find_segment_npoints   (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
                                              GError **error);
+static gchar*        find_sgement_name      (GHashTable *header_properties);
 static const gchar*  lookup_channel_property(JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
                                              const gchar *subkey,
@@ -843,10 +846,20 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
 
         hash = parse_header_properties(zipfile, jpkfile, error);
         jpkfile->data[id].header_properties = hash;
+        /* FIXME FIXME: A segment many not have numpoints if data were not
+         * collected. */
         if (!hash
             || !enumerate_channels(jpkfile, hash, TRUE, error)
             || !(ndata = find_segment_npoints(jpkfile, hash, error)))
             return FALSE;
+
+        jpkfile->data[id].segment_style
+            = g_hash_table_lookup(hash, "force-segment-header.settings"
+                                        ".segment-settings.style");
+        jpkfile->data[id].segment_type
+            = g_hash_table_lookup(hash, "force-segment-header.settings"
+                                        ".segment-settings.type");
+        jpkfile->data[id].segment_name = find_sgement_name(hash);
 
         gwy_debug("%u, npts = %u", id, ndata);
         jpkfile->data[id].ndata = ndata;
@@ -865,11 +878,13 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
 
             gwy_debug("data.type %s", datatype);
             if (gwy_strequal(datatype, "constant-data")) {
+                g_warning("Cannot handle constant-data yet.");
                 /* TODO: handle constant data. */
                 continue;
             }
 
             if (gwy_strequal(datatype, "raster-data")) {
+                g_warning("Cannot handle raster-data yet.");
                 /* TODO: handle ramp data. */
                 continue;
             }
@@ -894,8 +909,6 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
             }
 
             /* TODO: Read the data. */
-            /* TODO: Set seen_data accordingly (if we actualy keep that
-             * mechanism). */
             if (!read_raw_data(zipfile, jpkfile, jpkfile->data + id,
                                datatype, i, error)) {
                 g_free(filename);
@@ -1024,6 +1037,50 @@ find_segment_npoints(JPKForceFile *jpkfile,
     }
 
     return npts;
+}
+
+static gchar*
+find_sgement_name(GHashTable *header_properties)
+{
+    const gchar *t, *name, *prefix, *suffix;
+    gchar *s;
+
+    t = g_hash_table_lookup(header_properties,
+                            "force-segment-header.settings"
+                            ".segment-settings.identifier.type");
+    name = g_hash_table_lookup(header_properties,
+                               "force-segment-header.settings"
+                               ".segment-settings.identifier.name");
+    if (!name)
+        return NULL;
+
+    if (!t) {
+        g_warning("Missing identifier type.");
+        return g_strdup(name);
+    }
+
+    if (gwy_strequal(t, "standard")) {
+        s = g_strdup(name);
+        s[0] = g_ascii_toupper(s[0]);
+        return s;
+    }
+    if (gwy_strequal(t, "ExtendedStandard")) {
+        prefix = g_hash_table_lookup(header_properties,
+                                     "force-segment-header.settings"
+                                     ".segment-settings.identifier.prefix");
+        suffix = g_hash_table_lookup(header_properties,
+                                     "force-segment-header.settings"
+                                     ".segment-settings.identifier.suffix");
+        if (prefix && suffix)
+            return g_strconcat(prefix, name, suffix, NULL);
+        g_warning("Prefix or suffix missing for ExtendedStandard identifier.");
+        return g_strdup(name);
+    }
+    if (gwy_strequal(t, "user"))
+        return g_strdup(name);
+
+    g_warning("Unknown identifier type %s.", t);
+    return g_strdup(name);
 }
 
 static const gchar*
@@ -1350,7 +1407,7 @@ jpk_force_file_free(JPKForceFile *jpkfile)
             if (jpkfile->data[i].header_properties)
                 g_hash_table_destroy(jpkfile->data[i].header_properties);
             g_free(jpkfile->data[i].data);
-            g_free(jpkfile->data[i].seen_data);
+            g_free(jpkfile->data[i].segment_name);
         }
         g_free(jpkfile->data);
     }
