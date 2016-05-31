@@ -105,6 +105,7 @@ typedef struct {
     GRegex *index_segment_regex;
     GString *str;     /* General scratch buffer. */
     GString *sstr;    /* Inner scratch buffer for lookup_property(). */
+    GString *qstr;    /* Inner scratch buffer for find_scaling_parameters(). */
 
     GHashTable *header_properties;
     GHashTable *shared_header_properties;
@@ -158,58 +159,61 @@ static void          meta_store_double   (GwyContainer *container,
                                           const gchar *unit);
 
 #ifdef HAVE_GWYZIP
-static gint          jpkforce_detect        (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
-static GwyContainer* jpkforce_load          (const gchar *filename,
-                                             GwyRunType mode,
-                                             GError **error);
-static gboolean      read_curve_data        (GwyZipFile zipfile,
-                                             JPKForceFile *jpkfile,
-                                             GError **error);
-static gboolean      read_raw_data          (GwyZipFile zipfile,
-                                             JPKForceFile *jpkfile,
-                                             JPKForceData *data,
-                                             const gchar *datatype,
-                                             guint i,
-                                             GError **error);
-static guint         find_segment_npoints   (JPKForceFile *jpkfile,
-                                             GHashTable *header_properties,
-                                             GError **error);
-static gchar*        find_sgement_name      (GHashTable *header_properties);
-static gboolean      find_scaling_parameters(JPKForceFile *jpkfile,
-                                             GHashTable *header_properties,
-                                             const gchar *subkey,
-                                             guint i,
-                                             gdouble *multiplier,
-                                             gdouble *offset,
-                                             const gchar **unit);
-static const gchar*  lookup_channel_property(JPKForceFile *jpkfile,
-                                             GHashTable *header_properties,
-                                             const gchar *subkey,
-                                             guint i,
-                                             gboolean fail_if_not_found,
-                                             GError **error);
-static const gchar*  lookup_property        (JPKForceFile *jpkfile,
-                                             GHashTable *header_properties,
-                                             const gchar *key,
-                                             gboolean fail_if_not_found,
-                                             GError **error);
-static gboolean      enumerate_channels     (JPKForceFile *jpkfile,
-                                             GHashTable *header_properties,
-                                             gboolean needslist,
-                                             GError **error);
-static gboolean      analyse_segment_ids    (JPKForceFile *jpkfile,
-                                             GError **error);
-static gboolean      analyse_map_segment_ids(JPKForceFile *jpkfile,
-                                             GError **error);
-static gboolean      enumerate_segments     (GwyZipFile zipfile,
-                                             JPKForceFile *jpkfile);
-static gboolean      enumerate_map_segments (GwyZipFile zipfile,
-                                             JPKForceFile *jpkfile);
-static void          jpk_force_file_free    (JPKForceFile *jpkfile);
-static GHashTable*   parse_header_properties(GwyZipFile zipfile,
-                                             JPKForceFile *jpkfile,
-                                             GError **error);
+static gint          jpkforce_detect              (const GwyFileDetectInfo *fileinfo,
+                                                   gboolean only_name);
+static GwyContainer* jpkforce_load                (const gchar *filename,
+                                                   GwyRunType mode,
+                                                   GError **error);
+static gboolean      read_curve_data              (GwyZipFile zipfile,
+                                                   JPKForceFile *jpkfile,
+                                                   GError **error);
+static gboolean      read_raw_data                (GwyZipFile zipfile,
+                                                   JPKForceFile *jpkfile,
+                                                   JPKForceData *data,
+                                                   const gchar *datatype,
+                                                   guint i,
+                                                   GError **error);
+static guint         find_segment_npoints         (JPKForceFile *jpkfile,
+                                                   GHashTable *header_properties,
+                                                   GError **error);
+static gchar*        find_sgement_name            (GHashTable *header_properties);
+static gboolean      apply_default_channel_scaling(JPKForceFile *jpkfile,
+                                                   JPKForceData *data,
+                                                   guint i);
+static gboolean      find_scaling_parameters      (JPKForceFile *jpkfile,
+                                                   GHashTable *header_properties,
+                                                   const gchar *subkey,
+                                                   guint i,
+                                                   gdouble *multiplier,
+                                                   gdouble *offset,
+                                                   const gchar **unit);
+static const gchar*  lookup_channel_property      (JPKForceFile *jpkfile,
+                                                   GHashTable *header_properties,
+                                                   const gchar *subkey,
+                                                   guint i,
+                                                   gboolean fail_if_not_found,
+                                                   GError **error);
+static const gchar*  lookup_property              (JPKForceFile *jpkfile,
+                                                   GHashTable *header_properties,
+                                                   const gchar *key,
+                                                   gboolean fail_if_not_found,
+                                                   GError **error);
+static gboolean      enumerate_channels           (JPKForceFile *jpkfile,
+                                                   GHashTable *header_properties,
+                                                   gboolean needslist,
+                                                   GError **error);
+static gboolean      analyse_segment_ids          (JPKForceFile *jpkfile,
+                                                   GError **error);
+static gboolean      analyse_map_segment_ids      (JPKForceFile *jpkfile,
+                                                   GError **error);
+static gboolean      enumerate_segments           (GwyZipFile zipfile,
+                                                   JPKForceFile *jpkfile);
+static gboolean      enumerate_map_segments       (GwyZipFile zipfile,
+                                                   JPKForceFile *jpkfile);
+static void          jpk_force_file_free          (JPKForceFile *jpkfile);
+static GHashTable*   parse_header_properties      (GwyZipFile zipfile,
+                                                   JPKForceFile *jpkfile,
+                                                   GError **error);
 #endif
 
 static GwyModuleInfo module_info = {
@@ -669,6 +673,7 @@ jpkforce_load(const gchar *filename,
 
     jpkfile.str = g_string_new(NULL);
     jpkfile.sstr = g_string_new(NULL);
+    jpkfile.qstr = g_string_new(NULL);
     jpkfile.segment_regex
         = g_regex_new("^segments/([0-9]+)/(.*)$", G_REGEX_OPTIMIZE, 0, NULL);
     jpkfile.index_segment_regex
@@ -877,10 +882,7 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
         for (i = 0; i < jpkfile->nchannels; i++) {
             const gchar *datafilename, *datatype;
 
-            /* FIXME: The documentation says "data.type" but we find it
-             * as "lcd-info.type" for some reason. */
-            if (!(datatype = lookup_channel_property(jpkfile, hash,
-                                                     "lcd-info.type",
+            if (!(datatype = lookup_channel_property(jpkfile, hash, "type",
                                                      i, TRUE, error)))
                 return FALSE;
 
@@ -902,7 +904,7 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
                 return FALSE;
 
             if (!(datafilename = lookup_channel_property(jpkfile, hash,
-                                                         "data.file.name",
+                                                         "file.name",
                                                          i, TRUE, error)))
                 return FALSE;
 
@@ -923,6 +925,7 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
                 return FALSE;
             }
             g_free(filename);
+            apply_default_channel_scaling(jpkfile, jpkfile->data + id, i);
         }
     } while (gwyzip_next_file(zipfile, NULL));
 
@@ -934,7 +937,6 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
               JPKForceData *data, const gchar *datatype, guint i,
               GError **error)
 {
-    static const gchar encoder_key[] = "lcd-info.encoder.type";
     GwyRawDataType rawtype;
     GHashTable *hash = data->header_properties;
     const gchar *encoder = "";
@@ -948,7 +950,7 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
         rawtype = GWY_RAW_DATA_DOUBLE;
     else if (gwy_stramong(datatype, "short-data", "memory-short-data", "short",
                           NULL)) {
-        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+        if (!(encoder = lookup_channel_property(jpkfile, hash, "encoder.type",
                                                 i, TRUE, error)))
             return FALSE;
         if (gwy_stramong(encoder, "unsignedshort", "unsignedshort-limited",
@@ -964,7 +966,7 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
     }
     else if (gwy_stramong(datatype, "integer-data", "memory-integer-data",
                           NULL)) {
-        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+        if (!(encoder = lookup_channel_property(jpkfile, hash, "encoder.type",
                                                 i, TRUE, error)))
             return FALSE;
         if (gwy_stramong(encoder, "unsignedinteger", "unsignedinteger-limited",
@@ -980,7 +982,7 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
     }
     else if (gwy_stramong(datatype, "long-data", "memory-long-data", "long",
                           NULL)) {
-        if (!(encoder = lookup_channel_property(jpkfile, hash, encoder_key,
+        if (!(encoder = lookup_channel_property(jpkfile, hash, "encoder.type",
                                                 i, TRUE, error)))
             return FALSE;
         if (gwy_stramong(encoder, "unsignedlong", "unsignedlong-limited",
@@ -1011,7 +1013,7 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
     /* Apply the encoder conversion factors.  These convert raw data to some
      * sensor physical values, typically Volts.  Conversions to values we
      * actually want to display are done later.  */
-    find_scaling_parameters(jpkfile, hash, "lcd-info.encoder", i,
+    find_scaling_parameters(jpkfile, hash, "encoder", i,
                             &q, &off, data->units + i);
     gwy_convert_raw_data(bytes, data->ndata, 1, rawtype,
                          GWY_BYTE_ORDER_BIG_ENDIAN,
@@ -1031,7 +1033,7 @@ find_segment_npoints(JPKForceFile *jpkfile,
 
     for (i = 0; i < jpkfile->nchannels; i++) {
         if (!(s = lookup_channel_property(jpkfile, header_properties,
-                                          "data.num-points", i, TRUE, error)))
+                                          "num-points", i, TRUE, error)))
             return 0;
         if (i) {
             if (atoi(s) != npts) {
@@ -1093,99 +1095,142 @@ find_sgement_name(GHashTable *header_properties)
     return g_strdup(name);
 }
 
+static gboolean
+apply_default_channel_scaling(JPKForceFile *jpkfile,
+                              JPKForceData *data,
+                              guint i)
+{
+    GHashTable *header_properties = data->header_properties;
+    const gchar *default_cal;
+    gdouble q, off;
+    gdouble *d;
+    gchar *key;
+    guint j, ndata;
+
+    default_cal = lookup_channel_property(jpkfile, header_properties,
+                                          "conversion-set.conversions.default",
+                                          i, FALSE, NULL);
+    if (!default_cal) {
+        g_warning("Cannot find the default conversion.");
+        return FALSE;
+    }
+
+    key = g_strconcat("conversion-set.conversion.", default_cal, NULL);
+    if (!find_scaling_parameters(jpkfile, header_properties, key, i,
+                                 &q, &off, data->units + i)) {
+        g_free(key);
+        return FALSE;
+    }
+    g_free(key);
+
+    ndata = data->ndata;
+    d = data->data + i*ndata;
+    for (j = 0; j < ndata; j++)
+        d[j] = q*d[j] + off;
+
+    return TRUE;
+}
+
+static const gchar*
+lookup_scaling_property(JPKForceFile *jpkfile,
+                        GHashTable *hash,
+                        const gchar *subkey,
+                        guint len,
+                        guint i,
+                        const gchar *expected_value)
+{
+    GString *key = jpkfile->qstr;
+    const gchar *s;
+
+    g_string_truncate(key, len);
+    g_string_append(key, subkey);
+    s = lookup_channel_property(jpkfile, hash, key->str, i, FALSE, NULL);
+    if (!s) {
+        g_warning("Cannot find %s.", key->str);
+        return NULL;
+    }
+    if (expected_value && !gwy_strequal(s, expected_value)) {
+        g_warning("Value of %s is not %s.", key->str, expected_value);
+        return NULL;
+    }
+    return s;
+}
+
 /* Subkey is typically something like "data.encoder" for conversion from
  * integral data; or "conversion-set.conversion.force" for calibrations.
  * Note calibrations can be nested, we it can refer recursively to
  * "base-calibration-slot" and we have to perform that calibration first. */
 static gboolean
 find_scaling_parameters(JPKForceFile *jpkfile,
-                        GHashTable *header_properties,
+                        GHashTable *hash,
                         const gchar *subkey,
                         guint i,
                         gdouble *multiplier,
                         gdouble *offset,
                         const gchar **unit)
 {
+    /* There seem to be different unit styles.  Documentation says just "unit"
+     * but I see "unit.type" and "unit.unit" for the actual unit.  Try both. */
+    static const gchar *unit_keys[] = { "unit.unit", "unit" };
+
     gdouble base_multipler, base_offset;
     const gchar *base_unit;  /* we ignore that; they do not specify factors
                                 but directly units of the results. */
-    gchar *key;
+    /* NB: This function can recurse.  Must avoid overwriting! */
+    GString *key = jpkfile->qstr;
     const gchar *s, *bcs;
-    guint len;
+    gchar *bcskey;
+    guint len, j;
 
     *multiplier = 1.0;
     *offset = 0.0;
-    *unit = "";
+    /* Do not set the unit unless some unit is found. */
 
-    key = g_strconcat(subkey, ".scaling.type", NULL);
-    s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                FALSE, NULL);
-    g_free(key);
-    if (!s) {
-        g_warning("Cannot find scaling.type.");
-        return FALSE;
-    }
-    if (!gwy_strequal(s, "linear")) {
-        g_warning("Scaling type is not linear.");
-        return FALSE;
-    }
+    g_string_assign(key, subkey);
+    g_string_append_c(key, '.');
+    len = key->len;
 
-    key = g_strconcat(subkey, ".scaling.style", NULL);
-    s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                FALSE, NULL);
-    g_free(key);
-    if (!s) {
-        g_warning("Cannot find scaling.style.");
-        return FALSE;
-    }
-    if (!gwy_strequal(s, "offsetmultiplier")) {
-        g_warning("Scaling style is not offsetmultiplier.");
-        return FALSE;
-    }
+    /* If the scaling has defined=false, it means there is no scaling to
+     * perform.  This occurs for the base calibration.  In principle, we should
+     * already know we are at the base calibration by looking at
+     * "conversions.base" but we do not bother at present. */
+    g_string_append(key, "defined");
+    if ((s = lookup_channel_property(jpkfile, hash, key->str, i, FALSE, NULL))
+        && gwy_strequal(s, "false"))
+        return TRUE;
 
-    key = g_strconcat(subkey, ".scaling.offset", NULL);
-    s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                FALSE, NULL);
-    g_free(key);
-    if (s)
+    g_string_truncate(key, len);
+    g_string_append(key, "scaling.");
+    len = key->len;
+
+    if (!lookup_scaling_property(jpkfile, hash, "type", len, i, "linear"))
+        return FALSE;
+    if (!lookup_scaling_property(jpkfile, hash, "style", len, i,
+                                 "offsetmultiplier"))
+        return FALSE;
+    if ((s = lookup_scaling_property(jpkfile, hash, "offset", len, i, NULL)))
         *offset = g_ascii_strtod(s, NULL);
-    else
-        g_warning("Cannot find scaling.offset.");
-
-    key = g_strconcat(subkey, ".scaling.multiplier", NULL);
-    s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                FALSE, NULL);
-    g_free(key);
-    if (s)
+    if ((s = lookup_scaling_property(jpkfile, hash, "multiplier", len, i, NULL)))
         *multiplier = g_ascii_strtod(s, NULL);
-    else
-        g_warning("Cannot find scaling.multiplier.");
 
-    /* There seem to be different unit styles.  Documentation says just "unit"
-     * but I see "unit.type" and "unit.unit" for the actual unit.  Try both. */
-    key = g_strconcat(subkey, ".scaling.unit", NULL);
-    s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                FALSE, NULL);
-    g_free(key);
-    if (s)
-        *unit = s;
-    else {
-        key = g_strconcat(subkey, ".scaling.unit.unit", NULL);
-        s = lookup_channel_property(jpkfile, header_properties, key, i,
-                                    FALSE, NULL);
-        g_free(key);
-        if (s)
+    for (j = 0; j < G_N_ELEMENTS(unit_keys); j++) {
+        g_string_truncate(key, len);
+        g_string_append(key, unit_keys[j]);
+        s = lookup_channel_property(jpkfile, hash, key->str, i, FALSE, NULL);
+        if (s) {
             *unit = s;
-        else
-            g_warning("Cannot find scaling unit.");
+            break;
+        }
     }
+    if (!*unit)
+        g_warning("Cannot find scaling unit.");
 
     /* If there is no base calibration slot we have the final calibration
      * parameters. */
-    key = g_strconcat(subkey, ".base-calibration-slot", NULL);
-    bcs = lookup_channel_property(jpkfile, header_properties, key, i,
-                                  FALSE, NULL);
-    g_free(key);
+    g_string_assign(key, subkey);
+    len = key->len;
+    g_string_append(key, ".base-calibration-slot");
+    bcs = lookup_channel_property(jpkfile, hash, key->str, i, FALSE, NULL);
     if (!bcs)
         return TRUE;
 
@@ -1197,24 +1242,25 @@ find_scaling_parameters(JPKForceFile *jpkfile,
                   "in the original name.");
         return FALSE;
     }
-    len = s - subkey;
-    key = g_strdup_printf("%.*s.%s", len, subkey, bcs);
-    if (find_scaling_parameters(jpkfile, header_properties, key, i,
+    g_string_truncate(key, s+1 - subkey);
+    g_string_append(key, bcs);
+    bcskey = g_strdup(key->str);
+    if (find_scaling_parameters(jpkfile, hash, bcskey, i,
                                 &base_multipler, &base_offset, &base_unit)) {
+        g_free(bcskey);
         *multiplier *= base_multipler;
         *offset += *multiplier * base_offset;
         /* Ignore base unit. */
-        g_free(key);
         return TRUE;
     }
 
     /* XXX: The name does not necessarily have to be the same.  We should
-     * look for base calibration with "calibration-slot" equal to @bcs, but
+     * look for base calibration with "calibration-slot" equal to @bcskey, but
      * that requires scanning the entire dictionary (XXX: maybe not, there
      * is "conversions.list" field listing all the conversions – but whether
      * the names are slot or conversion names, no one knows. */
-    g_warning("Cannot figure out base calibration (trying %s).", key);
-    g_free(key);
+    g_warning("Cannot figure out base calibration (trying %s).", bcskey);
+    g_free(bcskey);
     return FALSE;
 }
 
@@ -1224,16 +1270,38 @@ lookup_channel_property(JPKForceFile *jpkfile,
                         guint i,
                         gboolean fail_if_not_found, GError **error)
 {
+    GError *err = NULL;
     GString *str = jpkfile->str;
+    const gchar *retval;
+    guint len;
 
     g_return_val_if_fail(i < jpkfile->nchannels, NULL);
     g_string_assign(str, "channel.");
     g_string_append(str, jpkfile->channel_names[i]);
     g_string_append_c(str, '.');
-    g_string_append(str, subkey);
 
-    return lookup_property(jpkfile, header_properties, str->str,
-                           fail_if_not_found, error);
+    /* Some things are found under "data" in documentation but under "lcd-info"
+     * in real files.  Some may be only in one location but we simply try both
+     * for all keys. */
+    len = str->len;
+    g_string_append(str, "lcd-info.");
+    g_string_append(str, subkey);
+    if ((retval = lookup_property(jpkfile, header_properties, str->str,
+                                  fail_if_not_found, &err)))
+        return retval;
+
+    g_string_truncate(str, len);
+    g_string_append(str, "data.");
+    g_string_append(str, subkey);
+    if ((retval = lookup_property(jpkfile, header_properties, str->str,
+                                  FALSE, NULL)))
+        return retval;
+
+    if (fail_if_not_found) {
+        /* @err cannot be set otherwise. */
+        g_propagate_error(error, err);
+    }
+    return NULL;
 }
 
 /* Look up a property in provided @header_properties and, failing that, in
@@ -1522,6 +1590,8 @@ jpk_force_file_free(JPKForceFile *jpkfile)
         g_string_free(jpkfile->str, TRUE);
     if (jpkfile->sstr)
         g_string_free(jpkfile->sstr, TRUE);
+    if (jpkfile->qstr)
+        g_string_free(jpkfile->qstr, TRUE);
 
     if (jpkfile->header_properties)
         g_hash_table_destroy(jpkfile->header_properties);
