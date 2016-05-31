@@ -94,6 +94,7 @@ typedef struct {
     /* Concatenated data of all channels. */
     guint ndata;
     gdouble *data;
+    const gchar **units;   /* For all channels */
     const gchar *segment_style;   /* This is extend, retract, pause. */
     const gchar *segment_type;    /* This is a more detailed type. */
     gchar *segment_name;
@@ -175,6 +176,13 @@ static guint         find_segment_npoints   (JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
                                              GError **error);
 static gchar*        find_sgement_name      (GHashTable *header_properties);
+static gboolean      find_scaling_parameters(JPKForceFile *jpkfile,
+                                             GHashTable *header_properties,
+                                             const gchar *subkey,
+                                             guint i,
+                                             gdouble *multiplier,
+                                             gdouble *offset,
+                                             const gchar **unit);
 static const gchar*  lookup_channel_property(JPKForceFile *jpkfile,
                                              GHashTable *header_properties,
                                              const gchar *subkey,
@@ -864,8 +872,8 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
         gwy_debug("%u, npts = %u", id, ndata);
         jpkfile->data[id].ndata = ndata;
         jpkfile->data[id].data = g_new(gdouble, ndata*jpkfile->nchannels);
+        jpkfile->data[id].units = g_new(const gchar*, jpkfile->nchannels);
         /* Expect corresponding data files next. */
-        /* TOOD: Data type and conversion. */
         for (i = 0; i < jpkfile->nchannels; i++) {
             const gchar *datafilename, *datatype;
 
@@ -908,7 +916,7 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
                 return FALSE;
             }
 
-            /* TODO: Read the data. */
+            /* Read the data. */
             if (!read_raw_data(zipfile, jpkfile, jpkfile->data + id,
                                datatype, i, error)) {
                 g_free(filename);
@@ -918,9 +926,7 @@ read_curve_data(GwyZipFile zipfile, JPKForceFile *jpkfile, GError **error)
         }
     } while (gwyzip_next_file(zipfile, NULL));
 
-    err_NO_DATA(error);
-
-    return FALSE;
+    return TRUE;
 }
 
 static gboolean
@@ -934,6 +940,7 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
     const gchar *encoder = "";
     gsize size;
     guchar *bytes;
+    gdouble q, off;
 
     if (gwy_stramong(datatype, "float-data", "float", NULL))
         rawtype = GWY_RAW_DATA_FLOAT;
@@ -1001,11 +1008,14 @@ read_raw_data(GwyZipFile zipfile, JPKForceFile *jpkfile,
         return FALSE;
     }
 
-    /* TODO: Apply actual conversion factors.  Although we might want to do
-     * that later. */
+    /* Apply the encoder conversion factors.  These convert raw data to some
+     * sensor physical values, typically Volts.  Conversions to values we
+     * actually want to display are done later.  */
+    find_scaling_parameters(jpkfile, hash, "lcd-info.encoder", i,
+                            &q, &off, data->units + i);
     gwy_convert_raw_data(bytes, data->ndata, 1, rawtype,
                          GWY_BYTE_ORDER_BIG_ENDIAN,
-                         data->data + i*data->ndata, 1.0, 0.0);
+                         data->data + i*data->ndata, q, off);
     g_free(bytes);
     gwy_debug("read %u (%s,%s) data points",
               data->ndata, datatype, encoder);
@@ -1081,6 +1091,131 @@ find_sgement_name(GHashTable *header_properties)
 
     g_warning("Unknown identifier type %s.", t);
     return g_strdup(name);
+}
+
+/* Subkey is typically something like "data.encoder" for conversion from
+ * integral data; or "conversion-set.conversion.force" for calibrations.
+ * Note calibrations can be nested, we it can refer recursively to
+ * "base-calibration-slot" and we have to perform that calibration first. */
+static gboolean
+find_scaling_parameters(JPKForceFile *jpkfile,
+                        GHashTable *header_properties,
+                        const gchar *subkey,
+                        guint i,
+                        gdouble *multiplier,
+                        gdouble *offset,
+                        const gchar **unit)
+{
+    gdouble base_multipler, base_offset;
+    const gchar *base_unit;  /* we ignore that; they do not specify factors
+                                but directly units of the results. */
+    gchar *key;
+    const gchar *s, *bcs;
+    guint len;
+
+    *multiplier = 1.0;
+    *offset = 0.0;
+    *unit = "";
+
+    key = g_strconcat(subkey, ".scaling.type", NULL);
+    s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                FALSE, NULL);
+    g_free(key);
+    if (!s) {
+        g_warning("Cannot find scaling.type.");
+        return FALSE;
+    }
+    if (!gwy_strequal(s, "linear")) {
+        g_warning("Scaling type is not linear.");
+        return FALSE;
+    }
+
+    key = g_strconcat(subkey, ".scaling.style", NULL);
+    s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                FALSE, NULL);
+    g_free(key);
+    if (!s) {
+        g_warning("Cannot find scaling.style.");
+        return FALSE;
+    }
+    if (!gwy_strequal(s, "offsetmultiplier")) {
+        g_warning("Scaling style is not offsetmultiplier.");
+        return FALSE;
+    }
+
+    key = g_strconcat(subkey, ".scaling.offset", NULL);
+    s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                FALSE, NULL);
+    g_free(key);
+    if (s)
+        *offset = g_ascii_strtod(s, NULL);
+    else
+        g_warning("Cannot find scaling.offset.");
+
+    key = g_strconcat(subkey, ".scaling.multiplier", NULL);
+    s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                FALSE, NULL);
+    g_free(key);
+    if (s)
+        *multiplier = g_ascii_strtod(s, NULL);
+    else
+        g_warning("Cannot find scaling.multiplier.");
+
+    /* There seem to be different unit styles.  Documentation says just "unit"
+     * but I see "unit.type" and "unit.unit" for the actual unit.  Try both. */
+    key = g_strconcat(subkey, ".scaling.unit", NULL);
+    s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                FALSE, NULL);
+    g_free(key);
+    if (s)
+        *unit = s;
+    else {
+        key = g_strconcat(subkey, ".scaling.unit.unit", NULL);
+        s = lookup_channel_property(jpkfile, header_properties, key, i,
+                                    FALSE, NULL);
+        g_free(key);
+        if (s)
+            *unit = s;
+        else
+            g_warning("Cannot find scaling unit.");
+    }
+
+    /* If there is no base calibration slot we have the final calibration
+     * parameters. */
+    key = g_strconcat(subkey, ".base-calibration-slot", NULL);
+    bcs = lookup_channel_property(jpkfile, header_properties, key, i,
+                                  FALSE, NULL);
+    g_free(key);
+    if (!bcs)
+        return TRUE;
+
+    /* Otherwise we have to recurse.  First assume the calibration slot name
+     * is the same as the calibration name (yes, there seems another level
+     * of indirection). */
+    if (!(s = strrchr(subkey, '.'))) {
+        g_warning("Cannot form base calibration name becaue there is no dot "
+                  "in the original name.");
+        return FALSE;
+    }
+    len = s - subkey;
+    key = g_strdup_printf("%.*s.%s", len, subkey, bcs);
+    if (find_scaling_parameters(jpkfile, header_properties, key, i,
+                                &base_multipler, &base_offset, &base_unit)) {
+        *multiplier *= base_multipler;
+        *offset += *multiplier * base_offset;
+        /* Ignore base unit. */
+        g_free(key);
+        return TRUE;
+    }
+
+    /* XXX: The name does not necessarily have to be the same.  We should
+     * look for base calibration with "calibration-slot" equal to @bcs, but
+     * that requires scanning the entire dictionary (XXX: maybe not, there
+     * is "conversions.list" field listing all the conversions – but whether
+     * the names are slot or conversion names, no one knows. */
+    g_warning("Cannot figure out base calibration (trying %s).", key);
+    g_free(key);
+    return FALSE;
 }
 
 static const gchar*
@@ -1408,6 +1543,7 @@ jpk_force_file_free(JPKForceFile *jpkfile)
                 g_hash_table_destroy(jpkfile->data[i].header_properties);
             g_free(jpkfile->data[i].data);
             g_free(jpkfile->data[i].segment_name);
+            g_free(jpkfile->data[i].units);
         }
         g_free(jpkfile->data);
     }
