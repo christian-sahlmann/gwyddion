@@ -59,24 +59,53 @@ gauss_guess(gint n_dat,
             gdouble *param,
             gboolean *fres)
 {
-    gint i, imax;
+    gint i, imin, imax, nv;
+    gdouble c0, cm, vec[5];
 
-    param[1] = G_MAXDOUBLE;
-    param[2] = -G_MAXDOUBLE;
-    imax = 0;
-    for (i = 0; i < n_dat; i++) {
-        param[0] += x[i]/n_dat;
-        if (param[1] > y[i]) {
-            param[1] = y[i];
-        }
-        if (param[2] < y[i]) {
-            param[2] = y[i];
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 0.0;
+    param[3] = 1.0;
+
+    imin = imax = 0;
+    for (i = 1; i < n_dat; i++) {
+        if (y[imax] < y[i])
             imax = i;
-        }
+        if (y[imin] > y[i])
+            imin = i;
     }
-    param[2] -= param[1];
-    param[0] = x[imax];
-    param[3] = (x[n_dat-1] - x[0])/2/G_SQRT2;
+
+    c0 = 0.0;
+    for (i = 0; i < n_dat; i++)
+        c0 += y[i];
+    c0 /= n_dat;
+
+    nv = G_N_ELEMENTS(vec);
+    for (i = 0; i < nv; i++)
+        vec[i] = y[i*(n_dat - 1)/(nv - 1)];
+    cm = gwy_math_median(nv, vec);
+
+    if (cm - y[imin] < y[imax] - cm) {
+        param[1] = y[imin];
+        param[0] = x[imax];
+    }
+    else {
+        param[1] = y[imax];
+        param[0] = x[imin];
+    }
+
+    c0 = c0 - param[1];
+    c0 *= fabs(x[n_dat-1] - x[0]);
+    c0 /= G_PI;
+    param[2] = c0*fabs(c0)/(y[imax] - y[imin]);
+
+    if (c0)
+        param[3] = param[2]/c0;
+    else
+        param[3] = fabs(x[n_dat-1] - x[0])/4.0;
+
+    param[2] /= param[3]*param[3];
+    param[3] /= sqrt(G_LN2);
 
     *fres = TRUE;
 }
