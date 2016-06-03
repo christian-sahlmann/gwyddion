@@ -96,7 +96,7 @@ static void      logistic_reset_args    (LogisticArgs *args);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Mark grain by logistic regression."),
+    N_("Trains logistic regression to mark grains."),
     "Daniil Bratashov <dn2010@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
@@ -114,7 +114,7 @@ module_register(void)
                               GWY_STOCK_GRAINS,
                               LOGISTIC_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Mark grains by logistic regression"));
+                              N_("Mark grains with logistic regression"));
 
     return TRUE;
 }
@@ -140,16 +140,22 @@ logistic_run(GwyContainer *data, GwyRunType run)
     features = create_feature_vector(dfield);
     thetas = gwy_data_line_get_data(args.thetas);
     if (args.mode == LOGISTIC_MODE_TRAIN) {
-        train_logistic(features, mfield, thetas, 1.0);
+        if (mfield) {
+            train_logistic(features, mfield, thetas, 1.0);
+        }
     }
     else {
         if (!mfield) {
             mfield = gwy_data_field_new_alike(dfield, TRUE);
+            predict_mask(features, thetas, mfield);
+            gwy_container_set_object(data, quark, mfield);
+            g_object_unref(mfield);
         }
-        gwy_app_undo_qcheckpointv(data, 1, &quark);
-        predict_mask(features, thetas, mfield);
-        gwy_container_set_object(data, quark, mfield);
-        g_object_unref(mfield);
+        else {
+            gwy_app_undo_qcheckpointv(data, 1, &quark);
+            predict_mask(features, thetas, mfield);
+            gwy_data_field_data_changed(mfield);
+        }
     }
     gwy_app_channel_log_add_proc(data, id, id);
     g_object_unref(features);
@@ -193,7 +199,7 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
                                               LOGISTIC_MODE_USE,
                                               NULL);
     button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_TRAIN);
-    gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1, 
+    gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1,
                      GTK_FILL, 0, 0, 0);
     row++;
 
@@ -249,7 +255,7 @@ create_feature_vector(GwyDataField *dfield)
     xreal = gwy_data_field_get_xreal(feature0);
     yreal = gwy_data_field_get_yreal(feature0);
     ngauss = 5;
-    zres = 1 + 4 * ngauss;
+    zres = NFEATURES;
     z = 0;
     max = gwy_data_field_get_max(feature0);
     min = gwy_data_field_get_min(feature0);
@@ -356,7 +362,7 @@ gdouble *thetas, gdouble lambda)
     epsilon = 1E-5;
     alpha = 10.0;
     iter = 0;
-    maxiter = 10000;
+    maxiter = 2000;
     while(!converged) {
         cost = cost_function(features, mfield, thetas, grad, lambda);
 
