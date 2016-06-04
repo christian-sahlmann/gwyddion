@@ -103,6 +103,7 @@ static gboolean crosscor_data_filter    (GwyContainer *data,
 static gboolean crosscor_weaker_filter  (GwyContainer *data,
                                          gint id,
                                          gpointer user_data);
+static void     guess_offsets           (CrosscorControls *controls);
 static void     crosscor_update_values  (CrosscorControls *controls,
                                          CrosscorArgs *args);
 static gboolean crosscor_do             (CrosscorArgs *args);
@@ -183,7 +184,7 @@ static gboolean
 crosscor_dialog(CrosscorArgs *args)
 {
     CrosscorControls controls;
-    GtkWidget *dialog, *table, *label, *combo;
+    GtkWidget *dialog, *table, *label, *combo, *button;
     GwyDataChooser *chooser;
     gint row, response;
     gboolean ok = FALSE;
@@ -248,9 +249,24 @@ crosscor_dialog(CrosscorArgs *args)
 
     row++;
 
+    label = gtk_label_new(_("2nd channel global offset"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    button = gtk_button_new_with_mnemonic(_("_Guess"));
+    gtk_table_attach(GTK_TABLE(table), button, 2, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                        G_CALLBACK(guess_offsets), &controls);
+
+
+    row++;
+
+
     controls.search_area_xoffset = gtk_adjustment_new(args->search_xoffset,
                                                 -200.0, 200.0, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("2nd channel _x offset:"), "px",
+    gwy_table_attach_hscale(table, row, _("_x offset:"), "px",
                             controls.search_area_xoffset, 0);
 
     g_signal_connect(controls.search_area_xoffset, "value-changed",
@@ -261,7 +277,7 @@ crosscor_dialog(CrosscorArgs *args)
 
     controls.search_area_yoffset = gtk_adjustment_new(args->search_yoffset,
                                                 -200.0, 200.0, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("2nd channel _y offset:"), "px",
+    gwy_table_attach_hscale(table, row, _("_y offset:"), "px",
                             controls.search_area_yoffset, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     g_signal_connect(controls.search_area_yoffset, "value-changed",
@@ -590,6 +606,64 @@ add_mask(GwyDataField *score, GwyContainer *data, gdouble threshold, gint id)
     g_object_unref(score);
 }
 
+static void     
+guess_offsets(CrosscorControls *controls)
+{
+    GwyContainer *data;
+    CrosscorArgs *args = controls->args;
+    GwyDataField *dfield1, *dfield2, *kernel, *score;
+    GQuark quark;
+    gint col, row, xres, yres, xoffset=0, yoffset=0;
+    gint border;
+    gdouble *scoredata, maxscore;
+//    gint newid;
+
+
+    data = gwy_app_data_browser_get(args->op1.datano);
+    quark = gwy_app_get_data_key_for_id(args->op1.id);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    data = gwy_app_data_browser_get(args->op2.datano);
+    quark = gwy_app_get_data_key_for_id(args->op2.id);
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+
+    border = CLAMP(xres/5, 10, 100); //should be more clever
+
+    kernel = gwy_data_field_duplicate(dfield2);
+    gwy_data_field_resize(kernel, border, border, 
+             gwy_data_field_get_xres(dfield2)-border, gwy_data_field_get_yres(dfield2)-border);
+
+    score = gwy_data_field_new_alike(dfield1, FALSE);
+
+    gwy_data_field_correlate(dfield1, kernel,
+                         score, GWY_CORRELATION_POC);
+    scoredata = gwy_data_field_get_data(score);
+
+    maxscore = G_MINDOUBLE;
+    for (col=(2*border); col<(xres-2*border); col++) {
+       for (row=(2*border); row<(yres-2*border); row++) {
+           if (scoredata[col + xres*row]>maxscore) {
+              xoffset = col-xres/2;
+              yoffset = row-yres/2;
+              maxscore = scoredata[col + xres*row];
+           }
+       }
+    }
+    //printf("result offset %d %d  border %d\n", xoffset, yoffset, border);
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_xoffset), xoffset);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->search_area_yoffset), yoffset);
+
+//    newid = gwy_app_data_browser_add_data_field(score, data, TRUE);
+
+
+    g_object_unref(kernel);
+    g_object_unref(score);
+}
+
 static gboolean
 crosscor_do(CrosscorArgs * args)
 {
@@ -720,6 +794,12 @@ crosscor_do(CrosscorArgs * args)
         gwy_data_field_multiply(dfieldy, 0.5);
         gwy_data_field_multiply(score, 0.5);
     }
+
+    if (args->search_xoffset!=0 || args->search_yoffset!=0) {
+        gwy_data_field_add(dfieldx, args->search_xoffset);
+        gwy_data_field_add(dfieldy, args->search_yoffset);
+    }
+
 
     if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS)
         abs = abs_field(dfieldx, dfieldy);
