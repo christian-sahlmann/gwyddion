@@ -19,6 +19,9 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+//TODO: use gwy_math_refine_maximum
+
+
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -26,6 +29,7 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libprocess/filters.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
@@ -48,8 +52,11 @@ typedef struct {
     CrosscorResult result;
     gint search_x;
     gint search_y;
+    gint search_xoffset;
+    gint search_yoffset;
     gint window_x;
     gint window_y;
+    gint order;
     gdouble rot_pos;
     gdouble rot_neg;
     gboolean add_ls_mask;
@@ -67,8 +74,11 @@ typedef struct {
     GtkWidget *result;
     GtkObject *search_area_x;
     GtkObject *search_area_y;
+    GtkObject *search_area_xoffset;
+    GtkObject *search_area_yoffset;
     GtkObject *window_area_x;
     GtkObject *window_area_y;
+    GtkObject *order;
     GtkObject *rotation_neg;
     GtkObject *rotation_pos;
     GtkWidget *add_ls_mask;
@@ -109,7 +119,7 @@ static void     crosscor_update_areas_cb(GtkObject *adj,
                                          CrosscorControls *controls);
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, 1, 0.95, 0,
+    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
@@ -237,6 +247,29 @@ crosscor_dialog(CrosscorArgs *args)
                      &controls);
 
     row++;
+
+    controls.search_area_xoffset = gtk_adjustment_new(args->search_xoffset,
+                                                -200.0, 200.0, 1, 5, 0);
+    gwy_table_attach_hscale(table, row, _("2nd channel _x offset:"), "px",
+                            controls.search_area_xoffset, 0);
+
+    g_signal_connect(controls.search_area_xoffset, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
+
+    row++;
+
+    controls.search_area_yoffset = gtk_adjustment_new(args->search_yoffset,
+                                                -200.0, 200.0, 1, 5, 0);
+    gwy_table_attach_hscale(table, row, _("2nd channel _y offset:"), "px",
+                            controls.search_area_yoffset, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect(controls.search_area_yoffset, "value-changed",
+                     G_CALLBACK(crosscor_update_areas_cb),
+                     &controls);
+
+    row++;
+
 
     /* Window size */
     label = gtk_label_new(_("Window size"));
@@ -509,6 +542,10 @@ crosscor_update_areas_cb(G_GNUC_UNUSED GtkObject *adj,
     controls->args->search_x = gwy_adjustment_get_int(controls->search_area_x);
     controls->args->search_y = gwy_adjustment_get_int(controls->search_area_y);
 
+    controls->args->search_xoffset = gwy_adjustment_get_int(controls->search_area_xoffset);
+    controls->args->search_yoffset = gwy_adjustment_get_int(controls->search_area_yoffset);
+
+
     controls->args->window_x = gwy_adjustment_get_int(controls->window_area_x);
     controls->args->window_y = gwy_adjustment_get_int(controls->window_area_y);
 
@@ -557,7 +594,7 @@ static gboolean
 crosscor_do(CrosscorArgs * args)
 {
     GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2,
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL, *dfield4b = NULL,
                  *dfield3 = NULL, *dfield4 = NULL, *score, *dir = NULL,
                  *abs = NULL;
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
@@ -597,6 +634,37 @@ crosscor_do(CrosscorArgs * args)
     data = gwy_app_data_browser_get(args->op1.datano);
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                        _("Initializing..."));
+
+    /*if a shift is requested, make a copy and shift it*/
+    dfield2b = NULL;
+    dfield4b = NULL;
+    if (args->search_xoffset!=0 || args->search_yoffset!=0) {
+        //printf("offset %d %d\n", args->search_xoffset, args->search_yoffset);
+
+        dfield2b = gwy_data_field_new_alike(dfield1, FALSE);
+        gwy_data_field_fill(dfield2b, gwy_data_field_get_avg(dfield2));
+
+        gwy_data_field_area_copy(dfield2, dfield2b,
+                          0, 0,
+                          -1, -1,
+                          args->search_xoffset, args->search_yoffset);
+
+        dfield2 = dfield2b;
+
+        if (args->multiple) {
+            dfield4b = gwy_data_field_new_alike(dfield1, FALSE);
+            gwy_data_field_fill(dfield4b, gwy_data_field_get_avg(dfield4));
+
+            gwy_data_field_area_copy(dfield4, dfield4b,
+                          0, 0,
+                          -1, -1,
+                          args->search_xoffset, args->search_yoffset);
+
+            dfield4 = dfield4b;
+        }
+
+    }
+
 
     /* compute crosscorelation */
     state = gwy_data_field_crosscorrelate_init(dfield1, dfield2,
@@ -730,22 +798,26 @@ crosscor_do(CrosscorArgs * args)
     g_object_unref(score);
     g_object_unref(dfieldy);
     g_object_unref(dfieldx);
+    if (dfield2b) g_object_unref(dfield2b);
+    if (dfield4b) g_object_unref(dfield4b);
     gwy_object_unref(abs);
     gwy_object_unref(dir);
 
     return TRUE;
 }
 
-static const gchar add_ls_mask_key[] = "/module/crosscor/add_ls_mask";
-static const gchar multiple_key[]    = "/module/crosscor/multiple";
-static const gchar result_key[]      = "/module/crosscor/result";
-static const gchar rot_neg_key[]     = "/module/crosscor/rot_neg";
-static const gchar rot_pos_key[]     = "/module/crosscor/rot_pos";
-static const gchar search_x_key[]    = "/module/crosscor/search_x";
-static const gchar search_y_key[]    = "/module/crosscor/search_y";
-static const gchar threshold_key[]   = "/module/crosscor/threshold";
-static const gchar window_x_key[]    = "/module/crosscor/window_x";
-static const gchar window_y_key[]    = "/module/crosscor/window_y";
+static const gchar add_ls_mask_key[]     = "/module/crosscor/add_ls_mask";
+static const gchar multiple_key[]        = "/module/crosscor/multiple";
+static const gchar result_key[]          = "/module/crosscor/result";
+static const gchar rot_neg_key[]         = "/module/crosscor/rot_neg";
+static const gchar rot_pos_key[]         = "/module/crosscor/rot_pos";
+static const gchar search_x_key[]        = "/module/crosscor/search_x";
+static const gchar search_y_key[]        = "/module/crosscor/search_y";
+static const gchar search_xoffset_key[]  = "/module/crosscor/search_xoffset";
+static const gchar search_yoffset_key[]  = "/module/crosscor/search_yoffset";
+static const gchar threshold_key[]       = "/module/crosscor/threshold";
+static const gchar window_x_key[]        = "/module/crosscor/window_x";
+static const gchar window_y_key[]        = "/module/crosscor/window_y";
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)
@@ -753,6 +825,8 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->result = MIN(args->result, GWY_CROSSCOR_LAST-1);
     args->search_x = CLAMP(args->search_x, 0, 100);
     args->search_y = CLAMP(args->search_y, 0, 100);
+    args->search_xoffset = CLAMP(args->search_xoffset, -200, 200);
+    args->search_yoffset = CLAMP(args->search_yoffset, -200, 200);
     args->window_x = CLAMP(args->window_x, 0, 100);
     args->window_y = CLAMP(args->window_y, 0, 100);
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
@@ -770,6 +844,8 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_int32_by_name(settings, search_x_key, &args->search_x);
     gwy_container_gis_int32_by_name(settings, search_y_key, &args->search_y);
+    gwy_container_gis_int32_by_name(settings, search_xoffset_key, &args->search_xoffset);
+    gwy_container_gis_int32_by_name(settings, search_yoffset_key, &args->search_yoffset);
     gwy_container_gis_int32_by_name(settings, window_x_key, &args->window_x);
     gwy_container_gis_int32_by_name(settings, window_y_key, &args->window_y);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
@@ -794,6 +870,8 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_int32_by_name(settings, search_x_key, args->search_x);
     gwy_container_set_int32_by_name(settings, search_y_key, args->search_y);
+    gwy_container_set_int32_by_name(settings, search_xoffset_key, args->search_xoffset);
+    gwy_container_set_int32_by_name(settings, search_yoffset_key, args->search_yoffset);
     gwy_container_set_int32_by_name(settings, window_x_key, args->window_x);
     gwy_container_set_int32_by_name(settings, window_y_key, args->window_y);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
