@@ -71,7 +71,8 @@ static gdouble   cost_function          (GwyBrick *brick,
                                          gdouble *thetas,
                                          gdouble *grad,
                                          gdouble lambda);
-static void      train_logistic         (GwyBrick *features,
+static void      train_logistic         (GwyContainer *container,
+                                         GwyBrick *features,
                                          GwyDataField *mfield,
                                          gdouble *thetas,
                                          gdouble lambda);
@@ -141,7 +142,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
     thetas = gwy_data_line_get_data(args.thetas);
     if (args.mode == LOGISTIC_MODE_TRAIN) {
         if (mfield) {
-            train_logistic(features, mfield, thetas, 1.0);
+            train_logistic(data, features, mfield, thetas, 1.0);
         }
     }
     else {
@@ -343,14 +344,16 @@ sigmoid(gdouble z)
 }
 
 static void
-train_logistic(GwyBrick *features, GwyDataField *mfield,
-gdouble *thetas, gdouble lambda)
+train_logistic(GwyContainer *container, GwyBrick *features,
+GwyDataField *mfield, gdouble *thetas, gdouble lambda)
 {
     gdouble *grad, *oldgrad;
     gdouble epsilon, alpha, cost, sum;
-    gint i, iter, maxiter, zres;
-    gboolean converged = FALSE;
+    gint i, iter, maxiter, zres, id;
+    gboolean converged = FALSE, cancelled = FALSE;
 
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
     zres = gwy_brick_get_zres(features);
     thetas = g_malloc(zres * sizeof(gdouble));
     grad = g_malloc(zres * sizeof(gdouble));
@@ -363,7 +366,13 @@ gdouble *thetas, gdouble lambda)
     alpha = 10.0;
     iter = 0;
     maxiter = 2000;
-    while(!converged) {
+    gwy_app_wait_start(gwy_app_find_window_for_channel(container, id),
+                       _("Training..."));
+    while(!converged && !cancelled) {
+        if (!gwy_app_wait_set_fraction((gdouble)iter/maxiter)) {
+            cancelled = TRUE;
+            break;
+        }
         cost = cost_function(features, mfield, thetas, grad, lambda);
 
         sum = 0;
@@ -402,6 +411,7 @@ gdouble *thetas, gdouble lambda)
         fprintf(stderr,"thetas[%d] = %g\n", i, thetas[i]);
     }
 
+    gwy_app_wait_finish();
     g_free(grad);
     g_free(oldgrad);
 }
