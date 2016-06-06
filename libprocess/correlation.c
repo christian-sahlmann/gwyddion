@@ -748,13 +748,15 @@ gwy_data_field_crosscorrelate_init(GwyDataField *data_field1,
  * by finishing or being aborted, gwy_data_field_crosscorrelate_finalize()
  * must be called to release allocated resources.
  **/
+
 void
 gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
 {
     GwyCrossCorrelationState *state = (GwyCrossCorrelationState*)cstate;
-    gint xres, yres, m, n, col, row, colmax, rowmax;
+    gint xres, yres, m, n, k, col, row, colmax, rowmax;
     gdouble cormax, lscore;
-    gdouble zm, zp, z0, ipos, jpos;
+    gdouble ipos, jpos, scores[9];
+    gdouble xmaximum, ymaximum;
 
 
     xres = state->data_field1->xres;
@@ -773,10 +775,10 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
         state->j = state->search_width/2;
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_ITERATE) {
-        /*iterate over search area in the second datafield */
+        //iterate over search area in the second datafield 
         row = rowmax = state->i;
         col = colmax = state->j;
-        cormax = -1.0;
+        cormax = -1.01;
         for (m = row - state->search_height/2; m < (row + state->search_height/2 - state->window_height + 1); m++) {
             for (n = col - state->search_width/2; n < (col + state->search_width/2 - state->window_width + 1); n++) {
                 lscore = gwy_data_field_get_correlation_score
@@ -788,11 +790,10 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                                                  state->window_width,
                                                  state->window_height);
 
-                /* add a little to score at exactly same point
-                 * - to prevent problems on flat data */
+                // add a little to score at exactly same point - to prevent problems on flat data 
                 if (m == row - state->search_height/2
                     && n == col - state->search_width/2)
-                    lscore *= 1.01;
+                    lscore *= 1.0001;
 
                 if (lscore > cormax) {
                     cormax = lscore;
@@ -804,54 +805,41 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
         }
         if (state->score)
             state->score->data[col + xres * row] = cormax;
-        if (state->x_dist) {
-            z0 = zp = zm = cormax;
-            zm = gwy_data_field_get_correlation_score(state->data_field1,
+        if (state->x_dist || state->x_dist) {
+            k = 0;
+            for (m=-1; m<=1; m++) {
+               for (n=-1; n<=1; n++) {
+    
+                  if (m==0 && n==0) scores[k++] = cormax;
+                  else scores[k++] = gwy_data_field_get_correlation_score(state->data_field1,
                                                       state->data_field2,
                                                       col - state->window_width/2,
                                                       row - state->window_height/2,
-                                                      colmax - state->window_width/2 - 1,
-                                                      rowmax - state->window_height/2,
+                                                      colmax - state->window_width/2 + n,
+                                                      rowmax - state->window_height/2 + m,
                                                       state->window_width,
                                                       state->window_height);
-            zp = gwy_data_field_get_correlation_score(state->data_field1,
-                                                      state->data_field2,
-                                                      col - state->window_width/2,
-                                                      row - state->window_height/2,
-                                                      colmax - state->window_width/2 + 1,
-                                                      rowmax - state->window_height/2,
-                                                      state->window_width,
-                                                      state->window_height);
+                  }
+            }
 
 
-            ipos = colmax + (zm - zp)/(zm + zp - 2*z0)/2.0;
+            if (gwy_math_refine_maximum(scores, &xmaximum, &ymaximum))
+            {
+                ipos = colmax + xmaximum;
+                jpos = rowmax + ymaximum;
+            }
+            else {
+                ipos = colmax;
+                jpos = rowmax;
+            }
+
+
             state->x_dist->data[col + xres * row]
                 = (ipos - col)*state->data_field1->xreal/state->data_field1->xres;
-        }
-        if (state->y_dist) {
-            z0 = zp = zm = cormax;
-            zm = gwy_data_field_get_correlation_score(state->data_field1,
-                                                      state->data_field2,
-                                                      col - state->window_width/2,
-                                                      row - state->window_height/2,
-                                                      colmax - state->window_width/2,
-                                                      rowmax - state->window_height/2 - 1,
-                                                      state->window_width,
-                                                      state->window_height);
-            zp = gwy_data_field_get_correlation_score(state->data_field1,
-                                                      state->data_field2,
-                                                      col - state->window_width/2,
-                                                      row - state->window_height/2,
-                                                      colmax - state->window_width/2,
-                                                      rowmax - state->window_height/2 + 1,
-                                                      state->window_width,
-                                                      state->window_height);
 
-
-            jpos = rowmax + (zm - zp)/(zm + zp - 2*z0)/2.0;
             state->y_dist->data[col + xres * row]
                 = (jpos - row)*state->data_field1->yreal/state->data_field1->yres;
-        }
+    }
 
         state->j++;
         if (state->j == xres - (state->search_width
