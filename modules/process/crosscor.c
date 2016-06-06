@@ -796,8 +796,8 @@ crosscor_do(CrosscorArgs * args)
     }
 
     if (args->search_xoffset!=0 || args->search_yoffset!=0) {
-        gwy_data_field_add(dfieldx, args->search_xoffset);
-        gwy_data_field_add(dfieldy, args->search_yoffset);
+        gwy_data_field_add(dfieldx, gwy_data_field_itor(dfieldx, args->search_xoffset));
+        gwy_data_field_add(dfieldy, gwy_data_field_jtor(dfieldy, args->search_yoffset));
     }
 
 
