@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-05-15 18:13+0300\n"
-"PO-Revision-Date: 2016-05-15 18:17+0300\n"
+"POT-Creation-Date: 2016-06-06 08:38+0300\n"
+"PO-Revision-Date: 2016-06-06 08:47+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Poedit-Basepath: .\n"
-"X-Generator: Poedit 1.8.6\n"
+"X-Generator: Poedit 1.8.7.1\n"
 "X-Poedit-SearchPath-0: /home/dan/.poedit\n"
 
 #: libgwyddion/gwyexpr.c:765
@@ -136,92 +136,92 @@ msgstr "контакт: Герц (параболоид)"
 msgid "Untitled"
 msgstr "Безымянный"
 
-#: libgwyddion/gwynlfitpreset.c:1498 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfitpreset.c:1527 libprocess/gwyprocessenums.c:101
 msgid "Gaussian"
 msgstr "Гауссиана"
 
-#: libgwyddion/gwynlfitpreset.c:1514
+#: libgwyddion/gwynlfitpreset.c:1543
 msgid "Gaussian (PSDF)"
 msgstr "Гауссиана (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1528
+#: libgwyddion/gwynlfitpreset.c:1557
 msgid "Gaussian (ACF)"
 msgstr "Гауссиана (АКФ)"
 
-#: libgwyddion/gwynlfitpreset.c:1542
+#: libgwyddion/gwynlfitpreset.c:1571
 msgid "Gaussian (HHCF)"
 msgstr "Гауссиана (ФКВВ)"
 
-#: libgwyddion/gwynlfitpreset.c:1556
+#: libgwyddion/gwynlfitpreset.c:1585
 msgid "Gaussian (RPSDF)"
 msgstr "Гауссиана (РФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1570
+#: libgwyddion/gwynlfitpreset.c:1599
 msgid "Two Gaussians (PSDF)"
 msgstr "Две гауссианы (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:841
+#: libgwyddion/gwynlfitpreset.c:1615 modules/xyz/xyz_drift.c:841
 #: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "Экспоненциальная"
 
-#: libgwyddion/gwynlfitpreset.c:1599
+#: libgwyddion/gwynlfitpreset.c:1628
 msgid "Exponential (PSDF)"
 msgstr "Экспоненциальная (ФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1613
+#: libgwyddion/gwynlfitpreset.c:1642
 msgid "Exponential (ACF)"
 msgstr "Экспоненциальная (АКФ)"
 
-#: libgwyddion/gwynlfitpreset.c:1626
+#: libgwyddion/gwynlfitpreset.c:1655
 msgid "Exponential (HHCF)"
 msgstr "Экспоненциальная (ФКВВ)"
 
-#: libgwyddion/gwynlfitpreset.c:1640
+#: libgwyddion/gwynlfitpreset.c:1669
 msgid "Exponential (RPSDF)"
 msgstr "Экспоненциальная (РФСПМ)"
 
-#: libgwyddion/gwynlfitpreset.c:1655
+#: libgwyddion/gwynlfitpreset.c:1684
 msgid "Polynomial (order 0)"
 msgstr "Полиномиальная (порядка 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1667 modules/xyz/xyz_drift.c:1805
+#: libgwyddion/gwynlfitpreset.c:1696 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "Полиномиальная (порядка 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1679
+#: libgwyddion/gwynlfitpreset.c:1708
 msgid "Polynomial (order 2)"
 msgstr "Полиномиальная (порядка 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1692
+#: libgwyddion/gwynlfitpreset.c:1721
 msgid "Polynomial (order 3)"
 msgstr "Полиномиальная (порядка 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1706
+#: libgwyddion/gwynlfitpreset.c:1735
 msgid "Square wave"
 msgstr "Прямоугольные импульсы"
 
-#: libgwyddion/gwynlfitpreset.c:1723
+#: libgwyddion/gwynlfitpreset.c:1752
 msgid "Parabolic step"
 msgstr "Параболическая ступень"
 
-#: libgwyddion/gwynlfitpreset.c:1740
+#: libgwyddion/gwynlfitpreset.c:1769
 msgid "Smooth slanted step"
 msgstr "Гладкая наклонная ступень"
 
-#: libgwyddion/gwynlfitpreset.c:1758
+#: libgwyddion/gwynlfitpreset.c:1787
 msgid "Smooth bent step"
 msgstr "Гладкая ступень с изгибом"
 
-#: libgwyddion/gwynlfitpreset.c:1775
+#: libgwyddion/gwynlfitpreset.c:1804
 msgid "Power"
 msgstr "Степенная"
 
-#: libgwyddion/gwynlfitpreset.c:1788
+#: libgwyddion/gwynlfitpreset.c:1817
 msgid "Lorentzian"
 msgstr "Лоренцева"
 
-#: libgwyddion/gwynlfitpreset.c:1803
+#: libgwyddion/gwynlfitpreset.c:1832
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -926,7 +926,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/hough.c:179 modules/process/lat_synth.c:523
 #: modules/process/latsim.c:158 modules/process/level.c:245
 #: modules/process/linematch.c:804 modules/process/lno_synth.c:433
-#: modules/process/local_contrast.c:130 modules/process/logistic.c:170
+#: modules/process/local_contrast.c:130 modules/process/logistic.c:177
 #: modules/process/mark_disconn.c:208 modules/process/mask_distribute.c:152
 #: modules/process/measure_lattice.c:256 modules/process/median-bg.c:180
 #: modules/process/noise_synth.c:336 modules/process/obj_synth.c:438
@@ -1282,7 +1282,7 @@ msgstr "Кривая:"
 msgid "Method:"
 msgstr "Способ:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:324
 msgid "Angle"
 msgstr "Угол"
 
@@ -3898,7 +3898,7 @@ msgstr "Физические размеры"
 
 #: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2808
 #: modules/file/pixmap.c:872 modules/file/rawfile.c:658
-#: modules/process/crosscor.c:221 modules/process/dimensions.h:473
+#: modules/process/crosscor.c:232 modules/process/dimensions.h:473
 #: modules/process/tip_blind.c:333
 msgid "_Width:"
 msgstr "_Ширина:"
@@ -3917,7 +3917,7 @@ msgid "verb|Change"
 msgstr "Изменить"
 
 #: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:907
-#: modules/file/rawfile.c:694 modules/process/crosscor.c:232
+#: modules/file/rawfile.c:694 modules/process/crosscor.c:243
 #: modules/process/dimensions.h:477
 msgid "H_eight:"
 msgstr "_Высота:"
@@ -4474,37 +4474,37 @@ msgstr "Файлы данных JEOL (.tif)"
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr "Тип данных неизвестен. Пожалуйста сообщите о нём разработчикам."
 
-#: modules/file/jpkscan.c:207
+#: modules/file/jpkscan.c:222
 msgid "Imports JPK image scans."
 msgstr "Импортирует изображения сканирований JPK."
 
-#: modules/file/jpkscan.c:220
+#: modules/file/jpkscan.c:235
 msgid "JPK image scans (.jpk, .jpk-qi-image)"
 msgstr "Сканы изображений JPK (.jpk, .jpk-qi-image)"
 
-#: modules/file/jpkscan.c:227
+#: modules/file/jpkscan.c:242
 msgid "JPK force curves (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 msgstr "Силовые кривые JPK (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 
-#: modules/file/jpkscan.c:293
+#: modules/file/jpkscan.c:308
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/jpkscan.c:638 modules/file/nanoobserver.c:193
+#: modules/file/jpkscan.c:653 modules/file/nanoobserver.c:193
 #: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/jpkscan.c:709
+#: modules/file/jpkscan.c:725
 msgid "Non-uniform point and/or segment numbering is not supported."
 msgstr "Неупорядоченная нумерация точек и/или сегментов не поддерживается."
 
-#: modules/file/jpkscan.c:718
+#: modules/file/jpkscan.c:734
 msgid "Non-uniform channel lists are not supported."
 msgstr "Неупорядоченные списки каналов не поддерживаются."
 
-#: modules/file/jpkscan.c:726
+#: modules/file/jpkscan.c:742
 #, c-format
 msgid "Data file %s was found instead of expected %s."
 msgstr "Файл данных %s был найден вместо ожидаемого %s."
@@ -7307,8 +7307,8 @@ msgstr "Создать поверхность используя баллист�
 
 #: modules/process/bdep_synth.c:239 modules/process/bdep_synth.c:596
 #: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:274
-#: modules/process/col_synth.c:717 modules/process/crosscor.c:599
-#: modules/process/crosscor.c:624 modules/process/deposit_synth.c:270
+#: modules/process/col_synth.c:717 modules/process/crosscor.c:710
+#: modules/process/crosscor.c:766 modules/process/deposit_synth.c:270
 #: modules/process/deposit_synth.c:861 modules/process/diff_synth.c:304
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
@@ -7960,7 +7960,7 @@ msgstr "Угол падения"
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:494 modules/process/crosscor.c:713
+#: modules/process/col_synth.c:494 modules/process/crosscor.c:861
 msgid "Direction"
 msgstr "Направление"
 
@@ -8140,105 +8140,121 @@ msgstr "угол"
 msgid "Re_fine"
 msgstr "_Уточнить"
 
-#: modules/process/crosscor.c:126
+#: modules/process/crosscor.c:137
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Вычисляет взаимную корреляцию двух полей данных."
 
-#: modules/process/crosscor.c:140
+#: modules/process/crosscor.c:151
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/М_ножественные данные/_Взаимная корреляция..."
 
-#: modules/process/crosscor.c:144
+#: modules/process/crosscor.c:155
 msgid "Cross-correlate two data fields"
 msgstr "Взаимная корреляция двух полей данных"
 
-#: modules/process/crosscor.c:183
+#: modules/process/crosscor.c:194
 msgid "Cross-Correlation"
 msgstr "Взаимная корреляция"
 
-#: modules/process/crosscor.c:207
+#: modules/process/crosscor.c:218
 msgid "Co_rrelate with:"
 msgstr "Ко_ррелировать с:"
 
-#: modules/process/crosscor.c:213
+#: modules/process/crosscor.c:224
 msgid "Search size"
 msgstr "Размер поиска"
 
-#: modules/process/crosscor.c:242
+#: modules/process/crosscor.c:252
+msgid "2nd channel global offset"
+msgstr "Общее смещение второго канала"
+
+#: modules/process/crosscor.c:257
+msgid "_Guess"
+msgstr "_Угадать"
+
+#: modules/process/crosscor.c:269
+msgid "_x offset:"
+msgstr "Смещение по _X:"
+
+#: modules/process/crosscor.c:280
+msgid "_y offset:"
+msgstr "Смещение по _Y:"
+
+#: modules/process/crosscor.c:291
 msgid "Window size"
 msgstr "Размер окна"
 
-#: modules/process/crosscor.c:250
+#: modules/process/crosscor.c:299
 msgid "W_idth:"
 msgstr "Ш_ирина:"
 
-#: modules/process/crosscor.c:260
+#: modules/process/crosscor.c:309
 msgid "Hei_ght:"
 msgstr "В_ысота:"
 
-#: modules/process/crosscor.c:271
+#: modules/process/crosscor.c:320
 msgid "All"
 msgstr "Всё"
 
-#: modules/process/crosscor.c:272
+#: modules/process/crosscor.c:321
 msgid "Absolute"
 msgstr "Модуль"
 
-#: modules/process/crosscor.c:273
+#: modules/process/crosscor.c:322
 msgid "X Distance"
 msgstr "Расстояние по X"
 
-#: modules/process/crosscor.c:274
+#: modules/process/crosscor.c:323
 msgid "Y Distance"
 msgstr "Расстояние по Y"
 
-#: modules/process/crosscor.c:276 modules/process/crosscor.c:727
+#: modules/process/crosscor.c:325 modules/process/crosscor.c:875
 msgid "Score"
 msgstr "Степень"
 
-#: modules/process/crosscor.c:278 modules/process/fft.c:395
+#: modules/process/crosscor.c:327 modules/process/fft.c:395
 #: modules/process/maskcor.c:176
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
 
-#: modules/process/crosscor.c:284
+#: modules/process/crosscor.c:333
 msgid "Add _low score results mask"
 msgstr "Добавить маску результатов с _низким весом"
 
-#: modules/process/crosscor.c:295 modules/process/grain_wshed.c:223
+#: modules/process/crosscor.c:344 modules/process/grain_wshed.c:223
 #: modules/process/maskcor.c:188
 msgid "T_hreshold:"
 msgstr "_Порог:"
 
-#: modules/process/crosscor.c:302
+#: modules/process/crosscor.c:351
 msgid "Multichannel cross-corelation"
 msgstr "Взаимная корреляция нескольких каналов"
 
-#: modules/process/crosscor.c:321
+#: modules/process/crosscor.c:370
 msgid "Second _source data:"
 msgstr "Данные второго _источника:"
 
-#: modules/process/crosscor.c:338
+#: modules/process/crosscor.c:387
 msgid "Correlate with:"
 msgstr "Коррелировать с:"
 
-#: modules/process/crosscor.c:606
+#: modules/process/crosscor.c:748
 msgid "Correlating first set..."
 msgstr "Корреляция первого множества..."
 
-#: modules/process/crosscor.c:632
+#: modules/process/crosscor.c:774
 msgid "Correlating second set..."
 msgstr "Корреляция второго множества..."
 
-#: modules/process/crosscor.c:673
+#: modules/process/crosscor.c:821
 msgid "X difference"
 msgstr "Различие X"
 
-#: modules/process/crosscor.c:687
+#: modules/process/crosscor.c:835
 msgid "Y difference"
 msgstr "Различие Y"
 
-#: modules/process/crosscor.c:700
+#: modules/process/crosscor.c:848
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
@@ -10875,30 +10891,33 @@ msgstr "Размер _ядра:"
 msgid "Blending _depth:"
 msgstr "_Глубина смешения:"
 
-#: modules/process/logistic.c:99
-#, fuzzy
-msgid "Mark grain by logistic regression."
-msgstr "Пометить зёрна с помощью логистической регрессии."
+#: modules/process/logistic.c:100
+msgid "Trains logistic regression to mark grains."
+msgstr "Обучает и использует логистическую регрессию для выделения зёрен."
 
-#: modules/process/logistic.c:113
+#: modules/process/logistic.c:114
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Зёрна/_Логистическая регрессия..."
 
-#: modules/process/logistic.c:117
-msgid "Mark grains by logistic regression"
-msgstr "Пометить зёрна с помощью логистической регрессии"
+#: modules/process/logistic.c:118
+msgid "Mark grains with logistic regression"
+msgstr "Пометить зёрна логистической регрессией"
 
-#: modules/process/logistic.c:167
+#: modules/process/logistic.c:174
 msgid "Logistic Regression"
 msgstr "Логистическая регрессия"
 
-#: modules/process/logistic.c:190
+#: modules/process/logistic.c:197
 msgid "_Train logistic regression"
 msgstr "_Обучить регрессию"
 
-#: modules/process/logistic.c:192
+#: modules/process/logistic.c:199
 msgid "_Use trained regression"
 msgstr "_Использовать регрессию"
+
+#: modules/process/logistic.c:370 modules/process/neural.c:1115
+msgid "Training..."
+msgstr "Обучение..."
 
 #: modules/process/mark_disconn.c:104
 msgid "Creates mask of values disconnected to the rest."
@@ -11600,10 +11619,6 @@ msgstr "Модель и сигнал несовместимы."
 #: modules/process/neural.c:940
 msgid "A field dimension is too small for chosen window size."
 msgstr "Размер поля слишком мал для выбранного размера окна."
-
-#: modules/process/neural.c:1115
-msgid "Training..."
-msgstr "Обучение..."
 
 #: modules/process/neural.c:1197 modules/process/neural.c:1363
 msgid "Evaluating..."
@@ -14663,6 +14678,13 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#, fuzzy
+#~ msgid "Mark grain by logistic regression."
+#~ msgstr "Пометить зёрна с помощью логистической регрессии."
+
+#~ msgid "Mark grains by logistic regression"
+#~ msgstr "Пометить зёрна с помощью логистической регрессии"
 
 #~ msgid ""
 #~ "Cannot determine scan dimensions; it seems non-square with an unknown "
