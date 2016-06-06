@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocess.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libprocess/filters.h>
@@ -62,6 +63,7 @@ typedef struct {
     gboolean add_ls_mask;
     gdouble threshold;
     gboolean multiple;
+    gboolean extend;
     GwyAppDataId op1;
     GwyAppDataId op2;
     GwyAppDataId op3;
@@ -84,6 +86,7 @@ typedef struct {
     GtkWidget *add_ls_mask;
     GtkObject *threshold;
     GtkWidget *multiple;
+    GtkWidget *extend;
     GtkWidget *chooser_op2;
     GtkWidget *chooser_op3;
     GtkWidget *chooser_op4;
@@ -116,11 +119,13 @@ static void     mask_changed_cb         (GtkToggleButton *button,
                                          CrosscorControls *controls);
 static void     multiple_changed_cb     (GtkToggleButton *button,
                                          CrosscorControls *controls);
+static void     extend_changed_cb       (GtkToggleButton *button,
+                                         CrosscorControls *controls);
 static void     crosscor_update_areas_cb(GtkObject *adj,
                                          CrosscorControls *controls);
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0,
+    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
@@ -390,6 +395,24 @@ crosscor_dialog(CrosscorArgs *args)
     gtk_widget_set_sensitive(controls.chooser_op4, args->multiple);
     row++;
 
+    /*postprocessing*/
+    label = gtk_label_new(_("Postprocess:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.extend = gtk_check_button_new_with_mnemonic
+                                           (_("Extend results to borders"));
+    gtk_table_attach(GTK_TABLE(table), controls.extend, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.extend),
+                                 args->extend);
+    g_signal_connect(controls.extend, "toggled",
+                     G_CALLBACK(extend_changed_cb), &controls);
+    row++;
+
+
     gtk_widget_show_all(dialog);
 
     do {
@@ -447,6 +470,11 @@ mask_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
     controls->args->add_ls_mask = gtk_toggle_button_get_active(button);
     gwy_table_hscale_set_sensitive(controls->threshold,
                                    controls->args->add_ls_mask);
+}
+static void
+extend_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
+{
+    controls->args->extend = gtk_toggle_button_get_active(button);
 }
 static void
 multiple_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
@@ -669,10 +697,11 @@ crosscor_do(CrosscorArgs * args)
 {
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL, *dfield4b = NULL,
-                 *dfield3 = NULL, *dfield4 = NULL, *score, *dir = NULL,
+                 *dfield3 = NULL, *dfield4 = NULL, *score, *buffer, *mask, *dir = NULL,
                  *abs = NULL;
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
-    gint newid;
+    gint newid, xres, yres, i;
+    gdouble error;
     GwyComputationState *state;
     GwySIUnit *siunit;
     GQuark quark;
@@ -689,6 +718,10 @@ crosscor_do(CrosscorArgs * args)
     dfieldx = gwy_data_field_new_alike(dfield1, FALSE);
     dfieldy = gwy_data_field_new_alike(dfield1, FALSE);
     score = gwy_data_field_new_alike(dfield1, FALSE);
+
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+
 
     if (args->multiple) {
         data = gwy_app_data_browser_get(args->op3.datano);
@@ -800,6 +833,47 @@ crosscor_do(CrosscorArgs * args)
         gwy_data_field_add(dfieldy, gwy_data_field_jtor(dfieldy, args->search_yoffset));
     }
 
+    if (args->extend) {
+       
+        buffer = gwy_data_field_new_alike(dfieldx, FALSE);
+        mask = gwy_data_field_new_alike(dfieldx, TRUE);
+
+        gwy_data_field_area_fill(mask, 0, 0, args->search_x/2 + 2, yres, 1);
+        gwy_data_field_area_fill(mask, 0, 0, xres, args->search_y/2 + 2, 1);
+        gwy_data_field_area_fill(mask, xres - args->search_x/2 - 2, 0, args->search_x/2 + 2, yres, 1);
+        gwy_data_field_area_fill(mask, 0, yres - args->search_y/2 - 2, xres, args->search_y/2 + 2, 1);
+
+        gwy_data_field_correct_average_unmasked(dfieldx, mask);
+        gwy_data_field_correct_average_unmasked(dfieldy, mask);
+
+        gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
+                           _("Borders extension..."));
+
+        for (i=0; i<10000; i++) {
+            gwy_data_field_correct_laplace_iteration(dfieldx,
+                                mask,
+                                buffer,
+                                0.2,
+                                &error);
+            if ((i%1000)==0) if (!gwy_app_wait_set_fraction((gdouble)i/20000.0)) break;
+           
+        }
+        for (i=0; i<10000; i++) {
+            gwy_data_field_correct_laplace_iteration(dfieldy,
+                                mask,
+                                buffer,
+                                0.2,
+                                &error);
+            if ((i%1000)==0) if (!gwy_app_wait_set_fraction((10000.0 + (gdouble)i)/20000.0)) break;
+           
+        }
+         gwy_app_wait_finish();
+
+        gwy_object_unref(buffer);
+        gwy_object_unref(mask);
+       
+    }
+
 
     if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS)
         abs = abs_field(dfieldx, dfieldy);
@@ -898,6 +972,7 @@ static const gchar search_yoffset_key[]  = "/module/crosscor/search_yoffset";
 static const gchar threshold_key[]       = "/module/crosscor/threshold";
 static const gchar window_x_key[]        = "/module/crosscor/window_x";
 static const gchar window_y_key[]        = "/module/crosscor/window_y";
+static const gchar extend_key[]          = "/module/crosscor/extend";
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)
@@ -911,6 +986,7 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->window_y = CLAMP(args->window_y, 0, 100);
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
     args->add_ls_mask = !!args->add_ls_mask;
+    args->extend = !!args->extend;
     gwy_app_data_id_verify_channel(&args->op2);
     gwy_app_data_id_verify_channel(&args->op3);
     gwy_app_data_id_verify_channel(&args->op4);
@@ -931,6 +1007,7 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
     gwy_container_gis_boolean_by_name(settings, add_ls_mask_key,
                                       &args->add_ls_mask);
+    gwy_container_gis_boolean_by_name(settings, extend_key, &args->extend);
     gwy_container_gis_boolean_by_name(settings, multiple_key, &args->multiple);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
@@ -957,6 +1034,7 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
     gwy_container_set_boolean_by_name(settings, add_ls_mask_key,
                                       args->add_ls_mask);
+    gwy_container_set_boolean_by_name(settings, extend_key, args->extend);
     gwy_container_set_boolean_by_name(settings, multiple_key, args->multiple);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
