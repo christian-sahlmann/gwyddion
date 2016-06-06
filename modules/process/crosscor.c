@@ -64,6 +64,7 @@ typedef struct {
     gdouble threshold;
     gboolean multiple;
     gboolean extend;
+    gboolean correct;
     GwyAppDataId op1;
     GwyAppDataId op2;
     GwyAppDataId op3;
@@ -87,6 +88,7 @@ typedef struct {
     GtkObject *threshold;
     GtkWidget *multiple;
     GtkWidget *extend;
+    GtkWidget *correct;
     GtkWidget *chooser_op2;
     GtkWidget *chooser_op3;
     GtkWidget *chooser_op4;
@@ -121,11 +123,13 @@ static void     multiple_changed_cb     (GtkToggleButton *button,
                                          CrosscorControls *controls);
 static void     extend_changed_cb       (GtkToggleButton *button,
                                          CrosscorControls *controls);
+static void     correct_changed_cb      (GtkToggleButton *button,
+                                         CrosscorControls *controls);
 static void     crosscor_update_areas_cb(GtkObject *adj,
                                          CrosscorControls *controls);
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE,
+    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE, TRUE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
@@ -412,6 +416,16 @@ crosscor_dialog(CrosscorArgs *args)
                      G_CALLBACK(extend_changed_cb), &controls);
     row++;
 
+    controls.correct = gtk_check_button_new_with_mnemonic
+                                           (_("Create corrected data from 2nd channel"));
+    gtk_table_attach(GTK_TABLE(table), controls.correct, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.correct),
+                                 args->correct);
+    g_signal_connect(controls.correct, "toggled",
+                     G_CALLBACK(correct_changed_cb), &controls);
+    row++;
+
 
     gtk_widget_show_all(dialog);
 
@@ -475,6 +489,11 @@ static void
 extend_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
 {
     controls->args->extend = gtk_toggle_button_get_active(button);
+}
+static void
+correct_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
+{
+    controls->args->correct = gtk_toggle_button_get_active(button);
 }
 static void
 multiple_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
@@ -698,10 +717,12 @@ crosscor_do(CrosscorArgs * args)
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL, *dfield4b = NULL,
                  *dfield3 = NULL, *dfield4 = NULL, *score, *buffer, *mask, *dir = NULL,
-                 *abs = NULL;
+                 *abs = NULL, *corrected;
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
-    gint newid, xres, yres, i;
-    gdouble error;
+    GwyXY *coords;
+
+    gint newid, xres, yres, i, col, row;
+    gdouble error, *xdata, *ydata;
     GwyComputationState *state;
     GwySIUnit *siunit;
     GQuark quark;
@@ -874,6 +895,42 @@ crosscor_do(CrosscorArgs * args)
        
     }
 
+    if (args->correct) {
+
+       corrected = gwy_data_field_new_alike(dfield2, FALSE);
+       coords = g_new(GwyXY, xres*yres);
+
+       xdata = gwy_data_field_get_data(dfieldx);
+       ydata = gwy_data_field_get_data(dfieldy);
+       i = 0;
+       for (row=0; row<yres; row++) 
+       {
+           for (col=0; col<xres; col++)
+           {
+               coords[i].x = col + gwy_data_field_rtoi(corrected, xdata[col + xres*row]);
+               coords[i].y = row + gwy_data_field_rtoj(corrected, ydata[col + xres*row]);
+               i++;
+           }
+       }
+
+       gwy_data_field_sample_distorted (dfield2,
+                                 corrected,
+                                 coords,
+                                 GWY_INTERPOLATION_BILINEAR,
+                                 GWY_EXTERIOR_BORDER_EXTEND,
+                                 0);
+       
+        newid = gwy_app_data_browser_add_data_field(corrected, data, TRUE);
+        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
+
+        gwy_app_set_data_field_title(data, newid, _("Corrected 2nd channel"));
+
+        g_object_unref(corrected);
+        g_free(coords); 
+    }
+
 
     if (args->result == GWY_CROSSCOR_ALL || args->result == GWY_CROSSCOR_ABS)
         abs = abs_field(dfieldx, dfieldy);
@@ -973,6 +1030,7 @@ static const gchar threshold_key[]       = "/module/crosscor/threshold";
 static const gchar window_x_key[]        = "/module/crosscor/window_x";
 static const gchar window_y_key[]        = "/module/crosscor/window_y";
 static const gchar extend_key[]          = "/module/crosscor/extend";
+static const gchar correct_key[]         = "/module/crosscor/correct";
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)
@@ -987,6 +1045,7 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
     args->add_ls_mask = !!args->add_ls_mask;
     args->extend = !!args->extend;
+    args->correct = !!args->correct;
     gwy_app_data_id_verify_channel(&args->op2);
     gwy_app_data_id_verify_channel(&args->op3);
     gwy_app_data_id_verify_channel(&args->op4);
@@ -1008,6 +1067,7 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_boolean_by_name(settings, add_ls_mask_key,
                                       &args->add_ls_mask);
     gwy_container_gis_boolean_by_name(settings, extend_key, &args->extend);
+    gwy_container_gis_boolean_by_name(settings, correct_key, &args->correct);
     gwy_container_gis_boolean_by_name(settings, multiple_key, &args->multiple);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
@@ -1035,6 +1095,7 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_boolean_by_name(settings, add_ls_mask_key,
                                       args->add_ls_mask);
     gwy_container_set_boolean_by_name(settings, extend_key, args->extend);
+    gwy_container_set_boolean_by_name(settings, correct_key, args->correct);
     gwy_container_set_boolean_by_name(settings, multiple_key, args->multiple);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
