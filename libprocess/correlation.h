@@ -66,6 +66,8 @@ GwyComputationState* gwy_data_field_crosscorrelate_init(GwyDataField *data_field
                                                         gint window_width,
                                                         gint window_height);
 
+void gwy_data_field_crosscorrelate_set_weights(GwyComputationState *state, 
+                                               GwyWindowingType type);
 
 void gwy_data_field_crosscorrelate_iteration(GwyComputationState *state);
 void gwy_data_field_crosscorrelate_finalize(GwyComputationState *state);

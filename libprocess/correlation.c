@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
+#include <libprocess/simplefft.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/filters.h>
 #include <libprocess/correlation.h>
@@ -189,7 +190,7 @@ gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
                                      gint kernel_width,
                                      gint kernel_height)
 {
-    gint xres, yres, kxres, kyres, wxres, wyres, i, j;
+    gint xres, yres, kxres, kyres, wxres, i, j;
     gdouble rms1, rms2, avg1, avg2, score;
     gdouble *data, *kdata, *wdata, weightsum;
 
@@ -204,7 +205,6 @@ gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
     wxres = weight_field->xres;
-    wyres = weight_field->yres;
 
     /* correlation request outside kernel */
     if (kernel_col > kxres || kernel_row > kyres)
@@ -852,6 +852,29 @@ gwy_data_field_crosscorrelate_init(GwyDataField *data_field1,
 
     return (GwyComputationState*)state;
 }
+
+/**
+ * gwy_data_field_crosscorrelate_set_weights:
+ * @state: Cross-correlation iterator.
+ * @type: Set windowing type to be set as correlation weight, see #GwyWindowingType for details.
+ *
+ * Sets the weight function to be used within iterative cross-correlation algorithm. By default (not setting it),
+ * rectangular windowing is used. This function should be called before running first iteration to get consistent results.
+*/
+ 
+void 
+gwy_data_field_crosscorrelate_set_weights(GwyComputationState *state, 
+                                          GwyWindowingType type)
+{
+    GwyCrossCorrelationState *cstate = (GwyCrossCorrelationState*)state;
+    g_return_if_fail(cstate->cs.state == GWY_COMPUTATION_STATE_INIT);
+
+    gwy_data_field_fill(cstate->weights, 1);
+    gwy_fft_window_data_field(cstate->weights, GWY_ORIENTATION_HORIZONTAL, type);
+    gwy_fft_window_data_field(cstate->weights, GWY_ORIENTATION_VERTICAL, type);
+
+}
+
 
 /**
  * gwy_data_field_crosscorrelate_iteration:
