@@ -65,6 +65,7 @@ typedef struct {
     gboolean multiple;
     gboolean extend;
     gboolean correct;
+    GwyWindowingType window;
     GwyAppDataId op1;
     GwyAppDataId op2;
     GwyAppDataId op3;
@@ -89,6 +90,7 @@ typedef struct {
     GtkWidget *multiple;
     GtkWidget *extend;
     GtkWidget *correct;
+    GtkWidget *window;
     GtkWidget *chooser_op2;
     GtkWidget *chooser_op3;
     GtkWidget *chooser_op4;
@@ -129,7 +131,7 @@ static void     crosscor_update_areas_cb(GtkObject *adj,
                                          CrosscorControls *controls);
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE, TRUE,
+    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE, TRUE, GWY_WINDOWING_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
@@ -321,6 +323,16 @@ crosscor_dialog(CrosscorArgs *args)
     g_signal_connect(controls.window_area_y, "value-changed",
                      G_CALLBACK(crosscor_update_areas_cb),
                      &controls);
+    row++;
+
+
+    controls.window
+        = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->window, args->window, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Windowing type:"), NULL,
+                            GTK_OBJECT(controls.window),
+                            GWY_HSCALE_WIDGET);
     row++;
 
     /* Result */
@@ -799,7 +811,10 @@ crosscor_do(CrosscorArgs * args)
                                                dfieldx, dfieldy, score,
                                                args->search_x, args->search_y,
                                                args->window_x, args->window_y);
+    gwy_data_field_crosscorrelate_set_weights(state, args->window);
+
     gwy_app_wait_set_message(_("Correlating first set..."));
+    
     do {
         gwy_data_field_crosscorrelate_iteration(state);
         if (!gwy_app_wait_set_fraction(state->fraction)) {
@@ -825,6 +840,8 @@ crosscor_do(CrosscorArgs * args)
                                                    args->search_y,
                                                    args->window_x,
                                                    args->window_y);
+        gwy_data_field_crosscorrelate_set_weights(state, args->window);
+
         gwy_app_wait_set_message(_("Correlating second set..."));
         do {
             gwy_data_field_crosscorrelate_iteration(state);
@@ -1031,6 +1048,8 @@ static const gchar window_x_key[]        = "/module/crosscor/window_x";
 static const gchar window_y_key[]        = "/module/crosscor/window_y";
 static const gchar extend_key[]          = "/module/crosscor/extend";
 static const gchar correct_key[]         = "/module/crosscor/correct";
+static const gchar window_key[]          = "/module/crosscor/window";
+
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)
@@ -1046,6 +1065,8 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->add_ls_mask = !!args->add_ls_mask;
     args->extend = !!args->extend;
     args->correct = !!args->correct;
+    args->window = gwy_enum_sanitize_value(args->window,
+                                           GWY_TYPE_WINDOWING_TYPE);
     gwy_app_data_id_verify_channel(&args->op2);
     gwy_app_data_id_verify_channel(&args->op3);
     gwy_app_data_id_verify_channel(&args->op4);
@@ -1071,6 +1092,7 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_boolean_by_name(settings, multiple_key, &args->multiple);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
+    gwy_container_gis_enum_by_name(settings, window_key, &args->window);
     args->op2 = op2_id;
     args->op3 = op3_id;
     args->op4 = op4_id;
@@ -1099,6 +1121,8 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_boolean_by_name(settings, multiple_key, args->multiple);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
+    gwy_container_set_enum_by_name(settings, window_key, args->window);
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
