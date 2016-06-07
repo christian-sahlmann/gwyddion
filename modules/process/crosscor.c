@@ -65,6 +65,8 @@ typedef struct {
     gboolean multiple;
     gboolean extend;
     gboolean correct;
+    gboolean gaussian;
+    gdouble gaussian_width;
     GwyWindowingType window;
     GwyAppDataId op1;
     GwyAppDataId op2;
@@ -90,6 +92,8 @@ typedef struct {
     GtkWidget *multiple;
     GtkWidget *extend;
     GtkWidget *correct;
+    GtkWidget *gaussian;
+    GtkObject *gaussian_width;
     GtkWidget *window;
     GtkWidget *chooser_op2;
     GtkWidget *chooser_op3;
@@ -127,11 +131,16 @@ static void     extend_changed_cb       (GtkToggleButton *button,
                                          CrosscorControls *controls);
 static void     correct_changed_cb      (GtkToggleButton *button,
                                          CrosscorControls *controls);
+static void     gaussian_changed_cb      (GtkToggleButton *button,
+                                         CrosscorControls *controls);
 static void     crosscor_update_areas_cb(GtkObject *adj,
                                          CrosscorControls *controls);
+static void     gaussian_width_changed_cb(GtkObject *adj,
+                                         CrosscorControls *controls);
+
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE, TRUE, GWY_WINDOWING_NONE,
+    GWY_CROSSCOR_ABS, 10, 10, 0, 0, 25, 25, 0, 0.0, 0.0, 1, 0.95, 0, TRUE, TRUE, FALSE, 10, GWY_WINDOWING_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
     GWY_APP_DATA_ID_NONE,
@@ -195,7 +204,7 @@ static gboolean
 crosscor_dialog(CrosscorArgs *args)
 {
     CrosscorControls controls;
-    GtkWidget *dialog, *table, *label, *combo, *button;
+    GtkWidget *dialog, *table, *label, *combo, *button, *spin;
     GwyDataChooser *chooser;
     gint row, response;
     gboolean ok = FALSE;
@@ -418,6 +427,26 @@ crosscor_dialog(CrosscorArgs *args)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    controls.gaussian = gtk_check_button_new_with_mnemonic
+                                           (_("Apply Ga_ussian filter of width: "));
+    gtk_table_attach(GTK_TABLE(table), controls.gaussian, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.gaussian),
+                                 args->gaussian);
+    g_signal_connect(controls.gaussian, "toggled",
+                     G_CALLBACK(gaussian_changed_cb), &controls);
+
+    controls.gaussian_width = gtk_adjustment_new(args->gaussian_width, 2, 100, 1, 5, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.gaussian_width), 1, 2);
+    g_signal_connect(controls.gaussian_width, "value-changed",
+                     G_CALLBACK(gaussian_width_changed_cb), &controls);
+
+    gtk_table_attach(GTK_TABLE(table), spin, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    
+
+    row++;
+
     controls.extend = gtk_check_button_new_with_mnemonic
                                            (_("Extend results to borders"));
     gtk_table_attach(GTK_TABLE(table), controls.extend, 0, 4, row, row+1,
@@ -483,6 +512,13 @@ crosscor_data_changed(GwyDataChooser *chooser,
                                       object->datano);
 }
 
+static void     
+gaussian_width_changed_cb(GtkObject *adj,
+                 CrosscorControls *controls)
+{
+    controls->args->gaussian_width = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+}
+
 static void
 crosscor_operation_cb(GtkWidget *combo,
                       CrosscorArgs *args)
@@ -501,6 +537,11 @@ static void
 extend_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
 {
     controls->args->extend = gtk_toggle_button_get_active(button);
+}
+static void
+gaussian_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
+{
+    controls->args->gaussian = gtk_toggle_button_get_active(button);
 }
 static void
 correct_changed_cb(GtkToggleButton *button, CrosscorControls *controls)
@@ -733,7 +774,7 @@ crosscor_do(CrosscorArgs * args)
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
     GwyXY *coords;
 
-    gint newid, xres, yres, i, col, row;
+    gint newid, xres, yres, i, col, row, leftadd, rightadd, topadd, bottomadd;
     gdouble error, *xdata, *ydata;
     GwyComputationState *state;
     GwySIUnit *siunit;
@@ -813,7 +854,8 @@ crosscor_do(CrosscorArgs * args)
                                                args->window_x, args->window_y);
     gwy_data_field_crosscorrelate_set_weights(state, args->window);
 
-    gwy_app_wait_set_message(_("Correlating first set..."));
+    if (args->multiple) gwy_app_wait_set_message(_("Correlating first set..."));
+    else gwy_app_wait_set_message(_("Correlating..."));
     
     do {
         gwy_data_field_crosscorrelate_iteration(state);
@@ -871,15 +913,34 @@ crosscor_do(CrosscorArgs * args)
         gwy_data_field_add(dfieldy, gwy_data_field_jtor(dfieldy, args->search_yoffset));
     }
 
+
     if (args->extend) {
        
         buffer = gwy_data_field_new_alike(dfieldx, FALSE);
         mask = gwy_data_field_new_alike(dfieldx, TRUE);
 
-        gwy_data_field_area_fill(mask, 0, 0, args->search_x/2 + 2, yres, 1);
-        gwy_data_field_area_fill(mask, 0, 0, xres, args->search_y/2 + 2, 1);
-        gwy_data_field_area_fill(mask, xres - args->search_x/2 - 2, 0, args->search_x/2 + 2, yres, 1);
-        gwy_data_field_area_fill(mask, 0, yres - args->search_y/2 - 2, xres, args->search_y/2 + 2, 1);
+        //crop data if there was a global shift
+        if (args->search_xoffset<0) {
+            leftadd = 0;
+            rightadd = -args->search_xoffset;
+        } else {
+            leftadd = args->search_xoffset;
+            rightadd = 0;
+        }
+        if (args->search_yoffset<0) {
+            topadd = 0;
+            bottomadd = -args->search_yoffset;
+        } else {
+            topadd = args->search_yoffset;
+            bottomadd = 0;
+       }
+
+        printf("adds %d %d %d %d\n", leftadd, rightadd, topadd, bottomadd);
+
+        gwy_data_field_area_fill(mask, 0, 0, args->search_x/2 + 2 + leftadd, yres, 1);
+        gwy_data_field_area_fill(mask, 0, 0, xres, args->search_y/2 + 2 + topadd, 1);
+        gwy_data_field_area_fill(mask, xres - args->search_x/2 - 2 - rightadd, 0, args->search_x/2 + 2 + rightadd, yres, 1);
+        gwy_data_field_area_fill(mask, 0, yres - args->search_y/2 - 2 - bottomadd, xres, args->search_y/2 + 2 + bottomadd, 1);
 
         gwy_data_field_correct_average_unmasked(dfieldx, mask);
         gwy_data_field_correct_average_unmasked(dfieldy, mask);
@@ -910,6 +971,11 @@ crosscor_do(CrosscorArgs * args)
         gwy_object_unref(buffer);
         gwy_object_unref(mask);
        
+    }
+
+    if (args->gaussian) {
+       gwy_data_field_filter_gaussian(dfieldx, args->gaussian_width);
+       gwy_data_field_filter_gaussian(dfieldy, args->gaussian_width);
     }
 
     if (args->correct) {
@@ -1049,6 +1115,8 @@ static const gchar window_y_key[]        = "/module/crosscor/window_y";
 static const gchar extend_key[]          = "/module/crosscor/extend";
 static const gchar correct_key[]         = "/module/crosscor/correct";
 static const gchar window_key[]          = "/module/crosscor/window";
+static const gchar gaussian_key[]        = "/module/crosscor/gaussian";
+static const gchar gaussian_width_key[]  = "/module/crosscor/gaussian_width";
 
 
 static void
@@ -1065,6 +1133,8 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->add_ls_mask = !!args->add_ls_mask;
     args->extend = !!args->extend;
     args->correct = !!args->correct;
+    args->gaussian = !!args->gaussian;
+    args->gaussian_width = CLAMP(args->gaussian_width, 2, 100);
     args->window = gwy_enum_sanitize_value(args->window,
                                            GWY_TYPE_WINDOWING_TYPE);
     gwy_app_data_id_verify_channel(&args->op2);
@@ -1085,11 +1155,13 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_int32_by_name(settings, window_x_key, &args->window_x);
     gwy_container_gis_int32_by_name(settings, window_y_key, &args->window_y);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
+    gwy_container_gis_double_by_name(settings, gaussian_width_key, &args->gaussian_width);
     gwy_container_gis_boolean_by_name(settings, add_ls_mask_key,
                                       &args->add_ls_mask);
     gwy_container_gis_boolean_by_name(settings, extend_key, &args->extend);
     gwy_container_gis_boolean_by_name(settings, correct_key, &args->correct);
     gwy_container_gis_boolean_by_name(settings, multiple_key, &args->multiple);
+    gwy_container_gis_boolean_by_name(settings, gaussian_key, &args->gaussian);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
     gwy_container_gis_enum_by_name(settings, window_key, &args->window);
@@ -1114,11 +1186,13 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, window_x_key, args->window_x);
     gwy_container_set_int32_by_name(settings, window_y_key, args->window_y);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
+    gwy_container_set_double_by_name(settings, gaussian_width_key, args->gaussian_width);
     gwy_container_set_boolean_by_name(settings, add_ls_mask_key,
                                       args->add_ls_mask);
     gwy_container_set_boolean_by_name(settings, extend_key, args->extend);
     gwy_container_set_boolean_by_name(settings, correct_key, args->correct);
     gwy_container_set_boolean_by_name(settings, multiple_key, args->multiple);
+    gwy_container_set_boolean_by_name(settings, gaussian_key, args->gaussian);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
     gwy_container_set_enum_by_name(settings, window_key, args->window);
