@@ -907,13 +907,13 @@ crosscor_do(CrosscorArgs * args)
        {
            for (col=0; col<xres; col++)
            {
-               coords[i].x = col + gwy_data_field_rtoi(corrected, xdata[col + xres*row]);
-               coords[i].y = row + gwy_data_field_rtoj(corrected, ydata[col + xres*row]);
+               coords[i].x = col + gwy_data_field_rtoi(corrected, xdata[col + xres*row]) + 0.5 - args->search_xoffset;
+               coords[i].y = row + gwy_data_field_rtoj(corrected, ydata[col + xres*row]) + 0.5 - args->search_yoffset;
                i++;
            }
        }
 
-       gwy_data_field_sample_distorted (dfield2,
+       gwy_data_field_sample_distorted(dfield2,
                                  corrected,
                                  coords,
                                  GWY_INTERPOLATION_BILINEAR,
