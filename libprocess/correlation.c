@@ -49,6 +49,7 @@ typedef struct {
     GwyDataField *x_dist;
     GwyDataField *y_dist;
     GwyDataField *score;
+    GwyDataField *weights;
     gint search_width;
     gint search_height;
     gint window_width;
@@ -148,6 +149,127 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
         }
     }
     score /= rms1 * rms2 * sumpoints;
+
+    return score;
+}
+/**
+ * gwy_data_field_get_weighted_correlation_score:
+ * @data_field: A data field.
+ * @kernel_field: Kernel to correlate data field with.
+ * @weight_field: data field of same size as kernel window size
+ * @col: Upper-left column position in the data field.
+ * @row: Upper-left row position in the data field.
+ * @kernel_col: Upper-left column position in kernel field.
+ * @kernel_row: Upper-left row position in kernel field.
+ * @kernel_width: Width of kernel field area.
+ * @kernel_height: Heigh of kernel field area.
+ *
+ * Calculates a correlation score in one point using weights to center
+ * the used information to the center of kernel.
+ *
+ * Correlation window size is given
+ * by @kernel_col, @kernel_row, @kernel_width, @kernel_height,
+ * postion of the correlation window on data is given by
+ * @col, @row.
+ *
+ * If anything fails (data too close to boundary, etc.),
+ * function returns -1.0 (none correlation)..
+ *
+ * Returns: Correlation score (between -1.0 and 1.0). Value 1.0 denotes
+ *          maximum correlation, -1.0 none correlation.
+ **/
+gdouble
+gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
+                                     GwyDataField *kernel_field,
+                                     GwyDataField *weight_field,
+                                     gint col,
+                                     gint row,
+                                     gint kernel_col,
+                                     gint kernel_row,
+                                     gint kernel_width,
+                                     gint kernel_height)
+{
+    gint xres, yres, kxres, kyres, wxres, wyres, i, j;
+    gdouble rms1, rms2, avg1, avg2, score;
+    gdouble *data, *kdata, *wdata, weightsum;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -1.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -1.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(weight_field), -1.0);
+    g_return_if_fail(kernel_width == weight_field->xres && 
+                     kernel_height == weight_field->yres);
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    kxres = kernel_field->xres;
+    kyres = kernel_field->yres;
+    wxres = weight_field->xres;
+    wyres = weight_field->yres;
+
+    /* correlation request outside kernel */
+    if (kernel_col > kxres || kernel_row > kyres)
+        return -1;
+
+    /* correlation request outside data field */
+    if (col < 0 || row < 0
+        || col + kernel_width > xres
+        || row + kernel_height > yres)
+        return -1;
+    if (kernel_col < 0
+        || kernel_row < 0
+        || kernel_col + kernel_width > kxres
+        || kernel_row + kernel_height > kyres)
+        return -1;
+
+    data = data_field->data;
+    kdata = kernel_field->data;
+    wdata = weight_field->data;
+    weightsum = gwy_data_field_get_sum(weight_field);
+
+    avg1 = avg2 = 0;
+    for (j = 0; j < kernel_height; j++) {   /* row */
+        for (i = 0; i < kernel_width; i++) {   /* col */
+            avg1 += data[(i + col) + xres*(j + row)]*wdata[i + wxres*j];
+            avg2 += kdata[(i + kernel_col) + kxres*(j + kernel_row)]*wdata[i + wxres*j];
+        }
+    }
+    avg1 /= gwy_data_field_get_sum(weight_field);
+    avg2 /= gwy_data_field_get_sum(weight_field);
+
+    rms1 = rms2 = 0;
+    for (j = 0; j < kernel_height; j++) {   /* row */
+        for (i = 0; i < kernel_width; i++) {   /* col */
+            rms1 += wdata[i + wxres*j]*(data[(i + col) + xres*(j + row)] - avg1)
+                      *(data[(i + col) + xres*(j + row)] - avg1);
+            rms2 += wdata[i + wxres*j]*(kdata[(i + kernel_col) + kxres*(j + kernel_row)] - avg2)
+                      *(kdata[(i + kernel_col) + kxres*(j + kernel_row)] - avg2);
+        }
+    }
+    rms1 /= gwy_data_field_get_sum(weight_field);
+    rms2 /= gwy_data_field_get_sum(weight_field);
+
+    rms1 = sqrt(rms1);
+    rms2 = sqrt(rms2);
+
+    if (rms1 == 0.0)
+        return 0.0;
+    if (rms2 == 0.0)
+        return 0.0;
+
+
+    score = 0;
+    data = data_field->data;
+    kdata = kernel_field->data;
+    for (j = 0; j < kernel_height; j++) {   /* row */
+        for (i = 0; i < kernel_width; i++) {   /* col */
+            score += wdata[i + wxres*j]*(data[(i + col) + xres*(j + row)] - avg1)
+                      * (kdata[(i + kernel_col) + kxres*(j + kernel_row)]
+                         - avg2);
+        }
+    }
+    //printf("%g %g %g %g  = %g\n", rms1, rms2, score, weightsum, score/(rms1 * rms2 * weightsum));
+
+    score /= rms1 * rms2 * weightsum;
 
     return score;
 }
@@ -724,6 +846,10 @@ gwy_data_field_crosscorrelate_init(GwyDataField *data_field1,
     state->window_width = window_width;
     state->window_height = window_height;
 
+    state->weights = gwy_data_field_new(window_width, window_height, 
+                                        window_width, window_height, 1);
+    gwy_data_field_fill(state->weights, 1);
+
     return (GwyComputationState*)state;
 }
 
@@ -757,6 +883,7 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
     gdouble cormax, lscore;
     gdouble ipos, jpos, scores[9];
     gdouble xmaximum, ymaximum;
+    
 
 
     xres = state->data_field1->xres;
@@ -781,9 +908,10 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
         cormax = -1.01;
         for (m = row - state->search_height/2; m < (row + state->search_height/2 - state->window_height + 1); m++) {
             for (n = col - state->search_width/2; n < (col + state->search_width/2 - state->window_width + 1); n++) {
-                lscore = gwy_data_field_get_correlation_score
+                lscore = gwy_data_field_get_weighted_correlation_score
                                                 (state->data_field1,
                                                  state->data_field2,
+                                                 state->weights,
                                                  col - state->window_width/2,
                                                  row - state->window_height/2,
                                                  n, m,
@@ -811,8 +939,9 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
                for (n=-1; n<=1; n++) {
     
                   if (m==0 && n==0) scores[k++] = cormax;
-                  else scores[k++] = gwy_data_field_get_correlation_score(state->data_field1,
+                  else scores[k++] = gwy_data_field_get_weighted_correlation_score(state->data_field1,
                                                       state->data_field2,
+                                                      state->weights,
                                                       col - state->window_width/2,
                                                       row - state->window_height/2,
                                                       colmax - state->window_width/2 + n,
@@ -883,6 +1012,7 @@ gwy_data_field_crosscorrelate_finalize(GwyComputationState *cstate)
     gwy_object_unref(state->x_dist);
     gwy_object_unref(state->y_dist);
     gwy_object_unref(state->score);
+    gwy_object_unref(state->weights);
     g_free(state);
 }
 

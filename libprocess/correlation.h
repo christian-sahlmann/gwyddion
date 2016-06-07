@@ -36,6 +36,16 @@ gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
                                              gint kernel_width,
                                              gint kernel_height);
 
+gdouble gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
+                                     GwyDataField *kernel_field,
+                                     GwyDataField *weight_field,
+                                     gint col,
+                                     gint row,
+                                     gint kernel_col,
+                                     gint kernel_row,
+                                     gint kernel_width,
+                                     gint kernel_height);
+
 void gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                    GwyDataField *data_field2,
                                    GwyDataField *x_dist,
@@ -55,6 +65,8 @@ GwyComputationState* gwy_data_field_crosscorrelate_init(GwyDataField *data_field
                                                         gint search_height,
                                                         gint window_width,
                                                         gint window_height);
+
+
 void gwy_data_field_crosscorrelate_iteration(GwyComputationState *state);
 void gwy_data_field_crosscorrelate_finalize(GwyComputationState *state);
 
