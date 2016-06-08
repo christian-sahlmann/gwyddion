@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004,2014-2015 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2014-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -214,7 +214,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -1129,9 +1129,10 @@ assign_edge(gint edgepos, gint pos1, gint pos2, gint *w1, gint *w2)
     gboolean onedge1 = (pos1 == edgepos);
     gboolean onedge2 = (pos2 == edgepos);
 
+    gwy_debug("%d :: %d %d", edgepos, pos1, pos2);
     g_assert(onedge1 || onedge2);
-    *w1 = onedge2;
-    *w2 = onedge1;
+    *w1 = onedge1;
+    *w2 = onedge2;
 }
 
 static void
@@ -1164,9 +1165,9 @@ merge_boundary(GwyDataField *dfield1,
     gwy_debug("rect in result : %d x %d at (%d,%d)",
               res_rect.width, res_rect.height, res_rect.x, res_rect.y);
 
-    assign_edge(res_rect.x, f1_pos.x, f2_pos.x, &w1left, &w2left);
+    assign_edge(0, f1_pos.x, f2_pos.x, &w1left, &w2left);
     gwy_debug("left: %d %d", w1left, w2left);
-    assign_edge(res_rect.y, f1_pos.y, f2_pos.y, &w1top, &w2top);
+    assign_edge(0, f1_pos.y, f2_pos.y, &w1top, &w2top);
     gwy_debug("top: %d %d", w1top, w2top);
     assign_edge(res_rect.width,
                 xres1 - f1_pos.x, xres2 - f2_pos.x,
