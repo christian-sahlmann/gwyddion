@@ -1,5 +1,17 @@
-The features I want to be implemented, WIP is for the parts that are
-developed just now:
+- Machine learning based segmentation (feature vector generation,
+  classifier, postprocessing like graph-cut).
+- Machine learning engines (logistic regression, SVM, neural networks, 
+  deep/convolutional neural network, more generic clustering, 
+  hierarhial cluster trees,...)
+- Volume drift correction (mutual crop-like)
+- Volume segmentation.
+- Volume planes/voxels statistics.
+- Volume export into images.
+- Composite image (two or more channels with different color scale mixed
+  into RGB, export module).
+- metadata loading from EXIF for some formats.
+
+older ideas:
 - more simple interface for volume data extraction. Implement missing
   parts of volume infrastructure.
 - Tool to recalculate calibrations for volume data.
@@ -14,19 +26,15 @@ developed just now:
   and presentations (gwyddion4: somewhere in the far future of gwyddion4
   era, we need the plain list of all data without categories and one
   data processing menu to add another datatypes).
-- Something like GwyBrick, but wit one extra dimension (gwyddion4)
+- Something like GwyBrick, but with one extra dimension (gwyddion4)
 - graph filter module with all basic graph processing.
 - multiple graph arithmetic.
 - more deconvolution algorithms.
-- better image segmentation algorithms for the noisy data.
-- machine learning infrastructure for the above.
 - better jumping mode (QNM, Hybrid, ... in other implementations)
   processing (currently I have no good examples of such file).
 - isolines support for image export
 - smarter units and metadata (keeping some relevant info about scan type
   and parameters in defined way for modules that can use it,
   probably also for gwyddion4)
-- Composite image (two or more channels with different color scale mixed
-  into RGB, export module).
 - Volume generation from different wavelet scales (more advanced
   separation into background, waviness, roughness and noise).
