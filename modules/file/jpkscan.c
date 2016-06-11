@@ -57,7 +57,9 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
+#include <libgwydgets/gwygraphmodel.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 #include "jpk.h"
@@ -115,7 +117,9 @@ typedef struct {
     guint nsegs;
     guint npoints;
     guint nchannels;
+    gint height_cid;
     gchar **channel_names;
+    const gchar **default_cals;
     JPKForceData *data;
 
     /* For maps/QI */
@@ -164,6 +168,8 @@ static gint          jpkforce_detect              (const GwyFileDetectInfo *file
 static GwyContainer* jpkforce_load                (const gchar *filename,
                                                    GwyRunType mode,
                                                    GError **error);
+static guint         create_force_curves          (GwyContainer *container,
+                                                   JPKForceFile *jpkfile);
 static gboolean      read_curve_data              (GwyZipFile zipfile,
                                                    JPKForceFile *jpkfile,
                                                    GError **error);
@@ -671,6 +677,7 @@ jpkforce_load(const gchar *filename,
                                                                    NULL);
     }
 
+    jpkfile.height_cid = -1;
     jpkfile.str = g_string_new(NULL);
     jpkfile.sstr = g_string_new(NULL);
     jpkfile.qstr = g_string_new(NULL);
@@ -702,14 +709,20 @@ jpkforce_load(const gchar *filename,
         goto fail;
 
     jpkfile.data = g_new0(JPKForceData, jpkfile.nids);
+    container = gwy_container_new();
     if (jpkfile.type == JPK_FORCE_CURVES) {
         if (!read_curve_data(zipfile, &jpkfile, error))
             goto fail;
+        create_force_curves(container, &jpkfile);
     }
     else {
     }
 
-    err_NO_DATA(error);
+    if (!gwy_container_get_n_items(container)) {
+        gwy_object_unref(container);
+        err_NO_DATA(error);
+        goto fail;
+    }
 
 fail:
     gwyzip_close(zipfile);
@@ -819,6 +832,69 @@ match_map_segment_filename(const gchar *filename, GRegex *regex,
     s = g_match_info_fetch(info, 3);
     g_match_info_free(info);
     return s;
+}
+
+static guint
+create_force_curves(GwyContainer *container, JPKForceFile *jpkfile)
+{
+    gint id, cid, height_cid = jpkfile->height_cid;
+    guint ngraphs = 0, i, ndata;
+
+    g_return_val_if_fail(height_cid >= 0
+                         && height_cid < jpkfile->nchannels, 0);
+
+    for (cid = 0; cid < jpkfile->nchannels; cid++) {
+        GwyGraphModel *gmodel;
+        GwySIUnit *xunit, *yunit;
+        GQuark key;
+
+        if (cid == height_cid)
+            continue;
+
+        gmodel = gwy_graph_model_new();
+        i = 0;
+        for (id = 0; id < jpkfile->nsegs; id++) {
+            GwyGraphCurveModel *gcmodel;
+            JPKForceData *data = jpkfile->data + id;
+            const gdouble *xdata, *ydata;
+
+            if (gwy_strequal(data->segment_style, "pause"))
+                continue;
+
+            ndata = data->ndata;
+            xdata = data->data + height_cid * ndata;
+            ydata = data->data + cid * ndata;
+            gcmodel = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, ndata);
+            g_object_set(gcmodel,
+                         "mode", GWY_GRAPH_CURVE_LINE,
+                         "color", gwy_graph_get_preset_color(i++),
+                         "description", data->segment_name,
+                         NULL);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            g_object_unref(gcmodel);
+        }
+
+        if (gwy_graph_model_get_n_curves(gmodel)) {
+            xunit = gwy_si_unit_new(jpkfile->data[0].units[height_cid]);
+            yunit = gwy_si_unit_new(jpkfile->data[0].units[cid]);
+            g_object_set(gmodel,
+                         "title", jpkfile->channel_names[cid],
+                         "si-unit-x", xunit,
+                         "si-unit-y", yunit,
+                         "axis-label-bottom", jpkfile->default_cals[height_cid],
+                         "axis-label-left", jpkfile->default_cals[cid],
+                         NULL);
+            g_object_unref(yunit);
+            g_object_unref(xunit);
+
+            key = gwy_app_get_graph_key_for_id(ngraphs++);
+            gwy_container_set_object(container, key, gmodel);
+        }
+        g_object_unref(gmodel);
+    }
+
+    return ngraphs;
 }
 
 /* Expect the files in order.  We could read everything into memory first but
@@ -1095,6 +1171,8 @@ find_sgement_name(GHashTable *header_properties)
     return g_strdup(name);
 }
 
+/* FIXME: We might not want to do this because apparently it is not guaranteed
+ * the default for force is force etc. */
 static gboolean
 apply_default_channel_scaling(JPKForceFile *jpkfile,
                               JPKForceData *data,
@@ -1107,12 +1185,16 @@ apply_default_channel_scaling(JPKForceFile *jpkfile,
     gchar *key;
     guint j, ndata;
 
-    default_cal = lookup_channel_property(jpkfile, header_properties,
-                                          "conversion-set.conversions.default",
-                                          i, FALSE, NULL);
-    if (!default_cal) {
-        g_warning("Cannot find the default conversion.");
-        return FALSE;
+    if (!(default_cal = jpkfile->default_cals[i])) {
+        default_cal = lookup_channel_property(jpkfile, header_properties,
+                                              "conversion-set.conversions.default",
+                                              i, FALSE, NULL);
+        if (!default_cal) {
+            g_warning("Cannot find the default conversion.");
+            return FALSE;
+        }
+        else
+            jpkfile->default_cals[i] = default_cal;
     }
 
     key = g_strconcat("conversion-set.conversion.", default_cal, NULL);
@@ -1395,16 +1477,25 @@ enumerate_channels(JPKForceFile *jpkfile, GHashTable *header_properties,
     if (!n) {
         g_free(fields);
         err_NO_DATA(error);
-        return NULL;
+        return FALSE;
     }
 
     jpkfile->nchannels = n;
     jpkfile->channel_names = g_new(gchar*, n);
+    jpkfile->default_cals = g_new0(const gchar*, n);
     for (i = 0; i < n; i++) {
         jpkfile->channel_names[i] = fields[i];
         gwy_debug("channel[%u] = <%s>", i, fields[i]);
+        if (gwy_strequal(jpkfile->channel_names[i], "height"))
+            jpkfile->height_cid = i;
     }
     g_free(fields);
+
+    if (jpkfile->height_cid < 0) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot find any height channel."));
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -1580,6 +1671,7 @@ jpk_force_file_free(JPKForceFile *jpkfile)
     for (i = 0; i < jpkfile->nchannels; i++)
         g_free(jpkfile->channel_names[i]);
     g_free(jpkfile->channel_names);
+    g_free(jpkfile->default_cals);
 
     if (jpkfile->segment_regex)
         g_regex_unref(jpkfile->segment_regex);
