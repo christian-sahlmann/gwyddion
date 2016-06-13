@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-06-06 08:38+0300\n"
-"PO-Revision-Date: 2016-06-06 08:47+0300\n"
+"POT-Creation-Date: 2016-06-13 07:44+0300\n"
+"PO-Revision-Date: 2016-06-13 07:47+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -1282,7 +1282,7 @@ msgstr "Кривая:"
 msgid "Method:"
 msgstr "Способ:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:324
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:354
 msgid "Angle"
 msgstr "Угол"
 
@@ -3898,7 +3898,7 @@ msgstr "Физические размеры"
 
 #: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2808
 #: modules/file/pixmap.c:872 modules/file/rawfile.c:658
-#: modules/process/crosscor.c:232 modules/process/dimensions.h:473
+#: modules/process/crosscor.c:252 modules/process/dimensions.h:473
 #: modules/process/tip_blind.c:333
 msgid "_Width:"
 msgstr "_Ширина:"
@@ -3917,7 +3917,7 @@ msgid "verb|Change"
 msgstr "Изменить"
 
 #: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:907
-#: modules/file/rawfile.c:694 modules/process/crosscor.c:243
+#: modules/file/rawfile.c:694 modules/process/crosscor.c:263
 #: modules/process/dimensions.h:477
 msgid "H_eight:"
 msgstr "_Высота:"
@@ -4474,40 +4474,44 @@ msgstr "Файлы данных JEOL (.tif)"
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr "Тип данных неизвестен. Пожалуйста сообщите о нём разработчикам."
 
-#: modules/file/jpkscan.c:222
+#: modules/file/jpkscan.c:228
 msgid "Imports JPK image scans."
 msgstr "Импортирует изображения сканирований JPK."
 
-#: modules/file/jpkscan.c:235
+#: modules/file/jpkscan.c:241
 msgid "JPK image scans (.jpk, .jpk-qi-image)"
 msgstr "Сканы изображений JPK (.jpk, .jpk-qi-image)"
 
-#: modules/file/jpkscan.c:242
+#: modules/file/jpkscan.c:248
 msgid "JPK force curves (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 msgstr "Силовые кривые JPK (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 
-#: modules/file/jpkscan.c:308
+#: modules/file/jpkscan.c:314
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/jpkscan.c:653 modules/file/nanoobserver.c:193
+#: modules/file/jpkscan.c:659 modules/file/nanoobserver.c:193
 #: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip не может открыть файл как архив ZIP."
 
-#: modules/file/jpkscan.c:725
+#: modules/file/jpkscan.c:738
 msgid "Non-uniform point and/or segment numbering is not supported."
 msgstr "Неупорядоченная нумерация точек и/или сегментов не поддерживается."
 
-#: modules/file/jpkscan.c:734
+#: modules/file/jpkscan.c:747
 msgid "Non-uniform channel lists are not supported."
 msgstr "Неупорядоченные списки каналов не поддерживаются."
 
-#: modules/file/jpkscan.c:742
+#: modules/file/jpkscan.c:755
 #, c-format
 msgid "Data file %s was found instead of expected %s."
 msgstr "Файл данных %s был найден вместо ожидаемого %s."
+
+#: modules/file/jpkscan.c:1496
+msgid "Cannot find any height channel."
+msgstr "Не получается найти ни одного канала высот."
 
 #: modules/file/jspmfile.c:188
 msgid "Imports JEOL JSPM data files."
@@ -7307,8 +7311,8 @@ msgstr "Создать поверхность используя баллист�
 
 #: modules/process/bdep_synth.c:239 modules/process/bdep_synth.c:596
 #: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:274
-#: modules/process/col_synth.c:717 modules/process/crosscor.c:710
-#: modules/process/crosscor.c:766 modules/process/deposit_synth.c:270
+#: modules/process/col_synth.c:717 modules/process/crosscor.c:817
+#: modules/process/crosscor.c:877 modules/process/deposit_synth.c:270
 #: modules/process/deposit_synth.c:861 modules/process/diff_synth.c:304
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
@@ -7612,8 +7616,9 @@ msgstr[2] "найдено %d объектов"
 msgid "Search canceled"
 msgstr "Поиск отменён"
 
-#: modules/process/calcoefs_simple.c:638 modules/process/maskcor.c:332
-#: modules/process/mcrop.c:317 modules/process/merge.c:1074
+#: modules/process/calcoefs_simple.c:638 modules/process/crosscor.c:858
+#: modules/process/maskcor.c:332 modules/process/mcrop.c:317
+#: modules/process/merge.c:1074
 msgid "Correlating..."
 msgstr "Поиск корреляции..."
 
@@ -7960,7 +7965,7 @@ msgstr "Угол падения"
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:494 modules/process/crosscor.c:861
+#: modules/process/col_synth.c:494 modules/process/crosscor.c:1075
 msgid "Direction"
 msgstr "Направление"
 
@@ -8140,121 +8145,150 @@ msgstr "угол"
 msgid "Re_fine"
 msgstr "_Уточнить"
 
-#: modules/process/crosscor.c:137
+#: modules/process/crosscor.c:157
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Вычисляет взаимную корреляцию двух полей данных."
 
-#: modules/process/crosscor.c:151
+#: modules/process/crosscor.c:171
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/М_ножественные данные/_Взаимная корреляция..."
 
-#: modules/process/crosscor.c:155
+#: modules/process/crosscor.c:175
 msgid "Cross-correlate two data fields"
 msgstr "Взаимная корреляция двух полей данных"
 
-#: modules/process/crosscor.c:194
+#: modules/process/crosscor.c:214
 msgid "Cross-Correlation"
 msgstr "Взаимная корреляция"
 
-#: modules/process/crosscor.c:218
+#: modules/process/crosscor.c:238
 msgid "Co_rrelate with:"
 msgstr "Ко_ррелировать с:"
 
-#: modules/process/crosscor.c:224
+#: modules/process/crosscor.c:244
 msgid "Search size"
 msgstr "Размер поиска"
 
-#: modules/process/crosscor.c:252
+#: modules/process/crosscor.c:272
 msgid "2nd channel global offset"
 msgstr "Общее смещение второго канала"
 
-#: modules/process/crosscor.c:257
+#: modules/process/crosscor.c:277
 msgid "_Guess"
 msgstr "_Угадать"
 
-#: modules/process/crosscor.c:269
+#: modules/process/crosscor.c:289
 msgid "_x offset:"
 msgstr "Смещение по _X:"
 
-#: modules/process/crosscor.c:280
+#: modules/process/crosscor.c:300
 msgid "_y offset:"
 msgstr "Смещение по _Y:"
 
-#: modules/process/crosscor.c:291
+#: modules/process/crosscor.c:311
 msgid "Window size"
 msgstr "Размер окна"
 
-#: modules/process/crosscor.c:299
+#: modules/process/crosscor.c:319
 msgid "W_idth:"
 msgstr "Ш_ирина:"
 
-#: modules/process/crosscor.c:309
+#: modules/process/crosscor.c:329
 msgid "Hei_ght:"
 msgstr "В_ысота:"
 
-#: modules/process/crosscor.c:320
+#: modules/process/crosscor.c:342 modules/process/fft.c:405
+#: modules/process/psdf_logphi.c:268
+msgid "_Windowing type:"
+msgstr "Тип о_кна:"
+
+#: modules/process/crosscor.c:350
 msgid "All"
 msgstr "Всё"
 
-#: modules/process/crosscor.c:321
+#: modules/process/crosscor.c:351
 msgid "Absolute"
 msgstr "Модуль"
 
-#: modules/process/crosscor.c:322
+#: modules/process/crosscor.c:352
 msgid "X Distance"
 msgstr "Расстояние по X"
 
-#: modules/process/crosscor.c:323
+#: modules/process/crosscor.c:353
 msgid "Y Distance"
 msgstr "Расстояние по Y"
 
-#: modules/process/crosscor.c:325 modules/process/crosscor.c:875
+#: modules/process/crosscor.c:355 modules/process/crosscor.c:1089
 msgid "Score"
 msgstr "Степень"
 
-#: modules/process/crosscor.c:327 modules/process/fft.c:395
+#: modules/process/crosscor.c:357 modules/process/fft.c:395
 #: modules/process/maskcor.c:176
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
 
-#: modules/process/crosscor.c:333
+#: modules/process/crosscor.c:363
 msgid "Add _low score results mask"
 msgstr "Добавить маску результатов с _низким весом"
 
-#: modules/process/crosscor.c:344 modules/process/grain_wshed.c:223
+#: modules/process/crosscor.c:374 modules/process/grain_wshed.c:223
 #: modules/process/maskcor.c:188
 msgid "T_hreshold:"
 msgstr "_Порог:"
 
-#: modules/process/crosscor.c:351
+#: modules/process/crosscor.c:381
 msgid "Multichannel cross-corelation"
 msgstr "Взаимная корреляция нескольких каналов"
 
-#: modules/process/crosscor.c:370
+#: modules/process/crosscor.c:400
 msgid "Second _source data:"
 msgstr "Данные второго _источника:"
 
-#: modules/process/crosscor.c:387
+#: modules/process/crosscor.c:417
 msgid "Correlate with:"
 msgstr "Коррелировать с:"
 
-#: modules/process/crosscor.c:748
+#: modules/process/crosscor.c:424
+msgid "Postprocess:"
+msgstr "Постобработка:"
+
+#: modules/process/crosscor.c:431
+msgid "Apply Ga_ussian filter of width: "
+msgstr "Применить г-ауссов фильтр шириной:"
+
+#: modules/process/crosscor.c:451
+msgid "Extend results to borders"
+msgstr "Расширить результат до границ"
+
+#: modules/process/crosscor.c:461
+msgid "Create corrected data from 2nd channel"
+msgstr "Создать исправленные данные из второго канала"
+
+#: modules/process/crosscor.c:857
 msgid "Correlating first set..."
 msgstr "Корреляция первого множества..."
 
-#: modules/process/crosscor.c:774
+#: modules/process/crosscor.c:887
 msgid "Correlating second set..."
 msgstr "Корреляция второго множества..."
 
-#: modules/process/crosscor.c:821
+#: modules/process/crosscor.c:949
+msgid "Borders extension..."
+msgstr "Расширение границ..."
+
+#: modules/process/crosscor.c:1011
+msgid "Corrected 2nd channel"
+msgstr "Исправленный второй канал"
+
+#: modules/process/crosscor.c:1035
 msgid "X difference"
 msgstr "Различие X"
 
-#: modules/process/crosscor.c:835
+#: modules/process/crosscor.c:1049
 msgid "Y difference"
 msgstr "Различие Y"
 
-#: modules/process/crosscor.c:848
+#: modules/process/crosscor.c:1062
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
@@ -9248,10 +9282,6 @@ msgstr "_Мнимая часть:"
 #: modules/process/fft.c:382
 msgid "_Inverse transform"
 msgstr "_Обратное преобразование"
-
-#: modules/process/fft.c:405 modules/process/psdf_logphi.c:268
-msgid "_Windowing type:"
-msgstr "Тип о_кна:"
 
 #: modules/process/fft.c:411
 msgid "Subtract mean _value beforehand"
