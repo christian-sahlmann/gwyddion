@@ -494,7 +494,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -3623,6 +3623,8 @@ create_value_controls(ImgExportControls *controls)
         = gwy_table_hscale_get_check(controls->fmscale_precision);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fix_fmscale_precision),
                                  args->fix_fmscale_precision);
+    gwy_table_hscale_set_sensitive(controls->fmscale_precision,
+                                   args->fix_fmscale_precision);
     g_signal_connect_swapped(controls->fmscale_precision, "value-changed",
                              G_CALLBACK(fmscale_precision_changed), controls);
     g_signal_connect_swapped(controls->fix_fmscale_precision, "toggled",
@@ -4003,6 +4005,10 @@ reset_to_preset(ImgExportControls *controls,
     gwy_radio_buttons_set_current(controls->ztype, src->ztype);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_gap),
                              src->fmscale_gap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fix_fmscale_precision),
+                                 src->fix_fmscale_precision);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_precision),
+                             src->fmscale_precision);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
                                   src->title_type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
