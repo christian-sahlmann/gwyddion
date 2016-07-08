@@ -197,8 +197,8 @@ gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -1.0);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -1.0);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(weight_field), -1.0);
-    g_return_if_fail(kernel_width == weight_field->xres && 
-                     kernel_height == weight_field->yres);
+    g_return_val_if_fail(kernel_width == weight_field->xres && 
+                     kernel_height == weight_field->yres, -1.0);
 
     xres = data_field->xres;
     yres = data_field->yres;
