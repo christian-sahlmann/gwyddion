@@ -135,6 +135,8 @@ ignore-glob
   *_get_type
   gwy_container_gis_*
   gwy_container_get_string
+  gwy_container_get_value
+  gwy_container_set_value
   gwy_container_get_value_by_name
   gwy_container_set_value_by_name
   gwy_gradient_sample
@@ -638,6 +640,58 @@ _wrap_gwy_container_set_value_by_name(PyGObject *self, PyObject *args, PyObject 
    g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
    pyg_value_from_pyobject(&val,v);
    gwy_container_set_value_by_name((GWY_CONTAINER(self->obj)), name, &val, NULL);
+
+   Py_RETURN_NONE;
+
+}
+
+%%
+define GwyContainer.get_value kwargs
+
+static PyObject *
+_wrap_gwy_container_get_value(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+   static char *kwlist[] = {"key", NULL};
+   guint key;  /* In fact, GQuark */
+   GValue val;
+   PyObject* obj;
+
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"I:gwy.Container.get_value", kwlist, &key))
+      return NULL;
+   val = gwy_container_get_value((GWY_CONTAINER(self->obj)), (GQuark)key);
+
+   obj = pyg_value_as_pyobject(&val,0);
+
+   return obj;
+}
+
+%%
+define GwyContainer.set_value_by_name kwargs
+
+static PyObject *
+_wrap_gwy_container_set_value_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+   static char *kwlist[] = {"key", "value", NULL};
+   guint key;
+   GValue val;
+   PyObject* v;
+   GType g_type;
+   PyObject* py_type;
+   gwy_clear(&val,1);
+
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"IO:gwy.Container.get_value", kwlist, &key, &v))
+      return NULL;
+
+   py_type = PyObject_Type(v);
+   g_type = pyg_type_from_object(py_type);
+   Py_DECREF(py_type);
+   if(g_type==0)
+   {
+      return NULL;
+   }
+   g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
+   pyg_value_from_pyobject(&val,v);
+   gwy_container_set_value((GWY_CONTAINER(self->obj)), (GQuark)key, &val, NULL);
 
    Py_RETURN_NONE;
 
