@@ -7,6 +7,16 @@ Libraries:
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
   Gtk+ main loop is let to run.
 
+Modules:
+- XYZize: XYZ log is created for the new XYZ data, not volume data log.
+- Pygwy: Containers can be directly indexed both by strings and integers
+  (quarks).  Overrides for Container methods get_value() and set_value() were
+  added.
+
+Other:
+- Development: API documentation not being installed with gtk-doc 1.25+ was
+  fixed.
+
 
 2.45 (2016-04-26)
 Application:
