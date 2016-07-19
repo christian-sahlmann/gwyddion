@@ -192,7 +192,7 @@ _gwy_app_log_discard_captured_messages(void)
 {
     /* No message_history indicates no logging setup.  Be no-op then. */
     if (!log_setup.message_history)
-        return NULL;
+        return;
 
     g_return_if_fail(log_setup.capturing_from != G_MAXUINT);
     log_setup.capturing_from = G_MAXUINT;
