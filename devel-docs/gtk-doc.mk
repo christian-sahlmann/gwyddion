@@ -169,10 +169,10 @@ maintainer-clean-local:
 
 install-data-local:
 	d=; \
-	if test -s html/index.sgml; then \
+	if test -s html/index.html; then \
 		echo 'gtk-doc: Installing HTML from builddir'; \
 		d=html; \
-	elif test -s $(srcdir)/html/index.sgml; then \
+	elif test -s $(srcdir)/html/index.html; then \
 		echo 'gtk-doc: Installing HTML from srcdir'; \
 		d=$(srcdir)/html; \
 	else \
@@ -202,7 +202,7 @@ endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/html
-	if test -s html/index.sgml; then d=html; else d=$(srcdir)/html; fi; \
+	if test -s html/index.html; then d=html; else d=$(srcdir)/html; fi; \
 	cp -f $$d/* $(distdir)/html
 	$(PYTHON) $(top_srcdir)/devel-docs/ncrosslinks.py $(distdir)/html/*.html </dev/null
 
