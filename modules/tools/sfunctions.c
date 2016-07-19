@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.13",
+    "2.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -275,6 +275,8 @@ gwy_tool_sfunctions_finalize(GObject *object)
                                     tool->args.resolution);
     gwy_container_set_boolean_by_name(settings, fixres_key,
                                       tool->args.fixres);
+    gwy_container_set_boolean_by_name(settings, separate_key,
+                                      tool->args.separate);
     gwy_container_set_enum_by_name(settings, interpolation_key,
                                    tool->args.interpolation);
     gwy_container_set_enum_by_name(settings, direction_key,
@@ -282,9 +284,9 @@ gwy_tool_sfunctions_finalize(GObject *object)
 
     gwy_object_unref(tool->line);
     gwy_object_unref(tool->gmodel);
-    if (tool->xunc) g_object_unref(tool->xunc);
-    if (tool->yunc) g_object_unref(tool->yunc);
-    if (tool->zunc) g_object_unref(tool->zunc);
+    gwy_object_unref(tool->xunc);
+    gwy_object_unref(tool->yunc);
+    gwy_object_unref(tool->zunc);
 
     G_OBJECT_CLASS(gwy_tool_sfunctions_parent_class)->finalize(object);
 }
@@ -318,6 +320,8 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
                                     &tool->args.resolution);
     gwy_container_gis_boolean_by_name(settings, fixres_key,
                                       &tool->args.fixres);
+    gwy_container_gis_boolean_by_name(settings, separate_key,
+                                      &tool->args.separate);
     gwy_container_gis_enum_by_name(settings, interpolation_key,
                                    &tool->args.interpolation);
     tool->args.interpolation
