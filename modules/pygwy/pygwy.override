@@ -408,63 +408,79 @@ static Py_ssize_t _map_gwy_container_length(PyGObject *cont)
     return gwy_container_get_n_items(GWY_CONTAINER(cont->obj));
 }
 
-static PyObject * _map_gwy_container_subscript(PyGObject * cont, PyObject * key)
+static PyObject*
+_map_gwy_container_subscript(PyGObject *cont, PyObject *key)
 {
-   gchar* name;
-   PyGObject *ret;
-   GValue val;
+    GQuark quark;
 
-   if (!PyString_Check(key)) {
-        PyErr_SetString(PyExc_TypeError, "Expected key to be a string.");
+    if (PyString_Check(key)) {
+        const gchar *name = PyString_AsString(key);
+        quark = g_quark_try_string(name);
+        /* There cannot be anything in the container if the quark does not
+         * exist.  Avoid new quark creation in such case. */
+        if (!quark) {
+            PyErr_SetString(PyExc_KeyError, "Nothing stored here");
+            return NULL;
+        }
+    }
+    else if (PyInt_Check(key)) {
+        quark = PyInt_AS_LONG(key);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "Expected key to be a string or int.");
         return NULL;
-   }
+    }
 
-   name = PyString_AsString(key);
+    if (gwy_container_contains((GWY_CONTAINER(cont->obj)), quark)) {
+        GValue val = gwy_container_get_value((GWY_CONTAINER(cont->obj)), quark);
+        PyObject *ret = pyg_value_as_pyobject(&val, 0);
 
-   if (gwy_container_contains_by_name((GWY_CONTAINER(cont->obj)), name)) {
-     val = gwy_container_get_value_by_name((GWY_CONTAINER(cont->obj)), name);
-     ret = pyg_value_as_pyobject(&val, 0);
-     g_value_unset(&val);
-     return ret;
-   }
+        g_value_unset(&val);
+        return ret;
+    }
 
-   PyErr_SetString(PyExc_KeyError, "Nothing stored here");
-   return NULL;
+    PyErr_SetString(PyExc_KeyError, "Nothing stored here");
+    return NULL;
 }
 
-static int _map_gwy_container_ass_subscript(PyGObject *cont,
-                                            PyObject *key,
-                                            PyObject *v){
-    char* name;
-    GValue val;
-    GType g_type;
-    PyObject* py_type;
-    gwy_clear(&val,1);
+static int
+_map_gwy_container_ass_subscript(PyGObject *cont,
+                                 PyObject *key,
+                                 PyObject *v)
+{
+    GQuark quark;
 
-    if (!PyString_Check(key))
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected key to be a string.");
+    if (PyString_Check(key)) {
+        const gchar *name = PyString_AsString(key);
+        quark = g_quark_from_string(name);
+    }
+    else if (PyInt_Check(key)) {
+        quark = PyInt_AS_LONG(key);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "Expected key to be a string or int.");
         return -1;
     }
 
-    name = PyString_AsString(key);
+    if (v) {
+        GValue val;
+        GType g_type;
+        PyObject* py_type;
 
-    if(v!=NULL) {
         py_type = PyObject_Type(v);
         g_type = pyg_type_from_object(py_type);
         Py_DECREF(py_type);
-        if(g_type==0)
-        {
+        if (!g_type)
             return -1;
-        }
+
+        gwy_clear(&val, 1);
         g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
-        pyg_value_from_pyobject(&val,v);
-        gwy_container_set_value_by_name((GWY_CONTAINER(cont->obj)), name, &val, NULL);
+        pyg_value_from_pyobject(&val, v);
+        gwy_container_set_value((GWY_CONTAINER(cont->obj)), quark, &val, NULL);
         g_value_unset(&val);
     }
-    else
-    {
-        gwy_container_remove_by_name((GWY_CONTAINER(cont->obj)), name);
+    else {
+        gwy_container_remove((GWY_CONTAINER(cont->obj)), quark);
     }
 
     return 0;
