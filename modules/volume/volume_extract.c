@@ -222,7 +222,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Shows and/or extracts a section of volume data"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2013",
 };
@@ -2184,7 +2184,7 @@ extract_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
     gwy_container_gis_double_by_name(container, size_key, &args->size);
     gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
-    gwy_container_gis_double_by_name(container, zscale_key, &args->opacity);
+    gwy_container_gis_double_by_name(container, opacity_key, &args->opacity);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_boolean_by_name(container, perspective_key, &args->perspective);
     gwy_container_gis_boolean_by_name(container, render_key, &args->render);
@@ -2203,6 +2203,7 @@ extract_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, zpos_key, args->zpos);
     gwy_container_set_double_by_name(container, size_key, args->size);
     gwy_container_set_double_by_name(container, zscale_key, args->zscale);
+    gwy_container_set_double_by_name(container, opacity_key, args->opacity);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_boolean_by_name(container, perspective_key, args->perspective);
     gwy_container_set_boolean_by_name(container, render_key, args->render);
