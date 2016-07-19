@@ -36,12 +36,6 @@ enum {
     LAST_SIGNAL
 };
 
-/* FIXME: unused */
-typedef struct {
-    gdouble prefix_affinity;
-    gint base_power10;
-} GwyUnitTraits;
-
 typedef struct {
     GQuark unit;
     gshort power;
@@ -84,13 +78,6 @@ static const gchar* gwy_si_unit_prefix            (gint power);
 static GString*     gwy_si_unit_format            (GwySIUnit *siunit,
                                                    const GwySIStyleSpec *fs,
                                                    GString *string);
-
-/* FIXME: unused */
-static const GwyUnitTraits unit_traits[] = {
-    { 1.0,   0 },    /* normal unit */
-    { 1.0,   3 },    /* kilogram */
-    { 0.0,   0 },    /* does not take prefixes */
-};
 
 static const struct {
     const gchar *prefix;
@@ -163,10 +150,6 @@ static const GwySIStyleSpec format_style_vfmarkup = {
 };
 static const GwySIStyleSpec format_style_TeX = {
     "10^{", "^{", "}", "\\,", "/", "\\,"
-};
-/* Unused */
-static const GwySIStyleSpec format_style_backwoods = {
-    "1e", NULL, NULL, " ", "/", " "
 };
 
 static const GwySIStyleSpec *format_styles[] = {
