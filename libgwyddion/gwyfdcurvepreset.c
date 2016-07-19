@@ -630,6 +630,7 @@ esphcapella_guess(gint n_dat,
 
 
 /*xc, R, H, gamma*/
+/*
 static const GwyNLFitParam argento_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
@@ -637,8 +638,10 @@ static const GwyNLFitParam argento_params[] = {
     { "H", 1, 1, },
     { "gamma", 0, 0, },
 };
+*/
 
 /*xc, R, H, gamma, h1, L*/
+/*
 static const GwyNLFitParam parzanette_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
@@ -648,6 +651,7 @@ static const GwyNLFitParam parzanette_params[] = {
     { "h1", 1, 0, },
     { "L", 1, 0, },
 };
+*/
 
 static const GwyNLFitParam sszanette_params[] = {
     { "xc", 1, 0, },
@@ -702,8 +706,6 @@ static const GwyNLFitParam parcapella_params[] = {
     { "H", 1, 1, },
 };
 
-
-
 static const GwyNLFitParam sphtiptap_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
@@ -712,6 +714,7 @@ static const GwyNLFitParam sphtiptap_params[] = {
     { "xi", 1, 0, },
 };
 
+/*
 static const GwyNLFitParam sphxu_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
@@ -770,13 +773,13 @@ static const GwyNLFitParam hsphhertz_params[] = {
     { "E", 1, 0, },
     { "nu", 1, 0, },
 };
+*/
 
 static const GwyNLFitParam hertzpar_params[] = {
     { "xc", 1, 0, },
     { "R", -1, 0, },
     { "Er", -1, 1, },
 };
-
 
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
