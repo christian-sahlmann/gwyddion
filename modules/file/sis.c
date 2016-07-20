@@ -173,6 +173,7 @@ static const gchar processing_steps_symbol[] =
     "PAVE\000RAWR\000RGOI\000ROTN\000SHRP\000SMTH\000STAT\000STEP\000SURF\000"
     "TIBQ\000TIL3\000TILT";
 
+G_GNUC_UNUSED
 static const gchar processing_steps_meta[] =
     "Particle count\0003DJS\000Autocorrelation\000Autocorrelation LineCut\000"
     "Biqudratic Fourier filter fit\000Contrast histogram\000Differentiation"
