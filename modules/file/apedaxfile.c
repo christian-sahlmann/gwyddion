@@ -163,7 +163,8 @@ static const GwyEnum spm_modes_names[] = {
     { "PHASE_AFM", SPM_MODE_PHASE_DETECT_AFM },
 };
 
-
+#if 0
+/* Not used any more? */
 /*APDT Sensor types*/
 typedef enum {
     SENSOR_UNKNOWN = -1,
@@ -175,7 +176,8 @@ static const GwyEnum sensor_types[] = {
     { "Unknown",    SENSOR_UNKNOWN,    },
     { "Cantilever", SENSOR_CANTILEVER, },
     { "Capacitive", SENSOR_CAPACITIVE, },
- };
+};
+#endif
 
 /*Structures*/
 typedef struct {
