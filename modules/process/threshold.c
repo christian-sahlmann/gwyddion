@@ -117,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Limit the data range using a lower/upper threshold."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -213,6 +213,7 @@ threshold_entry_attach(ThresholdControls *controls,
     threshold_format_value(controls, GTK_ENTRY(entry), value);
     gtk_table_attach(table, entry, 1, 3, row, row+1, GTK_FILL, 0, 0, 0);
     label = gtk_label_new(controls->format->units);
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 3, 4, row, row+1, GTK_FILL, 0, 0, 0);
 
@@ -325,6 +326,7 @@ threshold_dialog(ThresholdArgs *args,
     gtk_table_attach(table, label, 1, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new(controls.format->units);
+    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 3, 4, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
