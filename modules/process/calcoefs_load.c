@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Load calibration data from text file"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2010",
 };
@@ -114,16 +114,16 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint oldid;
     G_GNUC_UNUSED gint n;
+    GwyInventory *cals;
     GwyCalibration *calibration;
     GwyCalData *caldata = NULL;
     gchar *filename;
-    gchar *contents;
+    gchar *contents, *s;
     gsize len;
     GError *err = NULL;
     gsize pos = 0;
     GString *str;
     FILE *fh;
-
 
     g_return_if_fail(run & CLOAD_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -131,31 +131,39 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    //cload_load_args(gwy_app_settings_get(), &args);
+    args = cload_defaults;
+    args.name = g_strdup(args.name);
+
     if (run == GWY_RUN_INTERACTIVE) {
         ok = cload_dialog(&args, dfield);
-        //cload_save_args(gwy_app_settings_get(), &args);
-        if (!ok)
+        if (!ok) {
+            g_free(args.name);
             return;
+        }
     }
 
-    if (!args.caldata) return;
+    if (!args.caldata) {
+        g_free(args.name);
+        return;
+    }
 
     /*if append requested, copy newly created calibration into old one*/
-    if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
-    {
+    cals = gwy_calibrations();
+    if (args.duplicate == DUPLICATE_APPEND
+        && (calibration = gwy_inventory_get_item(cals, args.name))) {
 
-        filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
+        filename = g_build_filename(gwy_get_user_dir(), "caldata",
+                                    calibration->filename, NULL);
         if (!g_file_get_contents(filename,
-                                 &contents, &len, &err))
-        {
+                                 &contents, &len, &err)) {
              g_warning(N_("Error loading file: %s\n"), err->message);
              g_clear_error(&err);
              return;
         }
         else {
             if (len)
-              caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
+                caldata = GWY_CALDATA(gwy_serializable_deserialize(contents,
+                                                                   len, &pos));
             g_free(contents);
         }
         n = gwy_caldata_get_ndata(caldata) + gwy_caldata_get_ndata(args.caldata);
@@ -163,22 +171,26 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     }
 
     /*now create and save the resource*/
-    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name)))==NULL)
-    {
-        calibration = gwy_calibration_new(args.name, g_strconcat(args.name, ".dat", NULL));
-        gwy_inventory_insert_item(gwy_calibrations(), calibration);
+    if (!(calibration = GWY_CALIBRATION(gwy_inventory_get_item(cals, args.name)))) {
+        s = g_strconcat(args.name, ".dat", NULL);
+        calibration = gwy_calibration_new(args.name, s);
+        g_free(s);
+        gwy_inventory_insert_item(cals, calibration);
         g_object_unref(calibration);
     }
     calibration->caldata = args.caldata;
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
     if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
-        g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
+        s = g_build_filename(gwy_get_user_dir(), "calibrations", NULL);
+        g_mkdir(s, 0700);
+        g_free(s);
     }
     fh = gwy_fopen(filename, "w");
     if (!fh) {
         g_warning(_("Cannot save preset: %s"), filename);
         g_free(filename);
+        g_free(args.name);
         return;
     }
     g_free(filename);
@@ -194,8 +206,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 
     /*now save the calibration data*/
     gwy_caldata_save_data(args.caldata, calibration->filename);
-
-
+    g_free(args.name);
 }
 
 static gboolean
@@ -234,7 +245,6 @@ cload_dialog(CLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    args->name = g_strdup("new"); //FIXME this should not be here
     controls.name = GTK_ENTRY(gtk_entry_new());
     gtk_entry_set_text(controls.name, args->name);
     gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(controls.name),
@@ -261,6 +271,7 @@ cload_dialog(CLoadArgs *args,
 
             case GTK_RESPONSE_OK:
             /*check whether this resource already exists*/
+            g_free(args->name);
             args->name = g_strdup(gtk_entry_get_text(controls.name));
             if (gwy_inventory_get_item(gwy_calibrations(), args->name))
                 response = ask_for_overwrite(GTK_WINDOW(dialog), args);
@@ -447,7 +458,5 @@ load_caldata(CLoadControls *controls)
     gtk_widget_destroy (dialog);
 
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
