@@ -40,20 +40,16 @@ typedef struct {
     GwyAppDataId op2;
 } XYdenoiseArgs;
 
-static gboolean module_register       (void);
-static void     xydenoise              (GwyContainer *data,
-                                       GwyRunType run);
-static gboolean xydenoise_dialog       (XYdenoiseArgs *args);
-static void     xydenoise_data_cb      (GwyDataChooser *chooser,
-                                       GwyAppDataId *object);
+static gboolean module_register      (void);
+static void     xydenoise            (GwyContainer *data,
+                                      GwyRunType run);
+static gboolean xydenoise_dialog     (XYdenoiseArgs *args);
+static void     xydenoise_data_cb    (GwyDataChooser *chooser,
+                                      GwyAppDataId *object);
 static gboolean xydenoise_data_filter(GwyContainer *data,
-                                       gint id,
-                                       gpointer user_data);
-static gboolean xydenoise_do           (XYdenoiseArgs *args);
-
-static const XYdenoiseArgs xydenoise_defaults = {
-    GWY_APP_DATA_ID_NONE, GWY_APP_DATA_ID_NONE,
-};
+                                      gint id,
+                                      gpointer user_data);
+static gboolean xydenoise_do         (XYdenoiseArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
