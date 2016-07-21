@@ -529,12 +529,19 @@ gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager *tool,
     if (is_selected) {
         GwySelection *sel;
         GType type;
-        guint i;
+        guint i, n;
 
         gtk_tree_model_get(GTK_TREE_MODEL(tool->model), &iter,
                            MODEL_OBJECT, &sel,
                            MODEL_ID, &quark,
                            -1);
+        n = gwy_selection_get_data(sel, NULL);
+        if (!n) {
+            gtk_widget_set_sensitive(tool->distribute, FALSE);
+            gtk_widget_set_sensitive(tool->copy, FALSE);
+            gtk_widget_set_sensitive(tool->export, FALSE);
+        }
+
         type = G_OBJECT_TYPE(sel);
         for (i = 0; i < NLAYERTYPES; i++) {
             if (type == tool->selection_types[i]) {
@@ -692,6 +699,9 @@ gwy_tool_selection_manager_copy(GwyToolSelectionManager *tool)
     gchar *text;
 
     text = gwy_tool_selection_manager_create_report(tool);
+    if (!text)
+        return;
+
     display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
     clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clipboard, text, -1);
@@ -704,6 +714,9 @@ gwy_tool_selection_manager_export(GwyToolSelectionManager *tool)
     gchar *text;
 
     text = gwy_tool_selection_manager_create_report(tool);
+    if (!text)
+        return;
+
     gwy_save_auxiliary_data(_("Save Table"),
                             GTK_WINDOW(GWY_TOOL(tool)->dialog), -1, text);
     g_free(text);
@@ -720,14 +733,19 @@ gwy_tool_selection_manager_create_report(GwyToolSelectionManager *tool)
     gdouble xoff, yoff;
     GtkTreeIter iter;
     GString *text;
+    guint n;
 
     treesel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
     if (!gtk_tree_selection_get_selected(treesel, NULL, &iter))
-        return g_strdup("");
+        return NULL;
 
     gtk_tree_model_get(GTK_TREE_MODEL(tool->model), &iter,
                        MODEL_OBJECT, &selection,
                        -1);
+    n = gwy_selection_get_data(selection, NULL);
+    if (!n)
+        return NULL;
+
     plain_tool = GWY_PLAIN_TOOL(tool);
     dfield = plain_tool->data_field;
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
