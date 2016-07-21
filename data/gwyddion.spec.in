@@ -1,10 +1,6 @@
 # @(#) $Id$
-# Optional features:
-#   --with-kde4-thumbnailer    Enables the kde4-thumbnailer subpackage (and
-#                              introduces lots of new dependencies).
 %{expand:%global distro_is_redhat %(test ! -f /etc/redhat-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
-%define enable_kde4_thumbnailer %{?_with_kde4_thumbnailer:1}%{!?_with_kde4_thumbnailer:0}
 
 Name:          @PACKAGE_TARNAME@
 Version:       @PACKAGE_VERSION@
@@ -76,10 +72,6 @@ BuildRequires: libzip-devel
 %define python2devel python-devel
 %endif
 
-%if %{enable_kde4_thumbnailer}
-BuildRequires: %{kde4libs}-devel >= 4.0
-%endif
-
 %ifarch %ix86
 BuildRequires: %{fftw3devel} >= 3.0
 %else
@@ -128,16 +120,6 @@ Requires(post):  GConf2
 Requires(preun): GConf2
 
 
-%if %{enable_kde4_thumbnailer}
-%package thumbnailer-kde4
-Summary:         KDE4 gwyddion thumbnailer module
-Group:           System Environment/Libraries
-Requires:        %{name} = %{version}
-# We do not actually link with them, but they own the module directory.
-Requires:        %{kde4libs} >= 4.0
-%endif
-
-
 %description
 Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
 analysis tool written with Gtk+.
@@ -160,13 +142,6 @@ programming languages.
 %description thumbnailer-gconf
 GConf schemas that register gwyddion-thumbnailer as thumbnailer for SPM files
 in GNOME and XFce.
-
-
-%if %{enable_kde4_thumbnailer}
-%description thumbnailer-kde4
-Gwyddion-thumbnailer based KDE thumbnail creator extension module for SPM
-files.
-%endif
 
 
 %prep
@@ -342,9 +317,3 @@ fi
 
 %files thumbnailer-gconf
 %{gconfdir}/*.schemas
-
-%if %{enable_kde4_thumbnailer}
-%files thumbnailer-kde4
-%defattr(-,root,root)
-%{_libdir}/kde4/gwythumbcreator.so
-%endif
