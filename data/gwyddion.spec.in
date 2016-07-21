@@ -21,9 +21,10 @@ Requires(pre):    /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
 BuildRequires: gcc-c++
-BuildRequires: gtk2-devel >= 2.8
-BuildRequires: glib2-devel >= 2.8
+BuildRequires: gtk2-devel >= 2.14
+BuildRequires: glib2-devel >= 2.14
 BuildRequires: pango-devel >= 1.10
+BuildRequires: cairo-devel >= 1.6
 BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
 BuildRequires: zlib-devel
@@ -54,6 +55,7 @@ BuildRequires: xorg-x11-Mesa-devel
 BuildRequires: xorg-x11-libXmu-devel
 BuildRequires: python-gtk-devel
 BuildRequires: gtksourceview-devel
+BuildRequires: libzip-devel
 %define fftw3 fftw3
 %define fftw3devel fftw3-devel
 %define kde4libs libkde4
