@@ -4,7 +4,6 @@
 #                              introduces lots of new dependencies).
 %{expand:%global distro_is_redhat %(test ! -f /etc/redhat-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
-%{expand:%global distro_is_mdk %(test ! -f /etc/mandriva-release; echo $?)}
 %define enable_kde4_thumbnailer %{?_with_kde4_thumbnailer:1}%{!?_with_kde4_thumbnailer:0}
 
 Name:          @PACKAGE_TARNAME@
@@ -60,18 +59,6 @@ BuildRequires: libzip-devel
 %define fftw3devel fftw3-devel
 %define kde4libs libkde4
 %define configureopts %{nil}
-%endif
-
-%if %{distro_is_mdk}
-BuildRequires: libxmu-devel
-BuildRequires: pygtk2.0-devel
-BuildRequires: gtksourceview-devel
-%define fftw3 libfftw3
-%define fftw3devel libfftw-devel
-%define kde4libs kdelibs4
-# Mandriva enforces --as-needed and other weirdness on everything.
-# So, give it what it deserves.
-%define configureopts --enable-library-bloat
 %endif
 
 # Default the fftw package name to the common name in the hope the distro
