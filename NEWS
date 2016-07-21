@@ -1,7 +1,8 @@
 2.46 (0000-00-00)
 Libraries:
-- libprocess: An obscure case of GwyTriangulation failure now fails gracefully
-  instead of on a failed assertion.
+- libgwyddion: Gaussian fitting function estimator was improved.
+- libgwyprocess: An obscure case of GwyTriangulation failure now fails
+  gracefully instead of on a failed assertion.
 - libgwyapp: Critical _gwy_app_log_start_message_capture() error when opening
   files from standalone Python scripts was fixed.
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
@@ -12,6 +13,9 @@ Modules:
 - Pygwy: Containers can be directly indexed both by strings and integers
   (quarks).  Overrides for Container methods get_value() and set_value() were
   added.
+- Diffusion synthesis (new): Incorrect behaviour for non-square images was
+  fixed.
+- Fit sphere: It can create the fitted shape or the difference as the output.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
