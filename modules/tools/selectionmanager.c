@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "2.0",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -722,18 +722,63 @@ gwy_tool_selection_manager_export(GwyToolSelectionManager *tool)
     g_free(text);
 }
 
+static void
+add_coordinate_header(GString *text, GwySelection *selection, GwySIUnit *unit)
+{
+    const gchar *typename = G_OBJECT_TYPE_NAME(selection);
+    gchar *unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+    gchar *s = (strlen(unitstr)
+                ? g_strconcat(" [", unitstr, "]", NULL)
+                : g_strdup(""));
+
+    if (gwy_stramong(typename,
+                     "GwySelectionRectangle", "GwySelectionEllipse",
+                     "GwySelectionLine", "GwySelectionLattice",
+                     NULL)) {
+        g_string_append_printf(text,
+                               "x0%s\ty0%s\tx1%s\ty1%s\n", s, s, s, s);
+    }
+    else if (gwy_stramong(typename,
+                          "GwySelectionPoint", "GwySelectionPath",
+                          NULL)) {
+        g_string_append_printf(text, "x%s\ty%s\n", s, s);
+    }
+    else if (gwy_strequal(typename, "GwySelectionAxis")) {
+        GwyOrientation orientation;
+
+        g_object_get(selection, "orientation", &orientation, NULL);
+        if (orientation == GWY_ORIENTATION_VERTICAL)
+            g_string_append_printf(text, "y%s\n", s);
+        else
+            g_string_append_printf(text, "x%s\n", s);
+    }
+    else {
+        guint j, objsize = gwy_selection_get_object_size(selection);
+
+        for (j = 0; j < objsize; j++) {
+            g_string_append_printf(text, "c%u%s", j, s);
+            g_string_append_c(text, (j == objsize-1) ? '\n' : '\t');
+        }
+    }
+
+    g_free(s);
+    g_free(unitstr);
+}
+
 static gchar*
 gwy_tool_selection_manager_create_report(GwyToolSelectionManager *tool)
 {
     GwyPlainTool *plain_tool;
     GtkTreeSelection *treesel;
-    GwySelection *selection;
+    GwySelection *selection, *movedselection = NULL;
     GwyDataField *dfield;
     GwySIUnit *xyunit;
     gdouble xoff, yoff;
     GtkTreeIter iter;
     GString *text;
-    guint n;
+    guint i, j, n, objsize;
+    gdouble *coords;
+    const gchar *typename;
 
     treesel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
     if (!gtk_tree_selection_get_selected(treesel, NULL, &iter))
@@ -742,6 +787,7 @@ gwy_tool_selection_manager_create_report(GwyToolSelectionManager *tool)
     gtk_tree_model_get(GTK_TREE_MODEL(tool->model), &iter,
                        MODEL_OBJECT, &selection,
                        -1);
+    typename = G_OBJECT_TYPE_NAME(selection);
     n = gwy_selection_get_data(selection, NULL);
     if (!n)
         return NULL;
@@ -751,7 +797,29 @@ gwy_tool_selection_manager_create_report(GwyToolSelectionManager *tool)
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
     xoff = gwy_data_field_get_xoffset(dfield);
     yoff = gwy_data_field_get_yoffset(dfield);
-    text = g_string_new("FIXME");
+    /* Apply the data field offset in a generic manner. */
+    if ((xoff != 0.0 || yoff != 0.0)
+        && !gwy_strequal(typename, "GwySelectionLattice")) {
+        movedselection = gwy_selection_duplicate(selection);
+        gwy_selection_move(movedselection, xoff, yoff);
+        selection = movedselection;
+    }
+
+    text = g_string_new(NULL);
+    add_coordinate_header(text, selection, xyunit);
+
+    objsize = gwy_selection_get_object_size(selection);
+    coords = g_new(gdouble, objsize);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(selection, i, coords);
+        for (j = 0; j < objsize; j++) {
+            g_string_append_printf(text, "%g", coords[j]);
+            g_string_append_c(text, (j == objsize-1) ? '\n' : '\t');
+        }
+    }
+
+    g_free(coords);
+    gwy_object_unref(movedselection);
 
     return g_string_free(text, FALSE);
 }
