@@ -13,8 +13,7 @@ Modules:
 - Pygwy: Containers can be directly indexed both by strings and integers
   (quarks).  Overrides for Container methods get_value() and set_value() were
   added.
-- Diffusion synthesis (new): Incorrect behaviour for non-square images was
-  fixed.
+- Diffusion synthesis: Incorrect behaviour for non-square images was fixed.
 - Fit sphere: It can create the fitted shape or the difference as the output.
 
 Other:
