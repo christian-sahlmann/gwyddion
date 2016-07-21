@@ -213,7 +213,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates surfaces by diffusion limited aggregation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -978,9 +978,9 @@ particle_try_move(Particle *p,
 
     hfield[p->k]--;
     if (direction == NEIGH_UP)
-        p->row = G_LIKELY(p->row) ? p->row - 1 : xres - 1;
+        p->row = G_LIKELY(p->row) ? p->row - 1 : yres - 1;
     else if (direction == NEIGH_LEFT)
-        p->col = G_LIKELY(p->col) ? p->col - 1 : yres - 1;
+        p->col = G_LIKELY(p->col) ? p->col - 1 : xres - 1;
     else if (direction == NEIGH_RIGHT)
         p->col = G_LIKELY(p->col < xres - 1) ? p->col + 1 : 0;
     else
