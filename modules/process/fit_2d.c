@@ -50,6 +50,13 @@ typedef enum {
     GWY_FIT_2D_FIT_SPHERE_DOWN = 1
 } GwyFit2DFunctionType;
 
+typedef enum {
+    GWY_FIT_2D_OUTPUT_NONE = 0,
+    GWY_FIT_2D_OUTPUT_FIT  = 1,
+    GWY_FIT_2D_OUTPUT_DIFF = 2,
+    GWY_FIT_2D_OUTPUT_BOTH = 3,
+} GwyFit2DOutputType;
+
 typedef struct {
     gint xres;
     gint yres;
@@ -66,6 +73,7 @@ typedef struct {
     gboolean par_fix[MAX_PARAMS];
     GwyFit2DDisplayType display_type;
     GwyFit2DFunctionType function_type;
+    GwyFit2DOutputType output_type;
     GwySIValueFormat *valform;
 } Fit2DArgs;
 
@@ -73,16 +81,17 @@ typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *type;
-    GtkWidget **param_des;
-    GtkWidget **param_init;
-    GtkWidget **param_res;
-    GtkWidget **param_err;
-    GtkWidget **param_fit;
-    GtkWidget **unit;
+    GtkWidget *param_des[MAX_PARAMS];
+    GtkWidget *param_init[MAX_PARAMS];
+    GtkWidget *param_res[MAX_PARAMS];
+    GtkWidget *param_err[MAX_PARAMS];
+    GtkWidget *param_fit[MAX_PARAMS];
+    GtkWidget *unit[MAX_PARAMS];
     GtkWidget **covar;
     GtkWidget *chisq;
     GtkWidget *menu_display;
     GtkWidget *menu_function;
+    GtkWidget *menu_output;
     gboolean is_fitted;
     GwyNLFitter *fitter;
     GwyContainer *mydata;
@@ -119,9 +128,14 @@ static GtkWidget*   menu_display           (GCallback callback,
 static GtkWidget*   menu_function          (GCallback callback,
                                             gpointer cbdata,
                                             GwyFit2DFunctionType current);
+static GtkWidget*   menu_output            (GCallback callback,
+                                            gpointer cbdata,
+                                            GwyFit2DOutputType current);
 static void         display_changed        (GtkComboBox *combo,
                                             Fit2DControls *controls);
 static void         function_changed       (GtkComboBox *combo,
+                                            Fit2DControls *controls);
+static void         output_changed         (GtkComboBox *combo,
                                             Fit2DControls *controls);
 static void         double_entry_changed_cb(GtkWidget *entry,
                                             gdouble *value);
@@ -166,7 +180,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -213,8 +227,8 @@ fit_2d(GwyContainer *data, GwyRunType run)
     if (gwy_si_unit_equal(siunitxy, siunitz))
         args.valform = gwy_data_field_get_value_format_xy(dfield,
                               GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
-    else args.valform = NULL;
-
+    else
+        args.valform = NULL;
 
     fit_2d_dialog(&args, data, dfield, id);
     fit_2d_save_args(gwy_app_settings_get(), &args);
@@ -228,7 +242,7 @@ fit_2d_dialog(Fit2DArgs *args,
 {
     GtkWidget *dialog, *table, *hbox, *vbox, *hbox2, *alignment;
     Fit2DControls controls;
-    gint response, i, j;
+    gint response, i, j, row;
     GtkWidget *label;
 
     controls.fitter = NULL;
@@ -280,34 +294,45 @@ fit_2d_dialog(Fit2DArgs *args,
     label = gwy_label_new_header(_("Fitting Parameters"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
-    table = gtk_table_new(2, 2, FALSE);
+    table = gtk_table_new(3, 2, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    row = 0;
 
-    label = gtk_label_new_with_mnemonic(_("Function type:"));
+    label = gtk_label_new_with_mnemonic(_("_Function type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL | GTK_EXPAND, 0, 0, 0);
     controls.menu_function = menu_function(G_CALLBACK(function_changed),
                                            &controls,
                                            args->function_type);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.menu_function);
+    gtk_table_attach(GTK_TABLE(table), controls.menu_function,
+                     1, 2, row, row+1, GTK_FILL | GTK_EXPAND, 0, 0, 0);
+    row++;
 
-    gtk_table_attach(GTK_TABLE(table), controls.menu_function, 1, 2, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
-    label = gtk_label_new(_("Preview:"));
-
+    label = gtk_label_new_with_mnemonic(_("_Preview:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL | GTK_EXPAND, 0, 0, 0);
     controls.menu_display = menu_display(G_CALLBACK(display_changed),
                                          &controls,
                                          args->display_type);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.menu_display);
+    gtk_table_attach(GTK_TABLE(table), controls.menu_display,
+                     1, 2, row, row+1, GTK_FILL | GTK_EXPAND, 0, 0, 0);
+    row++;
 
-    gtk_table_attach(GTK_TABLE(table), controls.menu_display, 1, 2, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    label = gtk_label_new_with_mnemonic(_("Output _type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL | GTK_EXPAND, 0, 0, 0);
+    controls.menu_output = menu_output(G_CALLBACK(output_changed),
+                                       &controls, args->output_type);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.menu_output);
+    gtk_table_attach(GTK_TABLE(table), controls.menu_output,
+                     1, 2, row, row+1, GTK_FILL | GTK_EXPAND, 0, 0, 0);
+    row++;
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
@@ -340,8 +365,6 @@ fit_2d_dialog(Fit2DArgs *args,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
 
-
-    controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_des[i] = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(controls.param_des[i]), 0.0, 0.5);
@@ -350,7 +373,6 @@ fit_2d_dialog(Fit2DArgs *args,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_init[i] = gtk_entry_new();
         gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
@@ -363,7 +385,6 @@ fit_2d_dialog(Fit2DArgs *args,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_res[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
@@ -371,7 +392,6 @@ fit_2d_dialog(Fit2DArgs *args,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_err = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_err[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
@@ -379,19 +399,17 @@ fit_2d_dialog(Fit2DArgs *args,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.unit = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         if (args->valform)
            controls.unit[i] = gtk_label_new(g_strdup(args->valform->units));
         else
-           controls.unit[i] = gtk_label_new(_("N.A.")); 
+           controls.unit[i] = gtk_label_new(_("N.A."));
         gtk_table_attach(GTK_TABLE(table), controls.unit[i],
                          4, 5, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
 
-    controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_fit[i] = gtk_check_button_new();
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.param_fit[i]),
@@ -447,7 +465,9 @@ fit_2d_dialog(Fit2DArgs *args,
 
             case GTK_RESPONSE_OK:
             fit_2d_do(&controls);
-            if (controls.is_fitted && controls.fitter && controls.fitter->covar)
+            if (controls.is_fitted
+                && controls.fitter
+                && controls.fitter->covar)
                 create_results_window(&controls, args);
             break;
 
@@ -471,7 +491,6 @@ fit_2d_dialog(Fit2DArgs *args,
 
     gtk_widget_destroy(dialog);
     fit_2d_dialog_abandon(&controls);
-
 }
 
 static void
@@ -500,8 +519,7 @@ update_view(Fit2DControls *controls, Fit2DArgs *args)
         gwy_data_field_copy(controls->fit_field, outputfield, FALSE);
     else
         gwy_data_field_subtract_fields(outputfield, controls->original_field,
-                                           controls->fit_field);
-
+                                       controls->fit_field);
 
     gwy_data_field_data_changed(outputfield);
 }
@@ -597,10 +615,10 @@ fit_2d_run(Fit2DControls *controls,
 {
     GtkWidget *dialog;
     GwyDataField *weight;
-    gdouble param[4], err[4];
+    gdouble param[MAX_PARAMS], err[MAX_PARAMS];
     gboolean fres;
     gdouble *data;
-    gchar buffer[20];
+    gchar buffer[24];
     gint i, j, nparams;
     GwyNLFitFunc fitfunc;
     Fit2DDimData dimdata;
@@ -608,23 +626,25 @@ fit_2d_run(Fit2DControls *controls,
     switch (args->function_type) {
         case GWY_FIT_2D_FIT_SPHERE_UP:
         fitfunc = fit_sphere_up;
+        nparams = 4;
         break;
 
         case GWY_FIT_2D_FIT_SPHERE_DOWN:
         fitfunc = fit_sphere_down;
+        nparams = 4;
         break;
 
         default:
         g_return_if_reached();
+        break;
     }
 
-    nparams = 4;
     memcpy(param, args->par_init, nparams*sizeof(gdouble));
 
     if (args->valform) {
-        for (i=0; i<nparams; i++)  param[i] *= args->valform->magnitude;
+        for (i = 0; i < nparams; i++)
+            param[i] *= args->valform->magnitude;
     }
-
 
     if (param[0] <= 0) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
@@ -664,15 +684,18 @@ fit_2d_run(Fit2DControls *controls,
             g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]);
         }
         else {
-            g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]/args->valform->magnitude);
+            g_snprintf(buffer, sizeof(buffer), "%.3g",
+                       param[i]/args->valform->magnitude);
         }
 
         gtk_label_set_text(GTK_LABEL(controls->param_res[i]), buffer);
 
         if (!args->valform)
             g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]);
-        else
-            g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]/args->valform->magnitude);
+        else {
+            g_snprintf(buffer, sizeof(buffer), "%.3g",
+                       err[i]/args->valform->magnitude);
+        }
 
         gtk_label_set_text(GTK_LABEL(controls->param_err[i]), buffer);
     }
@@ -695,22 +718,45 @@ fit_2d_run(Fit2DControls *controls,
     g_object_unref(weight);
 }
 
-/*dialog finished, export result data*/
+/* Dialog finished, export result data if requested. */
 static void
 fit_2d_do(Fit2DControls *controls)
 {
-    gint newid;
+    Fit2DArgs *args = controls->args;
+    GwyFit2DOutputType output_type = args->output_type;
+    GwyContainer *data = controls->data;
+    GwyDataField *fitfield = controls->fit_field, *dfield;
+    gint oldid = controls->original_id, newid;
 
-    newid = gwy_app_data_browser_add_data_field(controls->fit_field,
-                                                controls->data, TRUE);
-    gwy_app_sync_data_items(controls->data, controls->data,
-                            controls->original_id, newid, FALSE,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            GWY_DATA_ITEM_SELECTIONS,
-                            0);
-    gwy_app_set_data_field_title(controls->data, newid, _("Fitted sphere"));
+    if (output_type == GWY_FIT_2D_OUTPUT_FIT
+        || output_type == GWY_FIT_2D_OUTPUT_BOTH) {
+        newid = gwy_app_data_browser_add_data_field(fitfield, data, TRUE);
+        gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                GWY_DATA_ITEM_SELECTIONS,
+                                0);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
+        gwy_app_set_data_field_title(data, newid, _("Fitted shape"));
+    }
+
+    if (output_type == GWY_FIT_2D_OUTPUT_DIFF
+        || output_type == GWY_FIT_2D_OUTPUT_BOTH) {
+        dfield = gwy_data_field_new_alike(controls->original_field, FALSE);
+        gwy_data_field_subtract_fields(dfield,
+                                       controls->original_field, fitfield);
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        g_object_unref(dfield);
+        gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                GWY_DATA_ITEM_SELECTIONS,
+                                0);
+        gwy_app_channel_log_add_proc(data, oldid, newid);
+        gwy_app_set_data_field_title(data, newid, _("Difference"));
+    }
 }
 
 /*display mode menu*/
@@ -719,9 +765,9 @@ menu_display(GCallback callback, gpointer cbdata,
              GwyFit2DDisplayType current)
 {
     static const GwyEnum entries[] = {
-        { N_("Data"),        GWY_FIT_2D_DISPLAY_DATA,   },
-        { N_("Fit result"),  GWY_FIT_2D_DISPLAY_RESULT, },
-        { N_("Difference"),  GWY_FIT_2D_DISPLAY_DIFF,   },
+        { N_("Data"),         GWY_FIT_2D_DISPLAY_DATA,   },
+        { N_("Fitted shape"), GWY_FIT_2D_DISPLAY_RESULT, },
+        { N_("Difference"),   GWY_FIT_2D_DISPLAY_DIFF,   },
     };
     return gwy_enum_combo_box_new(entries, G_N_ELEMENTS(entries),
                                   callback, cbdata, current, TRUE);
@@ -735,6 +781,20 @@ menu_function(GCallback callback, gpointer cbdata,
     static const GwyEnum entries[] = {
         { N_("Sphere (up)"),    GWY_FIT_2D_FIT_SPHERE_UP,    },
         { N_("Sphere (down)"),  GWY_FIT_2D_FIT_SPHERE_DOWN,  },
+    };
+    return gwy_enum_combo_box_new(entries, G_N_ELEMENTS(entries),
+                                  callback, cbdata, current, TRUE);
+}
+
+static GtkWidget*
+menu_output(GCallback callback, gpointer cbdata,
+            GwyFit2DOutputType current)
+{
+    static const GwyEnum entries[] = {
+        { N_("None"),         GWY_FIT_2D_OUTPUT_NONE, },
+        { N_("Fitted shape"), GWY_FIT_2D_OUTPUT_FIT,  },
+        { N_("Difference"),   GWY_FIT_2D_OUTPUT_DIFF, },
+        { N_("Both"),         GWY_FIT_2D_OUTPUT_BOTH, },
     };
     return gwy_enum_combo_box_new(entries, G_N_ELEMENTS(entries),
                                   callback, cbdata, current, TRUE);
@@ -765,6 +825,13 @@ function_changed(GtkComboBox *combo, Fit2DControls *controls)
     controls->args->function_type = gwy_enum_combo_box_get_active(combo);
     guess(controls, controls->args);
     update_view(controls, controls->args);
+}
+
+static void
+output_changed(GtkComboBox *combo, Fit2DControls *controls)
+{
+    controls->args->output_type = gwy_enum_combo_box_get_active(combo);
+    /* Nothing to update here. */
 }
 
 /*extract radius and center from upper section of sphere*/
@@ -920,21 +987,30 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 
 static const gchar function_key[] = "/module/fit_2d/function";
 static const gchar display_key[]  = "/module/fit_2d/display";
+static const gchar output_key[]   = "/module/fit_2d/output";
 
 static void
 fit_2d_sanitize_args(Fit2DArgs *args)
 {
     args->display_type = MIN(args->display_type, GWY_FIT_2D_DISPLAY_DIFF);
     args->function_type = MIN(args->function_type, GWY_FIT_2D_FIT_SPHERE_DOWN);
+    args->output_type = MIN(args->output_type, GWY_FIT_2D_OUTPUT_BOTH);
 }
 
 static void
 fit_2d_load_args(GwyContainer *container,
                     Fit2DArgs *args)
 {
-    gwy_container_gis_enum_by_name(container, display_key, &args->display_type);
+    args->display_type = GWY_FIT_2D_DISPLAY_DATA;
+    args->function_type = GWY_FIT_2D_FIT_SPHERE_UP;
+    args->output_type = GWY_FIT_2D_OUTPUT_FIT;
+
+    gwy_container_gis_enum_by_name(container, display_key,
+                                   &args->display_type);
     gwy_container_gis_enum_by_name(container, function_key,
                                    &args->function_type);
+    gwy_container_gis_enum_by_name(container, output_key,
+                                   &args->output_type);
     fit_2d_sanitize_args(args);
 }
 
@@ -942,13 +1018,13 @@ static void
 fit_2d_save_args(GwyContainer *container,
                     Fit2DArgs *args)
 {
-    gwy_container_set_enum_by_name(container, display_key, args->display_type);
+    gwy_container_set_enum_by_name(container, display_key,
+                                   args->display_type);
     gwy_container_set_enum_by_name(container, function_key,
                                    args->function_type);
-
+    gwy_container_set_enum_by_name(container, output_key,
+                                   args->output_type);
 }
-
-
 
 
 /************************* fit report *****************************/
@@ -1145,7 +1221,7 @@ create_fit_report(Fit2DControls *controls, Fit2DArgs *args)
         if (!args->valform)
            g_string_append_printf(report, "%s = %g ± %g\n",
                                s2, args->par_res[i], args->par_err[i]);
-        else            
+        else
             g_string_append_printf(report, "%s = (%g ± %g) %s\n",
                                s2, args->par_res[i]/args->valform->magnitude, args->par_err[i]/args->valform->magnitude, args->valform->units);
 
