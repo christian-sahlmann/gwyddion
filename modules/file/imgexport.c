@@ -19,6 +19,25 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/* TODO:
+ * - explicit units for colour scale; UI is the hard part here; the best idea
+ *   seems to be adding a ‘kilo threshold’ slider (approx. 10–10000) that
+ *   will modify when we switch the unit from 834 m to 0.835 km; users of
+ *   course might like some explicit unit entry but it would have to be reset
+ *   all the time to avoid broken tick labels, whereas a kilo threshold can
+ *   be a presistent parameter
+ * - custom colours of the things outside the image (ticks, labels, frames,
+ *   ...); just one for everything to prevent absolute mess
+ * - custom background colour for pixmaps formats (goes with preceding point)
+ *   and transparency for pixmap formats – transparency makes only sense for
+ *   PNG makes sense ATM; see also the premultiplied alpha comment in
+ *   create_surface()
+ * - alignment of image title (namely when it is on the top)
+ * - WebP support; seems doable; they have sane documentation and libwebp has
+ *   a Fedora mingw package which is a boon
+ * - JPEG2000 support? seems possible but messy
+ */
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -4600,6 +4619,8 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
     g_array_append_val(selections, quark);
 }
 
+/* Gather all kind of information about the data and how they are currently
+ * displayed in Gwyddion so that we can mimic it. */
 static void
 img_export_load_env(ImgExportEnv *env,
                     GwyContainer *settings,
@@ -4664,6 +4685,7 @@ img_export_load_env(ImgExportEnv *env,
     }
     gwy_debug("env->xres %u, env->yres %u", env->xres, env->yres);
 
+    /* False colour mapping. */
     g_string_printf(s, "/%d/base/palette", env->id);
     gwy_container_gis_string_by_name(data, s->str, &gradname);
 
@@ -4697,14 +4719,7 @@ img_export_load_env(ImgExportEnv *env,
     if ((env->fm_inverted = (env->fm_max < env->fm_min)))
         GWY_SWAP(gdouble, env->fm_min, env->fm_max);
 
-    env->title = gwy_app_get_data_field_title(data, env->id);
-    g_strstrip(env->title);
-
-    if (format->write_grey16) {
-        env->grey = gwy_inventory_get_item(gradients, "Gray");
-        gwy_resource_use(GWY_RESOURCE(env->grey));
-    }
-
+    /* Selections. */
     env->selections = g_array_new(FALSE, FALSE, sizeof(GQuark));
     g_string_printf(s, "/%d/select/", env->id);
     gwy_container_foreach(data, s->str, &add_selection, env->selections);
@@ -4743,6 +4758,16 @@ img_export_load_env(ImgExportEnv *env,
             env->sel_line_thickness = lt;
         }
     }
+
+    /* Miscellaneous stuff. */
+    env->title = gwy_app_get_data_field_title(data, env->id);
+    g_strstrip(env->title);
+
+    if (format->write_grey16) {
+        env->grey = gwy_inventory_get_item(gradients, "Gray");
+        gwy_resource_use(GWY_RESOURCE(env->grey));
+    }
+
 
     g_string_free(s, TRUE);
 }
