@@ -43,14 +43,16 @@
  * [FILE-MAGIC-USERGUIDE]
  * SPIP ASCII
  * .asc
- * Read
+ * Read Export
  **/
 
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
@@ -69,19 +71,26 @@
 
 #define Nanometer (1e-9)
 
-static gboolean      module_register(void);
-static gint          asc_detect     (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* asc_load       (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
+static gboolean      module_register  (void);
+static gint          asc_detect       (const GwyFileDetectInfo *fileinfo,
+                                       gboolean only_name);
+static GwyContainer* asc_load         (const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+static gboolean      asc_export       (GwyContainer *data,
+                                       const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+static gchar*        asc_format_header(GwyContainer *data,
+                                       GwyDataField *dfield,
+                                       gboolean *zunit_is_nm);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports SPIP ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -96,7 +105,7 @@ module_register(void)
                            (GwyFileDetectFunc)&asc_detect,
                            (GwyFileLoadFunc)&asc_load,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&asc_export);
 
     return TRUE;
 }
@@ -273,6 +282,129 @@ fail:
         g_hash_table_destroy(hash);
 
     return container;
+}
+
+static gboolean
+asc_export(GwyContainer *data,
+           const gchar *filename,
+           G_GNUC_UNUSED GwyRunType mode,
+           GError **error)
+{
+    GwyDataField *dfield;
+    guint xres, i, n;
+    gchar *header;
+    const gdouble *d;
+    gboolean zunit_is_nm;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    if (!(fh = gwy_fopen(filename, "w"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    header = asc_format_header(data, dfield, &zunit_is_nm);
+    if (fputs(header, fh) == EOF)
+        goto fail;
+
+    d = gwy_data_field_get_data_const(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    n = xres*gwy_data_field_get_yres(dfield);
+    for (i = 0; i < n; i++) {
+        gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
+        gchar c;
+
+        if (zunit_is_nm)
+            g_ascii_dtostr(buf, G_ASCII_DTOSTR_BUF_SIZE, d[i]/Nanometer);
+        else
+            g_ascii_dtostr(buf, G_ASCII_DTOSTR_BUF_SIZE, d[i]);
+
+        if (fputs(buf, fh) == EOF)
+            goto fail;
+
+        c = (i % xres == xres-1) ? '\n' : '\t';
+        if (fputc(c, fh) == EOF)
+            goto fail;
+    }
+
+    fclose(fh);
+    g_free(header);
+
+    return TRUE;
+
+fail:
+    err_WRITE(error);
+    fclose(fh);
+    g_free(header);
+    g_unlink(filename);
+
+    return FALSE;
+}
+
+static gchar*
+asc_format_header(GwyContainer *data, GwyDataField *dfield,
+                  gboolean *zunit_is_nm)
+{
+    static const gchar asc_header_template[] =
+        "# File Format = ASCII\n"
+        "# Created by Gwyddion %s\n"
+        "# Original file: %s\n"
+        "# x-pixels = %u\n"
+        "# y-pixels = %u\n"
+        "# x-length = %s\n"
+        "# y-length = %s\n"
+        "# x-offset = %s\n"
+        "# y-offset = %s\n"
+        "# Bit2nm = 1.0\n"
+        "%s"
+        "# Start of Data:\n";
+
+    GwySIUnit *zunit;
+    gchar *header, *zunit_str, *zunit_line;
+    gchar xreal_str[G_ASCII_DTOSTR_BUF_SIZE],
+          yreal_str[G_ASCII_DTOSTR_BUF_SIZE],
+          xoff_str[G_ASCII_DTOSTR_BUF_SIZE],
+          yoff_str[G_ASCII_DTOSTR_BUF_SIZE];
+    const guchar *filename = "NONE";
+    gdouble xreal, yreal, xoff, yoff;
+
+    /* XXX: Gwyddion can have lateral dimensions as whatever we want.  But
+     * who knows about the SPIP ASC format... */
+    xreal = gwy_data_field_get_xreal(dfield)/Nanometer;
+    yreal = gwy_data_field_get_yreal(dfield)/Nanometer;
+    xoff = gwy_data_field_get_xoffset(dfield)/Nanometer;
+    yoff = gwy_data_field_get_yoffset(dfield)/Nanometer;
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+
+    g_ascii_dtostr(xreal_str, G_ASCII_DTOSTR_BUF_SIZE, xreal);
+    g_ascii_dtostr(yreal_str, G_ASCII_DTOSTR_BUF_SIZE, yreal);
+    g_ascii_dtostr(xoff_str, G_ASCII_DTOSTR_BUF_SIZE, xoff);
+    g_ascii_dtostr(yoff_str, G_ASCII_DTOSTR_BUF_SIZE, yoff);
+    zunit_str = gwy_si_unit_get_string(zunit, GWY_SI_UNIT_FORMAT_PLAIN);
+    if ((*zunit_is_nm = gwy_strequal(zunit_str, "m")))
+        zunit_line = g_strdup("");
+    else
+        zunit_line = g_strdup_printf("# z-unit = %s\n", zunit_str);
+
+    gwy_container_gis_string_by_name(data, "/filename", &filename);
+
+    header = g_strdup_printf(asc_header_template,
+                             gwy_version_string(), filename,
+                             gwy_data_field_get_xres(dfield),
+                             gwy_data_field_get_yres(dfield),
+                             xreal_str, yreal_str, xoff_str, yoff_str,
+                             zunit_line);
+
+    g_free(zunit_str);
+    g_free(zunit_line);
+
+    return header;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
