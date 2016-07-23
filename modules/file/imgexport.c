@@ -33,8 +33,6 @@
  *   PNG makes sense ATM; see also the premultiplied alpha comment in
  *   create_surface()
  * - alignment of image title (namely when it is on the top)
- * - WebP support; seems doable; they have sane documentation and libwebp has
- *   a Fedora mingw package which is a boon
  * - JPEG2000 support? seems possible but messy
  */
 
@@ -76,6 +74,10 @@
 #else
 #define Z_BEST_COMPRESSION 9
 #endif
+#endif
+
+#ifdef HAVE_WEBP
+#include <webp/encode.h>
 #endif
 
 #include <libgwyddion/gwymacros.h>
@@ -362,6 +364,12 @@ static gboolean write_pixbuf_targa  (GdkPixbuf *pixbuf,
                                      const gchar *name,
                                      const gchar *filename,
                                      GError **error);
+#ifdef HAVE_WEBP
+static gboolean write_pixbuf_webp   (GdkPixbuf *pixbuf,
+                                     const gchar *name,
+                                     const gchar *filename,
+                                     GError **error);
+#endif
 
 #define DECLARE_SELECTION_DRAWING(name) \
     static void draw_sel_##name(const ImgExportArgs *args, \
@@ -430,6 +438,14 @@ static ImgExportFormat image_formats[] = {
         ".tga,.targa",
         write_pixbuf_targa, NULL, NULL,
     },
+#ifdef HAVE_WEBP
+    {
+        "webp",
+        N_("WebP (.webp)"),
+        ".webp",
+        write_pixbuf_webp, NULL, NULL,
+    },
+#endif
 #ifdef CAIRO_HAS_PDF_SURFACE
     {
         "pdf",
@@ -509,7 +525,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Renders data into vector (SVG, PDF, EPS) and "
-       "pixmap (PNG, JPEG, TIFF, PPM, BMP, TARGA, GIF) images. "
+       "pixmap (PNG, JPEG, TIFF, WEBP, PPM, BMP, TARGA, GIF) images. "
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
@@ -847,12 +863,13 @@ create_surface(const gchar *name,
     iwidth = (gint)ceil(width);
     iheight = (gint)ceil(height);
 
-    /* XXX: PNG supports transparency.  But Cairo draws with premultiplied
-     * alpha, which means we would have to decompose it again for PNG.   This
-     * can turn ugly. */
+    /* XXX: PNG and WebP support transparency.  But Cairo draws with
+     * premultiplied alpha, which means we would have to decompose it again.
+     * This can turn ugly.  For PNG we can perhaps avoid this by using the
+     * PNG-specific Cairo functions?  */
     if (gwy_stramong(name,
                      "png", "jpeg2000", "jpeg", "tiff", "pnm",
-                     "bmp", "tga", NULL)) {
+                     "bmp", "tga", "webp", NULL)) {
         cairo_t *cr;
 
         gwy_debug("%u %u %u", imageformat, iwidth, iheight);
@@ -5639,6 +5656,48 @@ write_pixbuf_targa(GdkPixbuf *pixbuf,
 
     return TRUE;
 }
+
+#ifdef HAVE_WEBP
+static gboolean
+write_pixbuf_webp(GdkPixbuf *pixbuf,
+                  const gchar *name,
+                  const gchar *filename,
+                  GError **error)
+{
+    const guchar *pixels;
+    guchar *buffer = NULL;
+    guint xres, yres, nchannels, rowstride;
+    size_t size;
+    gboolean ok;
+    FILE *fh;
+
+    g_return_val_if_fail(gwy_strequal(name, "webp"), FALSE);
+
+    nchannels = gdk_pixbuf_get_n_channels(pixbuf);
+    g_return_val_if_fail(nchannels == 3, FALSE);
+
+    xres = gdk_pixbuf_get_width(pixbuf);
+    yres = gdk_pixbuf_get_height(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+
+    if (!(fh = gwy_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    size = WebPEncodeLosslessRGB(pixels, xres, yres, rowstride, &buffer);
+    ok = (fwrite(buffer, 1, size, fh) == size);
+    if (!ok)
+        err_WRITE(error);
+
+    fclose(fh);
+    /* XXX: Version at least 0.5.0 needed for WebPFree(buffer); */
+    free(buffer);
+
+    return ok;
+}
+#endif
 
 /* Borrowed from libgwyui4 */
 static void

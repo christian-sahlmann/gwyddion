@@ -590,6 +590,16 @@ PKG_CHECK_MODULES(PNG, [libpng],
 AM_CONDITIONAL([HAVE_PNG],[test x$enable_png != xno])
 
 #############################################################################
+# WebP
+# Optional.  Pixmap image format support.
+enable_webp=yes
+PKG_CHECK_MODULES(WEBP, [libwebp],
+                  [AC_DEFINE(HAVE_WEBP,1,
+                            [Define if we have the libwebp package.])],
+                  [enable_webp=no])
+AM_CONDITIONAL([HAVE_WEBP],[test x$enable_webp != xno])
+
+#############################################################################
 # C++
 # Check if the compiler is "g++" but it is not GNU C++.  This means it's just
 # the fallback when no actual compiler is found.  We have to disable the
