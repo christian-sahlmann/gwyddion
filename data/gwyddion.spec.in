@@ -23,6 +23,7 @@ BuildRequires: cairo-devel >= 1.6
 BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
 BuildRequires: zlib-devel
+BuildRequires: libwebp-devel
 BuildRequires: ruby >= 1.8
 %if %{distro_is_redhat}
 BuildRequires: rubypick
