@@ -195,9 +195,7 @@ function check_desktop() {
 
 
 function install_to_tmp() {
-  make -k install \
-    KDE4_MODULE_DIR=$installprefix/lib/kde \
-    DISABLE_GCONF_SCHEMAS_INSTALL=yes
+  make -k install DISABLE_GCONF_SCHEMAS_INSTALL=yes
 }
 
 
@@ -208,7 +206,7 @@ function make_dists() {
   if test -s $pkgname-$version.tar.xz; then
     if which rpmbuild >&/dev/null; then
       TAR_OPTIONS=--wildcards CCACHE_DISABLE=1 \
-          rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.xz \
+          rpmbuild -ta --clean $pkgname-$version.tar.xz \
         && touch .releaseme
     else
       echo "rpmbuild not available" 1>&2
