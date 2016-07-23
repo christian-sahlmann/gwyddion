@@ -150,6 +150,7 @@ file_LTLIBRARIES = \
 	codevfile.la \
 	createc.la \
 	csmfile.la \
+	dimensionfile.la \
 	dmefile.la \
 	dm3file.la \
 	dumbfile.la \
@@ -298,6 +299,7 @@ burleigh_exp_la_SOURCES  = burleigh_exp.c
 createc_la_SOURCES       = createc.c
 codevfile_la_SOURCES     = codevfile.c
 csmfile_la_SOURCES       = csmfile.c
+dimensionfile_la_SOURCES = dimensionfile.c
 dmefile_la_SOURCES       = dmefile.c
 dm3file_la_SOURCES       = dm3file.c
 dumbfile_la_SOURCES      = dumbfile.c
