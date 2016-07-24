@@ -63,8 +63,16 @@ typedef enum {
 } DetakXMLTypeID;
 
 typedef struct {
+    gchar *name;
+    gsize len;
+    guchar *data;
+} DetakXMLRawData;
+
+typedef struct {
     GHashTable *hash;
     GString *path;
+    GPtrArray *channels;
+    GArray *rawdata;
 } DetakXMLFile;
 
 static gboolean      module_register(void);
@@ -73,6 +81,8 @@ static gint          detakxml_detect(const GwyFileDetectInfo *fileinfo,
 static GwyContainer* detakxml_load  (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static void          detakxml_init  (DetakXMLFile *dxfile);
+static void          detakxml_free  (DetakXMLFile *dxfile);
 static void          start_element  (GMarkupParseContext *context,
                                      const gchar *element_name,
                                      const gchar **attribute_names,
@@ -158,8 +168,6 @@ detakxml_load(const gchar *filename,
     GMarkupParseContext *context = NULL;
     DetakXMLFile dxfile;
 
-    gwy_clear(&dxfile, 1);
-
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
@@ -170,10 +178,7 @@ detakxml_load(const gchar *filename,
         goto fail;
     }
 
-    dxfile.hash = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                        g_free, g_free);
-    dxfile.path = g_string_new(NULL);
-
+    detakxml_init(&dxfile);
     context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
                                          &dxfile, NULL);
     if (!g_markup_parse_context_parse(context, buffer, size, &err)
@@ -187,13 +192,49 @@ detakxml_load(const gchar *filename,
     err_NO_DATA(error);
 
 fail:
+    detakxml_free(&dxfile);
     g_free(buffer);
-    if (dxfile.hash)
-        g_hash_table_destroy(dxfile.hash);
-    if (dxfile.path)
-        g_string_free(dxfile.path, TRUE);
 
     return container;
+}
+
+static void
+detakxml_init(DetakXMLFile *dxfile)
+{
+    gwy_clear(dxfile, 1);
+
+    dxfile->hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                         g_free, g_free);
+    dxfile->path = g_string_new(NULL);
+    dxfile->channels = g_ptr_array_new();
+    dxfile->rawdata = g_array_new(FALSE, FALSE, sizeof(DetakXMLRawData));
+}
+
+static void
+detakxml_free(DetakXMLFile *dxfile)
+{
+    guint i;
+
+    if (dxfile->hash)
+        g_hash_table_destroy(dxfile->hash);
+    if (dxfile->path)
+        g_string_free(dxfile->path, TRUE);
+
+    if (dxfile->channels) {
+        for (i = 0; i < dxfile->channels->len; i++)
+            g_free(g_ptr_array_index(dxfile->channels, i));
+        g_ptr_array_free(dxfile->channels, TRUE);
+    }
+
+    if (dxfile->rawdata) {
+        for (i = 0; i < dxfile->rawdata->len; i++) {
+            DetakXMLRawData *rawdata = &g_array_index(dxfile->rawdata,
+                                                      DetakXMLRawData, i);
+            g_free(rawdata->name);
+            g_free(rawdata->data);
+        }
+        g_array_free(dxfile->rawdata, TRUE);
+    }
 }
 
 static void
@@ -247,11 +288,37 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
 {
     DetakXMLFile *dxfile = (DetakXMLFile*)user_data;
     const gchar *path = dxfile->path->str;
-    gchar *val;
 
-    gwy_debug("%s", path);
+    gwy_debug("%s (%lu)", path, (gulong)value_len);
     if (!value_len)
         return;
+
+    if (gwy_stramong(path,
+                     "/DataContainer/1D_Data/Raw/Array",
+                     "/DataContainer/1D_Data/Raw/PositionFunction",
+                     NULL)) {
+        DetakXMLRawData rawdata;
+
+        /* XXX: This is not the actual double data array.  There are some
+         * bytes before, apparently 5 for data and more for the position
+         * function. */
+        rawdata.data = g_base64_decode(value, &rawdata.len);
+        if (rawdata.len) {
+            rawdata.name = g_strdup(path);
+            g_array_append_val(dxfile->rawdata, rawdata);
+            gwy_debug("raw data <%s> of decoded length %lu",
+                      path, (gulong)rawdata.len);
+        }
+        else {
+            /* The parser returns some whitespace around the actual data
+             * as separate text chunks. */
+            g_free(rawdata.data);
+        }
+        return;
+    }
+
+    /* TODO: Handle the channels array.  But how?  What is actually the
+     * general structure and what is the channel title?  */
 
     g_hash_table_insert(dxfile->hash, g_strdup(path), g_strdup(value));
 }
