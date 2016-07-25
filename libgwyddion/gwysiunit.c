@@ -138,6 +138,21 @@ static const GwyUnitLongName long_names[] = {
     { 8, "Å", "Angstrom", },
 };
 
+static const GwyUnitLongName long_prefixes[] = {
+    { 4, "a", "atto", },
+    { 4, "G", "giga", },
+    { 4, "k", "kilo", },
+    { 4, "M", "mega", },
+    { 4, "n", "nano", },
+    { 4, "P", "peta", },
+    { 4, "p", "pico", },
+    { 4, "T", "tera", },
+    { 5, "c", "centi", },
+    { 5, "f", "fmeto", },
+    { 5, "µ", "micro", },
+    { 5, "m", "milli", },
+};
+
 /* Unit formats */
 static const GwySIStyleSpec format_style_plain = {
     "10^", "^", NULL, " ", "/", " "
@@ -783,9 +798,26 @@ fix_unit_name(GString *str)
     else if (gwy_strequal(s, "sec"))
         g_string_assign(str, "s");
     else {
-        const GwyUnitLongName *long_name = long_names;
+        const GwyUnitLongName *long_name;
+        const gchar *prefix = "";
         guint i;
 
+        long_name = long_prefixes;
+        for (i = G_N_ELEMENTS(long_prefixes); i; i--, long_name++) {
+            const gchar *name = long_name->name;
+            guint ll = long_name->len;
+
+            if (l <= ll)
+                break;
+            if (g_ascii_strncasecmp(s, name, ll) == 0) {
+                prefix = long_name->symbol;
+                s += ll;
+                l -= ll;
+                break;
+            }
+        }
+
+        long_name = long_names;
         for (i = G_N_ELEMENTS(long_names); i; i--, long_name++) {
             const gchar *name = long_name->name;
             guint ll = long_name->len;
@@ -795,7 +827,8 @@ fix_unit_name(GString *str)
             if (g_ascii_strncasecmp(s, name, ll) == 0
                 && (l == ll
                     || (l == ll+1 && g_ascii_tolower(s[ll]) == 's'))) {
-                g_string_assign(str, long_name->symbol);
+                g_string_assign(str, prefix);
+                g_string_append(str, long_name->symbol);
                 break;
             }
         }
