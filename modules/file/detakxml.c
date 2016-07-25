@@ -23,6 +23,7 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -42,6 +43,8 @@
 
 #define MAGIC "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
+
+#define MEAS_SETTINGS "/DataContainer/MetaData/MeasurementSettings"
 
 /* This is what I guessed from observing the XML.  At this moment we ignore
  * the type ids anyway. */
@@ -166,7 +169,16 @@ detakxml_load(const gchar *filename,
     GError *err = NULL;
     GMarkupParser parser = { start_element, end_element, text, NULL, NULL };
     GMarkupParseContext *context = NULL;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwyDataLine *dline;
     DetakXMLFile dxfile;
+    const gchar *s;
+    GwySIUnit *xunit;
+    gint power10;
+    guint i, res;
+    gsize expected_size;
+    gdouble real, q;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -189,7 +201,80 @@ detakxml_load(const gchar *filename,
         goto fail;
     }
 
-    err_NO_DATA(error);
+    if (!dxfile.rawdata->len) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    /* XXX: There is also NumPoints which precedes the position function so
+     * it may pertain to it – but why would the number of points be ever
+     * different? */
+    if (!require_keys(dxfile.hash, error,
+                      MEAS_SETTINGS "/SamplesToLog",
+                      MEAS_SETTINGS "/ScanLength/Value",
+                      MEAS_SETTINGS "/ScanLength/Unit",
+                      MEAS_SETTINGS "/DataScale/Value",
+                      MEAS_SETTINGS "/DataScale/Unit",
+                      NULL))
+        goto fail;
+
+    s = g_hash_table_lookup(dxfile.hash, MEAS_SETTINGS "/SamplesToLog");
+    res = atoi(s);
+
+    s = g_hash_table_lookup(dxfile.hash, MEAS_SETTINGS "/ScanLength/Value");
+    real = g_ascii_strtod(s, NULL);
+
+    s = g_hash_table_lookup(dxfile.hash, MEAS_SETTINGS "/ScanLength/Unit");
+    xunit = gwy_si_unit_new_parse(s, &power10);
+    q = pow10(power10);
+
+    gmodel = gwy_graph_model_new();
+    dline = gwy_data_line_new(res, real*q, FALSE);
+    expected_size = res*sizeof(gdouble);
+    /* XXX: The PositionFunction data seems to be indeed the position so we
+     * should use probably it for the abscissae instead of plotting it. */
+    for (i = 0; i < dxfile.rawdata->len; i++) {
+        DetakXMLRawData *rawdata = &g_array_index(dxfile.rawdata,
+                                                  DetakXMLRawData, i);
+
+        if (rawdata->len < expected_size) {
+            g_warning("Data %s have only %lu bytes, %lu required.",
+                      rawdata->name,
+                      (gulong)rawdata->len, (gulong)expected_size);
+            continue;
+        }
+
+        /* The real data is at the end of the buffer. */
+        /* XXX: The scale value (for height, not position function) seems to
+         * be DataScale, but who knows */
+        gwy_convert_raw_data(rawdata->data + (rawdata->len - expected_size),
+                             res, 1,
+                             GWY_RAW_DATA_DOUBLE, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                             gwy_data_line_get_data(dline),
+                             0.0079957274738689244e-6, 0.0);
+        gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(i),
+                     "description", rawdata->name,
+                     NULL);
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+
+    }
+    g_object_unref(dline);
+
+    if (gwy_graph_model_get_n_curves(gmodel)) {
+        g_object_set(gmodel,
+                     "si-unit-x", xunit,
+                     NULL);
+        container = gwy_container_new();
+        gwy_container_set_object(container,
+                                 gwy_app_get_graph_key_for_id(0), gmodel);
+    }
+    g_object_unref(gmodel);
+    g_object_unref(xunit);
 
 fail:
     detakxml_free(&dxfile);
