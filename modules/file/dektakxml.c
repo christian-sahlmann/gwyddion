@@ -49,63 +49,63 @@
 /* This is what I guessed from observing the XML.  At this moment we ignore
  * the type ids anyway. */
 typedef enum {
-    DETAKXML_BOOLEAN      = 1,   /* Takes value 0 and 1 */
-    DETAKXML_COUNT        = 11,  /* Positive integer which is an item count */
-    DETAKXML_DOUBLE       = 12,  /* Any number */
-    DETAKXML_INT          = 13,  /* Arbitrary integer */
-    DETAKXML_TYPE_ID      = 14,  /* Type id, some kind of enum? */
-    DETAKXML_STRING       = 18,  /* Free-form string value */
-    DETAKXML_VALUE_UNIT   = 19,  /* Have Value and Unit children */
-    DETAKXML_TIME_STAMP   = 21,  /* Datetime (formatted as string) */
-    DETAKXML_BASE64       = 64,  /* Base64-encoded raw data array */
-    DETAKXML_STRING_LIST  = 66,  /* List of Str */
-    DETAKXML_RAW_DATA     = 70,  /* Parent/wrapper tag of raw data */
-    DETAKXML_POS_RAW_DATA = 124, /* Base64-encoded positions, not sure how
-                                    it differs from 64 */
-    DETAKXML_CONTAINER    = 125, /* General nested data structure */
-} DetakXMLTypeID;
+    DEKTAKXML_BOOLEAN      = 1,   /* Takes value 0 and 1 */
+    DEKTAKXML_COUNT        = 11,  /* Positive integer which is an item count */
+    DEKTAKXML_DOUBLE       = 12,  /* Any number */
+    DEKTAKXML_INT          = 13,  /* Arbitrary integer */
+    DEKTAKXML_TYPE_ID      = 14,  /* Type id, some kind of enum? */
+    DEKTAKXML_STRING       = 18,  /* Free-form string value */
+    DEKTAKXML_VALUE_UNIT   = 19,  /* Have Value and Unit children */
+    DEKTAKXML_TIME_STAMP   = 21,  /* Datetime (formatted as string) */
+    DEKTAKXML_BASE64       = 64,  /* Base64-encoded raw data array */
+    DEKTAKXML_STRING_LIST  = 66,  /* List of Str */
+    DEKTAKXML_RAW_DATA     = 70,  /* Parent/wrapper tag of raw data */
+    DEKTAKXML_POS_RAW_DATA = 124, /* Base64-encoded positions, not sure how
+                                     it differs from 64 */
+    DEKTAKXML_CONTAINER    = 125, /* General nested data structure */
+} DektakXMLTypeID;
 
 typedef struct {
     gchar *name;
     gsize len;
     guchar *data;
-} DetakXMLRawData;
+} DektakXMLRawData;
 
 typedef struct {
     GHashTable *hash;
     GString *path;
     GPtrArray *channels;
     GArray *rawdata;
-} DetakXMLFile;
+} DektakXMLFile;
 
-static gboolean      module_register(void);
-static gint          detakxml_detect(const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* detakxml_load  (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static void          detakxml_init  (DetakXMLFile *dxfile);
-static void          detakxml_free  (DetakXMLFile *dxfile);
-static void          start_element  (GMarkupParseContext *context,
-                                     const gchar *element_name,
-                                     const gchar **attribute_names,
-                                     const gchar **attribute_values,
-                                     gpointer user_data,
-                                     GError **error);
-static void          end_element    (GMarkupParseContext *context,
-                                     const gchar *element_name,
-                                     gpointer user_data,
-                                     GError **error);
-static void          text           (GMarkupParseContext *context,
-                                     const gchar *value,
-                                     gsize value_len,
-                                     gpointer user_data,
-                                     GError **error);
+static gboolean      module_register (void);
+static gint          dektakxml_detect(const GwyFileDetectInfo *fileinfo,
+                                      gboolean only_name);
+static GwyContainer* dektakxml_load  (const gchar *filename,
+                                      GwyRunType mode,
+                                      GError **error);
+static void          dektakxml_init  (DektakXMLFile *dxfile);
+static void          dektakxml_free  (DektakXMLFile *dxfile);
+static void          start_element   (GMarkupParseContext *context,
+                                      const gchar *element_name,
+                                      const gchar **attribute_names,
+                                      const gchar **attribute_values,
+                                      gpointer user_data,
+                                      GError **error);
+static void          end_element     (GMarkupParseContext *context,
+                                      const gchar *element_name,
+                                      gpointer user_data,
+                                      GError **error);
+static void          text            (GMarkupParseContext *context,
+                                      const gchar *value,
+                                      gsize value_len,
+                                      gpointer user_data,
+                                      GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Detak XML data files."),
+    N_("Imports Dektak XML data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti)",
@@ -117,10 +117,10 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("detakxml",
-                           N_("Detak XML data files (.xml)"),
-                           (GwyFileDetectFunc)&detakxml_detect,
-                           (GwyFileLoadFunc)&detakxml_load,
+    gwy_file_func_register("dektakxml",
+                           N_("Dektak XML data files (.xml)"),
+                           (GwyFileDetectFunc)&dektakxml_detect,
+                           (GwyFileLoadFunc)&dektakxml_load,
                            NULL,
                            NULL);
 
@@ -128,8 +128,8 @@ module_register(void)
 }
 
 static gint
-detakxml_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+dektakxml_detect(const GwyFileDetectInfo *fileinfo,
+                 gboolean only_name)
 {
     const gchar *head = fileinfo->head;
 
@@ -159,9 +159,9 @@ detakxml_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-detakxml_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
-             GError **error)
+dektakxml_load(const gchar *filename,
+               G_GNUC_UNUSED GwyRunType mode,
+               GError **error)
 {
     GwyContainer *container = NULL;
     gchar *buffer = NULL;
@@ -172,7 +172,7 @@ detakxml_load(const gchar *filename,
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwyDataLine *dline;
-    DetakXMLFile dxfile;
+    DektakXMLFile dxfile;
     const gchar *s;
     GwySIUnit *xunit;
     gint power10;
@@ -186,11 +186,11 @@ detakxml_load(const gchar *filename,
     }
 
     if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
-        err_FILE_TYPE(error, "Detak XML");
+        err_FILE_TYPE(error, "Dektak XML");
         goto fail;
     }
 
-    detakxml_init(&dxfile);
+    dektakxml_init(&dxfile);
     context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT,
                                          &dxfile, NULL);
     if (!g_markup_parse_context_parse(context, buffer, size, &err)
@@ -234,8 +234,8 @@ detakxml_load(const gchar *filename,
     /* XXX: The PositionFunction data seems to be indeed the position so we
      * should use probably it for the abscissae instead of plotting it. */
     for (i = 0; i < dxfile.rawdata->len; i++) {
-        DetakXMLRawData *rawdata = &g_array_index(dxfile.rawdata,
-                                                  DetakXMLRawData, i);
+        DektakXMLRawData *rawdata = &g_array_index(dxfile.rawdata,
+                                                  DektakXMLRawData, i);
 
         if (rawdata->len < expected_size) {
             g_warning("Data %s have only %lu bytes, %lu required.",
@@ -277,14 +277,14 @@ detakxml_load(const gchar *filename,
     g_object_unref(xunit);
 
 fail:
-    detakxml_free(&dxfile);
+    dektakxml_free(&dxfile);
     g_free(buffer);
 
     return container;
 }
 
 static void
-detakxml_init(DetakXMLFile *dxfile)
+dektakxml_init(DektakXMLFile *dxfile)
 {
     gwy_clear(dxfile, 1);
 
@@ -292,11 +292,11 @@ detakxml_init(DetakXMLFile *dxfile)
                                          g_free, g_free);
     dxfile->path = g_string_new(NULL);
     dxfile->channels = g_ptr_array_new();
-    dxfile->rawdata = g_array_new(FALSE, FALSE, sizeof(DetakXMLRawData));
+    dxfile->rawdata = g_array_new(FALSE, FALSE, sizeof(DektakXMLRawData));
 }
 
 static void
-detakxml_free(DetakXMLFile *dxfile)
+dektakxml_free(DektakXMLFile *dxfile)
 {
     guint i;
 
@@ -313,8 +313,8 @@ detakxml_free(DetakXMLFile *dxfile)
 
     if (dxfile->rawdata) {
         for (i = 0; i < dxfile->rawdata->len; i++) {
-            DetakXMLRawData *rawdata = &g_array_index(dxfile->rawdata,
-                                                      DetakXMLRawData, i);
+            DektakXMLRawData *rawdata = &g_array_index(dxfile->rawdata,
+                                                      DektakXMLRawData, i);
             g_free(rawdata->name);
             g_free(rawdata->data);
         }
@@ -330,7 +330,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
               gpointer user_data,
               GError **error)
 {
-    DetakXMLFile *dxfile = (DetakXMLFile*)user_data;
+    DektakXMLFile *dxfile = (DektakXMLFile*)user_data;
     guint i;
 
     gwy_debug("<%s>", element_name);
@@ -356,7 +356,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
             gpointer user_data,
             G_GNUC_UNUSED GError **error)
 {
-    DetakXMLFile *dxfile = (DetakXMLFile*)user_data;
+    DektakXMLFile *dxfile = (DektakXMLFile*)user_data;
     gchar *pos;
 
     gwy_debug("</%s>", element_name);
@@ -371,7 +371,7 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
      gpointer user_data,
      G_GNUC_UNUSED GError **error)
 {
-    DetakXMLFile *dxfile = (DetakXMLFile*)user_data;
+    DektakXMLFile *dxfile = (DektakXMLFile*)user_data;
     const gchar *path = dxfile->path->str;
 
     gwy_debug("%s (%lu)", path, (gulong)value_len);
@@ -382,7 +382,7 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
                      "/DataContainer/1D_Data/Raw/Array",
                      "/DataContainer/1D_Data/Raw/PositionFunction",
                      NULL)) {
-        DetakXMLRawData rawdata;
+        DektakXMLRawData rawdata;
 
         /* XXX: This is not the actual double data array.  There are some
          * bytes before, apparently 5 for data and more for the position
