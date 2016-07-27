@@ -45,8 +45,6 @@
  * Read
  **/
 
-/* TODO: Add magic comments one the things is marginally working. */
-#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -465,9 +463,8 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
         return;
     }
 
-    /* TODO: Handle the channels array.  But how?  What is actually the
+    /* XXX: Handle the channels array.  But how?  What is actually the
      * general structure and what is the channel title?  */
-
     g_hash_table_insert(dxfile->hash, g_strdup(path), g_strdup(value));
 }
 
