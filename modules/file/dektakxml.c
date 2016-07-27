@@ -413,7 +413,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
 static void
 end_element(G_GNUC_UNUSED GMarkupParseContext *context,
-            const gchar *element_name,
+            G_GNUC_UNUSED const gchar *element_name,
             gpointer user_data,
             G_GNUC_UNUSED GError **error)
 {
