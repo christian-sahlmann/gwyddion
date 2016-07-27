@@ -1,5 +1,10 @@
 2.46 (0000-00-00)
+Application:
+- Translations updated: Russian.
+
 Libraries:
+- libgwyddion: GwySIUnit can parse prefixed spelled out unit names such as
+  "Millimetre" or "nanoampere".
 - libgwyddion: Gaussian fitting function estimator was improved.
 - libgwyprocess: An obscure case of GwyTriangulation failure now fails
   gracefully instead of on a failed assertion.
@@ -9,10 +14,14 @@ Libraries:
   Gtk+ main loop is let to run.
 
 Modules:
+- Dektak XML (new): Imports Dektak XML profilometry data.
 - XYZize: XYZ log is created for the new XYZ data, not volume data log.
 - Pygwy: Containers can be directly indexed both by strings and integers
   (quarks).  Overrides for Container methods get_value() and set_value() were
   added.
+- Limit Range: Units with exponents are displayed correctly now.
+- SPIP ASC: Can also export data to .asc now.
+- Image export: Can export to WebP now (lossless), libwebp required.
 - Diffusion synthesis: Incorrect behaviour for non-square images was fixed.
 - Fit sphere: It can create the fitted shape or the difference as the output.
 
