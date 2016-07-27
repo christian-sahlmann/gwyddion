@@ -19,6 +19,32 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-dektak-xml">
+ *   <comment>Dektak XML profilometry data</comment>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="&lt;?xml">
+ *       <match type="string" offset="20:60" value="&lt;DataContainer typeid=\"125\""/>
+ *     </match>
+ *   </magic>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FILEMAGIC]
+ * # SIS
+ * 0 string \x3c?xml
+ * >&0 search/80 \x3cDataContainer\ typeid="125" Dektak XML profilometry data
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Dektak XML profilometry data
+ * .xml
+ * Read
+ **/
+
 /* TODO: Add magic comments one the things is marginally working. */
 #define DEBUG 1
 #include "config.h"
@@ -45,6 +71,8 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define MEAS_SETTINGS "/DataContainer/MetaData/MeasurementSettings"
+#define RAW_1D_DATA   "/DataContainer/1D_Data/Raw"
+#define Micrometre 1e-6
 
 /* This is what I guessed from observing the XML.  At this moment we ignore
  * the type ids anyway. */
@@ -83,6 +111,10 @@ static gint          dektakxml_detect(const GwyFileDetectInfo *fileinfo,
                                       gboolean only_name);
 static GwyContainer* dektakxml_load  (const gchar *filename,
                                       GwyRunType mode,
+                                      GError **error);
+static gdouble*      convert_raw_data(const DektakXMLRawData *rawdata,
+                                      guint res,
+                                      gdouble q,
                                       GError **error);
 static void          dektakxml_init  (DektakXMLFile *dxfile);
 static void          dektakxml_free  (DektakXMLFile *dxfile);
@@ -171,14 +203,13 @@ dektakxml_load(const gchar *filename,
     GMarkupParseContext *context = NULL;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    GwyDataLine *dline;
     DektakXMLFile dxfile;
-    const gchar *s;
-    GwySIUnit *xunit;
+    const gchar *s, *title;
+    GwySIUnit *xunit, *yunit;
     gint power10;
     guint i, res;
-    gsize expected_size;
-    gdouble real, q;
+    gdouble real, qy;
+    gdouble *xdata = NULL, *ydata = NULL;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -206,15 +237,15 @@ dektakxml_load(const gchar *filename,
         goto fail;
     }
 
-    /* XXX: There is also NumPoints which precedes the position function so
-     * it may pertain to it – but why would the number of points be ever
-     * different? */
+    /* Many things have two values, one in measurement settings and the other
+     * in the data.  The value in data seems to be the actual one, the value
+     * in settings is nominal? */
     if (!require_keys(dxfile.hash, error,
-                      MEAS_SETTINGS "/SamplesToLog",
-                      MEAS_SETTINGS "/ScanLength/Value",
-                      MEAS_SETTINGS "/ScanLength/Unit",
-                      MEAS_SETTINGS "/DataScale/Value",
-                      MEAS_SETTINGS "/DataScale/Unit",
+                      RAW_1D_DATA "/NumPoints",
+                      RAW_1D_DATA "/Extent/Value",
+                      RAW_1D_DATA "/Extent/Unit",
+                      RAW_1D_DATA "/DataScale/Value",
+                      RAW_1D_DATA "/DataScale/Unit",
                       NULL))
         goto fail;
 
@@ -226,48 +257,60 @@ dektakxml_load(const gchar *filename,
 
     s = g_hash_table_lookup(dxfile.hash, MEAS_SETTINGS "/ScanLength/Unit");
     xunit = gwy_si_unit_new_parse(s, &power10);
-    q = pow10(power10);
+    real *= pow10(power10);
+
+    s = g_hash_table_lookup(dxfile.hash, RAW_1D_DATA "/DataScale/Value");
+    qy = g_ascii_strtod(s, NULL);
+
+    s = g_hash_table_lookup(dxfile.hash, RAW_1D_DATA "/DataScale/Unit");
+    yunit = gwy_si_unit_new_parse(s, &power10);
+    qy *= pow10(power10);
+
+    if (!(title = g_hash_table_lookup(dxfile.hash,
+                                      "/DataContainer/MetaData/DataKind")))
+        title = "Curve";
 
     gmodel = gwy_graph_model_new();
-    dline = gwy_data_line_new(res, real*q, FALSE);
-    expected_size = res*sizeof(gdouble);
-    /* XXX: The PositionFunction data seems to be indeed the position so we
-     * should use probably it for the abscissae instead of plotting it. */
     for (i = 0; i < dxfile.rawdata->len; i++) {
         DektakXMLRawData *rawdata = &g_array_index(dxfile.rawdata,
-                                                  DektakXMLRawData, i);
-
-        if (rawdata->len < expected_size) {
-            g_warning("Data %s have only %lu bytes, %lu required.",
-                      rawdata->name,
-                      (gulong)rawdata->len, (gulong)expected_size);
-            continue;
+                                                   DektakXMLRawData, i);
+        if (g_str_has_suffix(rawdata->name, "/PositionFunction")) {
+            if (!(xdata = convert_raw_data(rawdata, res, Micrometre, error)))
+                goto fail;
         }
+    }
+    if (!xdata) {
+        xdata = g_new(gdouble, res);
+        for (i = 0; i < res; i++)
+            xdata[i] = real*i/(res - 1.0);
+    }
 
-        /* The real data is at the end of the buffer. */
-        /* XXX: The scale value (for height, not position function) seems to
-         * be DataScale, but who knows */
-        gwy_convert_raw_data(rawdata->data + (rawdata->len - expected_size),
-                             res, 1,
-                             GWY_RAW_DATA_DOUBLE, GWY_BYTE_ORDER_LITTLE_ENDIAN,
-                             gwy_data_line_get_data(dline),
-                             0.0079957274738689244e-6, 0.0);
+    for (i = 0; i < dxfile.rawdata->len; i++) {
+        DektakXMLRawData *rawdata = &g_array_index(dxfile.rawdata,
+                                                   DektakXMLRawData, i);
+        if (g_str_has_suffix(rawdata->name, "/PositionFunction"))
+            continue;
+
+        if (!(ydata = convert_raw_data(rawdata, res, qy, error)))
+            goto fail;
+
         gcmodel = gwy_graph_curve_model_new();
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(i),
-                     "description", rawdata->name,
+                     "description", title,
                      NULL);
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
-
+        g_free(ydata);
     }
-    g_object_unref(dline);
 
     if (gwy_graph_model_get_n_curves(gmodel)) {
         g_object_set(gmodel,
                      "si-unit-x", xunit,
+                     "si-unit-y", yunit,
+                     "title", title,
                      NULL);
         container = gwy_container_new();
         gwy_container_set_object(container,
@@ -275,12 +318,32 @@ dektakxml_load(const gchar *filename,
     }
     g_object_unref(gmodel);
     g_object_unref(xunit);
+    g_object_unref(yunit);
 
 fail:
     dektakxml_free(&dxfile);
+    g_free(xdata);
     g_free(buffer);
 
     return container;
+}
+
+static gdouble*
+convert_raw_data(const DektakXMLRawData *rawdata,
+                 guint res, gdouble q, GError **error)
+{
+    gsize expected_size = res*sizeof(gdouble);
+    gsize size = rawdata->len;
+    gdouble *d;
+
+    if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
+        return NULL;
+
+    d = g_new(gdouble, res);
+    gwy_convert_raw_data(rawdata->data + (size - expected_size), res, 1,
+                         GWY_RAW_DATA_DOUBLE, GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         d, q, 0.0);
+    return d;
 }
 
 static void
