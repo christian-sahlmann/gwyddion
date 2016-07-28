@@ -104,7 +104,7 @@
 #define fixzero(x) (fabs(x) < 1e-14 ? 0.0 : (x))
 
 enum {
-    PREVIEW_SIZE = 440,
+    PREVIEW_SIZE = 480,
 };
 
 struct ImgExportFormat;
@@ -3280,10 +3280,15 @@ create_lateral_controls(ImgExportControls *controls)
     GtkWidget *table, *label;
     gint row = 0;
 
-    table = controls->table_lateral = gtk_table_new(13, 4, FALSE);
+    table = controls->table_lateral = gtk_table_new(16, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+
+    label = gwy_label_new_header(_("Lateral scale"));
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     controls->xytype
         = gwy_radio_buttons_create(lateral_types, G_N_ELEMENTS(lateral_types),
@@ -3316,8 +3321,8 @@ create_lateral_controls(ImgExportControls *controls)
                      3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls->inset_pos_label[0] = label = gtk_label_new(_("Placement:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls->inset_pos_label[0] = label = gwy_label_new_header(_("Placement"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
@@ -3368,6 +3373,12 @@ create_lateral_controls(ImgExportControls *controls)
                                       args->inset_ygap);
     g_signal_connect_swapped(controls->inset_ygap, "value-changed",
                              G_CALLBACK(inset_ygap_changed), controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     create_colour_control(GTK_TABLE(table), row++,
