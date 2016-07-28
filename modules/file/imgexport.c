@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014-2015 David Necas (Yeti).
+ *  Copyright (C) 2014-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,12 +20,7 @@
  */
 
 /* TODO:
- * - explicit units for colour scale; UI is the hard part here; the best idea
- *   seems to be adding a ‘kilo threshold’ slider (approx. 10–10000) that
- *   will modify when we switch the unit from 834 m to 0.835 km; users of
- *   course might like some explicit unit entry but it would have to be reset
- *   all the time to avoid broken tick labels, whereas a kilo threshold can
- *   be a presistent parameter
+ * - XXX: ensure the title and fmscale really use the same units!
  * - custom colours of the things outside the image (ticks, labels, frames,
  *   ...); just one for everything to prevent absolute mess
  * - custom background colour for pixmaps formats (goes with preceding point)
@@ -241,6 +236,8 @@ typedef struct {
     GtkObject *fmscale_gap;
     GtkWidget *fix_fmscale_precision;
     GtkObject *fmscale_precision;
+    GtkWidget *fix_kilo_threshold;
+    GtkObject *kilo_threshold;
     GtkWidget *title_type;
     GtkObject *title_gap;
     GtkWidget *units_in_title;
@@ -1117,6 +1114,37 @@ measure_fmscale_label(GwySIValueFormat *vf,
     gwy_debug("units width %g", sizes->fmruler_units_width);
 }
 
+static GwySIValueFormat*
+get_value_format_with_kilo_threshold(GwySIUnit *unit,
+                                     GwySIUnitFormatStyle style,
+                                     gdouble max, gdouble kilo_threshold,
+                                     GwySIValueFormat *vf)
+{
+    gint p = 3*(gint)floor(log(max)/G_LN10/3.0 + 1e-14);
+    gdouble b = pow10(p);
+
+    while (max/b < 1e-3*kilo_threshold) {
+        p -= 3;
+        b /= 1000.0;
+    }
+    while (max/b >= kilo_threshold) {
+        p += 3;
+        b *= 1000.0;
+    }
+
+    /* NB: This does not touch the number of decimal places.  We must decide
+     * ourselves how many digits we want. */
+    vf = gwy_si_unit_get_format_for_power10(unit, style, p, vf);
+    vf->precision = 0;
+
+    while (max/b < 120.0) {
+        vf->precision++;
+        b /= 10.0;
+    }
+
+    return vf;
+}
+
 static void
 find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
                    PangoLayout *layout, GString *s)
@@ -1125,7 +1153,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     GwyDataField *dfield = env->dfield;
     GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
     gdouble size = sizes->image.h;
-    gdouble min, max, real;
+    gdouble min, max, m, real;
     RulerTicks *ticks = &sizes->fmruler_ticks;
     GwySIValueFormat *vf;
     gdouble bs, height;
@@ -1134,12 +1162,22 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     min = env->fm_min;
     max = env->fm_max;
     real = max - min;
+    m = MAX(fabs(min), fabs(max));
 
     /* This format must be the same as sizes->vf_title. */
-    vf = gwy_si_unit_get_format_with_resolution(zunit,
-                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                real, real/96.0,
-                                                NULL);
+    if (args->fix_kilo_threshold && m) {
+        vf = get_value_format_with_kilo_threshold(zunit,
+                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                  m, args->kilo_threshold,
+                                                  NULL);
+    }
+    else {
+        vf = gwy_si_unit_get_format_with_resolution(zunit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    real, real/96.0,
+                                                    NULL);
+    }
+
     min /= vf->magnitude;
     max /= vf->magnitude;
     real /= vf->magnitude;
@@ -3457,6 +3495,24 @@ fix_fmscale_precision_changed(ImgExportControls *controls,
 }
 
 static void
+kilo_threshold_changed(ImgExportControls *controls,
+                       GtkAdjustment *adj)
+{
+    controls->args->kilo_threshold = gtk_adjustment_get_value(adj);
+    update_preview(controls);
+}
+
+static void
+fix_kilo_threshold_changed(ImgExportControls *controls,
+                           GtkToggleButton *toggle)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->fix_kilo_threshold = gtk_toggle_button_get_active(toggle);
+    update_preview(controls);
+}
+
+static void
 ztype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
               ImgExportControls *controls)
 {
@@ -3550,7 +3606,7 @@ create_value_controls(ImgExportControls *controls)
     GtkWidget *table, *label, *check;
     gint row = 0;
 
-    table = controls->table_value = gtk_table_new(15, 4, FALSE);
+    table = controls->table_value = gtk_table_new(16, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3676,6 +3732,23 @@ create_value_controls(ImgExportControls *controls)
                              G_CALLBACK(fmscale_precision_changed), controls);
     g_signal_connect_swapped(controls->fix_fmscale_precision, "toggled",
                              G_CALLBACK(fix_fmscale_precision_changed), controls);
+    row++;
+
+    controls->kilo_threshold = gtk_adjustment_new(args->kilo_threshold,
+                                                  10.0, 10000.0, 1.0, 100.0, 0);
+    gwy_table_attach_hscale(table, row, _("Fixed _kilo threshold:"), NULL,
+                            controls->kilo_threshold,
+                            GWY_HSCALE_CHECK | GWY_HSCALE_LOG);
+    controls->fix_kilo_threshold
+        = gwy_table_hscale_get_check(controls->kilo_threshold);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fix_kilo_threshold),
+                                 args->fix_kilo_threshold);
+    gwy_table_hscale_set_sensitive(controls->kilo_threshold,
+                                   args->fix_kilo_threshold);
+    g_signal_connect_swapped(controls->kilo_threshold, "value-changed",
+                             G_CALLBACK(kilo_threshold_changed), controls);
+    g_signal_connect_swapped(controls->fix_kilo_threshold, "toggled",
+                             G_CALLBACK(fix_kilo_threshold_changed), controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -6274,6 +6347,7 @@ static const gchar draw_maskkey_key[]          = "/module/pixmap/draw_maskkey";
 static const gchar draw_mask_key[]             = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[]        = "/module/pixmap/draw_selection";
 static const gchar fix_fmscale_precision_key[] = "/module/pixmap/fix_fmscale_precision";
+static const gchar fix_kilo_threshold_key[]    = "/module/pixmap/fix_kilo_threshold";
 static const gchar fmscale_gap_key[]           = "/module/pixmap/fmscale_gap";
 static const gchar fmscale_precision_key[]     = "/module/pixmap/fmscale_precision";
 static const gchar font_key[]                  = "/module/pixmap/font";
@@ -6287,6 +6361,7 @@ static const gchar inset_pos_key[]             = "/module/pixmap/inset_pos";
 static const gchar inset_xgap_key[]            = "/module/pixmap/inset_xgap";
 static const gchar inset_ygap_key[]            = "/module/pixmap/inset_ygap";
 static const gchar interpolation_key[]         = "/module/pixmap/interpolation";
+static const gchar kilo_threshold_key[]        = "/module/pixmap/kilo_threshold";
 static const gchar line_width_key[]            = "/module/pixmap/line_width";
 static const gchar maskkey_gap_key[]           = "/module/pixmap/maskkey_gap";
 static const gchar mask_key_key[]              = "/module/pixmap/mask_key";
@@ -6385,6 +6460,10 @@ img_export_load_args(GwyContainer *container,
                                       &args->fix_fmscale_precision);
     gwy_container_gis_int32_by_name(container, fmscale_precision_key,
                                     &args->fmscale_precision);
+    gwy_container_gis_boolean_by_name(container, fix_kilo_threshold_key,
+                                      &args->fix_kilo_threshold);
+    gwy_container_gis_double_by_name(container, kilo_threshold_key,
+                                     &args->kilo_threshold);
     gwy_container_gis_boolean_by_name(container, inset_draw_ticks_key,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
@@ -6468,6 +6547,10 @@ img_export_save_args(GwyContainer *container,
                                       args->fix_fmscale_precision);
     gwy_container_set_int32_by_name(container, fmscale_precision_key,
                                     args->fmscale_precision);
+    gwy_container_set_boolean_by_name(container, fix_kilo_threshold_key,
+                                      args->fix_kilo_threshold);
+    gwy_container_set_double_by_name(container, kilo_threshold_key,
+                                     args->kilo_threshold);
     gwy_container_set_boolean_by_name(container, inset_draw_ticks_key,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,

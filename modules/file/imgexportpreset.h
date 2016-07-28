@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014-2015 David Necas (Yeti).
+ *  Copyright (C) 2014-2014 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -109,6 +109,8 @@ typedef struct {
     gdouble maskkey_gap;
     gboolean fix_fmscale_precision;
     gint fmscale_precision;
+    gboolean fix_kilo_threshold;
+    gdouble kilo_threshold;
     gchar *inset_length;
     gchar *mask_key;
     GwyInterpolationType interpolation;
@@ -159,6 +161,7 @@ static const ImgExportArgs img_export_defaults = {
     FALSE, TRUE, TRUE,
     1.0, 1.0, 1.0, 0.0, 1.0,
     FALSE, 2,
+    FALSE, 1200.0,
     "", N_("Mask"),
     GWY_INTERPOLATION_ROUND,
     IMGEXPORT_TITLE_NONE, FALSE,
@@ -260,6 +263,8 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->title_gap = CLAMP(args->title_gap, -1.0, 1.0);
     args->fix_fmscale_precision = !!args->fix_fmscale_precision;
     args->fmscale_precision = CLAMP(args->fmscale_precision, 0, 16);
+    args->fix_kilo_threshold = !!args->fix_kilo_threshold;
+    args->kilo_threshold = CLAMP(args->kilo_threshold, 10.0, 10000.0);
     args->inset_outline_color.a = args->inset_color.a;
     args->sel_outline_color.a = args->sel_color.a;
     args->sel_number_objects = !!args->sel_number_objects;
@@ -325,7 +330,7 @@ gwy_img_export_preset_dump(GwyResource *resource,
 {
     gchar d1[G_ASCII_DTOSTR_BUF_SIZE], d2[G_ASCII_DTOSTR_BUF_SIZE],
           d3[G_ASCII_DTOSTR_BUF_SIZE], d4[G_ASCII_DTOSTR_BUF_SIZE],
-          d5[G_ASCII_DTOSTR_BUF_SIZE];
+          d5[G_ASCII_DTOSTR_BUF_SIZE], d6[G_ASCII_DTOSTR_BUF_SIZE];
     GwyImgExportPreset *preset;
     ImgExportArgs *data;
     gchar *s;
@@ -381,7 +386,8 @@ gwy_img_export_preset_dump(GwyResource *resource,
     g_ascii_dtostr(d2, sizeof(d2), data->inset_xgap);
     g_ascii_dtostr(d3, sizeof(d3), data->inset_ygap);
     g_ascii_dtostr(d4, sizeof(d4), data->title_gap);
-    g_ascii_dtostr(d5, sizeof(d5), data->maskkey_gap);
+    g_ascii_dtostr(d5, sizeof(d5), data->kilo_threshold);
+    g_ascii_dtostr(d6, sizeof(d6), data->maskkey_gap);
     s = g_strescape(data->mask_key, NULL);
     g_string_append_printf(str,
                            "fmscale_gap %s\n"
@@ -390,11 +396,14 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "title_gap %s\n"
                            "fix_fmscale_precision %d\n"
                            "fmscale_precision %d\n"
+                           "fix_kilo_threshold %d\n"
+                           "kilo_threshold %s\n"
                            "maskkey_gap %s\n"
                            "mask_key \"%s\"\n",
                            d1, d2, d3, d4,
                            data->fix_fmscale_precision, data->fmscale_precision,
-                           d5, s);
+                           data->fix_kilo_threshold, d5,
+                           d6, s);
     g_free(s);
 
     s = g_strescape(data->inset_length, NULL);
@@ -542,6 +551,10 @@ gwy_img_export_preset_parse(const gchar *text,
             data.fix_fmscale_precision = atoi(value);
         else if (gwy_strequal(key, "fmscale_precision"))
             data.fmscale_precision = atoi(value);
+        else if (gwy_strequal(key, "fix_kilo_threshold"))
+            data.fix_kilo_threshold = atoi(value);
+        else if (gwy_strequal(key, "kilo_threshold"))
+            data.kilo_threshold = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "maskkey_gap"))
             data.maskkey_gap = g_ascii_strtod(value, NULL);
         else if (gwy_strequal(key, "sel_line_thickness"))
