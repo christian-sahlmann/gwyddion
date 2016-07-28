@@ -25,7 +25,7 @@
  *   <comment>Dektak XML profilometry data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="&lt;?xml">
- *       <match type="string" offset="20:60" value="&lt;DataContainer typeid=\"125\""/>
+ *       <match type="string" offset="20:60" value="&lt;DataContainer typeid=&quot;125&quot;"/>
  *     </match>
  *   </magic>
  * </mime-type>
