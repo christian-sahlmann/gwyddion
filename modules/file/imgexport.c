@@ -3023,6 +3023,13 @@ update_value_sensitivity(ImgExportControls *controls)
                           && !maskkeysens);
 
     gwy_table_hscale_set_sensitive(controls->fmscale_gap, fmsens);
+    gwy_table_hscale_set_sensitive(controls->fmscale_precision, fmsens);
+    gtk_widget_set_sensitive(gwy_table_hscale_get_check(controls->fmscale_precision),
+                             fmsens);
+    gwy_table_hscale_set_sensitive(controls->kilo_threshold,
+                                   fmsens || titlesens);
+    gtk_widget_set_sensitive(gwy_table_hscale_get_check(controls->kilo_threshold),
+                             fmsens || titlesens);
     gwy_table_hscale_set_sensitive(controls->title_gap, titlesens);
     gtk_widget_set_sensitive(controls->draw_frame, framesens);
     gtk_widget_set_sensitive(controls->draw_maskkey, masksens);
