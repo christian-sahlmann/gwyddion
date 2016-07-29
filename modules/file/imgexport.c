@@ -20,7 +20,6 @@
  */
 
 /* TODO:
- * - XXX: ensure the title and fmscale really use the same units!
  * - custom colours of the things outside the image (ticks, labels, frames,
  *   ...); just one for everything to prevent absolute mess
  * - custom background colour for pixmaps formats (goes with preceding point)
