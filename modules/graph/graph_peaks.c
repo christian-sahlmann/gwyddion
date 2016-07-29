@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Finds peaks on graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -863,7 +863,7 @@ analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks,
             || peak->area <= 0.0
             || peak->x >= xright
             || peak->x <= xleft) {
-            g_array_remove_index_fast(peaks, k);
+            g_array_remove_index(peaks, k);
         }
         else {
             peak->prominence = log(peak->height * peak->area
