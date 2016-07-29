@@ -121,7 +121,6 @@ typedef struct {
     GwySIValueFormat *vf_hruler;
     GwySIValueFormat *vf_vruler;
     GwySIValueFormat *vf_fmruler;
-    GwySIValueFormat *vf_title;
     RulerTicks hruler_ticks;
     RulerTicks vruler_ticks;
     RulerTicks fmruler_ticks;
@@ -1164,7 +1163,7 @@ find_fmscale_ticks(const ImgExportArgs *args, ImgExportSizes *sizes,
     real = max - min;
     m = MAX(fabs(min), fabs(max));
 
-    /* This format must be the same as sizes->vf_title. */
+    /* This format is reused for the title. */
     if (args->fix_kilo_threshold && m) {
         vf = get_value_format_with_kilo_threshold(zunit,
                                                   GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -1296,18 +1295,7 @@ measure_title(const ImgExportArgs *args, ImgExportSizes *sizes,
 
     g_string_truncate(s, 0);
     if (args->units_in_title) {
-        GwyDataField *dfield = env->dfield;
-        GwySIUnit *zunit = gwy_data_field_get_si_unit_z(dfield);
-        GwySIValueFormat *vf;
-        gdouble real;
-
-        /* This format must be the same as sizes->vf_fmruler. */
-        real= env->fm_max - env->fm_min;
-        vf = gwy_si_unit_get_format_with_resolution(zunit,
-                                                    GWY_SI_UNIT_FORMAT_MARKUP,
-                                                    real, real/240,
-                                                    NULL);
-        sizes->vf_title = vf;
+        GwySIValueFormat *vf = sizes->vf_fmruler;
         if (strlen(vf->units))
             format_layout(layout, &logical, s, "%s [%s]",
                           env->title, vf->units);
@@ -1418,21 +1406,21 @@ calculate_sizes(const ImgExportArgs *args,
         rect_move(&sizes->inset, sizes->image.x, sizes->image.y);
     }
 
-    /* False colour gradient */
+    /* False colour gradient. Always measure the false colour axis.  We may not
+     * draw it but we may want to know how it would be drawn (e.g. units). */
     sizes->fmgrad = sizes->image;
     rect_move(&sizes->fmgrad,
               sizes->image.w + fs*args->fmscale_gap - fw, 0.0);
+    find_fmscale_ticks(args, sizes, layout, s);
     if (args->ztype == IMGEXPORT_VALUE_FMSCALE) {
-        /* NB: We subtract fw here to make the fmscale visually just touch the
-         * image in the case of zero gap. */
+        /* Subtract fw here to make the fmscale visually just touch the image
+         * in the case of zero gap. */
         sizes->fmgrad.w = 1.5*fs + 2.0*fw;
-
-        /* False colour axis */
-        find_fmscale_ticks(args, sizes, layout, s);
     }
     else {
         sizes->fmgrad.x = sizes->image.x + sizes->image.w;
         sizes->fmgrad.w = 0;
+        sizes->fmruler_label_width = sizes->fmruler_units_width = 0;
     }
     sizes->fmruler.x = sizes->fmgrad.x + sizes->fmgrad.w;
     sizes->fmruler.y = sizes->fmgrad.y;
@@ -1552,8 +1540,6 @@ destroy_sizes(ImgExportSizes *sizes)
         gwy_si_unit_value_format_free(sizes->vf_vruler);
     if (sizes->vf_fmruler)
         gwy_si_unit_value_format_free(sizes->vf_fmruler);
-    if (sizes->vf_title)
-        gwy_si_unit_value_format_free(sizes->vf_title);
     g_free(sizes);
 }
 
@@ -1680,8 +1666,9 @@ draw_data_pixbuf_resampled(const ImgExportArgs *args,
                                              args->interpolation);
 
     /* XXX: Resampling can influence adaptive mapping, i.e. adaptive-mapping
-     * resampled image is not the same as adaptive-mapping the original.  But
-     * it should not be noticeable in normal circumstances.  */
+     * resampled image is not the same as adaptive-mapping the original and
+     * then resampling.  But it should not be noticeable in normal
+     * circumstances.  */
     if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
         gwy_pixbuf_draw_data_field_adaptive(pixbuf, resampled, gradient);
     else {
@@ -2028,7 +2015,7 @@ draw_title(const ImgExportArgs *args,
     const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
-    GwySIValueFormat *vf;
+    GwySIValueFormat *vf = sizes->vf_fmruler;
     gdouble fs = sizes->sizes.font_size;
     gdouble gap = 0.0;
 
@@ -2041,7 +2028,6 @@ draw_title(const ImgExportArgs *args,
     cairo_save(cr);
     cairo_translate(cr, rect->x + gap, rect->y);
     set_cairo_source_rgba(cr, &black);
-    vf = sizes->vf_title;
     if (args->units_in_title && strlen(vf->units))
         format_layout(layout, &logical, s, "%s [%s]", env->title, vf->units);
     else
@@ -4129,6 +4115,10 @@ reset_to_preset(ImgExportControls *controls,
                                  src->fix_fmscale_precision);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->fmscale_precision),
                              src->fmscale_precision);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fix_kilo_threshold),
+                                 src->fix_kilo_threshold);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->kilo_threshold),
+                             src->kilo_threshold);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->title_type),
                                   src->title_type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->title_gap),
@@ -6123,7 +6113,7 @@ draw_sel_path(const ImgExportArgs *args,
     py = sizes->image.h/gwy_data_field_get_yres(args->env->dfield);
 
     /* XXX: This is dirty.  Unfortunately, we need to know the natural units
-     * for good spline sampline and the vector ones are too coarse.   Hence
+     * for good spline sampling and the vector ones are too coarse.   Hence
      * we artificially refine them and cross fingers. */
     q = is_vector ? 8.0 : 1.0;
     pts = g_new(GwyXY, n);
