@@ -93,6 +93,7 @@ typedef struct {
     GwyRGBA inset_color;
     GwyRGBA inset_outline_color;
     InsetPosType inset_pos;
+    GwyRGBA linetext_color;
     gboolean draw_mask;
     gboolean draw_frame;
     gboolean draw_selection;
@@ -156,6 +157,7 @@ static const ImgExportArgs img_export_defaults = {
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
+    GWYRGBA_BLACK,
     TRUE, TRUE, FALSE, TRUE,
     "Helvetica", TRUE,
     FALSE, TRUE, TRUE,
@@ -249,6 +251,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->draw_maskkey = !!args->draw_maskkey;
     args->scale_font = !!args->scale_font;
     args->decomma = !!args->decomma;
+    args->linetext_color.a = 1.0;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
     args->units_in_title = !!args->units_in_title;
@@ -362,6 +365,9 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            data->draw_selection, data->draw_maskkey,
                            s);
     g_free(s);
+
+    dump_rgba(&data->linetext_color, d1, d2, d3, d4);
+    g_string_append_printf(str, "linetext_color %s %s %s\n", d1, d2, d3);
 
     g_ascii_dtostr(d1, sizeof(d1), data->sizes.font_size);
     g_ascii_dtostr(d2, sizeof(d2), data->sizes.line_width);
@@ -609,6 +615,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.sel_color.a = alpha;
             data.sel_outline_color.a = alpha;
         }
+        else if (gwy_strequal(key, "linetext_color"))
+            parse_rgb(&data.linetext_color, value);
         else if (gwy_strequal(key, "inset_color"))
             parse_rgb(&data.inset_color, value);
         else if (gwy_strequal(key, "inset_outline_color"))

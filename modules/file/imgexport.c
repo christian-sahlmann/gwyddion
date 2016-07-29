@@ -203,6 +203,7 @@ typedef struct {
     GtkObject *tick_length;
     GtkWidget *scale_font;
     GtkWidget *decomma;
+    ImgExportColourControls linetext_colour;
 
     /* Lateral Scale */
     GtkWidget *table_lateral;
@@ -1778,6 +1779,7 @@ draw_data_frame(const ImgExportArgs *args,
                 cairo_t *cr)
 {
     const ImgExportRect *rect = &sizes->image;
+    const GwyRGBA *color = &args->linetext_color;
     gdouble fw = sizes->sizes.line_width;
     gdouble w = rect->w - 2.0*fw;
     gdouble h = rect->h - 2.0*fw;
@@ -1787,7 +1789,7 @@ draw_data_frame(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, fw);
     cairo_rectangle(cr, 0.5*fw, 0.5*fw, w + fw, h + fw);
     cairo_stroke(cr);
@@ -1807,6 +1809,7 @@ draw_hruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->hruler;
     const RulerTicks *ticks = &sizes->hruler_ticks;
     GwySIValueFormat *vf = sizes->vf_hruler;
+    const GwyRGBA *color = &args->linetext_color;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
     gdouble x, bs, scale, ximg;
@@ -1820,7 +1823,7 @@ draw_hruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         ximg = (x - xoffset)*scale + 0.5*lw;
@@ -1833,7 +1836,7 @@ draw_hruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     for (x = ticks->from; x <= ticks->to + 1e-14*bs; x += bs) {
         PangoRectangle logical;
 
@@ -1870,6 +1873,7 @@ draw_vruler(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->vruler;
     const RulerTicks *ticks = &sizes->vruler_ticks;
     GwySIValueFormat *vf = sizes->vf_vruler;
+    const GwyRGBA *color = &args->linetext_color;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
     gdouble y, bs, scale, yimg;
@@ -1882,7 +1886,7 @@ draw_vruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
         yimg = (y - yoffset)*scale + 0.5*lw;
@@ -1895,7 +1899,7 @@ draw_vruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     for (y = ticks->from; y <= ticks->to + 1e-14*bs; y += bs) {
         PangoRectangle logical;
 
@@ -2015,6 +2019,7 @@ draw_title(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->title;
     PangoRectangle logical;
     GwySIValueFormat *vf = sizes->vf_fmruler;
+    const GwyRGBA *color = &args->linetext_color;
     gdouble fs = sizes->sizes.font_size;
     gdouble gap = 0.0;
 
@@ -2026,7 +2031,7 @@ draw_title(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x + gap, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     if (args->units_in_title && strlen(vf->units))
         format_layout(layout, &logical, s, "%s [%s]", env->title, vf->units);
     else
@@ -2047,6 +2052,7 @@ draw_mask_legend(const ImgExportArgs *args,
 {
     const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->maskkey;
+    const GwyRGBA *color = &args->linetext_color;
     PangoRectangle logical;
     gdouble fs = sizes->sizes.font_size;
     gdouble lw = sizes->sizes.line_width;
@@ -2064,7 +2070,7 @@ draw_mask_legend(const ImgExportArgs *args,
     cairo_rectangle(cr, 0.5*lw, 0.5*lw, 1.4*h - lw, h - lw);
     set_cairo_source_rgba(cr, &env->mask_colour);
     cairo_fill_preserve(cr);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     cairo_stroke(cr);
     cairo_restore(cr);
@@ -2073,7 +2079,7 @@ draw_mask_legend(const ImgExportArgs *args,
     format_layout(layout, &logical, s, "%s", args->mask_key);
     yoff = 0.5*(logical.height/pangoscale - h);
     cairo_translate(cr, rect->x + 1.4*h + hgap, rect->y + vgap - yoff);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 }
@@ -2085,6 +2091,7 @@ draw_fmgrad(const ImgExportArgs *args,
 {
     const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->fmgrad;
+    const GwyRGBA *color = &args->linetext_color;
     const GwyGradientPoint *points;
     cairo_pattern_t *pat;
     gint npoints, i;
@@ -2105,10 +2112,10 @@ draw_fmgrad(const ImgExportArgs *args,
     points = gwy_gradient_get_points(env->gradient, &npoints);
     for (i = 0; i < npoints; i++) {
         const GwyGradientPoint *gpt = points + i;
-        const GwyRGBA *color = &gpt->color;
+        const GwyRGBA *ptcolor = &gpt->color;
 
         cairo_pattern_add_color_stop_rgb(pat, gpt->x,
-                                         color->r, color->g, color->b);
+                                         ptcolor->r, ptcolor->g, ptcolor->b);
     }
     cairo_pattern_set_filter(pat, CAIRO_FILTER_BILINEAR);
 
@@ -2124,7 +2131,7 @@ draw_fmgrad(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     cairo_rectangle(cr, 0.5*lw, 0.5*lw, w + lw, h + lw);
     cairo_stroke(cr);
@@ -2140,6 +2147,7 @@ draw_fmruler(const ImgExportArgs *args,
 {
     const ImgExportEnv *env = args->env;
     const ImgExportRect *rect = &sizes->fmruler;
+    const GwyRGBA *color = &args->linetext_color;
     const RulerTicks *ticks = &sizes->fmruler_ticks;
     GwySIValueFormat *vf = sizes->vf_fmruler;
     gdouble lw = sizes->sizes.line_width;
@@ -2161,7 +2169,7 @@ draw_fmruler(const ImgExportArgs *args,
     /* Draw the edge ticks first */
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     cairo_move_to(cr, 0.0, 0.5*lw);
     cairo_rel_line_to(cr, tl, 0.0);
@@ -2175,7 +2183,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     if (args->units_in_title)
         format_layout_numeric(args, layout, &logical, s,
                               "%.*f", vf->precision, max);
@@ -2224,7 +2232,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     cairo_set_line_width(cr, lw);
     for (i = 0; i < nticks; i++) {
         z = g_array_index(mticks, gdouble, i);
@@ -2250,7 +2258,7 @@ draw_fmruler(const ImgExportArgs *args,
 
     cairo_save(cr);
     cairo_translate(cr, rect->x, rect->y);
-    set_cairo_source_rgba(cr, &black);
+    set_cairo_source_rgba(cr, color);
     for (i = 0; i < nticks; i++) {
         z = g_array_index(mticks, gdouble, i);
         z = fixzero(z);
@@ -2790,6 +2798,115 @@ decimal_comma_changed(ImgExportControls *controls,
 }
 
 static void
+select_colour(ImgExportControls *controls,
+              GwyColorButton *button)
+{
+    GtkColorSelection *colorsel;
+    GtkWindow *parent;
+    GtkWidget *dialog, *selector;
+    GdkColor gdkcolor;
+    GwyRGBA *target;
+    gint response;
+
+    target = (GwyRGBA*)g_object_get_data(G_OBJECT(button), "target");
+    g_return_if_fail(target);
+
+    gwy_rgba_to_gdk_color(target, &gdkcolor);
+
+    dialog = gtk_color_selection_dialog_new(_("Select Color"));
+    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
+    colorsel = GTK_COLOR_SELECTION(selector);
+    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
+    gtk_color_selection_set_has_palette(colorsel, FALSE);
+    gtk_color_selection_set_has_opacity_control(colorsel, FALSE);
+
+    parent = GTK_WINDOW(controls->dialog);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+    gtk_window_set_modal(parent, FALSE);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_color_selection_get_current_color(colorsel, &gdkcolor);
+    gtk_widget_destroy(dialog);
+    gtk_window_set_modal(parent, TRUE);
+
+    if (response != GTK_RESPONSE_OK)
+        return;
+
+    gwy_rgba_from_gdk_color(target, &gdkcolor);  /* OK, doesn't touch alpha */
+    gwy_color_button_set_color(button, target);
+    update_preview(controls);
+}
+
+static void
+set_colour_to(ImgExportControls *controls,
+              GObject *button)
+{
+    GwyColorButton *colourbutton;
+    const GwyRGBA *settocolour;
+    GwyRGBA *target;
+
+    target = (GwyRGBA*)g_object_get_data(button, "target");
+    settocolour = (const GwyRGBA*)g_object_get_data(button, "settocolour");
+    colourbutton = (GwyColorButton*)g_object_get_data(button, "colourbutton");
+    g_return_if_fail(target);
+    g_return_if_fail(colourbutton);
+
+    *target = *settocolour;
+    gwy_color_button_set_color(colourbutton, target);
+    update_preview(controls);
+}
+
+static void
+create_colour_control(GtkTable *table,
+                      guint row,
+                      const gchar *name,
+                      GwyRGBA *target,
+                      ImgExportControls *controls,
+                      ImgExportColourControls *colourctrl)
+{
+    GtkWidget *label, *colour, *setblack, *setwhite, *hbox;
+    gint ncols;
+
+    label = gtk_label_new_with_mnemonic(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label,
+                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    hbox = gtk_hbox_new(TRUE, 4);
+    g_object_get(table, "n-columns", &ncols, NULL);
+    gtk_table_attach(table, hbox,
+                     1, ncols, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    colour = gwy_color_button_new_with_color(target);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), colour);
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(colour), FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), colour, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(colour), "target", target);
+    g_signal_connect_swapped(colour, "clicked",
+                             G_CALLBACK(select_colour), controls);
+
+    setblack = gtk_button_new_with_label(_("Black"));
+    gtk_box_pack_start(GTK_BOX(hbox), setblack, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(setblack), "target", target);
+    g_object_set_data(G_OBJECT(setblack), "settocolour", (gpointer)&black);
+    g_object_set_data(G_OBJECT(setblack), "colourbutton", colour);
+    g_signal_connect_swapped(setblack, "clicked",
+                             G_CALLBACK(set_colour_to), controls);
+
+    setwhite = gtk_button_new_with_label(_("White"));
+    gtk_box_pack_start(GTK_BOX(hbox), setwhite, TRUE, TRUE, 0);
+    g_object_set_data(G_OBJECT(setwhite), "target", target);
+    g_object_set_data(G_OBJECT(setwhite), "settocolour", (gpointer)&white);
+    g_object_set_data(G_OBJECT(setwhite), "colourbutton", colour);
+    g_signal_connect_swapped(setwhite, "clicked",
+                             G_CALLBACK(set_colour_to), controls);
+
+    colourctrl->label = label;
+    colourctrl->button = colour;
+    colourctrl->setblack = setblack;
+    colourctrl->setwhite = setwhite;
+}
+
+static void
 create_basic_controls(ImgExportControls *controls)
 {
     ImgExportArgs *args = controls->args;
@@ -2800,7 +2917,7 @@ create_basic_controls(ImgExportControls *controls)
     GCallback width_cb, height_cb;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(13 + 1*is_vector, 3, FALSE);
+    table = controls->table_basic = gtk_table_new(15 + 1*is_vector, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -2971,6 +3088,16 @@ create_basic_controls(ImgExportControls *controls)
                              G_CALLBACK(decimal_comma_changed), controls);
     row++;
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Colors")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("_Line and text color:"), &args->linetext_color,
+                          controls, &controls->linetext_colour);
+    row++;
 }
 
 static void
@@ -3070,64 +3197,6 @@ xytype_changed(G_GNUC_UNUSED GtkToggleButton *toggle,
     controls->args->xytype = gwy_radio_buttons_get_current(controls->xytype);
     update_lateral_sensitivity(controls);
     update_value_sensitivity(controls);    /* For draw_frame */
-    update_preview(controls);
-}
-
-static void
-select_colour(ImgExportControls *controls,
-              GwyColorButton *button)
-{
-    GtkColorSelection *colorsel;
-    GtkWindow *parent;
-    GtkWidget *dialog, *selector;
-    GdkColor gdkcolor;
-    GwyRGBA *target;
-    gint response;
-
-    target = (GwyRGBA*)g_object_get_data(G_OBJECT(button), "target");
-    g_return_if_fail(target);
-
-    gwy_rgba_to_gdk_color(target, &gdkcolor);
-
-    dialog = gtk_color_selection_dialog_new(_("Select Color"));
-    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
-    colorsel = GTK_COLOR_SELECTION(selector);
-    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
-    gtk_color_selection_set_has_palette(colorsel, FALSE);
-    gtk_color_selection_set_has_opacity_control(colorsel, FALSE);
-
-    parent = GTK_WINDOW(controls->dialog);
-    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
-    gtk_window_set_modal(parent, FALSE);
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_color_selection_get_current_color(colorsel, &gdkcolor);
-    gtk_widget_destroy(dialog);
-    gtk_window_set_modal(parent, TRUE);
-
-    if (response != GTK_RESPONSE_OK)
-        return;
-
-    gwy_rgba_from_gdk_color(target, &gdkcolor);  /* OK, doesn't touch alpha */
-    gwy_color_button_set_color(button, target);
-    update_preview(controls);
-}
-
-static void
-set_colour_to(ImgExportControls *controls,
-              GObject *button)
-{
-    GwyColorButton *colourbutton;
-    const GwyRGBA *settocolour;
-    GwyRGBA *target;
-
-    target = (GwyRGBA*)g_object_get_data(button, "target");
-    settocolour = (const GwyRGBA*)g_object_get_data(button, "settocolour");
-    colourbutton = (GwyColorButton*)g_object_get_data(button, "colourbutton");
-    g_return_if_fail(target);
-    g_return_if_fail(colourbutton);
-
-    *target = *settocolour;
-    gwy_color_button_set_color(colourbutton, target);
     update_preview(controls);
 }
 
@@ -3250,57 +3319,6 @@ inset_pos_add(ImgExportControls *controls,
     gtk_table_attach(table, button, col, col+1, row, row+1, 0, 0, 0, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(inset_pos_changed), controls);
-}
-
-static void
-create_colour_control(GtkTable *table,
-                      guint row,
-                      const gchar *name,
-                      GwyRGBA *target,
-                      ImgExportControls *controls,
-                      ImgExportColourControls *colourctrl)
-{
-    GtkWidget *label, *colour, *setblack, *setwhite, *hbox;
-    gint ncols;
-
-    label = gtk_label_new_with_mnemonic(name);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-    hbox = gtk_hbox_new(TRUE, 4);
-    g_object_get(table, "n-columns", &ncols, NULL);
-    gtk_table_attach(table, hbox,
-                     1, ncols, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    colour = gwy_color_button_new_with_color(target);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), colour);
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(colour), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), colour, TRUE, TRUE, 0);
-    g_object_set_data(G_OBJECT(colour), "target", target);
-    g_signal_connect_swapped(colour, "clicked",
-                             G_CALLBACK(select_colour), controls);
-
-    setblack = gtk_button_new_with_label(_("Black"));
-    gtk_box_pack_start(GTK_BOX(hbox), setblack, TRUE, TRUE, 0);
-    g_object_set_data(G_OBJECT(setblack), "target", target);
-    g_object_set_data(G_OBJECT(setblack), "settocolour", (gpointer)&black);
-    g_object_set_data(G_OBJECT(setblack), "colourbutton", colour);
-    g_signal_connect_swapped(setblack, "clicked",
-                             G_CALLBACK(set_colour_to), controls);
-
-    setwhite = gtk_button_new_with_label(_("White"));
-    gtk_box_pack_start(GTK_BOX(hbox), setwhite, TRUE, TRUE, 0);
-    g_object_set_data(G_OBJECT(setwhite), "target", target);
-    g_object_set_data(G_OBJECT(setwhite), "settocolour", (gpointer)&white);
-    g_object_set_data(G_OBJECT(setwhite), "colourbutton", colour);
-    g_signal_connect_swapped(setwhite, "clicked",
-                             G_CALLBACK(set_colour_to), controls);
-
-    colourctrl->label = label;
-    colourctrl->button = colour;
-    colourctrl->setblack = setblack;
-    colourctrl->setwhite = setwhite;
 }
 
 static void
@@ -6358,6 +6376,7 @@ static const gchar inset_xgap_key[]            = "/module/pixmap/inset_xgap";
 static const gchar inset_ygap_key[]            = "/module/pixmap/inset_ygap";
 static const gchar interpolation_key[]         = "/module/pixmap/interpolation";
 static const gchar kilo_threshold_key[]        = "/module/pixmap/kilo_threshold";
+static const gchar linetext_color_key[]        = "/module/pixmap/linetext_color";
 static const gchar line_width_key[]            = "/module/pixmap/line_width";
 static const gchar maskkey_gap_key[]           = "/module/pixmap/maskkey_gap";
 static const gchar mask_key_key[]              = "/module/pixmap/mask_key";
@@ -6417,6 +6436,8 @@ img_export_load_args(GwyContainer *container,
                                    &args->interpolation);
     gwy_container_gis_enum_by_name(container, title_type_key,
                                    &args->title_type);
+    gwy_rgba_get_from_container(&args->linetext_color, container,
+                                linetext_color_key);
     gwy_rgba_get_from_container(&args->inset_color, container, inset_color_key);
     gwy_rgba_get_from_container(&args->sel_color, container, sel_color_key);
     gwy_rgba_get_from_container(&args->inset_outline_color, container,
@@ -6504,6 +6525,8 @@ img_export_save_args(GwyContainer *container,
                                    args->interpolation);
     gwy_container_set_enum_by_name(container, title_type_key,
                                    args->title_type);
+    gwy_rgba_store_to_container(&args->linetext_color, container,
+                                linetext_color_key);
     gwy_rgba_store_to_container(&args->inset_color, container, inset_color_key);
     gwy_rgba_store_to_container(&args->sel_color, container, sel_color_key);
     gwy_rgba_store_to_container(&args->inset_outline_color, container,
