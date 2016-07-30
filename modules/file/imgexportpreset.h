@@ -267,7 +267,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->fix_fmscale_precision = !!args->fix_fmscale_precision;
     args->fmscale_precision = CLAMP(args->fmscale_precision, 0, 16);
     args->fix_kilo_threshold = !!args->fix_kilo_threshold;
-    args->kilo_threshold = CLAMP(args->kilo_threshold, 5.0, 50000.0);
+    args->kilo_threshold = CLAMP(args->kilo_threshold, 1.0, 100000.0);
     args->inset_outline_color.a = args->inset_color.a;
     args->sel_outline_color.a = args->sel_color.a;
     args->sel_number_objects = !!args->sel_number_objects;

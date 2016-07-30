@@ -3745,7 +3745,7 @@ create_value_controls(ImgExportControls *controls)
     row++;
 
     controls->kilo_threshold = gtk_adjustment_new(args->kilo_threshold,
-                                                  5.0, 50000.0, 1.0, 100.0, 0);
+                                                  1.0, 100000.0, 1.0, 100.0, 0);
     gwy_table_attach_hscale(table, row, _("Fixed _kilo threshold:"), NULL,
                             controls->kilo_threshold,
                             GWY_HSCALE_CHECK | GWY_HSCALE_LOG);
