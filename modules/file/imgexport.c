@@ -509,11 +509,11 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Renders data into vector (SVG, PDF, EPS) and "
-       "pixmap (PNG, JPEG, TIFF, WEBP, PPM, BMP, TARGA, GIF) images. "
+       "pixmap (PNG, JPEG, TIFF, WebP, PPM, BMP, TARGA) images. "
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "2.0",
     "David Nečas (Yeti)",
     "2014",
 };
