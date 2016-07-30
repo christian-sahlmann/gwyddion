@@ -203,7 +203,9 @@ typedef struct {
     GtkObject *tick_length;
     GtkWidget *scale_font;
     GtkWidget *decomma;
+    GtkWidget *transparent_bg;
     ImgExportColourControls linetext_colour;
+    ImgExportColourControls bg_colour;
 
     /* Lateral Scale */
     GtkWidget *table_lateral;
@@ -298,6 +300,7 @@ typedef struct _ImgExportFormat {
     WritePixbufFunc write_pixbuf;   /* If NULL, use generic GdkPixbuf func. */
     WriteImageFunc write_grey16;    /* 16bit grey */
     WriteImageFunc write_vector;    /* scalable */
+    gboolean supports_transparency;
 } ImgExportFormat;
 
 static gboolean module_register         (void);
@@ -393,53 +396,44 @@ static ImgExportFormat image_formats[] = {
         "png",
         N_("Portable Network Graphics (.png)"),
         ".png",
-        NULL, write_image_png16, NULL,
+        NULL, write_image_png16, NULL, TRUE,
     },
     {
         "jpeg",
         N_("JPEG (.jpeg,.jpg)"),
         ".jpeg,.jpg,.jpe",
-        NULL, NULL, NULL,
+        NULL, NULL, NULL, FALSE,
     },
-#if 0
-    /* Seems available on Win32, but crashes.  Not available in Unix anyway. */
-    {
-        "gif",
-        N_("Graphics Interchange Format GIF (.gif)"),
-        ".gif",
-        NULL, NULL, NULL,
-    },
-#endif
     {
         "tiff",
         N_("TIFF (.tiff,.tif)"),
         ".tiff,.tif",
-        write_pixbuf_tiff, write_image_tiff16, NULL,
+        write_pixbuf_tiff, write_image_tiff16, NULL, FALSE,
     },
     {
         "pnm",
         N_("Portable Pixmap (.ppm,.pnm)"),
         ".ppm,.pnm",
-        write_pixbuf_ppm, write_image_pgm16, NULL,
+        write_pixbuf_ppm, write_image_pgm16, NULL, FALSE,
     },
     {
         "bmp",
         N_("Windows or OS2 Bitmap (.bmp)"),
         ".bmp",
-        write_pixbuf_bmp, NULL, NULL,
+        write_pixbuf_bmp, NULL, NULL, FALSE,
     },
     {
         "tga",
         N_("TARGA (.tga,.targa)"),
         ".tga,.targa",
-        write_pixbuf_targa, NULL, NULL,
+        write_pixbuf_targa, NULL, NULL, FALSE,
     },
 #ifdef HAVE_WEBP
     {
         "webp",
         N_("WebP (.webp)"),
         ".webp",
-        write_pixbuf_webp, NULL, NULL,
+        write_pixbuf_webp, NULL, NULL, TRUE,
     },
 #endif
 #ifdef CAIRO_HAS_PDF_SURFACE
@@ -447,7 +441,7 @@ static ImgExportFormat image_formats[] = {
         "pdf",
         N_("Portable document format (.pdf)"),
         ".pdf",
-        NULL, NULL, write_vector_generic,
+        NULL, NULL, write_vector_generic, TRUE,
     },
 #endif
 #ifdef CAIRO_HAS_PS_SURFACE
@@ -455,7 +449,7 @@ static ImgExportFormat image_formats[] = {
         "eps",
         N_("Encapsulated PostScript (.eps)"),
         ".eps",
-        NULL, NULL, write_vector_generic,
+        NULL, NULL, write_vector_generic, TRUE,
     },
 #endif
 #ifdef CAIRO_HAS_SVG_SURFACE
@@ -463,7 +457,7 @@ static ImgExportFormat image_formats[] = {
         "svg",
         N_("Scalable Vector Graphics (.svg)"),
         ".svg",
-        NULL, NULL, write_vector_generic,
+        NULL, NULL, write_vector_generic, TRUE,
     },
 #endif
 };
@@ -2798,6 +2792,38 @@ decimal_comma_changed(ImgExportControls *controls,
 }
 
 static void
+update_colour_controls_sensitivity(ImgExportColourControls *colourctrl,
+                                   gboolean sens)
+{
+    gtk_widget_set_sensitive(colourctrl->label, sens);
+    gtk_widget_set_sensitive(colourctrl->button, sens);
+    gtk_widget_set_sensitive(colourctrl->setblack, sens);
+    gtk_widget_set_sensitive(colourctrl->setwhite, sens);
+}
+
+static void
+update_basic_sensitivity(ImgExportControls *controls)
+{
+    /* Background is transparent if it is enabled *and* supported by the
+     * format -- which means controls->transparent_bg is offered. */
+    gboolean bg_is_transp = (controls->args->transparent_bg
+                             && controls->transparent_bg);
+
+    update_colour_controls_sensitivity(&controls->bg_colour, !bg_is_transp);
+}
+
+static void
+transparent_bg_changed(ImgExportControls *controls,
+                       GtkToggleButton *check)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->transparent_bg = gtk_toggle_button_get_active(check);
+    update_basic_sensitivity(controls);
+    update_preview(controls);
+}
+
+static void
 select_colour(ImgExportControls *controls,
               GwyColorButton *button)
 {
@@ -2912,12 +2938,14 @@ create_basic_controls(ImgExportControls *controls)
     ImgExportArgs *args = controls->args;
     ImgExportEnv *env = args->env;
     gboolean is_vector = !!env->format->write_vector;
+    gboolean can_transp = !!env->format->supports_transparency;
     const gchar *sizeunit;
     GtkWidget *table, *spin, *label;
     GCallback width_cb, height_cb;
     gint row = 0, digits;
 
-    table = controls->table_basic = gtk_table_new(15 + 1*is_vector, 3, FALSE);
+    table = controls->table_basic
+        = gtk_table_new(16 + 1*is_vector + 1*can_transp, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3098,16 +3126,25 @@ create_basic_controls(ImgExportControls *controls)
                           _("_Line and text color:"), &args->linetext_color,
                           controls, &controls->linetext_colour);
     row++;
-}
 
-static void
-update_colour_controls_sensitivity(ImgExportColourControls *colourctrl,
-                                   gboolean sens)
-{
-    gtk_widget_set_sensitive(colourctrl->label, sens);
-    gtk_widget_set_sensitive(colourctrl->button, sens);
-    gtk_widget_set_sensitive(colourctrl->setblack, sens);
-    gtk_widget_set_sensitive(colourctrl->setwhite, sens);
+    if (can_transp) {
+        controls->transparent_bg
+            = gtk_check_button_new_with_mnemonic(_("_Transparent background"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->transparent_bg),
+                                     args->transparent_bg);
+        gtk_table_attach(GTK_TABLE(table), controls->transparent_bg,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect_swapped(controls->transparent_bg, "toggled",
+                                 G_CALLBACK(transparent_bg_changed), controls);
+        row++;
+    }
+
+    create_colour_control(GTK_TABLE(table), row++,
+                          _("_Background color:"), &args->bg_color,
+                          controls, &controls->bg_colour);
+    row++;
+
+    update_basic_sensitivity(controls);
 }
 
 static void
@@ -4088,6 +4125,17 @@ reset_to_preset(ImgExportControls *controls,
     if (controls->zoom)
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zoom),
                                  src->zoom);
+
+    if (controls->transparent_bg)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->transparent_bg),
+                                     src->transparent_bg);
+
+    args->linetext_color = src->linetext_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->linetext_colour.button),
+                               &args->linetext_color);
+    args->bg_color = src->linetext_color;
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(controls->bg_colour.button),
+                               &args->bg_color);
 
     update_selected_font(controls);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->font_size),
@@ -6354,6 +6402,7 @@ options_sel_path(ImgExportControls *controls)
 
 /* Use the pixmap prefix for compatibility */
 static const gchar active_page_key[]           = "/module/pixmap/active_page";
+static const gchar bg_color_key[]              = "/module/pixmap/bg_color";
 static const gchar border_width_key[]          = "/module/pixmap/border_width";
 static const gchar decomma_key[]               = "/module/pixmap/decomma";
 static const gchar draw_frame_key[]            = "/module/pixmap/draw_frame";
@@ -6393,6 +6442,7 @@ static const gchar sel_point_radius_key[]      = "/module/pixmap/sel_point_radiu
 static const gchar tick_length_key[]           = "/module/pixmap/tick_length";
 static const gchar title_gap_key[]             = "/module/pixmap/title_gap";
 static const gchar title_type_key[]            = "/module/pixmap/title_type";
+static const gchar transparent_bg_key[]        = "/module/pixmap/transparent_bg";
 static const gchar units_in_title_key[]        = "/module/pixmap/units_in_title";
 static const gchar xytype_key[]                = "/module/pixmap/xytype";
 static const gchar zoom_key[]                  = "/module/pixmap/zoom";
@@ -6436,6 +6486,9 @@ img_export_load_args(GwyContainer *container,
                                    &args->interpolation);
     gwy_container_gis_enum_by_name(container, title_type_key,
                                    &args->title_type);
+    gwy_container_gis_boolean_by_name(container, transparent_bg_key,
+                                      &args->transparent_bg);
+    gwy_rgba_get_from_container(&args->bg_color, container, bg_color_key);
     gwy_rgba_get_from_container(&args->linetext_color, container,
                                 linetext_color_key);
     gwy_rgba_get_from_container(&args->inset_color, container, inset_color_key);
@@ -6525,8 +6578,11 @@ img_export_save_args(GwyContainer *container,
                                    args->interpolation);
     gwy_container_set_enum_by_name(container, title_type_key,
                                    args->title_type);
+    gwy_container_set_boolean_by_name(container, transparent_bg_key,
+                                      args->transparent_bg);
     gwy_rgba_store_to_container(&args->linetext_color, container,
                                 linetext_color_key);
+    gwy_rgba_store_to_container(&args->bg_color, container, bg_color_key);
     gwy_rgba_store_to_container(&args->inset_color, container, inset_color_key);
     gwy_rgba_store_to_container(&args->sel_color, container, sel_color_key);
     gwy_rgba_store_to_container(&args->inset_outline_color, container,

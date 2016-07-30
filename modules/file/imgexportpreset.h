@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014-2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -94,6 +94,8 @@ typedef struct {
     GwyRGBA inset_outline_color;
     InsetPosType inset_pos;
     GwyRGBA linetext_color;
+    GwyRGBA bg_color;
+    gboolean transparent_bg;
     gboolean draw_mask;
     gboolean draw_frame;
     gboolean draw_selection;
@@ -157,7 +159,7 @@ static const ImgExportArgs img_export_defaults = {
     { 12.0, 1.0, 0.0, 0.0, 10.0 },
     IMGEXPORT_LATERAL_RULERS, IMGEXPORT_VALUE_FMSCALE,
     GWYRGBA_WHITE, GWYRGBA_WHITE, INSET_POS_BOTTOM_RIGHT,
-    GWYRGBA_BLACK,
+    GWYRGBA_BLACK, GWYRGBA_WHITE, TRUE,
     TRUE, TRUE, FALSE, TRUE,
     "Helvetica", TRUE,
     FALSE, TRUE, TRUE,
@@ -251,7 +253,9 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->draw_maskkey = !!args->draw_maskkey;
     args->scale_font = !!args->scale_font;
     args->decomma = !!args->decomma;
+    args->transparent_bg = !!args->transparent_bg;
     args->linetext_color.a = 1.0;
+    args->bg_color.a = 1.0;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
     args->units_in_title = !!args->units_in_title;
@@ -358,16 +362,19 @@ gwy_img_export_preset_dump(GwyResource *resource,
                            "draw_frame %d\n"
                            "draw_selection %d\n"
                            "draw_maskkey %d\n"
+                           "transparent_bg %d\n"
                            "font \"%s\"\n",
                            data->mode, d1, d2, data->scale_font, data->decomma,
                            data->xytype, data->ztype, data->inset_pos,
                            data->draw_mask, data->draw_frame,
                            data->draw_selection, data->draw_maskkey,
-                           s);
+                           data->transparent_bg, s);
     g_free(s);
 
     dump_rgba(&data->linetext_color, d1, d2, d3, d4);
     g_string_append_printf(str, "linetext_color %s %s %s\n", d1, d2, d3);
+    dump_rgba(&data->bg_color, d1, d2, d3, d4);
+    g_string_append_printf(str, "bg_color %s %s %s\n", d1, d2, d3);
 
     g_ascii_dtostr(d1, sizeof(d1), data->sizes.font_size);
     g_ascii_dtostr(d2, sizeof(d2), data->sizes.line_width);
@@ -523,6 +530,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.scale_font = atoi(value);
         else if (gwy_strequal(key, "decomma"))
             data.decomma = atoi(value);
+        else if (gwy_strequal(key, "transparent_bg"))
+            data.transparent_bg = atoi(value);
         else if (gwy_strequal(key, "inset_draw_ticks"))
             data.inset_draw_ticks = atoi(value);
         else if (gwy_strequal(key, "inset_draw_label"))
@@ -617,6 +626,8 @@ gwy_img_export_preset_parse(const gchar *text,
         }
         else if (gwy_strequal(key, "linetext_color"))
             parse_rgb(&data.linetext_color, value);
+        else if (gwy_strequal(key, "bg_color"))
+            parse_rgb(&data.bg_color, value);
         else if (gwy_strequal(key, "inset_color"))
             parse_rgb(&data.inset_color, value);
         else if (gwy_strequal(key, "inset_outline_color"))
