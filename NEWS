@@ -21,9 +21,15 @@ Modules:
   added.
 - Limit Range: Units with exponents are displayed correctly now.
 - SPIP ASC: Can also export data to .asc now.
-- Image export: Can export to WebP now (lossless), libwebp required.
+- Image export: Can export to WebP (lossless) now if libwebp is available.
+  Units of false colour map scale are somewhat controllable.  The colour of
+  lines and text drawn outside the image area is controllable; likewise the
+  background colour – and for vector formats and PNG and WebP the background
+  can be transparent (for vector formats that used to be the only possibility).
 - Diffusion synthesis: Incorrect behaviour for non-square images was fixed.
 - Fit sphere: It can create the fitted shape or the difference as the output.
+- Find graph peaks: A peak filtering bug resulting in sometimes the module
+  not finding any useful peaks was fixed.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
