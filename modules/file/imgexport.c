@@ -20,12 +20,6 @@
  */
 
 /* TODO:
- * - custom colours of the things outside the image (ticks, labels, frames,
- *   ...); just one for everything to prevent absolute mess
- * - custom background colour for pixmaps formats (goes with preceding point)
- *   and transparency for pixmap formats – transparency makes only sense for
- *   PNG makes sense ATM; see also the premultiplied alpha comment in
- *   create_surface()
  * - alignment of image title (namely when it is on the top)
  * - JPEG2000 support? seems possible but messy
  */
@@ -839,35 +833,26 @@ format_layout_numeric(const ImgExportArgs *args,
 static cairo_surface_t*
 create_surface(const gchar *name,
                const gchar *filename,
-               gdouble width, gdouble height)
+               gdouble width, gdouble height, gboolean transparent_bg)
 {
     cairo_surface_t *surface = NULL;
-    cairo_format_t imageformat = CAIRO_FORMAT_RGB24;
-    gint iwidth, iheight;
 
     if (width <= 0.0)
         width = 100.0;
     if (height <= 0.0)
         height = 100.0;
 
-    iwidth = (gint)ceil(width);
-    iheight = (gint)ceil(height);
-
-    /* XXX: PNG and WebP support transparency.  But Cairo draws with
-     * premultiplied alpha, which means we would have to decompose it again.
-     * This can turn ugly.  For PNG we can perhaps avoid this by using the
-     * PNG-specific Cairo functions?  */
     if (gwy_stramong(name,
                      "png", "jpeg2000", "jpeg", "tiff", "pnm",
                      "bmp", "tga", "webp", NULL)) {
-        cairo_t *cr;
+        cairo_format_t imageformat = (transparent_bg
+                                      ? CAIRO_FORMAT_ARGB32
+                                      : CAIRO_FORMAT_RGB24);
+        gint iwidth = (gint)ceil(width);
+        gint iheight = (gint)ceil(height);
 
         gwy_debug("%u %u %u", imageformat, iwidth, iheight);
         surface = cairo_image_surface_create(imageformat, iwidth, iheight);
-        cr = cairo_create(surface);
-        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-        cairo_paint(cr);
-        cairo_destroy(cr);
     }
 #ifdef CAIRO_HAS_PDF_SURFACE
     else if (gwy_strequal(name, "pdf"))
@@ -1354,7 +1339,7 @@ calculate_sizes(const ImgExportArgs *args,
     cairo_t *cr;
 
     gwy_debug("zoom %g", zoom);
-    surface = create_surface(name, NULL, 0.0, 0.0);
+    surface = create_surface(name, NULL, 0.0, 0.0, FALSE);
     g_return_val_if_fail(surface, NULL);
     cr = cairo_create(surface);
     /* With scale_font unset, the sizes are on the final rendering, i.e. they
@@ -1608,6 +1593,19 @@ draw_line_outline(cairo_t *cr,
     set_cairo_source_rgb(cr, outcolour);
     cairo_stroke(cr);
     cairo_restore(cr);
+}
+
+static void
+draw_background(const ImgExportArgs *args, cairo_t *cr)
+{
+    gboolean can_transp = args->env->format->supports_transparency;
+    gboolean want_transp = args->transparent_bg;
+
+    if (can_transp && want_transp)
+        return;
+
+    set_cairo_source_rgb(cr, &args->bg_color);
+    cairo_paint(cr);
 }
 
 static GdkPixbuf*
@@ -2371,6 +2369,7 @@ image_draw_cairo(const ImgExportArgs *args,
 
     layout = create_layout(args->font, sizes->sizes.font_size, cr);
 
+    draw_background(args, cr);
     draw_data(args, sizes, cr);
     draw_inset(args, sizes, layout, s, cr);
     draw_selection(args, sizes, layout, s, cr);
@@ -2394,13 +2393,17 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     GdkPixbuf *pixbuf;
     guchar *imgdata, *pixels;
     guint xres, yres, imgrowstride, pixrowstride, i, j;
+    gboolean can_transp = args->env->format->supports_transparency;
+    gboolean want_transp = args->transparent_bg;
+    gboolean transparent_bg = (can_transp && want_transp);
     cairo_format_t imgformat;
     cairo_t *cr;
 
     gwy_debug("format name %s", name);
     sizes = calculate_sizes(args, name);
     g_return_val_if_fail(sizes, FALSE);
-    surface = create_surface(name, NULL, sizes->canvas.w, sizes->canvas.h);
+    surface = create_surface(name, NULL, sizes->canvas.w, sizes->canvas.h,
+                             transparent_bg);
     cr = cairo_create(surface);
     image_draw_cairo(args, sizes, cr);
     cairo_surface_flush(surface);
@@ -2411,26 +2414,96 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     yres = cairo_image_surface_get_height(surface);
     imgrowstride = cairo_image_surface_get_stride(surface);
     imgformat = cairo_image_surface_get_format(surface);
-    g_return_val_if_fail(imgformat == CAIRO_FORMAT_RGB24, NULL);
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+    if (transparent_bg) {
+        g_return_val_if_fail(imgformat == CAIRO_FORMAT_ARGB32, NULL);
+    }
+    else {
+        g_return_val_if_fail(imgformat == CAIRO_FORMAT_RGB24, NULL);
+    }
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, transparent_bg, 8, xres, yres);
     pixrowstride = gdk_pixbuf_get_rowstride(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
+
+    /* Things can get a bit confusing here due to the heavy impedance matching
+     * necessary.
+     *
+     * Byte order:
+     * (1) GdkPixbuf is endian-independent.  The order is always R, G, B[, A],
+     *     i.e. it stores individual components as bytes, not 24bit or 32bit
+     *     integers.  If seen as an RGB[A] integer, it is always big-endian.
+     * (2) Cairo is endian-dependent.  Pixel is a native-endian 32bit integer
+     *     with alpha in the high 8 bits (if present) and then R, G, B from the
+     *     highest to lowest remaining bits.
+     *
+     * Alpha:
+     * (A) GdkPixbuf uses non-premultiplied alpha (as most image formats,
+     *     except TIFF apparently).
+     * (B) Cairo uses premultiplied alpha.
+     **/
     for (i = 0; i < yres; i++) {
         const guchar *p = imgdata + i*imgrowstride;
         guchar *q = pixels + i*pixrowstride;
 
         if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
-            for (j = xres; j; j--, p += 4, q += 3) {
-                *q = *(p + 2);
-                *(q + 1) = *(p + 1);
-                *(q + 2) = *p;
+            if (transparent_bg) {
+                /* Convert (A*B, A*G, A*R, A) to (R, G, B, A). */
+                for (j = xres; j; j--, p += 4, q += 4) {
+                    guint a = *(q + 3) = *(p + 3);
+                    if (a == 0xff) {
+                        *q = *(p + 2);
+                        *(q + 1) = *(p + 1);
+                        *(q + 2) = *p;
+                    }
+                    else if (a == 0x00) {
+                        *q = *(q + 1) = *(q + 2) = 0;
+                    }
+                    else {
+                        /* This is the same unpremultiplication formula as
+                         * Cairo uses. */
+                        *q = (*(p + 2)*0xff + a/2)/a;
+                        *(q + 1) = (*(p + 1)*0xff + a/2)/a;
+                        *(q + 2) = ((*p)*0xff + a/2)/a;
+                    }
+                }
+            }
+            else {
+                /* Convert (B, G, R, unused) to (R, G, B). */
+                for (j = xres; j; j--, p += 4, q += 3) {
+                    *q = *(p + 2);
+                    *(q + 1) = *(p + 1);
+                    *(q + 2) = *p;
+                }
             }
         }
         else {
-            for (j = xres; j; j--, p += 4, q += 3) {
-                *q = *(p + 1);
-                *(q + 1) = *(p + 2);
-                *(q + 2) = *(p + 3);
+            if (transparent_bg) {
+                /* Convert (A, A*R, A*G, A*B) to (R, G, B, A). */
+                for (j = xres; j; j--, p += 4, q += 4) {
+                    guint a = *(q + 3) = *p;
+                    if (a == 0xff) {
+                        *q = *(p + 1);
+                        *(q + 1) = *(p + 2);
+                        *(q + 2) = *(p + 3);
+                    }
+                    else if (a == 0x00) {
+                        *q = *(q + 1) = *(q + 2) = 0;
+                    }
+                    else {
+                        /* This is the same unpremultiplication formula as
+                         * Cairo uses. */
+                        *q = (*(p + 1)*0xff + a/2)/a;
+                        *(q + 1) = (*(p + 2)*0xff + a/2)/a;
+                        *(q + 2) = (*(p + 3)*0xff + a/2)/a;
+                    }
+                }
+            }
+            else {
+                /* Convert (unused, R, G, B) to (R, G, B). */
+                for (j = xres; j; j--, p += 4, q += 3) {
+                    *q = *(p + 1);
+                    *(q + 1) = *(p + 2);
+                    *(q + 2) = *(p + 3);
+                }
             }
         }
     }
@@ -2441,10 +2514,9 @@ render_pixbuf(const ImgExportArgs *args, const gchar *name)
     return pixbuf;
 }
 
-/*
- * TODO: Try to ensure the preview looks at least a bit like the final
- * rendering.  Slight sizing issues can be forgiven but we must not change tick
- * step and tick label precision between preview and final rendering. */
+/* Try to ensure the preview looks at least a bit like the final rendering.
+ * Slight sizing issues can be forgiven but we must not change tick step and
+ * tick label precision between preview and final rendering. */
 static void
 preview(ImgExportControls *controls)
 {
@@ -5449,7 +5521,8 @@ write_vector_generic(ImgExportArgs *args,
     g_return_val_if_fail(sizes, FALSE);
     gwy_debug("image width %g, canvas width %g",
               sizes->image.w/mm2pt, sizes->canvas.w/mm2pt);
-    surface = create_surface(name, filename, sizes->canvas.w, sizes->canvas.h);
+    surface = create_surface(name, filename, sizes->canvas.w, sizes->canvas.h,
+                             TRUE);
     g_return_val_if_fail(surface, FALSE);
     cr = cairo_create(surface);
     image_draw_cairo(args, sizes, cr);
@@ -5820,7 +5893,7 @@ write_pixbuf_webp(GdkPixbuf *pixbuf,
     g_return_val_if_fail(gwy_strequal(name, "webp"), FALSE);
 
     nchannels = gdk_pixbuf_get_n_channels(pixbuf);
-    g_return_val_if_fail(nchannels == 3, FALSE);
+    g_return_val_if_fail(nchannels == 3 || nchannels == 4, FALSE);
 
     xres = gdk_pixbuf_get_width(pixbuf);
     yres = gdk_pixbuf_get_height(pixbuf);
@@ -5832,7 +5905,14 @@ write_pixbuf_webp(GdkPixbuf *pixbuf,
         return FALSE;
     }
 
-    size = WebPEncodeLosslessRGB(pixels, xres, yres, rowstride, &buffer);
+    if (nchannels == 3)
+        size = WebPEncodeLosslessRGB(pixels, xres, yres, rowstride, &buffer);
+    else if (nchannels == 4)
+        size = WebPEncodeLosslessRGBA(pixels, xres, yres, rowstride, &buffer);
+    else {
+        g_assert_not_reached();
+    }
+
     ok = (fwrite(buffer, 1, size, fh) == size);
     if (!ok)
         err_WRITE(error);
