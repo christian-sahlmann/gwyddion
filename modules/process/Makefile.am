@@ -47,6 +47,7 @@ process_LTLIBRARIES = \
 	fft_profile.la \
 	fft_synth.la \
 	fit_2d.la \
+	fit-shape.la \
 	flatten_base.la \
 	fraccor.la \
 	fractal.la \
@@ -173,6 +174,7 @@ fft_profile_la_SOURCES         = fft_profile.c preview.h
 fft_la_SOURCES                 = fft.c preview.h
 fft_synth_la_SOURCES           = fft_synth.c dimensions.h synth.h preview.h
 fit_2d_la_SOURCES              = fit_2d.c preview.h
+fit_shape_la_SOURCES           = fit-shape.c preview.h
 flatten_base_la_SOURCES        = flatten_base.c
 fractal_la_SOURCES             = fractal.c preview.h
 fraccor_la_SOURCES             = fraccor.c
