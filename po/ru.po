@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-07-27 09:10+0300\n"
-"PO-Revision-Date: 2016-07-27 09:13+0300\n"
+"POT-Creation-Date: 2016-07-31 14:27+0300\n"
+"PO-Revision-Date: 2016-07-31 14:29+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -452,7 +452,7 @@ msgstr "Идентификатор"
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4365
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4583
 #: modules/process/curvature.c:762 modules/tools/level3.c:468
 #: modules/tools/readvalue.c:297
 msgid "Value"
@@ -572,12 +572,12 @@ msgid "Scale and space adaptive"
 msgstr "Адаптивный по масштабу и пространству"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3565
+#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3751
 #: modules/xyz/xyz_raster.c:640
 msgid "Round"
 msgstr "Округление"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3566
+#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3752
 #: modules/xyz/xyz_raster.c:641
 msgid "Linear"
 msgstr "Линейная"
@@ -805,7 +805,7 @@ msgstr "Показать все элементы управления"
 msgid "Hide full controls"
 msgstr "Скрыть все элементы управления"
 
-#: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4536
+#: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4754
 msgid "adjective|Basic"
 msgstr "Основные"
 
@@ -908,7 +908,7 @@ msgid "L_ight θ:"
 msgstr "Уг_ол θ света:"
 
 #: libgwydgets/gwy3dwindow.c:1070 libgwydgets/gwy3dwindow.c:1240
-#: modules/file/hdrimage.cc:2213 modules/file/imgexport.c:4500
+#: modules/file/hdrimage.cc:2213 modules/file/imgexport.c:4718
 #: modules/file/pixmap.c:789 modules/file/rawfile.c:424
 #: modules/process/angle_dist.c:172 modules/process/bdep_synth.c:341
 #: modules/process/calcoefs_new.c:352 modules/process/calibrate.c:391
@@ -962,7 +962,7 @@ msgstr "Минимальное значение z"
 msgid "Maximum z value"
 msgstr "Максимальное значение z"
 
-#: libgwydgets/gwy3dwindow.c:1168 modules/file/imgexport.c:3610
+#: libgwydgets/gwy3dwindow.c:1168 modules/file/imgexport.c:3796
 msgid "_Label:"
 msgstr "_Метка:"
 
@@ -1041,7 +1041,7 @@ msgid "Hidden"
 msgstr "Скрытый"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/file/imgexport.c:490 modules/tools/selectionmanager.c:274
+#: modules/file/imgexport.c:474 modules/tools/selectionmanager.c:274
 msgid "Points"
 msgstr "Точки"
 
@@ -1098,7 +1098,7 @@ msgstr "Размер то_чки:"
 msgid "_Line type:"
 msgstr "Тип _линии:"
 
-#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:2893
+#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:3133
 msgid "Line t_hickness:"
 msgstr "Тол_щина линии:"
 
@@ -1292,7 +1292,7 @@ msgid "Preferred"
 msgstr "Предпочтительное"
 
 #: libgwydgets/gwyoptionmenus.c:470 app/meta.c:408
-#: modules/file/imgexport.c:3917 modules/file/imgexport.c:4347
+#: modules/file/imgexport.c:4120 modules/file/imgexport.c:4565
 #: modules/file/rawfile.c:995 modules/process/convolution_filter.c:538
 #: modules/process/neural.c:421 modules/tools/selectionmanager.c:345
 msgid "Name"
@@ -2087,7 +2087,7 @@ msgstr "О_чистить"
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: app/log.c:617 modules/file/imgexport.c:3925 modules/file/rawfile.c:996
+#: app/log.c:617 modules/file/imgexport.c:4128 modules/file/rawfile.c:996
 msgid "Type"
 msgstr "Тип"
 
@@ -2095,7 +2095,7 @@ msgstr "Тип"
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:619 modules/file/imgexport.c:2860 modules/process/neural.c:613
+#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/neural.c:613
 #: modules/tools/stats.c:426
 msgid "Parameters"
 msgstr "Параметры"
@@ -2148,7 +2148,7 @@ msgstr "_Предыдущие документы"
 msgid "_New"
 msgstr "Новый _элемент"
 
-#: app/meta.c:235 modules/file/imgexport.c:4412 modules/file/rawfile.c:1058
+#: app/meta.c:235 modules/file/imgexport.c:4630 modules/file/rawfile.c:1058
 #: modules/process/neural.c:714 modules/tools/selectionmanager.c:405
 msgid "_Delete"
 msgstr "_Удалить"
@@ -3159,17 +3159,17 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:275 modules/file/gxyzffile.c:402
-#: modules/file/imgexport.c:3960 modules/file/rawfile.c:758
-#: modules/file/xyzexport.c:311 modules/process/calibrate.c:607
-#: modules/process/coerce.c:364 modules/process/col_synth.c:501
-#: modules/process/correct_affine.c:470 modules/process/extend.c:259
-#: modules/process/fft_filter_1d.c:261 modules/process/grain_dist.c:306
-#: modules/process/grain_edge.c:255 modules/process/grain_mark.c:338
-#: modules/process/grain_wshed.c:252 modules/process/linematch.c:852
-#: modules/process/mark_disconn.c:279 modules/process/slope_dist.c:367
-#: modules/process/tip_blind.c:357 modules/process/wpour_mark.c:354
-#: modules/tools/spotremove.c:322 modules/tools/stats.c:403
-#: modules/xyz/xyz_raster.c:628
+#: modules/file/imgexport.c:3536 modules/file/imgexport.c:4163
+#: modules/file/rawfile.c:758 modules/file/xyzexport.c:311
+#: modules/process/calibrate.c:607 modules/process/coerce.c:364
+#: modules/process/col_synth.c:501 modules/process/correct_affine.c:470
+#: modules/process/extend.c:259 modules/process/fft_filter_1d.c:261
+#: modules/process/grain_dist.c:306 modules/process/grain_edge.c:255
+#: modules/process/grain_mark.c:338 modules/process/grain_wshed.c:252
+#: modules/process/linematch.c:852 modules/process/mark_disconn.c:279
+#: modules/process/slope_dist.c:367 modules/process/tip_blind.c:357
+#: modules/process/wpour_mark.c:354 modules/tools/spotremove.c:322
+#: modules/tools/stats.c:403 modules/xyz/xyz_raster.c:628
 msgid "Options"
 msgstr "Параметры"
 
@@ -3300,21 +3300,21 @@ msgstr "Импортирует файлы данных Benyuan CSM."
 msgid "Benyuan CSM files (.csm)"
 msgstr "Файлы Benyuan CSM (.csm)"
 
-#: modules/file/dektakxml.c:108
+#: modules/file/dektakxml.c:138
 msgid "Imports Dektak XML data files."
 msgstr "Импортирует файлы данных Dektak XML."
 
-#: modules/file/dektakxml.c:121
+#: modules/file/dektakxml.c:151
 msgid "Dektak XML data files (.xml)"
 msgstr "Файлы данных Dektak XML (.xml)"
 
-#: modules/file/dektakxml.c:199 modules/file/lextfile.c:260
+#: modules/file/dektakxml.c:228 modules/file/lextfile.c:260
 #: modules/file/nanoscan.c:267 modules/file/ometiff.c:265
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "Разбор XML окончился неудачно: %s"
 
-#: modules/file/dektakxml.c:339 modules/file/lextfile.c:163
+#: modules/file/dektakxml.c:400 modules/file/lextfile.c:163
 #: modules/file/nanoscan.c:672 modules/file/ometiff.c:445
 #, c-format
 msgid "Top-level element is not ‘%s’."
@@ -3877,12 +3877,12 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Тип данных OpenEXR %u неправилен или не поддерживается."
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/imgexport.c:4989 modules/file/imgexport.c:5000
+#: modules/file/imgexport.c:5207 modules/file/imgexport.c:5218
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:5064
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:5282
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
@@ -3917,14 +3917,14 @@ msgstr "Каналы:"
 msgid "Pages:"
 msgstr "Страницы:"
 
-#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2786
+#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:3026
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
 #: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:774
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2844
+#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:3084
 #: modules/file/pixmap.c:872 modules/file/rawfile.c:658
 #: modules/process/crosscor.c:252 modules/process/dimensions.h:473
 #: modules/process/tip_blind.c:333
@@ -4047,127 +4047,135 @@ msgstr "Размер данных %u не соответствует числу 
 msgid "Cannot read channel labels."
 msgstr "Не удаётся прочесть метки каналов."
 
-#: modules/file/imgexport.c:398 modules/file/pixmap.c:178
+#: modules/file/imgexport.c:391 modules/file/pixmap.c:178
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/imgexport.c:404 modules/file/pixmap.c:182
+#: modules/file/imgexport.c:397 modules/file/pixmap.c:182
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/imgexport.c:412 modules/file/pixmap.c:202
-msgid "Graphics Interchange Format GIF (.gif)"
-msgstr "Graphics Interchange Format (.gif)"
-
-#: modules/file/imgexport.c:419 modules/file/pixmap.c:186
+#: modules/file/imgexport.c:403 modules/file/pixmap.c:186
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/imgexport.c:425 modules/file/pixmap.c:190
+#: modules/file/imgexport.c:409 modules/file/pixmap.c:190
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/imgexport.c:431 modules/file/pixmap.c:194
+#: modules/file/imgexport.c:415 modules/file/pixmap.c:194
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmap из Windows или OS2 (.bmp)"
 
-#: modules/file/imgexport.c:437 modules/file/pixmap.c:198
+#: modules/file/imgexport.c:421 modules/file/pixmap.c:198
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/imgexport.c:444
+#: modules/file/imgexport.c:428
 msgid "WebP (.webp)"
 msgstr "WebP (.webp)"
 
-#: modules/file/imgexport.c:452
+#: modules/file/imgexport.c:436
 msgid "Portable document format (.pdf)"
 msgstr "Portable document format (.pdf)"
 
-#: modules/file/imgexport.c:460
+#: modules/file/imgexport.c:444
 msgid "Encapsulated PostScript (.eps)"
 msgstr "Encapsulated PostScript (.eps)"
 
-#: modules/file/imgexport.c:468
+#: modules/file/imgexport.c:452
 msgid "Scalable Vector Graphics (.svg)"
 msgstr "Scalable Vector Graphics (.svg)"
 
-#: modules/file/imgexport.c:478 modules/tools/selectionmanager.c:269
+#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:269
 msgid "Horiz./vert. lines"
 msgstr "Гориз./Верт. линии"
 
-#: modules/file/imgexport.c:482 modules/tools/selectionmanager.c:270
+#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:270
 msgid "Ellipses"
 msgstr "Эллипсы"
 
-#: modules/file/imgexport.c:486 modules/tools/selectionmanager.c:272
+#: modules/file/imgexport.c:470 modules/tools/selectionmanager.c:272
 msgid "Lines"
 msgstr "Линии"
 
-#: modules/file/imgexport.c:494 modules/tools/selectionmanager.c:275
+#: modules/file/imgexport.c:478 modules/tools/selectionmanager.c:275
 msgid "Rectangles"
 msgstr "Прямоугольники"
 
-#: modules/file/imgexport.c:498 modules/process/lat_synth.c:521
+#: modules/file/imgexport.c:482 modules/process/lat_synth.c:521
 #: modules/process/lat_synth.c:593 modules/tools/selectionmanager.c:271
 msgid "Lattice"
 msgstr "Решетка"
 
-#: modules/file/imgexport.c:502
+#: modules/file/imgexport.c:486
 msgid "Path"
 msgstr "Путь"
 
-#: modules/file/imgexport.c:508 modules/file/imgexport.c:514
+#: modules/file/imgexport.c:492 modules/file/imgexport.c:498
 msgid "ruler|_None"
 msgstr "_Нет"
 
-#: modules/file/imgexport.c:509
+#: modules/file/imgexport.c:493
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/imgexport.c:510
+#: modules/file/imgexport.c:494
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/imgexport.c:515
+#: modules/file/imgexport.c:499
 msgid "_False color ruler"
 msgstr "_Линейка псевдоцвета"
 
-#: modules/file/imgexport.c:519
+#: modules/file/imgexport.c:503
 msgid "title|None"
 msgstr "Нет"
 
-#: modules/file/imgexport.c:520
+#: modules/file/imgexport.c:504
 msgid "At the top"
 msgstr "Сверху"
 
-#: modules/file/imgexport.c:521
+#: modules/file/imgexport.c:505
 msgid "Along the right edge"
 msgstr "Вдоль правой стороны"
 
-#: modules/file/imgexport.c:527
+#: modules/file/imgexport.c:511
 msgid ""
-"Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, WEBP, "
-"PPM, BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
+"Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, WebP, "
+"PPM, BMP, TARGA) images. Export to some formats relies on GDK and other "
 "libraries thus may be installation-dependent."
 msgstr ""
 "Отрисовывает данные в векторные (SVG, PDF, EPS) и растровые (PNG, JPEG, "
-"TIFF, WEBP, PPM, BMP, TARGA, GIF) изображения. Экспорт в некоторые форматы "
+"TIFF, WebP, PPM, BMP, TARGA) изображения. Экспорт в некоторые форматы "
 "основан на GDK и других библиотеках, и, вследствие этого, может зависеть от "
 "варианта установки."
 
-#: modules/file/imgexport.c:2796
+#: modules/file/imgexport.c:2914
+msgid "Select Color"
+msgstr "Выбрать цвет"
+
+#: modules/file/imgexport.c:2985
+msgid "Black"
+msgstr "Чёрный"
+
+#: modules/file/imgexport.c:2993
+msgid "White"
+msgstr "Белый"
+
+#: modules/file/imgexport.c:3036
 msgid "Pi_xel size:"
 msgstr "Размер пи_кселя:"
 
-#: modules/file/imgexport.c:2805
+#: modules/file/imgexport.c:3045
 msgid "Pixels per _inch:"
 msgstr "Пикселей на _дюйм:"
 
-#: modules/file/imgexport.c:2832
+#: modules/file/imgexport.c:3072
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/imgexport.c:2851 modules/process/bdep_synth.c:430
+#: modules/file/imgexport.c:3091 modules/process/bdep_synth.c:430
 #: modules/process/col_synth.c:471 modules/process/diff_synth.c:508
 #: modules/process/domain_synth.c:510 modules/process/grain_mark.c:285
 #: modules/process/lat_synth.c:709 modules/process/obj_synth.c:572
@@ -4176,111 +4184,119 @@ msgstr "_Увеличение:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/imgexport.c:2864
+#: modules/file/imgexport.c:3104
 msgid "_Font:"
 msgstr "_Шрифт:"
 
-#: modules/file/imgexport.c:2883
+#: modules/file/imgexport.c:3123
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/imgexport.c:2903
+#: modules/file/imgexport.c:3143
 msgid "O_utline thickness:"
 msgstr "То_лщина контура:"
 
-#: modules/file/imgexport.c:2913
+#: modules/file/imgexport.c:3153
 msgid "_Border width:"
 msgstr "Ширина _границы:"
 
-#: modules/file/imgexport.c:2923
+#: modules/file/imgexport.c:3163
 msgid "_Tick length:"
 msgstr "Длина _засечек:"
 
-#: modules/file/imgexport.c:2931
+#: modules/file/imgexport.c:3171
 msgid "Tie sizes to _data pixels"
 msgstr "Привязать размеры к _пикселям данных"
 
-#: modules/file/imgexport.c:2941 modules/file/rawfile.c:843
+#: modules/file/imgexport.c:3181 modules/file/rawfile.c:843
 msgid "_Decimal separator is comma"
 msgstr "_Запятая как десятичный разделитель"
 
-#: modules/file/imgexport.c:3062
-msgid "Select Color"
-msgstr "Выбрать цвет"
+#: modules/file/imgexport.c:3193
+msgid "Colors"
+msgstr "Цвета"
 
-#: modules/file/imgexport.c:3254
-msgid "Black"
-msgstr "Чёрный"
+#: modules/file/imgexport.c:3198
+msgid "_Line and text color:"
+msgstr "Цвет _линий и текста:"
 
-#: modules/file/imgexport.c:3262
-msgid "White"
-msgstr "Белый"
+#: modules/file/imgexport.c:3204
+msgid "_Transparent background"
+msgstr "_Прозрачный фон"
 
-#: modules/file/imgexport.c:3296 modules/process/lno_synth.c:1053
+#: modules/file/imgexport.c:3215
+msgid "_Background color:"
+msgstr "Цвет _фона:"
+
+#: modules/file/imgexport.c:3445
+msgid "Lateral scale"
+msgstr "Пространственный масштаб"
+
+#: modules/file/imgexport.c:3458 modules/process/lno_synth.c:1053
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/imgexport.c:3312
+#: modules/file/imgexport.c:3474
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/imgexport.c:3319
-msgid "Placement:"
-msgstr "Размещение:"
+#: modules/file/imgexport.c:3482 modules/process/pat_synth.c:469
+msgid "Placement"
+msgstr "Положение"
 
-#: modules/file/imgexport.c:3324
+#: modules/file/imgexport.c:3486
 msgid "left"
 msgstr "слева"
 
-#: modules/file/imgexport.c:3328
+#: modules/file/imgexport.c:3490
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/imgexport.c:3332
+#: modules/file/imgexport.c:3494
 msgid "right"
 msgstr "справа"
 
-#: modules/file/imgexport.c:3337
+#: modules/file/imgexport.c:3499
 msgid "top"
 msgstr "верх"
 
-#: modules/file/imgexport.c:3349
+#: modules/file/imgexport.c:3511
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/imgexport.c:3361 modules/file/imgexport.c:3648
+#: modules/file/imgexport.c:3523 modules/file/imgexport.c:3834
 msgid "Hori_zontal gap:"
 msgstr "_Горизонтальный зазор:"
 
-#: modules/file/imgexport.c:3367 modules/file/imgexport.c:3628
+#: modules/file/imgexport.c:3529 modules/file/imgexport.c:3814
 msgid "_Vertical gap:"
 msgstr "В_ертикальный зазор:"
 
-#: modules/file/imgexport.c:3374 modules/file/imgexport.c:3941
+#: modules/file/imgexport.c:3542 modules/file/imgexport.c:4144
 msgid "Colo_r:"
 msgstr "Цве_т:"
 
-#: modules/file/imgexport.c:3379 modules/file/imgexport.c:3946
+#: modules/file/imgexport.c:3547 modules/file/imgexport.c:4149
 msgid "Out_line color:"
 msgstr "_Цвет контура:"
 
-#: modules/file/imgexport.c:3383 modules/file/imgexport.c:3952
+#: modules/file/imgexport.c:3551 modules/file/imgexport.c:4155
 msgid "O_pacity:"
 msgstr "_Непрозрачность:"
 
-#: modules/file/imgexport.c:3392
+#: modules/file/imgexport.c:3560
 msgid "Draw _ticks"
 msgstr "Рисовать засе_чки"
 
-#: modules/file/imgexport.c:3402
+#: modules/file/imgexport.c:3570
 msgid "Draw _label"
 msgstr "Рисовать подпис_ь"
 
-#: modules/file/imgexport.c:3547
+#: modules/file/imgexport.c:3733
 msgid "Image"
 msgstr "Изображение"
 
-#: modules/file/imgexport.c:3551 modules/process/calcoefs_view.c:473
+#: modules/file/imgexport.c:3737 modules/process/calcoefs_view.c:473
 #: modules/process/correct_affine.c:488 modules/process/drift.c:297
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:294 modules/process/fft_profile.c:292
@@ -4293,126 +4309,130 @@ msgstr "Изображение"
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
-#: modules/file/imgexport.c:3581
+#: modules/file/imgexport.c:3767
 msgid "Draw _frame"
 msgstr "Показывать _рамку"
 
-#: modules/file/imgexport.c:3590
+#: modules/file/imgexport.c:3776
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/imgexport.c:3600
+#: modules/file/imgexport.c:3786
 msgid "Draw mask _legend"
 msgstr "Рисовать _легенду для маски"
 
-#: modules/file/imgexport.c:3635
+#: modules/file/imgexport.c:3821
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/imgexport.c:3656
+#: modules/file/imgexport.c:3842
 msgid "Fi_xed precision:"
 msgstr "Фи_ксированная точность:"
 
-#: modules/file/imgexport.c:3671 modules/file/imgexport.c:4375
+#: modules/file/imgexport.c:3858
+msgid "Fixed _kilo threshold:"
+msgstr "Фиксированный порог п_рефиксов:"
+
+#: modules/file/imgexport.c:3874 modules/file/imgexport.c:4593
 msgid "Title"
 msgstr "Заголовок"
 
-#: modules/file/imgexport.c:3675
+#: modules/file/imgexport.c:3878
 msgid "Posi_tion:"
 msgstr "Располо_жение:"
 
-#: modules/file/imgexport.c:3691
+#: modules/file/imgexport.c:3894
 msgid "_Gap:"
 msgstr "_Зазор:"
 
-#: modules/file/imgexport.c:3698
+#: modules/file/imgexport.c:3901
 msgid "Put _units to title"
 msgstr "Поместить единицы измерения в _заголовок"
 
-#: modules/file/imgexport.c:3882
+#: modules/file/imgexport.c:4085
 msgid "Draw _selection"
 msgstr "Рисовать в_ыделенные элементы"
 
-#: modules/file/imgexport.c:3933 modules/tools/selectionmanager.c:361
+#: modules/file/imgexport.c:4136 modules/tools/selectionmanager.c:361
 msgid "Objects"
 msgstr "Объекты"
 
-#: modules/file/imgexport.c:4355
+#: modules/file/imgexport.c:4573
 msgid "Lateral"
 msgstr "Горизонтальные"
 
-#: modules/file/imgexport.c:4394 modules/file/rawfile.c:1040
+#: modules/file/imgexport.c:4612 modules/file/rawfile.c:1040
 #: modules/process/calcoefs_load.c:230 modules/process/neural.c:696
 msgid "verb|_Load"
 msgstr "_Загрузить"
 
-#: modules/file/imgexport.c:4400 modules/file/rawfile.c:1046
+#: modules/file/imgexport.c:4618 modules/file/rawfile.c:1046
 #: modules/process/neural.c:702
 msgid "verb|_Store"
 msgstr "Со_хранить"
 
-#: modules/file/imgexport.c:4406 modules/file/rawfile.c:1052
+#: modules/file/imgexport.c:4624 modules/file/rawfile.c:1052
 #: modules/process/neural.c:708
 msgid "_Rename"
 msgstr "_Переименовать"
 
-#: modules/file/imgexport.c:4426 modules/file/rawfile.c:1071
+#: modules/file/imgexport.c:4644 modules/file/rawfile.c:1071
 msgid "Preset _name:"
 msgstr "_Название набора настроек:"
 
-#: modules/file/imgexport.c:4497
+#: modules/file/imgexport.c:4715
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/imgexport.c:4518
+#: modules/file/imgexport.c:4736
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/imgexport.c:4541
+#: modules/file/imgexport.c:4759
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб"
 
-#: modules/file/imgexport.c:4546
+#: modules/file/imgexport.c:4764
 msgid "Values"
 msgstr "Значения"
 
-#: modules/file/imgexport.c:4551
+#: modules/file/imgexport.c:4769
 msgid "Selection"
 msgstr "Выделение"
 
-#: modules/file/imgexport.c:4556 modules/file/rawfile.c:462
+#: modules/file/imgexport.c:4774 modules/file/rawfile.c:462
 #: modules/process/convolution_filter.c:275
 msgid "Presets"
 msgstr "Предустановки"
 
-#: modules/file/imgexport.c:5315
+#: modules/file/imgexport.c:5534
 #, c-format
 msgid "Cairo error occurred: %s"
 msgstr "Произошла ошибка cairo: %s"
 
-#: modules/file/imgexport.c:5339
+#: modules/file/imgexport.c:5558
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/imgexport.c:5617
+#: modules/file/imgexport.c:5836
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/imgexport.c:6189 modules/file/imgexport.c:6218
+#: modules/file/imgexport.c:6415 modules/file/imgexport.c:6444
 msgid "Draw _numbers"
 msgstr "Рисовать _номера"
 
-#: modules/file/imgexport.c:6201 modules/file/imgexport.c:6249
+#: modules/file/imgexport.c:6427 modules/file/imgexport.c:6475
 msgid "_End marker length:"
 msgstr "Длина _засечек:"
 
-#: modules/file/imgexport.c:6230
+#: modules/file/imgexport.c:6456
 msgid "Marker _radius:"
 msgstr "_Радиус маркера:"
 
-#: modules/file/imgexportpreset.h:162 modules/process/maskops.c:150
+#: modules/file/imgexportpreset.h:169 modules/process/maskops.c:150
 msgid "Mask"
 msgstr "Маска"
 
@@ -5416,6 +5436,10 @@ msgstr "Яркость"
 #: modules/file/pixmap.c:168
 msgid "Alpha"
 msgstr "Альфа"
+
+#: modules/file/pixmap.c:202
+msgid "Graphics Interchange Format GIF (.gif)"
+msgstr "Graphics Interchange Format (.gif)"
 
 #: modules/file/pixmap.c:206
 msgid "JPEG 2000 (.jpx)"
@@ -11848,10 +11872,6 @@ msgstr "Структура"
 msgid "_Pattern:"
 msgstr "С_труктура:"
 
-#: modules/process/pat_synth.c:469
-msgid "Placement"
-msgstr "Положение"
-
 #: modules/process/pat_synth.c:812
 msgid "Flat"
 msgstr "Плоскость"
@@ -14744,3 +14764,16 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid ""
+#~ "Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, "
+#~ "WEBP, PPM, BMP, TARGA, GIF) images. Export to some formats relies on GDK "
+#~ "and other libraries thus may be installation-dependent."
+#~ msgstr ""
+#~ "Отрисовывает данные в векторные (SVG, PDF, EPS) и растровые (PNG, JPEG, "
+#~ "TIFF, WEBP, PPM, BMP, TARGA, GIF) изображения. Экспорт в некоторые "
+#~ "форматы основан на GDK и других библиотеках, и, вследствие этого, может "
+#~ "зависеть от варианта установки."
+
+#~ msgid "Placement:"
+#~ msgstr "Размещение:"
