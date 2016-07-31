@@ -644,10 +644,11 @@ update_fit_results(FitShapeControls *controls,
 static void
 update_context_data(FitShapeControls *controls)
 {
-    GwyDataField *dfield, *mfield;
+    GwyDataField *dfield, *mfield = NULL;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-    mfield = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
+    gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                     (GObject**)&mfield);
     fit_context_fill_data(controls->ctx, dfield, mfield, NULL,
                           controls->args->masking);
 }
@@ -855,9 +856,9 @@ sphere_func(gdouble abscissa,
     r2k = kappa*(x*x + y*y);
     t = 1.0 - kappa*r2k;
     if (t > 0.0)
-        val = z0 - r2k/(1.0 + sqrt(t));
+        val = z0 + r2k/(1.0 + sqrt(t));
     else
-        val = z0 - 1.0/kappa;
+        val = z0 + 1.0/kappa;
 
     *fres = TRUE;
     return val;
@@ -1054,8 +1055,8 @@ sphere_estimate(const GwyXY *xy,
 
     param[3] = 2.0*b[3];
     if (param[3]) {
-        param[0] = -b[1]/param[3];
-        param[1] = -b[2]/param[3];
+        param[0] = xc - b[1]/param[3];
+        param[1] = yc - b[2]/param[3];
         param[2] = b[0] - 0.5*(b[1]*b[1] + b[2]*b[2])/param[3];
     }
 
