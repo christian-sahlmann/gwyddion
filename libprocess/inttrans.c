@@ -325,6 +325,8 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
 {
 #ifdef HAVE_FFTW3
     fftw_iodim dims[1], howmany_dims[1];
+    gdouble *rbuf = g_memdup(rsrc->data, rsrc->res*sizeof(gdouble));
+    gdouble *ibuf = g_memdup(isrc->data, isrc->res*sizeof(gdouble));
     fftw_plan plan;
 
     dims[0].n = rsrc->res;
@@ -334,22 +336,22 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
     howmany_dims[0].is = rsrc->res;
     howmany_dims[0].os = rsrc->res;
     /* Backward direction is equivalent to switching real and imaginary parts */
-    /* XXX: Planner destroys input, we have to either allocate memory or
-     * use in-place transform.  In some cases caller could provide us with
-     * already allocated buffers. */
+    /* XXX: Planner destroys input. */
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        rdest->data, idest->data,
+                                        rsrc->data, isrc->data,
                                         rdest->data, idest->data,
                                         _GWY_FFTW_PATIENCE);
     else
         plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
-                                        idest->data, rdest->data,
+                                        isrc->data, rsrc->data,
                                         idest->data, rdest->data,
                                         _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
-    gwy_data_line_copy(rsrc, rdest);
-    gwy_data_line_copy(isrc, idest);
+    memcpy(rsrc->data, rbuf, rsrc->res*sizeof(gdouble));
+    memcpy(isrc->data, ibuf, isrc->res*sizeof(gdouble));
+    g_free(ibuf);
+    g_free(rbuf);
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 

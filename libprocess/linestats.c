@@ -108,16 +108,15 @@ gdouble
 gwy_data_line_get_rms(GwyDataLine *data_line)
 {
     gint i;
-    gdouble sum2 = 0;
-    gdouble sum;
+    gdouble avg, sum2 = 0;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
 
-    sum = gwy_data_line_get_sum(data_line);
+    avg = gwy_data_line_get_avg(data_line);
     for (i = 0; i < data_line->res; i++)
-        sum2 += data_line->data[i]*data_line->data[i];
+        sum2 += (data_line->data[i] - avg)*(data_line->data[i] - avg);
 
-    return sqrt(fabs(sum2 - sum*sum/data_line->res)/data_line->res);
+    return sqrt(sum2/data_line->res);
 }
 
 /**
@@ -681,11 +680,11 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
  *               It will be resized to @data_line size.
  * @windowing: Windowing method to use.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  *
  * Calculates the power spectral density function of a data line.
  *
- * Up to version 2.7 it destroyed the input data and did not set the output
+ * Up to version 2.45 it destroyed the input data and did not set the output
  * units properly.
  **/
 void
@@ -715,7 +714,7 @@ gwy_data_line_psdf(GwyDataLine *data_line,
                       interpolation,
                       TRUE, 2);
 
-    data = data_line->data;
+    data = target_line->data;
     rdata = rout->data;
     idata = iout->data;
     q = data_line->real/(res*res*2.0*G_PI);
