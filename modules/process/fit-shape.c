@@ -109,6 +109,7 @@ typedef struct {
 typedef struct {
     FitShapeArgs *args;
     FitShapeContext *ctx;
+    gint id;
     guint function_id;
     gdouble *param;
     gdouble rss;
@@ -130,6 +131,8 @@ static void         fit_shape_dialogue       (FitShapeArgs *args,
                                               gint id,
                                               GwyDataField *dfield,
                                               GwyDataField *mfield);
+static void         create_output            (FitShapeControls *controls,
+                                              GwyContainer *data);
 static GtkWidget*   function_menu_new        (const gchar *name,
                                               GwyDataField *dfield,
                                               FitShapeControls *controls);
@@ -313,6 +316,7 @@ fit_shape_dialogue(FitShapeArgs *args,
     gwy_clear(&controls, 1);
     controls.args = args;
     controls.ctx = &ctx;
+    controls.id = id;
 
     dialogue = gtk_dialog_new_with_buttons(_("Fit Shape"), NULL, 0,
                                            gwy_sgettext("verb|_Fit"),
@@ -420,7 +424,7 @@ fit_shape_dialogue(FitShapeArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialogue);
             case GTK_RESPONSE_NONE:
-            return;
+            goto finalise;
             break;
 
             case GTK_RESPONSE_OK:
@@ -444,10 +448,51 @@ fit_shape_dialogue(FitShapeArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
+    create_output(&controls, data);
     gtk_widget_destroy(dialogue);
+
+finalise:
     g_object_unref(controls.mydata);
     g_free(controls.param);
     fit_context_free(controls.ctx);
+}
+
+/* NB: We reuse fields from mydata.  It is possible only because they are
+ * newly created and we are going to destroy mydata anyway. */
+static void
+create_output(FitShapeControls *controls, GwyContainer *data)
+{
+    FitShapeArgs *args = controls->args;
+    GwyDataField *dfield;
+    gint id = controls->id, newid;
+
+    if (args->output == FIT_SHAPE_OUTPUT_FIT
+        || args->output == FIT_SHAPE_OUTPUT_BOTH) {
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                GWY_DATA_ITEM_SELECTIONS,
+                                0);
+        gwy_app_channel_log_add_proc(data, id, newid);
+        gwy_app_set_data_field_title(data, newid, _("Fitted shape"));
+    }
+
+    if (args->output == FIT_SHAPE_OUTPUT_DIFF
+        || args->output == FIT_SHAPE_OUTPUT_BOTH) {
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/2/data");
+        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                GWY_DATA_ITEM_SELECTIONS,
+                                0);
+        gwy_app_channel_log_add_proc(data, id, newid);
+        gwy_app_set_data_field_title(data, newid, _("Difference"));
+    }
 }
 
 static GtkWidget*
@@ -1442,72 +1487,5 @@ fit_shape_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
     gwy_container_set_enum_by_name(container, output_key, args->output);
 }
-
-#if 0
-{
-    const FitShapeFunc *func = functions + 1;
-    FitShapeContext ctx;
-    GwyNLFitter *fitter;
-    gdouble *param;
-    guint i;
-
-    gwy_clear(&ctx, 1);
-    fit_context_resize_params(&ctx, func->nparams);
-    fit_context_fill_data(&ctx, dfield, NULL, NULL);
-
-    param = g_new(gdouble, func->nparams);
-    func->estimate(ctx.xy, ctx.z, ctx.n, param);
-    gwy_debug("RSS after estimate: %g", calculate_rss(func, &ctx, param));
-
-    dfield = gwy_data_field_new_alike(dfield, FALSE);
-    calculate_field(func, param, dfield);
-    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-    g_object_unref(dfield);
-    gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            0);
-    gwy_container_set_const_string(data,
-                                   gwy_app_get_data_title_key_for_id(newid),
-                                   "Estimate");
-
-    for (i = 0; i < func->nparams; i++)
-        gwy_debug("param[%u] %g", i, param[i]);
-
-    fitter = fit_reduced(func, &ctx, param);
-    if (fitter) {
-        gwy_debug("RSS after reduced fit: %g",
-                  calculate_rss(func, &ctx, param));
-        gwy_math_nlfit_free(fitter);
-    }
-
-    for (i = 0; i < func->nparams; i++)
-        gwy_debug("param[%u] %g", i, param[i]);
-
-    fitter = fit(func, &ctx, param);
-    gwy_debug("RSS after fit: %g", calculate_rss(func, &ctx, param));
-    gwy_math_nlfit_free(fitter);
-
-    for (i = 0; i < func->nparams; i++)
-        gwy_debug("param[%u] %g", i, param[i]);
-
-    dfield = gwy_data_field_new_alike(dfield, FALSE);
-    calculate_field(func, param, dfield);
-    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-    g_object_unref(dfield);
-    gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            0);
-    gwy_container_set_const_string(data,
-                                   gwy_app_get_data_title_key_for_id(newid),
-                                   "Fit");
-
-    g_free(param);
-    fit_context_free(&ctx);
-}
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
