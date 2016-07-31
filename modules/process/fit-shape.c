@@ -26,7 +26,6 @@
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -34,7 +33,9 @@
 #include <libgwyddion/gwynlfit.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
+#include <libprocess/arithmetic.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -54,14 +55,21 @@ typedef enum {
     FIT_SHAPE_DISPLAY_DATA   = 0,
     FIT_SHAPE_DISPLAY_RESULT = 1,
     FIT_SHAPE_DISPLAY_DIFF   = 2
-} GwyFitShapeDisplayType;
+} FitShapeDisplayType;
 
 typedef enum {
     FIT_SHAPE_OUTPUT_NONE = 0,
     FIT_SHAPE_OUTPUT_FIT  = 1,
     FIT_SHAPE_OUTPUT_DIFF = 2,
     FIT_SHAPE_OUTPUT_BOTH = 3,
-} GwyFitShapeOutputType;
+} FitShapeOutputType;
+
+typedef struct {
+    const gchar *function;
+    GwyMaskingType masking;
+    FitShapeDisplayType display;
+    FitShapeOutputType output;
+} FitShapeArgs;
 
 typedef gboolean (*FitShapeEstimate)(const GwyXY *xy,
                                      const gdouble *z,
@@ -72,8 +80,6 @@ typedef struct {
     const char *name;
     gint power_x;
     gint power_y;
-    gdouble min;
-    gdouble max;
 } FitShapeParam;
 
 /* XXX: We may need two sets of parameters: nice to fit (e.g. curvature
@@ -84,6 +90,7 @@ typedef struct {
     gboolean needs_same_units;
     GwyNLFitFunc function;
     FitShapeEstimate estimate;
+    FitShapeEstimate init_param;
     guint nparams;
     const FitShapeParam *param;
 } FitShapeFunc;
@@ -93,28 +100,61 @@ typedef struct {
     gboolean *param_fixed;
 
     guint n;
-    gdouble *fake_x;
+    gdouble *abscissa;
     GwyXY *xy;
     gdouble *z;
     gdouble *w;
 } FitShapeContext;
 
 typedef struct {
+    FitShapeArgs *args;
+    FitShapeContext *ctx;
+    guint function_id;
     gdouble *param;
-    gdouble *param_err;
-    gdouble chi_sq;
-    gboolean success;
-} FitShapeResult;
+    gdouble rss;
+    GwyContainer *mydata;
+    GtkWidget *dialogue;
+    GtkWidget *view;
+    GtkWidget *function;
+    GtkWidget *display;
+    GtkWidget *output;
+    GtkWidget *rss_label;
+    GSList *masking;
+} FitShapeControls;
 
 static gboolean     module_register          (void);
 static void         fit_shape                (GwyContainer *data,
                                               GwyRunType run);
+static void         fit_shape_dialogue       (FitShapeArgs *args,
+                                              GwyContainer *data,
+                                              gint id,
+                                              GwyDataField *dfield,
+                                              GwyDataField *mfield);
+static GtkWidget*   function_menu_new        (const gchar *name,
+                                              GwyDataField *dfield,
+                                              FitShapeControls *controls);
+static void         function_changed         (GtkComboBox *combo,
+                                              FitShapeControls *controls);
+static void         display_changed          (GtkComboBox *combo,
+                                              FitShapeControls *controls);
+static void         output_changed           (GtkComboBox *combo,
+                                              FitShapeControls *controls);
+static void         masking_changed          (GtkToggleButton *button,
+                                              FitShapeControls *controls);
+static void         fit_shape_estimate       (FitShapeControls *controls);
+static void         fit_shape_reduced_fit    (FitShapeControls *controls);
+static void         fit_shape_full_fit       (FitShapeControls *controls);
+static void         update_fields            (FitShapeControls *controls);
+static void         update_fit_results       (FitShapeControls *controls,
+                                              GwyNLFitter *fitter);
+static void         update_context_data      (FitShapeControls *controls);
 static void         fit_context_resize_params(FitShapeContext *ctx,
                                               guint n_param);
 static void         fit_context_fill_data    (FitShapeContext *ctx,
                                               GwyDataField *dfield,
                                               GwyDataField *mask,
-                                              GwyDataField *weight);
+                                              GwyDataField *weight,
+                                              GwyMaskingType masking);
 static void         fit_context_free         (FitShapeContext *ctx);
 static GwyNLFitter* fit                      (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
@@ -129,18 +169,19 @@ static void         calculate_function       (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
                                               const gdouble *param,
                                               gdouble *z);
-static gdouble      calculate_rss            (const FitShapeFunc *func,
-                                              const FitShapeContext *ctx,
-                                              const gdouble *param);
 static void         reduce_data_size         (const GwyXY *xy,
                                               const gdouble *z,
                                               guint n,
                                               GwyXY *xyred,
                                               gdouble *zred,
                                               guint nred);
+static void         fit_shape_load_args      (GwyContainer *container,
+                                              FitShapeArgs *args);
+static void         fit_shape_save_args      (GwyContainer *container,
+                                              FitShapeArgs *args);
 
 #define DECLARE_SHAPE_FUNC(name) \
-    static gdouble name##_func(gdouble fake_x, \
+    static gdouble name##_func(gdouble abscissa, \
                                gint n_param, \
                                const gdouble *param, \
                                gpointer user_data, \
@@ -148,39 +189,50 @@ static void         reduce_data_size         (const GwyXY *xy,
     static gboolean name##_estimate(const GwyXY *xy, \
                                     const gdouble *z, \
                                     guint n, \
-                                    gdouble *param);
+                                    gdouble *param); \
+    static gboolean name##_init(const GwyXY *xy, \
+                                const gdouble *z, \
+                                guint n, \
+                                gdouble *param);
 
 DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(grating);
 
 static const FitShapeParam sphere_params[] = {
-   { "x<sub>0</sub>", 1, 0, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "y<sub>0</sub>", 1, 0, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "z<sub>0</sub>", 0, 1, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "C",             0, 1, -G_MAXDOUBLE, G_MAXDOUBLE, },
+   { "x<sub>0</sub>", 1, 0, },
+   { "y<sub>0</sub>", 1, 0, },
+   { "z<sub>0</sub>", 0, 1, },
+   { "C",             0, 1, },
 };
 
 static const FitShapeParam grating_params[] = {
-   { "w",             1, 0, 0.0,          G_MAXDOUBLE, },
-   { "p",             0, 0, 0.0,          1.0,         },
-   { "h",             0, 1, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "z<sub>0</sub>", 0, 1, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "x<sub>0</sub>", 1, 0, -G_MAXDOUBLE, G_MAXDOUBLE, },
-   { "α",             0, 0, 0.0,          2.0*G_PI,    },
-   { "c",             0, 0, 0.0,          G_MAXDOUBLE, },
+   { "w",             1, 0, },
+   { "p",             0, 0, },
+   { "h",             0, 1, },
+   { "z<sub>0</sub>", 0, 1, },
+   { "x<sub>0</sub>", 1, 0, },
+   { "α",             0, 0, },
+   { "c",             0, 0, },
 };
 
-static const FitShapeFunc shapes[] = {
+static const FitShapeFunc functions[] = {
     {
         N_("Sphere"), TRUE,
-        &sphere_func, &sphere_estimate,
+        &sphere_func, &sphere_estimate, &sphere_init,
         G_N_ELEMENTS(sphere_params), sphere_params,
     },
     {
         N_("Grating"), FALSE,
-        &grating_func, &grating_estimate,
+        &grating_func, &grating_estimate, &grating_init,
         G_N_ELEMENTS(grating_params), grating_params,
     },
+};
+
+/* NB: The default must not require same units because then we could not fall
+ * back to it. */
+static const FitShapeArgs fit_shape_defaults = {
+    "Grating", GWY_MASK_IGNORE,
+    FIT_SHAPE_DISPLAY_RESULT, FIT_SHAPE_OUTPUT_FIT,
 };
 
 static GwyModuleInfo module_info = {
@@ -212,88 +264,392 @@ module_register(void)
 static void
 fit_shape(GwyContainer *data, GwyRunType run)
 {
-    //FitShapeArgs args;
-    GwyDataField *dfield;
-    //GwySIUnit *siunitxy, *siunitz;
-    gint id, newid;
+    FitShapeArgs args;
+    GwyDataField *dfield, *mfield;
+    gint id;
 
     g_return_if_fail(run & FIT_SHAPE_RUN_MODES);
 
-    //fit_shape_load_args(gwy_app_settings_get(), &args);
+    fit_shape_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
+    fit_shape_dialogue(&args, data, id, dfield, mfield);
+
+    //GwySIUnit *siunitxy, *siunitz;
     //siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     //siunitz = gwy_data_field_get_si_unit_z(dfield);
 
-    //fit_shape_save_args(gwy_app_settings_get(), &args);
+    fit_shape_save_args(gwy_app_settings_get(), &args);
 
-    {
-        const FitShapeFunc *func = shapes + 1;
-        FitShapeContext ctx;
-        GwyNLFitter *fitter;
-        gdouble *param;
-        guint i;
+}
 
-        gwy_clear(&ctx, 1);
-        fit_context_resize_params(&ctx, func->nparams);
-        fit_context_fill_data(&ctx, dfield, NULL, NULL);
+static void
+fit_shape_dialogue(FitShapeArgs *args,
+                   GwyContainer *data, gint id,
+                   GwyDataField *dfield, GwyDataField *mfield)
+{
+    static const GwyEnum displays[] = {
+        { N_("Data"),         FIT_SHAPE_DISPLAY_DATA,   },
+        { N_("Fitted shape"), FIT_SHAPE_DISPLAY_RESULT, },
+        { N_("Difference"),   FIT_SHAPE_DISPLAY_DIFF,   },
+    };
+    static const GwyEnum outputs[] = {
+        { N_("None"),         FIT_SHAPE_OUTPUT_NONE, },
+        { N_("Fitted shape"), FIT_SHAPE_OUTPUT_FIT,  },
+        { N_("Difference"),   FIT_SHAPE_OUTPUT_DIFF, },
+        { N_("Both"),         FIT_SHAPE_OUTPUT_BOTH, },
+    };
 
-        param = g_new(gdouble, func->nparams);
-        func->estimate(ctx.xy, ctx.z, ctx.n, param);
-        gwy_debug("RSS after estimate: %g", calculate_rss(func, &ctx, param));
+    GtkWidget *dialogue, *table, *hbox, *vbox, *alignment, *label;
+    FitShapeControls controls;
+    FitShapeContext ctx;
+    gint response, row;
 
-        dfield = gwy_data_field_new_alike(dfield, FALSE);
-        calculate_field(func, param, dfield);
-        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-        g_object_unref(dfield);
-        gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                GWY_DATA_ITEM_PALETTE,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_REAL_SQUARE,
-                                0);
-        gwy_container_set_const_string(data,
-                                       gwy_app_get_data_title_key_for_id(newid),
-                                       "Estimate");
+    gwy_clear(&ctx, 1);
+    gwy_clear(&controls, 1);
+    controls.args = args;
+    controls.ctx = &ctx;
 
-        for (i = 0; i < func->nparams; i++)
-            gwy_debug("param[%u] %g", i, param[i]);
+    dialogue = gtk_dialog_new_with_buttons(_("Fit Shape"), NULL, 0,
+                                           gwy_sgettext("verb|_Fit"),
+                                           RESPONSE_REFINE,
+                                           gwy_sgettext("verb|_Quick Fit"),
+                                           RESPONSE_CALCULATE,
+                                           gwy_sgettext("verb|_Estimate"),
+                                           RESPONSE_ESTIMATE,
+                                           GTK_STOCK_CANCEL,
+                                           GTK_RESPONSE_CANCEL,
+                                           GTK_STOCK_OK,
+                                           GTK_RESPONSE_OK,
+                                           NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialogue), GTK_RESPONSE_OK);
+    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
+    controls.dialogue = dialogue;
 
-        fitter = fit_reduced(func, &ctx, param);
-        if (fitter) {
-            gwy_debug("RSS after reduced fit: %g",
-                      calculate_rss(func, &ctx, param));
-            gwy_math_nlfit_free(fitter);
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialogue)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
+    controls.mydata = gwy_container_new();
+    gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
+    if (mfield)
+        gwy_container_set_object_by_name(controls.mydata, "/0/mask", mfield);
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
+    g_object_unref(dfield);
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/2/data", dfield);
+    g_object_unref(dfield);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
+    alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
+    gtk_container_add(GTK_CONTAINER(alignment), controls.view);
+    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
+    table = gtk_table_new(8, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
+
+    controls.function = function_menu_new(args->function, dfield, &controls);
+    gwy_table_attach_hscale(table, row, _("_Function type:"), NULL,
+                            GTK_OBJECT(controls.function), GWY_HSCALE_WIDGET);
+    row++;
+
+    controls.display
+        = gwy_enum_combo_box_new(displays, G_N_ELEMENTS(displays),
+                                 G_CALLBACK(display_changed), &controls,
+                                 args->display, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Preview:"), NULL,
+                            GTK_OBJECT(controls.display), GWY_HSCALE_WIDGET);
+    row++;
+
+    controls.output
+        = gwy_enum_combo_box_new(outputs, G_N_ELEMENTS(outputs),
+                                 G_CALLBACK(output_changed), &controls,
+                                 args->output, TRUE);
+    gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
+                            GTK_OBJECT(controls.output), GWY_HSCALE_WIDGET);
+    row++;
+
+    if (mfield) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+        label = gwy_label_new_header(_("Masking Mode"));
+        gtk_table_attach(GTK_TABLE(table), label,
+                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        controls.masking
+            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                       G_CALLBACK(masking_changed),
+                                       &controls, args->masking);
+        row = gwy_radio_buttons_attach_to_table(controls.masking,
+                                                GTK_TABLE(table), 3, row);
+    }
+
+    /* TODO: Units and everything. */
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.rss_label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.rss_label), 1.0, 0.5);
+    gwy_table_attach_hscale(table, row, _("Mean square difference:"), NULL,
+                            GTK_OBJECT(controls.rss_label), GWY_HSCALE_WIDGET);
+    row++;
+
+    update_context_data(&controls);
+    function_changed(GTK_COMBO_BOX(controls.function), &controls);
+    display_changed(GTK_COMBO_BOX(controls.display), &controls);
+
+    gtk_widget_show_all(dialogue);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialogue));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialogue);
+            case GTK_RESPONSE_NONE:
+            return;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_REFINE:
+            fit_shape_full_fit(&controls);
+            break;
+
+            case RESPONSE_CALCULATE:
+            fit_shape_reduced_fit(&controls);
+            break;
+
+            case RESPONSE_ESTIMATE:
+            fit_shape_estimate(&controls);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialogue);
+    g_object_unref(controls.mydata);
+    g_free(controls.param);
+    fit_context_free(controls.ctx);
+}
+
+static GtkWidget*
+function_menu_new(const gchar *name, GwyDataField *dfield,
+                  FitShapeControls *controls)
+{
+    GwySIUnit *xyunit, *zunit;
+    gboolean same_units;
+    GArray *entries = g_array_new(FALSE, FALSE, sizeof(GwyEnum));
+    GtkWidget *combo;
+    GwyEnum *model;
+    guint i, n, active = G_MAXUINT;
+
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    same_units = gwy_si_unit_equal(xyunit, zunit);
+
+    for (i = 0; i < G_N_ELEMENTS(functions); i++) {
+        GwyEnum entry;
+
+        if (functions[i].needs_same_units && !same_units)
+            continue;
+
+        entry.name = functions[i].name;
+        entry.value = i;
+        controls->function_id = i;
+        if (gwy_strequal(entry.name, name))
+            active = entries->len;
+        g_array_append_val(entries, entry);
+    }
+
+    if (active == G_MAXUINT) {
+        name = fit_shape_defaults.function;
+        for (i = 0; i < G_N_ELEMENTS(functions); i++) {
+            GwyEnum entry;
+
+            if (functions[i].needs_same_units && !same_units)
+                continue;
+
+            entry.name = functions[i].name;
+            entry.value = i;
+            controls->function_id = i;
+            if (gwy_strequal(entry.name, name))
+                active = entries->len;
+            g_array_append_val(entries, entry);
         }
 
-        for (i = 0; i < func->nparams; i++)
-            gwy_debug("param[%u] %g", i, param[i]);
-
-        fitter = fit(func, &ctx, param);
-        gwy_debug("RSS after fit: %g", calculate_rss(func, &ctx, param));
-        gwy_math_nlfit_free(fitter);
-
-        for (i = 0; i < func->nparams; i++)
-            gwy_debug("param[%u] %g", i, param[i]);
-
-        dfield = gwy_data_field_new_alike(dfield, FALSE);
-        calculate_field(func, param, dfield);
-        newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
-        g_object_unref(dfield);
-        gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                GWY_DATA_ITEM_PALETTE,
-                                GWY_DATA_ITEM_MASK_COLOR,
-                                GWY_DATA_ITEM_REAL_SQUARE,
-                                0);
-        gwy_container_set_const_string(data,
-                                       gwy_app_get_data_title_key_for_id(newid),
-                                       "Fit");
-
-        g_free(param);
-        fit_context_free(&ctx);
+        g_assert(active != G_MAXUINT);
     }
+
+    n = entries->len;
+    model = (GwyEnum*)g_array_free(entries, FALSE);
+    combo = gwy_enum_combo_box_new(model, n,
+                                   G_CALLBACK(function_changed), controls,
+                                   active, TRUE);
+    g_object_set_data(G_OBJECT(combo), "model", model);
+    g_object_weak_ref(G_OBJECT(combo), (GWeakNotify)g_free, model);
+
+    return combo;
+}
+
+static void
+function_changed(GtkComboBox *combo, FitShapeControls *controls)
+{
+    guint i = gwy_enum_combo_box_get_active(combo);
+    const GwyEnum *model = (const GwyEnum*)g_object_get_data(G_OBJECT(combo),
+                                                             "model");
+    FitShapeContext *ctx = controls->ctx;
+    const FitShapeFunc *func;
+
+    controls->function_id = model[i].value;
+    controls->args->function = model[i].name;
+    func = functions + controls->function_id;
+
+    controls->param = g_renew(gdouble, controls->param, func->nparams);
+    fit_context_resize_params(ctx, func->nparams);
+    func->init_param(ctx->xy, ctx->z, ctx->n, controls->param);
+    update_fields(controls);
+}
+
+static void
+display_changed(GtkComboBox *combo, FitShapeControls *controls)
+{
+    GwyPixmapLayer *player;
+    GQuark quark;
+
+    controls->args->display = gwy_enum_combo_box_get_active(combo);
+    player = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+    quark = gwy_app_get_data_key_for_id(controls->args->display);
+    gwy_pixmap_layer_set_data_key(player, g_quark_to_string(quark));
+}
+
+static void
+output_changed(GtkComboBox *combo, FitShapeControls *controls)
+{
+    controls->args->output = gwy_enum_combo_box_get_active(combo);
+}
+
+static void
+masking_changed(GtkToggleButton *button, FitShapeControls *controls)
+{
+    FitShapeArgs *args = controls->args;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    args->masking = gwy_radio_buttons_get_current(controls->masking);
+    update_context_data(controls);
+    // TODO: Do anything else here?
+}
+
+static void
+fit_shape_estimate(FitShapeControls *controls)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    const FitShapeContext *ctx = controls->ctx;
+
+    func->estimate(ctx->xy, ctx->z, ctx->n, controls->param);
+    update_fields(controls);
+    update_fit_results(controls, NULL);
+}
+
+static void
+fit_shape_reduced_fit(FitShapeControls *controls)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    const FitShapeContext *ctx = controls->ctx;
+    GwyNLFitter *fitter;
+
+    fitter = fit_reduced(func, ctx, controls->param);
+    update_fields(controls);
+    update_fit_results(controls, fitter);
+    gwy_math_nlfit_free(fitter);
+}
+
+static void
+fit_shape_full_fit(FitShapeControls *controls)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    const FitShapeContext *ctx = controls->ctx;
+    GwyNLFitter *fitter;
+
+    fitter = fit(func, ctx, controls->param);
+    update_fields(controls);
+    update_fit_results(controls, fitter);
+    gwy_math_nlfit_free(fitter);
+}
+
+static void
+update_fields(FitShapeControls *controls)
+{
+    GwyDataField *dfield, *resfield, *difffield;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    resfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
+    difffield = gwy_container_get_object_by_name(controls->mydata, "/2/data");
+    calculate_field(functions + controls->function_id,
+                    controls->param, resfield);
+    gwy_data_field_data_changed(resfield);
+    gwy_data_field_subtract_fields(difffield, dfield, resfield);
+    gwy_data_field_data_changed(difffield);
+}
+
+static void
+update_fit_results(FitShapeControls *controls,
+                   G_GNUC_UNUSED GwyNLFitter *fitter)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    const FitShapeContext *ctx = controls->ctx;
+    gdouble rss = 0.0;
+    guint k, n = ctx->n, nparams = func->nparams;
+    guchar buf[32];
+
+    for (k = 0; k < n; k++) {
+        gboolean fres;
+        gdouble z;
+
+        z = func->function((gdouble)k, nparams, controls->param,
+                           (gpointer)ctx, &fres);
+        if (!fres) {
+            g_warning("Cannot evaluate function for pixel.");
+        }
+        else {
+            z -= ctx->z[k];
+            rss += z*z;
+        }
+    }
+
+    controls->rss = sqrt(rss/n);
+    g_snprintf(buf, sizeof(buf), "%g", controls->rss);
+    gtk_label_set_text(GTK_LABEL(controls->rss_label), buf);
+}
+
+static void
+update_context_data(FitShapeControls *controls)
+{
+    GwyDataField *dfield, *mfield;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    mfield = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
+    fit_context_fill_data(controls->ctx, dfield, mfield, NULL,
+                          controls->args->masking);
 }
 
 static void
@@ -315,7 +671,8 @@ static void
 fit_context_fill_data(FitShapeContext *ctx,
                       GwyDataField *dfield,
                       GwyDataField *mask,
-                      GwyDataField *weight)
+                      GwyDataField *weight,
+                      GwyMaskingType masking)
 {
     guint n, k, i, j, nn, xres, yres;
     const gdouble *d, *m, *w;
@@ -328,13 +685,26 @@ fit_context_fill_data(FitShapeContext *ctx,
     xoff = gwy_data_field_get_xoffset(dfield);
     yoff = gwy_data_field_get_yoffset(dfield);
 
+    if (masking == GWY_MASK_IGNORE)
+        mask = NULL;
+    else if (!mask)
+        masking = GWY_MASK_IGNORE;
+
     nn = xres*yres;
     if (mask) {
         m = gwy_data_field_get_data_const(mask);
         n = 0;
-        for (k = 0; k < nn; k++) {
-            if (m[k] > 0.0)
-                n++;
+        if (masking == GWY_MASK_INCLUDE) {
+            for (k = 0; k < nn; k++) {
+                if (m[k] > 0.0)
+                    n++;
+            }
+        }
+        else {
+            for (k = 0; k < nn; k++) {
+                if (m[k] <= 0.0)
+                    n++;
+            }
         }
     }
     else {
@@ -343,23 +713,24 @@ fit_context_fill_data(FitShapeContext *ctx,
     }
 
     ctx->n = n;
-    ctx->fake_x = g_renew(gdouble, ctx->fake_x, n);
+    ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
     ctx->xy = g_renew(GwyXY, ctx->xy, n);
     ctx->z = g_renew(gdouble, ctx->z, n);
     ctx->w = g_renew(gdouble, ctx->w, n);
     d = gwy_data_field_get_data_const(dfield);
     w = weight ? gwy_data_field_get_data_const(weight) : NULL;
 
-    n = 0;
+    n = k = 0;
     for (i = 0; i < yres; i++) {
         gdouble y = (i + 0.5)*dy + yoff;
 
-        for (j = 0; j < xres; j++) {
-            if (!m || m[k] > 0.0) {
+        for (j = 0; j < xres; j++, k++) {
+            if (!m
+                || (masking == GWY_MASK_INCLUDE && m[k] > 0.0)
+                || (masking == GWY_MASK_EXCLUDE && m[k] <= 0.0)) {
                 gdouble x = (j + 0.5)*dx + xoff;
 
-                k = i*xres + j;
-                ctx->fake_x[n] = n;
+                ctx->abscissa[n] = n;
                 ctx->xy[n].x = x;
                 ctx->xy[n].y = y;
                 ctx->z[n] = d[k];
@@ -374,7 +745,7 @@ static void
 fit_context_free(FitShapeContext *ctx)
 {
     g_free(ctx->param_fixed);
-    g_free(ctx->fake_x);
+    g_free(ctx->abscissa);
     g_free(ctx->xy);
     g_free(ctx->z);
     g_free(ctx->w);
@@ -390,7 +761,7 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx, gdouble *param)
     fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
 
     rss = gwy_math_nlfit_fit_full(fitter,
-                                  ctx->n, ctx->fake_x, ctx->z, ctx->w,
+                                  ctx->n, ctx->abscissa, ctx->z, ctx->w,
                                   func->nparams, param, ctx->param_fixed, NULL,
                                   (gpointer)ctx);
     if (rss < 0.0)
@@ -432,7 +803,7 @@ calculate_field(const FitShapeFunc *func,
 
     gwy_clear(&ctx, 1);
     fit_context_resize_params(&ctx, func->nparams);
-    fit_context_fill_data(&ctx, dfield, NULL, NULL);
+    fit_context_fill_data(&ctx, dfield, NULL, NULL, GWY_MASK_IGNORE);
     calculate_function(func, &ctx, param, gwy_data_field_get_data(dfield));
     fit_context_free(&ctx);
 }
@@ -456,34 +827,8 @@ calculate_function(const FitShapeFunc *func,
     }
 }
 
-G_GNUC_UNUSED
 static gdouble
-calculate_rss(const FitShapeFunc *func,
-              const FitShapeContext *ctx,
-              const gdouble *param)
-{
-    guint k, n = ctx->n, nparams = func->nparams;
-    gdouble rss = 0.0;
-
-    for (k = 0; k < n; k++) {
-        gboolean fres;
-        gdouble z;
-
-        z = func->function((gdouble)k, nparams, param, (gpointer)ctx, &fres);
-        if (!fres) {
-            g_warning("Cannot evaluate function for pixel.");
-        }
-        else {
-            z -= ctx->z[k];
-            rss += z*z;
-        }
-    }
-
-    return rss;
-}
-
-static gdouble
-sphere_func(gdouble fake_x,
+sphere_func(gdouble abscissa,
             G_GNUC_UNUSED gint n_param,
             const gdouble *param,
             gpointer user_data,
@@ -499,7 +844,7 @@ sphere_func(gdouble fake_x,
 
     g_assert(n_param == 4);
 
-    i = (guint)fake_x;
+    i = (guint)abscissa;
     x = ctx->xy[i].x - xc;
     y = ctx->xy[i].y - yc;
     /* Rewrite R - sqrt(R² - r²) as κ*r²/(1 + sqrt(1 - κ²r²)) where
@@ -638,6 +983,25 @@ circumscribe_x_y(const GwyXY *xy, guint n,
     }
 }
 
+static gboolean
+sphere_init(const GwyXY *xy,
+            const gdouble *z,
+            guint n,
+            gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = 2.0*(zmax - zmin)/(r*r);
+
+    return TRUE;
+}
+
 /* Fit the data with a rotationally symmetric parabola and use its parameters
  * for the spherical surface estimate. */
 static gboolean
@@ -699,7 +1063,7 @@ sphere_estimate(const GwyXY *xy,
 }
 
 static gdouble
-grating_func(gdouble fake_x,
+grating_func(gdouble abscissa,
              G_GNUC_UNUSED gint n_param,
              const gdouble *param,
              gpointer user_data,
@@ -723,7 +1087,7 @@ grating_func(gdouble fake_x,
 
     g_assert(n_param == 7);
 
-    i = (guint)fake_x;
+    i = (guint)abscissa;
     x = ctx->xy[i].x;
     y = ctx->xy[i].y;
 
@@ -962,6 +1326,28 @@ fail:
 }
 
 static gboolean
+grating_init(const GwyXY *xy,
+             const gdouble *z,
+             guint n,
+             gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    param[0] = r/4.0;
+    param[1] = 0.5;
+    param[2] = zmax - zmin;
+    param[3] = zmin;
+    param[4] = 0.0;
+    param[5] = 0.0;
+    param[6] = 5.0;
+
+    return TRUE;
+}
+
+static gboolean
 grating_estimate(const GwyXY *xy,
                  const gdouble *z,
                  guint n,
@@ -1003,5 +1389,124 @@ grating_estimate(const GwyXY *xy,
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4);
 }
+
+static const gchar display_key[]  = "/module/fit_shape/display";
+static const gchar function_key[] = "/module/fit_shape/function";
+static const gchar masking_key[]  = "/module/fit_shape/masking";
+static const gchar output_key[]   = "/module/fit_shape/output";
+
+static void
+fit_shape_sanitize_args(FitShapeArgs *args)
+{
+    guint i;
+    gboolean ok;
+
+    args->masking = gwy_enum_sanitize_value(args->masking,
+                                            GWY_TYPE_MASKING_TYPE);
+    args->display = MIN(args->display, FIT_SHAPE_DISPLAY_DIFF);
+    args->output = MIN(args->output, FIT_SHAPE_OUTPUT_BOTH);
+
+    ok = FALSE;
+    for (i = 0; i < G_N_ELEMENTS(functions); i++) {
+        if (gwy_strequal(args->function, functions[i].name)) {
+            ok = TRUE;
+            break;
+        }
+    }
+    if (!ok)
+        args->function = fit_shape_defaults.function;
+}
+
+static void
+fit_shape_load_args(GwyContainer *container,
+                    FitShapeArgs *args)
+{
+    *args = fit_shape_defaults;
+
+    gwy_container_gis_string_by_name(container, function_key,
+                                     (const guchar**)&args->function);
+    gwy_container_gis_enum_by_name(container, display_key, &args->display);
+    gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
+    gwy_container_gis_enum_by_name(container, output_key, &args->output);
+    fit_shape_sanitize_args(args);
+}
+
+static void
+fit_shape_save_args(GwyContainer *container,
+                    FitShapeArgs *args)
+{
+    gwy_container_set_const_string_by_name(container, function_key,
+                                           args->function);
+    gwy_container_set_enum_by_name(container, display_key, args->display);
+    gwy_container_set_enum_by_name(container, masking_key, args->masking);
+    gwy_container_set_enum_by_name(container, output_key, args->output);
+}
+
+#if 0
+{
+    const FitShapeFunc *func = functions + 1;
+    FitShapeContext ctx;
+    GwyNLFitter *fitter;
+    gdouble *param;
+    guint i;
+
+    gwy_clear(&ctx, 1);
+    fit_context_resize_params(&ctx, func->nparams);
+    fit_context_fill_data(&ctx, dfield, NULL, NULL);
+
+    param = g_new(gdouble, func->nparams);
+    func->estimate(ctx.xy, ctx.z, ctx.n, param);
+    gwy_debug("RSS after estimate: %g", calculate_rss(func, &ctx, param));
+
+    dfield = gwy_data_field_new_alike(dfield, FALSE);
+    calculate_field(func, param, dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    gwy_container_set_const_string(data,
+                                   gwy_app_get_data_title_key_for_id(newid),
+                                   "Estimate");
+
+    for (i = 0; i < func->nparams; i++)
+        gwy_debug("param[%u] %g", i, param[i]);
+
+    fitter = fit_reduced(func, &ctx, param);
+    if (fitter) {
+        gwy_debug("RSS after reduced fit: %g",
+                  calculate_rss(func, &ctx, param));
+        gwy_math_nlfit_free(fitter);
+    }
+
+    for (i = 0; i < func->nparams; i++)
+        gwy_debug("param[%u] %g", i, param[i]);
+
+    fitter = fit(func, &ctx, param);
+    gwy_debug("RSS after fit: %g", calculate_rss(func, &ctx, param));
+    gwy_math_nlfit_free(fitter);
+
+    for (i = 0; i < func->nparams; i++)
+        gwy_debug("param[%u] %g", i, param[i]);
+
+    dfield = gwy_data_field_new_alike(dfield, FALSE);
+    calculate_field(func, param, dfield);
+    newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
+    g_object_unref(dfield);
+    gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    gwy_container_set_const_string(data,
+                                   gwy_app_get_data_title_key_for_id(newid),
+                                   "Fit");
+
+    g_free(param);
+    fit_context_free(&ctx);
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
