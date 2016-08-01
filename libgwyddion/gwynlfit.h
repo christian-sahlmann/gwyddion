@@ -24,6 +24,7 @@
 #define __GWY_NLFIT_H__
 
 #include <glib.h>
+#include <libgwyddion/gwyutils.h>
 
 G_BEGIN_DECLS
 
@@ -88,6 +89,9 @@ gdouble         gwy_math_nlfit_get_correlations  (GwyNLFitter *nlfit,
                                                   gint par2);
 gdouble         gwy_math_nlfit_get_sigma         (GwyNLFitter *nlfit,
                                                   gint par);
+void            gwy_math_nlfit_set_callbacks     (GwyNLFitter *nlfit,
+                                                  GwySetFractionFunc set_fraction,
+                                                  GwySetMessageFunc set_message);
 
 void            gwy_math_nlfit_derive            (gdouble x,
                                                   gint n_param,

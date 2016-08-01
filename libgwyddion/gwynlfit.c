@@ -39,20 +39,31 @@
 /* i (row) MUST be greater or equal than j (column) */
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
-static gdouble  gwy_math_nlfit_residua      (GwyNLFitter *nlfit,
-                                             gint n_dat,
-                                             const gdouble *x,
-                                             const gdouble *y,
-                                             const gdouble *weight,
-                                             gint n_param,
-                                             const gdouble *param,
-                                             gpointer user_data,
-                                             gdouble *resid);
+typedef struct {
+    GwyNLFitter *fitter;
+    GwySetFractionFunc set_fraction;
+    GwySetMessageFunc set_message;
+} GwyNLFitterPrivate;
+
+static gdouble             gwy_math_nlfit_residua(GwyNLFitter *nlfit,
+                                                  gint n_dat,
+                                                  const gdouble *x,
+                                                  const gdouble *y,
+                                                  const gdouble *weight,
+                                                  gint n_param,
+                                                  const gdouble *param,
+                                                  gpointer user_data,
+                                                  gdouble *resid);
+static GwyNLFitterPrivate* find_private_data     (GwyNLFitter *fitter,
+                                                  gboolean do_create);
+static void                free_private_data     (GwyNLFitter *fitter);
 
 /* XXX: publish in 2.0? */
 static gboolean gwy_math_sym_matrix_invert(gint n,
                                            gdouble *a);
 
+
+static GList *private_fitter_data = NULL;
 
 /**
  * gwy_math_nlfit_new:
@@ -94,6 +105,7 @@ gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
 void
 gwy_math_nlfit_free(GwyNLFitter *nlfit)
 {
+    free_private_data(nlfit);
     g_free(nlfit->covar);
     nlfit->covar = NULL;
     g_free(nlfit);
@@ -170,6 +182,9 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                         const gint *link_map,
                         gpointer user_data)
 {
+    GwyNLFitterPrivate *priv;
+    GwySetFractionFunc set_fraction = NULL;
+    GwySetMessageFunc set_message = NULL;
     gdouble mlambda = 1e-4;
     gdouble sumr = G_MAXDOUBLE;
     gdouble sumr1;
@@ -184,6 +199,11 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     gboolean step1 = TRUE;
     gboolean end = FALSE;
 
+    if ((priv = find_private_data(nlfit, FALSE))) {
+        set_fraction = priv->set_fraction;
+        set_message = priv->set_message;
+    }
+
     g_free(nlfit->covar);
     nlfit->covar = NULL;
     nlfit->dispersion = -1.0;
@@ -192,6 +212,11 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     g_return_val_if_fail(n_param > 0, -1.0);
     /*g_return_val_if_fail(n_dat > n_param, -1.0);*/
     g_return_val_if_fail(x && y && param, -1.0);
+
+    if (set_message)
+        set_message(_("Initial residua evaluation..."));
+    if (set_fraction)
+        set_fraction(0.0);
 
     /* Use defaults for param specials, if not specified */
     if (!weight) {
@@ -221,13 +246,17 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                                    n_param, param, user_data, resid);
     sumr = sumr1;
 
-    if (!nlfit->eval) {
+    if (!nlfit->eval || (set_fraction
+                         && !set_fraction(1.0/(nlfit->maxiter + 1)))) {
         g_warning("Initial residua evaluation failed");
         g_free(w);
         g_free(resid);
         g_free(origparam);
-        return -1;
+        return -1.0;
     }
+
+    if (set_message)
+        set_message(_("Fitting..."));
 
     /* find non-fixed parameters and map all -> non-fixed */
     n_var_param = 0;
@@ -395,6 +424,9 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             step1 = TRUE;
 
         if (++miter >= nlfit->maxiter)
+            break;
+
+        if (set_fraction && !set_fraction((gdouble)miter/nlfit->maxiter))
             break;
     } while (!end);
 
@@ -668,6 +700,64 @@ gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
     return SLi(nlfit->covar, par1, par2)/sqrt(Pom);
 }
 
+/**
+ * gwy_math_nlfit_set_callbacks:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ * @set_fraction: Function that sets fraction to output (or %NULL).
+ * @set_message: Function that sets message to output (or %NULL).
+ *
+ * Sets callbacks reporting a non-linear least squares fitter progress.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_math_nlfit_set_callbacks(GwyNLFitter *fitter,
+                             GwySetFractionFunc set_fraction,
+                             GwySetMessageFunc set_message)
+{
+    GwyNLFitterPrivate *priv;
+
+    priv = find_private_data(fitter, TRUE);
+    priv->set_fraction = set_fraction;
+    priv->set_message = set_message;
+}
+
+static GwyNLFitterPrivate*
+find_private_data(GwyNLFitter *fitter, gboolean do_create)
+{
+    GwyNLFitterPrivate *priv;
+    GList *l;
+
+    for (l = private_fitter_data; l; l = g_list_next(private_fitter_data)) {
+        priv = (GwyNLFitterPrivate*)l->data;
+        if (priv->fitter == fitter)
+            return priv;
+    }
+
+    if (!do_create)
+        return NULL;
+
+    priv = g_new0(GwyNLFitterPrivate, 1);
+    priv->fitter = fitter;
+    private_fitter_data = g_list_prepend(private_fitter_data, priv);
+    return priv;
+}
+
+static void
+free_private_data(GwyNLFitter *fitter)
+{
+    GwyNLFitterPrivate *priv;
+    GList *l;
+
+    for (l = private_fitter_data; l; l = g_list_next(private_fitter_data)) {
+        priv = (GwyNLFitterPrivate*)l->data;
+        if (priv->fitter == fitter) {
+            private_fitter_data = g_list_delete_link(private_fitter_data, l);
+            g_free(priv);
+            return;
+        }
+    }
+}
 
 /**
  * gwy_math_sym_matrix_invert:
