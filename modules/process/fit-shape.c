@@ -161,7 +161,9 @@ static void         fit_context_fill_data    (FitShapeContext *ctx,
 static void         fit_context_free         (FitShapeContext *ctx);
 static GwyNLFitter* fit                      (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
-                                              gdouble *param);
+                                              gdouble *param,
+                                              GwySetFractionFunc set_fraction,
+                                              GwySetMessageFunc set_message);
 static GwyNLFitter* fit_reduced              (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
                                               gdouble *param);
@@ -610,9 +612,19 @@ fit_shape_estimate(FitShapeControls *controls)
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
 
+    gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
+    gwy_debug("start estimate");
     func->estimate(ctx->xy, ctx->z, ctx->n, controls->param);
+#ifdef DEBUG
+    {
+        guint i;
+        for (i = 0; i < func->nparams; i++)
+            gwy_debug("[%u] %g", i, controls->param[i]);
+    }
+#endif
     update_fields(controls);
     update_fit_results(controls, NULL);
+    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
 
 static void
@@ -622,10 +634,20 @@ fit_shape_reduced_fit(FitShapeControls *controls)
     const FitShapeContext *ctx = controls->ctx;
     GwyNLFitter *fitter;
 
+    gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
+    gwy_debug("start reduced fit");
     fitter = fit_reduced(func, ctx, controls->param);
+#ifdef DEBUG
+    {
+        guint i;
+        for (i = 0; i < func->nparams; i++)
+            gwy_debug("[%u] %g", i, controls->param[i]);
+    }
+#endif
     update_fields(controls);
     update_fit_results(controls, fitter);
     gwy_math_nlfit_free(fitter);
+    gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
 
 static void
@@ -635,10 +657,21 @@ fit_shape_full_fit(FitShapeControls *controls)
     const FitShapeContext *ctx = controls->ctx;
     GwyNLFitter *fitter;
 
-    fitter = fit(func, ctx, controls->param);
+    gwy_app_wait_start(GTK_WINDOW(controls->dialogue), _("Fitting..."));
+    gwy_debug("start fit");
+    fitter = fit(func, ctx, controls->param,
+                 gwy_app_wait_set_fraction, gwy_app_wait_set_message);
+#ifdef DEBUG
+    {
+        guint i;
+        for (i = 0; i < func->nparams; i++)
+            gwy_debug("[%u] %g", i, controls->param[i]);
+    }
+#endif
     update_fields(controls);
     update_fit_results(controls, fitter);
     gwy_math_nlfit_free(fitter);
+    gwy_app_wait_finish();
 }
 
 static void
@@ -799,12 +832,15 @@ fit_context_free(FitShapeContext *ctx)
 }
 
 static GwyNLFitter*
-fit(const FitShapeFunc *func, const FitShapeContext *ctx, gdouble *param)
+fit(const FitShapeFunc *func, const FitShapeContext *ctx, gdouble *param,
+    GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     GwyNLFitter *fitter;
     gdouble rss;
 
     fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
+    if (set_fraction || set_message)
+        gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
 
     rss = gwy_math_nlfit_fit_full(fitter,
                                   ctx->n, ctx->abscissa, ctx->z, ctx->w,
@@ -833,7 +869,7 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
     ctxred.z = g_new(gdouble, nred);
     /* TODO TODO TODO we must also reduce weights. */
     reduce_data_size(ctx->xy, ctx->z, ctx->n, ctxred.xy, ctxred.z, nred);
-    fitter = fit(func, &ctxred, param);
+    fitter = fit(func, &ctxred, param, NULL, NULL);
     g_free(ctxred.xy);
     g_free(ctxred.z);
 
