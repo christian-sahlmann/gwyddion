@@ -24,6 +24,9 @@
 
 #include <glib.h>
 #include <libgwyddion/gwyenum.h>
+/* This is necessary to define the GwySetFractionFunc and GwySetMessageFunc
+ * types that used to be in this header so we must continue providing them. */
+#include <libgwyddion/gwyutils.h>
 
 G_BEGIN_DECLS
 
@@ -278,9 +281,6 @@ typedef struct {
     guint state;
     gdouble fraction;
 } GwyComputationState;
-
-typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
-typedef gboolean (*GwySetMessageFunc)(const gchar *message);
 
 G_END_DECLS
 

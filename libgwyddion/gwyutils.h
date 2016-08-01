@@ -48,6 +48,9 @@ typedef enum {
     GWY_BYTE_ORDER_BIG_ENDIAN    = G_BIG_ENDIAN,
 } GwyByteOrder;
 
+typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
+typedef gboolean (*GwySetMessageFunc)(const gchar *message);
+
 void         gwy_hash_table_to_slist_cb(gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);

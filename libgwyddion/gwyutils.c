@@ -2136,4 +2136,30 @@ gwy_fprintf(FILE        *file,
  * Since: 2.25
  **/
 
+/**
+ * GwySetFractionFunc:
+ * @fraction: Progress estimate as a number from the interval [0,1].
+ *
+ * Type of function for reporting progress of a long computation.
+ *
+ * Usually you want to use gwy_app_wait_set_fraction().
+ *
+ * Returns: %TRUE if the computation should continue; %FALSE if it should be
+ *          cancelled.
+ **/
+
+/**
+ * GwySetMessageFunc:
+ * @message: Message to be shown together with the progress fraction.  If the
+ *           computation has stages the messages should reflect this.
+ *           Otherwise at least some general message should be set.
+ *
+ * Type of function for reporting what a long computation is doing now.
+ *
+ * Usually you want to use gwy_app_wait_set_message().
+ *
+ * Returns: %TRUE if the computation should continue; %FALSE if it should be
+ *          cancelled.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
