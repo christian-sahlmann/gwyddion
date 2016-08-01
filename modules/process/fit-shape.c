@@ -107,11 +107,23 @@ typedef struct {
 } FitShapeContext;
 
 typedef struct {
+    GtkWidget *fix;
+    GtkWidget *name;
+    GtkWidget *equals;
+    GtkWidget *value;
+    GtkWidget *value_unit;
+    GtkWidget *pm;
+    GtkWidget *error;
+    GtkWidget *error_unit;
+} FitParamControl;
+
+typedef struct {
     FitShapeArgs *args;
     FitShapeContext *ctx;
     gint id;
     guint function_id;
     gdouble *param;
+    gdouble *alt_param;
     gdouble rss;
     GwyContainer *mydata;
     GtkWidget *dialogue;
@@ -120,7 +132,10 @@ typedef struct {
     GtkWidget *display;
     GtkWidget *output;
     GtkWidget *rss_label;
+    GtkWidget *revert;
     GSList *masking;
+    GtkWidget *param_table;
+    GArray *param_controls;
 } FitShapeControls;
 
 static gboolean     module_register          (void);
@@ -133,6 +148,11 @@ static void         fit_shape_dialogue       (FitShapeArgs *args,
                                               GwyDataField *mfield);
 static void         create_output            (FitShapeControls *controls,
                                               GwyContainer *data);
+static GtkWidget*   basic_tab_new            (FitShapeControls *controls,
+                                              GwyDataField *dfield,
+                                              GwyDataField *mfield);
+static GtkWidget*   parameters_tab_new       (FitShapeControls *controls);
+static void         fit_param_table_resize   (FitShapeControls *controls);
 static GtkWidget*   function_menu_new        (const gchar *name,
                                               GwyDataField *dfield,
                                               FitShapeControls *controls);
@@ -144,6 +164,9 @@ static void         output_changed           (GtkComboBox *combo,
                                               FitShapeControls *controls);
 static void         masking_changed          (GtkToggleButton *button,
                                               FitShapeControls *controls);
+static void         fix_changed              (GtkToggleButton *button,
+                                              FitShapeControls *controls);
+static void         revert_params            (FitShapeControls *controls);
 static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
@@ -293,22 +316,11 @@ fit_shape_dialogue(FitShapeArgs *args,
                    GwyContainer *data, gint id,
                    GwyDataField *dfield, GwyDataField *mfield)
 {
-    static const GwyEnum displays[] = {
-        { N_("Data"),         FIT_SHAPE_DISPLAY_DATA,   },
-        { N_("Fitted shape"), FIT_SHAPE_DISPLAY_RESULT, },
-        { N_("Difference"),   FIT_SHAPE_DISPLAY_DIFF,   },
-    };
-    static const GwyEnum outputs[] = {
-        { N_("None"),         FIT_SHAPE_OUTPUT_NONE, },
-        { N_("Fitted shape"), FIT_SHAPE_OUTPUT_FIT,  },
-        { N_("Difference"),   FIT_SHAPE_OUTPUT_DIFF, },
-        { N_("Both"),         FIT_SHAPE_OUTPUT_BOTH, },
-    };
-
-    GtkWidget *dialogue, *table, *hbox, *vbox, *alignment, *label;
+    GtkWidget *dialogue, *notebook, *widget, *vbox, *hbox, *alignment,
+              *hbox2, *label;
     FitShapeControls controls;
     FitShapeContext ctx;
-    gint response, row;
+    gint response;
 
     gwy_clear(&ctx, 1);
     gwy_clear(&controls, 1);
@@ -357,58 +369,28 @@ fit_shape_dialogue(FitShapeArgs *args,
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
     gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
 
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+    vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
-    table = gtk_table_new(8, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
-    row = 0;
+    notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 
-    controls.function = function_menu_new(args->function, dfield, &controls);
-    gwy_table_attach_hscale(table, row, _("_Function type:"), NULL,
-                            GTK_OBJECT(controls.function), GWY_HSCALE_WIDGET);
-    row++;
+    widget = basic_tab_new(&controls, dfield, mfield);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
+                             gtk_label_new(gwy_sgettext("adjective|Basic")));
 
-    controls.display
-        = gwy_enum_combo_box_new(displays, G_N_ELEMENTS(displays),
-                                 G_CALLBACK(display_changed), &controls,
-                                 args->display, TRUE);
-    gwy_table_attach_hscale(table, row, _("_Preview:"), NULL,
-                            GTK_OBJECT(controls.display), GWY_HSCALE_WIDGET);
-    row++;
+    widget = parameters_tab_new(&controls);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
+                             gtk_label_new(_("Parameters")));
 
-    controls.output
-        = gwy_enum_combo_box_new(outputs, G_N_ELEMENTS(outputs),
-                                 G_CALLBACK(output_changed), &controls,
-                                 args->output, TRUE);
-    gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
-                            GTK_OBJECT(controls.output), GWY_HSCALE_WIDGET);
-    row++;
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
 
-    if (mfield) {
-        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-        label = gwy_label_new_header(_("Masking Mode"));
-        gtk_table_attach(GTK_TABLE(table), label,
-                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
+    label = gtk_label_new(_("Mean square difference:"));
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 2);
 
-        controls.masking
-            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
-                                       G_CALLBACK(masking_changed),
-                                       &controls, args->masking);
-        row = gwy_radio_buttons_attach_to_table(controls.masking,
-                                                GTK_TABLE(table), 3, row);
-    }
-
-    /* TODO: Units and everything. */
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.rss_label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.rss_label), 1.0, 0.5);
-    gwy_table_attach_hscale(table, row, _("Mean square difference:"), " ",
-                            GTK_OBJECT(controls.rss_label), GWY_HSCALE_WIDGET);
-    row++;
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.rss_label, FALSE, FALSE, 2);
 
     update_context_data(&controls);
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
@@ -452,6 +434,8 @@ fit_shape_dialogue(FitShapeArgs *args,
 finalise:
     g_object_unref(controls.mydata);
     g_free(controls.param);
+    g_free(controls.alt_param);
+    g_array_free(controls.param_controls, TRUE);
     fit_context_free(controls.ctx);
 }
 
@@ -491,6 +475,193 @@ create_output(FitShapeControls *controls, GwyContainer *data)
         gwy_app_channel_log_add_proc(data, id, newid);
         gwy_app_set_data_field_title(data, newid, _("Difference"));
     }
+}
+
+static GtkWidget*
+basic_tab_new(FitShapeControls *controls,
+              GwyDataField *dfield, GwyDataField *mfield)
+{
+    static const GwyEnum displays[] = {
+        { N_("Data"),         FIT_SHAPE_DISPLAY_DATA,   },
+        { N_("Fitted shape"), FIT_SHAPE_DISPLAY_RESULT, },
+        { N_("Difference"),   FIT_SHAPE_DISPLAY_DIFF,   },
+    };
+    static const GwyEnum outputs[] = {
+        { N_("None"),         FIT_SHAPE_OUTPUT_NONE, },
+        { N_("Fitted shape"), FIT_SHAPE_OUTPUT_FIT,  },
+        { N_("Difference"),   FIT_SHAPE_OUTPUT_DIFF, },
+        { N_("Both"),         FIT_SHAPE_OUTPUT_BOTH, },
+    };
+
+    GtkWidget *table, *label;
+    FitShapeArgs *args = controls->args;
+    gint row;
+
+    table = gtk_table_new(7, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    row = 0;
+
+    controls->function = function_menu_new(args->function, dfield, controls);
+    gwy_table_attach_hscale(table, row, _("_Function type:"), NULL,
+                            GTK_OBJECT(controls->function), GWY_HSCALE_WIDGET);
+    row++;
+
+    controls->display
+        = gwy_enum_combo_box_new(displays, G_N_ELEMENTS(displays),
+                                 G_CALLBACK(display_changed), controls,
+                                 args->display, TRUE);
+    gwy_table_attach_hscale(table, row, _("_Preview:"), NULL,
+                            GTK_OBJECT(controls->display), GWY_HSCALE_WIDGET);
+    row++;
+
+    controls->output
+        = gwy_enum_combo_box_new(outputs, G_N_ELEMENTS(outputs),
+                                 G_CALLBACK(output_changed), controls,
+                                 args->output, TRUE);
+    gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
+                            GTK_OBJECT(controls->output), GWY_HSCALE_WIDGET);
+    row++;
+
+    if (mfield) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+        label = gwy_label_new_header(_("Masking Mode"));
+        gtk_table_attach(GTK_TABLE(table), label,
+                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        controls->masking
+            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                       G_CALLBACK(masking_changed),
+                                       controls, args->masking);
+        row = gwy_radio_buttons_attach_to_table(controls->masking,
+                                                GTK_TABLE(table), 3, row);
+    }
+
+    return table;
+}
+
+static GtkWidget*
+parameters_tab_new(FitShapeControls *controls)
+{
+    GtkWidget *vbox, *hbox;
+    GtkTable *table;
+
+    vbox = gtk_vbox_new(FALSE, 4);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+
+    controls->param_table = gtk_table_new(1, 8, FALSE);
+    table = GTK_TABLE(controls->param_table);
+    gtk_table_set_row_spacing(table, 0, 2);
+    gtk_table_set_col_spacings(table, 2);
+    gtk_table_set_col_spacing(table, 0, 6);
+    gtk_table_set_col_spacing(table, 4, 6);
+    gtk_table_set_col_spacing(table, 5, 6);
+    gtk_table_set_col_spacing(table, 7, 6);
+    gtk_box_pack_start(GTK_BOX(vbox), controls->param_table, FALSE, FALSE, 0);
+
+    gtk_table_attach(table, gwy_label_new_header(_("Fix")),
+                     0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gwy_label_new_header(_("Parameter")),
+                     1, 5, 0, 1, GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gwy_label_new_header(_("Error")),
+                     6, 8, 0, 1, GTK_FILL, 0, 0, 0);
+
+    controls->param_controls = g_array_new(FALSE, FALSE,
+                                           sizeof(FitParamControl));
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 8);
+    controls->revert = gtk_button_new_with_mnemonic(_("Revert to Previous"));
+    gtk_box_pack_start(GTK_BOX(hbox), controls->revert, FALSE, FALSE, 8);
+    g_signal_connect_swapped(controls->revert, "clicked",
+                             G_CALLBACK(revert_params), controls);
+
+    return vbox;
+}
+
+static void
+fit_param_table_resize(FitShapeControls *controls)
+{
+    GtkTable *table;
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, row, old_nparams, nparams;
+
+    old_nparams = controls->param_controls->len;
+    nparams = func->nparams;
+    gwy_debug("%u -> %u", old_nparams, nparams);
+    for (i = old_nparams; i > nparams; i--) {
+        FitParamControl *cntrl = &g_array_index(controls->param_controls,
+                                                FitParamControl, i-1);
+        gtk_widget_destroy(cntrl->fix);
+        gtk_widget_destroy(cntrl->name);
+        gtk_widget_destroy(cntrl->equals);
+        gtk_widget_destroy(cntrl->value);
+        gtk_widget_destroy(cntrl->value_unit);
+        gtk_widget_destroy(cntrl->pm);
+        gtk_widget_destroy(cntrl->error);
+        gtk_widget_destroy(cntrl->error_unit);
+        g_array_set_size(controls->param_controls, i-1);
+    }
+
+    table = GTK_TABLE(controls->param_table);
+    gtk_table_resize(table, 1+nparams, 8);
+    row = old_nparams + 1;
+
+    for (i = old_nparams; i < nparams; i++) {
+        FitParamControl cntrl;
+
+        cntrl.fix = gtk_check_button_new();
+        gtk_table_attach(table, cntrl.fix, 0, 1, row, row+1, 0, 0, 0, 0);
+        g_object_set_data(G_OBJECT(cntrl.fix), "id", GINT_TO_POINTER(i + 1));
+        g_signal_connect(cntrl.fix, "toggled",
+                         G_CALLBACK(fix_changed), controls);
+
+        cntrl.name = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.name), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.name,
+                         1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.equals = gtk_label_new("=");
+        gtk_table_attach(table, cntrl.equals, 2, 3, row, row+1, 0, 0, 0, 0);
+
+        cntrl.value = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.value), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.value,
+                         3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.value_unit = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.value_unit), 0.0, 0.5);
+        gtk_table_attach(table, cntrl.value_unit,
+                         4, 5, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.pm = gtk_label_new("±");
+        gtk_table_attach(table, cntrl.pm, 5, 6, row, row+1, 0, 0, 0, 0);
+
+        cntrl.error = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.error), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.error,
+                         6, 7, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.error_unit = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.error_unit), 0.0, 0.5);
+        gtk_table_attach(table, cntrl.error_unit,
+                         7, 8, row, row+1, GTK_FILL, 0, 0, 0);
+
+        g_array_append_val(controls->param_controls, cntrl);
+        row++;
+    }
+
+    for (i = 0; i < nparams; i++) {
+        FitParamControl *cntrl = &g_array_index(controls->param_controls,
+                                                FitParamControl, i);
+        const FitShapeParam *param = func->param + i;
+
+        gtk_label_set_markup(GTK_LABEL(cntrl->name), param->name);
+    }
+
+    gtk_widget_show_all(controls->param_table);
 }
 
 static GtkWidget*
@@ -560,14 +731,20 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
                                                              "model");
     FitShapeContext *ctx = controls->ctx;
     const FitShapeFunc *func;
+    guint nparams;
 
     controls->function_id = model[i].value;
     controls->args->function = model[i].name;
     func = functions + controls->function_id;
+    nparams = func->nparams;
 
-    controls->param = g_renew(gdouble, controls->param, func->nparams);
-    fit_context_resize_params(ctx, func->nparams);
+    controls->param = g_renew(gdouble, controls->param, nparams);
+    controls->alt_param = g_renew(gdouble, controls->alt_param, nparams);
+    fit_param_table_resize(controls);
+    fit_context_resize_params(ctx, nparams);
     func->init_param(ctx->xy, ctx->z, ctx->n, controls->param);
+    memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
+    /* TODO: Also update values in the table. */
     update_fields(controls);
 }
 
@@ -600,6 +777,18 @@ masking_changed(GtkToggleButton *button, FitShapeControls *controls)
     args->masking = gwy_radio_buttons_get_current(controls->masking);
     update_context_data(controls);
     // TODO: Do anything else here?
+}
+
+static void
+fix_changed(GtkToggleButton *button, FitShapeControls *controls)
+{
+    // TODO
+}
+
+static void
+revert_params(FitShapeControls *controls)
+{
+    // TODO
 }
 
 static void
@@ -696,8 +885,7 @@ update_fit_results(FitShapeControls *controls,
     guint k, n = ctx->n, nparams = func->nparams;
     GwySIUnit *zunit;
     GwySIValueFormat *vf;
-    GtkLabel *label;
-    guchar buf[32];
+    guchar buf[48];
 
     for (k = 0; k < n; k++) {
         gboolean fres;
@@ -720,13 +908,10 @@ update_fit_results(FitShapeControls *controls,
     vf = gwy_si_unit_get_format(zunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                 controls->rss, NULL);
 
-    label = GTK_LABEL(controls->rss_label);
-    g_snprintf(buf, sizeof(buf), "%.*f",
-               vf->precision+1, controls->rss/vf->magnitude);
-    gtk_label_set_text(label, buf);
-
-    label = GTK_LABEL(gwy_table_hscale_get_units(GTK_OBJECT(label)));
-    gtk_label_set_text(label, vf->units);
+    g_snprintf(buf, sizeof(buf), "%.*f%s%s",
+               vf->precision+1, controls->rss/vf->magnitude,
+               *vf->units ? " " : "", vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->rss_label), buf);
 
     gwy_si_unit_value_format_free(vf);
 }
