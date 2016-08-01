@@ -78,8 +78,8 @@ typedef gboolean (*FitShapeEstimate)(const GwyXY *xy,
 
 typedef struct {
     const char *name;
-    gint power_x;
-    gint power_y;
+    gint power_xy;
+    gint power_z;
 } FitShapeParam;
 
 /* XXX: We may need two sets of parameters: nice to fit (e.g. curvature
@@ -115,6 +115,7 @@ typedef struct {
     GtkWidget *pm;
     GtkWidget *error;
     GtkWidget *error_unit;
+    gdouble magnitude;
 } FitParamControl;
 
 typedef struct {
@@ -124,6 +125,7 @@ typedef struct {
     guint function_id;
     gdouble *param;
     gdouble *alt_param;
+    gdouble *param_err;
     gdouble rss;
     GwyContainer *mydata;
     GtkWidget *dialogue;
@@ -133,6 +135,7 @@ typedef struct {
     GtkWidget *output;
     GtkWidget *rss_label;
     GtkWidget *revert;
+    GtkWidget *recalculate;
     GSList *masking;
     GtkWidget *param_table;
     GArray *param_controls;
@@ -166,7 +169,14 @@ static void         masking_changed          (GtkToggleButton *button,
                                               FitShapeControls *controls);
 static void         fix_changed              (GtkToggleButton *button,
                                               FitShapeControls *controls);
+static void         param_value_activate     (GtkEntry *entry,
+                                              FitShapeControls *controls);
+static void         update_all_param_values  (FitShapeControls *controls);
 static void         revert_params            (FitShapeControls *controls);
+static void         recalculate_image        (FitShapeControls *controls);
+static void         update_param_table       (FitShapeControls *controls,
+                                              const gdouble *param,
+                                              const gdouble *param_err);
 static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
@@ -435,6 +445,7 @@ finalise:
     g_object_unref(controls.mydata);
     g_free(controls.param);
     g_free(controls.alt_param);
+    g_free(controls.param_err);
     g_array_free(controls.param_controls, TRUE);
     fit_context_free(controls.ctx);
 }
@@ -546,6 +557,7 @@ static GtkWidget*
 parameters_tab_new(FitShapeControls *controls)
 {
     GtkWidget *vbox, *hbox;
+    GtkSizeGroup *sizegroup;
     GtkTable *table;
 
     vbox = gtk_vbox_new(FALSE, 4);
@@ -571,12 +583,27 @@ parameters_tab_new(FitShapeControls *controls)
     controls->param_controls = g_array_new(FALSE, FALSE,
                                            sizeof(FitParamControl));
 
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+
     hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 8);
-    controls->revert = gtk_button_new_with_mnemonic(_("Revert to Previous"));
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+    controls->recalculate = gtk_button_new_with_mnemonic(_("_Recalculate "
+                                                           "Image"));
+    gtk_size_group_add_widget(sizegroup, controls->recalculate);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->recalculate, FALSE, FALSE, 8);
+    g_signal_connect_swapped(controls->recalculate, "clicked",
+                             G_CALLBACK(recalculate_image), controls);
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+    controls->revert = gtk_button_new_with_mnemonic(_("Revert to "
+                                                      "_Previous Values"));
+    gtk_size_group_add_widget(sizegroup, controls->revert);
     gtk_box_pack_start(GTK_BOX(hbox), controls->revert, FALSE, FALSE, 8);
     g_signal_connect_swapped(controls->revert, "clicked",
                              G_CALLBACK(revert_params), controls);
+
+    g_object_unref(sizegroup);
 
     return vbox;
 }
@@ -614,7 +641,7 @@ fit_param_table_resize(FitShapeControls *controls)
 
         cntrl.fix = gtk_check_button_new();
         gtk_table_attach(table, cntrl.fix, 0, 1, row, row+1, 0, 0, 0, 0);
-        g_object_set_data(G_OBJECT(cntrl.fix), "id", GINT_TO_POINTER(i + 1));
+        g_object_set_data(G_OBJECT(cntrl.fix), "id", GUINT_TO_POINTER(i));
         g_signal_connect(cntrl.fix, "toggled",
                          G_CALLBACK(fix_changed), controls);
 
@@ -626,10 +653,14 @@ fit_param_table_resize(FitShapeControls *controls)
         cntrl.equals = gtk_label_new("=");
         gtk_table_attach(table, cntrl.equals, 2, 3, row, row+1, 0, 0, 0, 0);
 
-        cntrl.value = gtk_label_new(NULL);
-        gtk_misc_set_alignment(GTK_MISC(cntrl.value), 1.0, 0.5);
+        cntrl.value = gtk_entry_new();
+        gtk_entry_set_width_chars(GTK_ENTRY(cntrl.value), 10);
         gtk_table_attach(table, cntrl.value,
                          3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+        g_object_set_data(G_OBJECT(cntrl.value), "id", GUINT_TO_POINTER(i));
+        g_signal_connect(cntrl.value, "activate",
+                         G_CALLBACK(param_value_activate), controls);
+        gwy_widget_set_activate_on_unfocus(cntrl.value, TRUE);
 
         cntrl.value_unit = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(cntrl.value_unit), 0.0, 0.5);
@@ -649,6 +680,7 @@ fit_param_table_resize(FitShapeControls *controls)
         gtk_table_attach(table, cntrl.error_unit,
                          7, 8, row, row+1, GTK_FILL, 0, 0, 0);
 
+        cntrl.magnitude = 1.0;
         g_array_append_val(controls->param_controls, cntrl);
         row++;
     }
@@ -740,11 +772,14 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
 
     controls->param = g_renew(gdouble, controls->param, nparams);
     controls->alt_param = g_renew(gdouble, controls->alt_param, nparams);
+    controls->param_err = g_renew(gdouble, controls->param_err, nparams);
+    for (i = 0; i < nparams; i++)
+        controls->param_err[i] = -1.0;
     fit_param_table_resize(controls);
     fit_context_resize_params(ctx, nparams);
     func->init_param(ctx->xy, ctx->z, ctx->n, controls->param);
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
-    /* TODO: Also update values in the table. */
+    update_param_table(controls, controls->param, NULL);
     update_fields(controls);
 }
 
@@ -782,13 +817,109 @@ masking_changed(GtkToggleButton *button, FitShapeControls *controls)
 static void
 fix_changed(GtkToggleButton *button, FitShapeControls *controls)
 {
-    // TODO
+    gboolean fixed = gtk_toggle_button_get_active(button);
+    guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "id"));
+    const FitShapeContext *ctx = controls->ctx;
+
+    ctx->param_fixed[i] = fixed;
+}
+
+static void
+param_value_activate(GtkEntry *entry, FitShapeControls *controls)
+{
+    guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(entry), "id"));
+    FitParamControl *cntrl = &g_array_index(controls->param_controls,
+                                            FitParamControl, i);
+
+    controls->param[i] = g_strtod(gtk_entry_get_text(entry), NULL);
+    controls->param[i] *= cntrl->magnitude;
+    /* This (a) clears error labels in the table (b) reformats the parameter,
+     * e.g. by moving the power-of-10 base appropriately. */
+    update_param_table(controls, controls->param, NULL);
+}
+
+static void
+update_all_param_values(FitShapeControls *controls)
+{
+    guint i;
+
+    for (i = 0; i < controls->param_controls->len; i++) {
+        FitParamControl *cntrl = &g_array_index(controls->param_controls,
+                                                FitParamControl, i);
+        GtkEntry *entry = GTK_ENTRY(cntrl->value);
+
+        controls->param[i] = g_strtod(gtk_entry_get_text(entry), NULL);
+        controls->param[i] *= cntrl->magnitude;
+    }
 }
 
 static void
 revert_params(FitShapeControls *controls)
 {
-    // TODO
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, nparams = func->nparams;
+
+    update_all_param_values(controls);
+    for (i = 0; i < nparams; i++)
+        GWY_SWAP(gdouble, controls->param[i], controls->alt_param[i]);
+
+    update_param_table(controls, controls->param, NULL);
+}
+
+static void
+recalculate_image(FitShapeControls *controls)
+{
+    update_all_param_values(controls);
+    update_fields(controls);
+}
+
+static void
+update_param_table(FitShapeControls *controls,
+                   const gdouble *param, const gdouble *param_err)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, nparams = func->nparams;
+    GwyDataField *dfield;
+    GwySIUnit *unit, *xyunit, *zunit;
+    GwySIValueFormat *vf = NULL;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    unit = gwy_si_unit_new(NULL);
+
+    for (i = 0; i < nparams; i++) {
+        FitParamControl *cntrl = &g_array_index(controls->param_controls,
+                                                FitParamControl, i);
+        const FitShapeParam *fitparam = func->param + i;
+        guchar buf[32];
+        gdouble v;
+
+        v = param[i];
+        gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
+                                   zunit, fitparam->power_z,
+                                   unit);
+        vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision+3, v/vf->magnitude);
+        gtk_entry_set_text(GTK_ENTRY(cntrl->value), buf);
+        gtk_label_set_markup(GTK_LABEL(cntrl->value_unit), vf->units);
+        cntrl->magnitude = vf->magnitude;
+
+        if (!param_err) {
+            gtk_label_set_text(GTK_LABEL(cntrl->error), "");
+            gtk_label_set_text(GTK_LABEL(cntrl->error_unit), "");
+            continue;
+        }
+
+        v = param_err[i];
+        vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, v/vf->magnitude);
+        gtk_label_set_text(GTK_LABEL(cntrl->error), buf);
+        gtk_label_set_markup(GTK_LABEL(cntrl->error_unit), vf->units);
+    }
+
+    gwy_si_unit_value_format_free(vf);
+    g_object_unref(unit);
 }
 
 static void
@@ -796,17 +927,19 @@ fit_shape_estimate(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
+    guint i, nparams = func->nparams;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start estimate");
+    memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     func->estimate(ctx->xy, ctx->z, ctx->n, controls->param);
-#ifdef DEBUG
-    {
-        guint i;
-        for (i = 0; i < func->nparams; i++)
-            gwy_debug("[%u] %g", i, controls->param[i]);
+    /* XXX: We honour fixed parameters by reverting to previous values and
+     * pretending nothing happened.  Is it OK? */
+    for (i = 0; i < nparams; i++) {
+        gwy_debug("[%u] %g", i, controls->param[i]);
+        if (ctx->param_fixed[i])
+            controls->param[i] = controls->alt_param[i];
     }
-#endif
     update_fields(controls);
     update_fit_results(controls, NULL);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
@@ -821,6 +954,8 @@ fit_shape_reduced_fit(FitShapeControls *controls)
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start reduced fit");
+    update_all_param_values(controls);
+    memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
     fitter = fit_reduced(func, ctx, controls->param);
 #ifdef DEBUG
     {
@@ -844,6 +979,8 @@ fit_shape_full_fit(FitShapeControls *controls)
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialogue), _("Fitting..."));
     gwy_debug("start fit");
+    update_all_param_values(controls);
+    memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
     fitter = fit(func, ctx, controls->param,
                  gwy_app_wait_set_fraction, gwy_app_wait_set_message);
 #ifdef DEBUG
@@ -875,14 +1012,13 @@ update_fields(FitShapeControls *controls)
 }
 
 static void
-update_fit_results(FitShapeControls *controls,
-                   G_GNUC_UNUSED GwyNLFitter *fitter)
+update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 {
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
     GwyDataField *dfield;
     gdouble rss = 0.0;
-    guint k, n = ctx->n, nparams = func->nparams;
+    guint k, n = ctx->n, i, nparams = func->nparams;
     GwySIUnit *zunit;
     GwySIValueFormat *vf;
     guchar buf[48];
@@ -903,6 +1039,11 @@ update_fit_results(FitShapeControls *controls,
     }
     controls->rss = sqrt(rss/n);
 
+    if (fitter) {
+        for (i = 0; i < nparams; i++)
+            controls->param_err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+    }
+
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     zunit = gwy_data_field_get_si_unit_z(dfield);
     vf = gwy_si_unit_get_format(zunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -914,6 +1055,9 @@ update_fit_results(FitShapeControls *controls,
     gtk_label_set_markup(GTK_LABEL(controls->rss_label), buf);
 
     gwy_si_unit_value_format_free(vf);
+
+    update_param_table(controls, controls->param,
+                       fitter ? controls->param_err : NULL);
 }
 
 static void
