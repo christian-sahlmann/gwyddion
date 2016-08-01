@@ -284,10 +284,6 @@ fit_shape(GwyContainer *data, GwyRunType run)
 
     fit_shape_dialogue(&args, data, id, dfield, mfield);
 
-    //GwySIUnit *siunitxy, *siunitz;
-    //siunitxy = gwy_data_field_get_si_unit_xy(dfield);
-    //siunitz = gwy_data_field_get_si_unit_z(dfield);
-
     fit_shape_save_args(gwy_app_settings_get(), &args);
 
 }
@@ -410,7 +406,7 @@ fit_shape_dialogue(FitShapeArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.rss_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.rss_label), 1.0, 0.5);
-    gwy_table_attach_hscale(table, row, _("Mean square difference:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Mean square difference:"), " ",
                             GTK_OBJECT(controls.rss_label), GWY_HSCALE_WIDGET);
     row++;
 
@@ -695,8 +691,12 @@ update_fit_results(FitShapeControls *controls,
 {
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
+    GwyDataField *dfield;
     gdouble rss = 0.0;
     guint k, n = ctx->n, nparams = func->nparams;
+    GwySIUnit *zunit;
+    GwySIValueFormat *vf;
+    GtkLabel *label;
     guchar buf[32];
 
     for (k = 0; k < n; k++) {
@@ -713,10 +713,22 @@ update_fit_results(FitShapeControls *controls,
             rss += z*z;
         }
     }
-
     controls->rss = sqrt(rss/n);
-    g_snprintf(buf, sizeof(buf), "%g", controls->rss);
-    gtk_label_set_text(GTK_LABEL(controls->rss_label), buf);
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    vf = gwy_si_unit_get_format(zunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                controls->rss, NULL);
+
+    label = GTK_LABEL(controls->rss_label);
+    g_snprintf(buf, sizeof(buf), "%.*f",
+               vf->precision+1, controls->rss/vf->magnitude);
+    gtk_label_set_text(label, buf);
+
+    label = GTK_LABEL(gwy_table_hscale_get_units(GTK_OBJECT(label)));
+    gtk_label_set_text(label, vf->units);
+
+    gwy_si_unit_value_format_free(vf);
 }
 
 static void
