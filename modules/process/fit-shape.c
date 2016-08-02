@@ -51,12 +51,6 @@
 
 #define FIT_SHAPE_RUN_MODES GWY_RUN_INTERACTIVE
 
-/* Caching seems totally worth it.  It adds some small time every function call
- * and it does not improve anything when we care calculating derivatives by
- * the cached parameter, but for evaluation and derivatives by any other
- * paramter it speeds up the functions considerably. */
-#define FIT_SHAPE_CACHE 1
-
 enum { NREDLIM = 4096 };
 
 typedef enum {
@@ -1842,10 +1836,8 @@ static gdouble
 grating_func(gdouble abscissa, gint n_param, const gdouble *param,
              gpointer user_data, gboolean *fres)
 {
-#ifdef FIT_SHAPE_CACHE
     static gdouble c_last = 0.0, coshm1_c_last = 1.0;
     static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
-#endif
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble w = param[0];
@@ -1869,7 +1861,6 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!wp2))
         return z0;
 
-#ifdef FIT_SHAPE_CACHE
     if (alpha == alpha_last) {
         ca = ca_last;
         sa = sa_last;
@@ -1880,23 +1871,15 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
         sa_last = sa;
         alpha_last = alpha;
     }
-#else
-    ca = cos(alpha);
-    sa = sin(alpha);
-#endif
     t = x*ca - y*sa - x0 + wp2;
     t = (t - w*floor(t/w))/wp2 - 1.0;
     if (fabs(t) < 1.0) {
-#ifdef FIT_SHAPE_CACHE
         if (c == c_last)
             coshm1_c = coshm1_c_last;
         else {
             coshm1_c = coshm1_c_last = gwy_coshm1(c);
             c_last = c;
         }
-#else
-        coshm1_c = gwy_coshm1(c);
-#endif
 
         val = z0 + h*(1.0 - gwy_coshm1(c*t)/coshm1_c);
     }
@@ -1975,9 +1958,7 @@ static gdouble
 gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-#ifdef FIT_SHAPE_CACHE
     static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
-#endif
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -2002,7 +1983,6 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!s2 || !a))
         return z0;
 
-#ifdef FIT_SHAPE_CACHE
     if (alpha == alpha_last) {
         ca = ca_last;
         sa = sa_last;
@@ -2013,10 +1993,6 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
         sa_last = sa;
         alpha_last = alpha;
     }
-#else
-    ca = cos(alpha);
-    sa = sin(alpha);
-#endif
     t = x*ca - y*sa;
     y = x*sa + y*ca;
     x = t;
@@ -2073,9 +2049,7 @@ static gdouble
 lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
                 gpointer user_data, gboolean *fres)
 {
-#ifdef FIT_SHAPE_CACHE
     static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
-#endif
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -2100,7 +2074,6 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!b2 || !a))
         return z0;
 
-#ifdef FIT_SHAPE_CACHE
     if (alpha == alpha_last) {
         ca = ca_last;
         sa = sa_last;
@@ -2111,10 +2084,6 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
         sa_last = sa;
         alpha_last = alpha;
     }
-#else
-    ca = cos(alpha);
-    sa = sin(alpha);
-#endif
     t = x*ca - y*sa;
     y = x*sa + y*ca;
     x = t;
