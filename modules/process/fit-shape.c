@@ -242,6 +242,7 @@ DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(grating);
 DECLARE_SHAPE_FUNC(gaussian);
 DECLARE_SHAPE_FUNC(lorentzian);
+DECLARE_SHAPE_FUNC(pyramidx);
 
 static const FitShapeParam sphere_params[] = {
    { "x<sub>0</sub>", 1, 0, },
@@ -280,11 +281,22 @@ static const FitShapeParam lorentzian_params[] = {
    { "α",                0, 0, },
 };
 
+static const FitShapeParam pyramidx_params[] = {
+   { "x<sub>0</sub>", 1, 0, },
+   { "y<sub>0</sub>", 1, 0, },
+   { "z<sub>0</sub>", 0, 1, },
+   { "h",             0, 1, },
+   { "L",             1, 0, },
+   { "a",             0, 0, },
+   { "α",             0, 0, },
+};
+
 static const FitShapeFunc functions[] = {
-    { N_("Sphere"),     TRUE,  SHAPE_FUNC_ITEM(sphere),     },
-    { N_("Grating"),    FALSE, SHAPE_FUNC_ITEM(grating),    },
-    { N_("Gaussian"),   FALSE, SHAPE_FUNC_ITEM(gaussian),   },
-    { N_("Lorentzian"), FALSE, SHAPE_FUNC_ITEM(lorentzian), },
+    { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
+    { N_("Grating"),           FALSE, SHAPE_FUNC_ITEM(grating),    },
+    { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
+    { N_("Lorentzian"),        FALSE, SHAPE_FUNC_ITEM(lorentzian), },
+    { N_("Pyramid (diamond)"), FALSE, SHAPE_FUNC_ITEM(pyramidx),   },
 };
 
 /* NB: The default must not require same units because then we could not fall
@@ -2108,6 +2120,101 @@ lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 
 static gboolean
 lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    /* Just initialise the shape parameters with some sane defaults. */
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    param[4] = r/3.0;
+
+    range_z(z, n, &zmin, &zmax);
+    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
+                                   param + 2, param + 3, param + 0, param + 1);
+}
+
+/**************************************************************************
+ *
+ * Pyramid (diamond)
+ *
+ **************************************************************************/
+
+static gdouble
+pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
+              gpointer user_data, gboolean *fres)
+{
+    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble h = param[3];
+    gdouble L = param[4];
+    gdouble a = param[5];
+    gdouble alpha = param[6];
+    gdouble x, y, t, val, ca, sa, q;
+    guint i;
+
+    g_assert(n_param == 7);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+
+    *fres = TRUE;
+    if (G_UNLIKELY(!L || !a))
+        return z0;
+
+    if (alpha == alpha_last) {
+        ca = ca_last;
+        sa = sa_last;
+    }
+    else {
+        sincos(alpha, &sa, &ca);
+        ca_last = ca;
+        sa_last = sa;
+        alpha_last = alpha;
+    }
+    t = x*ca - y*sa;
+    y = x*sa + y*ca;
+    x = t;
+
+    q = L*sqrt(1.0 + a*a);
+    x /= q;
+    y *= a/q;
+    t = fabs(x) + fabs(y);
+    if (t < 1.0)
+        val = z0 + h*(1.0 - t);
+    else
+        val = z0;
+
+    return val;
+}
+
+static gboolean
+pyramidx_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = zmax - zmin;
+    param[4] = r/3.0;
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
     gdouble xc, yc, r, zmin, zmax;
 
