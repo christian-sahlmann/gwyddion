@@ -23,8 +23,10 @@
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
  * - Weights; either remove them or implement the support properly.
- * - Handle fit failure.
+ * - Handle fit failure, estimate failure.
  * - Parameter table export.
+ * - Support parameter transforms between user/internal?  Rad vs. deg,
+ *   curvature vs. radius...
  */
 
 #define DEBUG 1
@@ -238,6 +240,10 @@ static void         fit_shape_save_args      (GwyContainer *container,
                                 guint n, \
                                 gdouble *param);
 
+#define SHAPE_FUNC_ITEM(name) \
+    &name##_func, &name##_estimate, &name##_init, \
+    G_N_ELEMENTS(name##_params), name##_params
+
 DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(grating);
 
@@ -259,16 +265,8 @@ static const FitShapeParam grating_params[] = {
 };
 
 static const FitShapeFunc functions[] = {
-    {
-        N_("Sphere"), TRUE,
-        &sphere_func, &sphere_estimate, &sphere_init,
-        G_N_ELEMENTS(sphere_params), sphere_params,
-    },
-    {
-        N_("Grating"), FALSE,
-        &grating_func, &grating_estimate, &grating_init,
-        G_N_ELEMENTS(grating_params), grating_params,
-    },
+    { N_("Sphere"),  TRUE,  SHAPE_FUNC_ITEM(sphere),  },
+    { N_("Grating"), FALSE, SHAPE_FUNC_ITEM(grating), },
 };
 
 /* NB: The default must not require same units because then we could not fall
@@ -1255,106 +1253,7 @@ calculate_function(const FitShapeFunc *func,
     }
 }
 
-#ifdef HAVE_SINCOS
-#define _gwy_sincos sincos
-#else
-static inline void
-_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
-{
-    *s = sin(x);
-    *c = cos(x);
-}
-#endif
-
-static inline gdouble
-gwy_coshm1(gdouble x)
-{
-    gdouble x2 = x*x;
-    if (x2 > 3e-5)
-        return cosh(x) - 1.0;
-    return x2*(0.5 + x2/24.0);
-}
-
-static gdouble
-sphere_func(gdouble abscissa,
-            G_GNUC_UNUSED gint n_param,
-            const gdouble *param,
-            gpointer user_data,
-            gboolean *fres)
-{
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
-    gdouble xc = param[0];
-    gdouble yc = param[1];
-    gdouble z0 = param[2];
-    gdouble kappa = param[3];
-    gdouble x, y, r2k, t, val;
-    guint i;
-
-    g_assert(n_param == 4);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
-    /* Rewrite R - sqrt(R² - r²) as κ*r²/(1 + sqrt(1 - κ²r²)) where
-     * r² = x² + y² and κR = 1 to get nice behaviour in the close-to-denegerate
-     * cases, including completely flat surface.  The expression 1.0/kappa
-     * is safe because we cannot get to this branch for κ → 0 unless
-     * simultaneously r → ∞. */
-    r2k = kappa*(x*x + y*y);
-    t = 1.0 - kappa*r2k;
-    if (t > 0.0)
-        val = z0 + r2k/(1.0 + sqrt(t));
-    else
-        val = z0 + 1.0/kappa;
-
-    *fres = TRUE;
-    return val;
-}
-
-static void
-mean_x_y(const GwyXY *xy, guint n,
-         gdouble *pxc, gdouble *pyc)
-{
-    gdouble xc = 0.0, yc = 0.0;
-    guint i;
-
-    if (!n) {
-        *pxc = *pyc = 0.0;
-        return;
-    }
-
-    for (i = 0; i < n; i++) {
-        xc += xy[i].x;
-        yc += xy[i].y;
-    }
-
-    *pxc = xc/n;
-    *pyc = yc/n;
-}
-
-static void
-range_z(const gdouble *z, guint n,
-        gdouble *pmin, gdouble *pmax)
-{
-    gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE;
-    guint i;
-
-    if (!n) {
-        *pmin = *pmax = 0.0;
-        return;
-    }
-
-    for (i = 0; i < n; i++) {
-        if (z[i] < min)
-            min = z[i];
-        if (z[i] > max)
-            max = z[i];
-    }
-
-    *pmin = min;
-    *pmax = max;
-}
-
+/* FIXME: Weights? */
 static void
 reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
                  GwyXY *xyred, gdouble *zred, guint nred)
@@ -1374,6 +1273,78 @@ reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
     }
 
     g_rand_free(rng);
+}
+
+/**************************************************************************
+ *
+ * General estimator helpers and math support functions.
+ *
+ **************************************************************************/
+
+#ifdef HAVE_SINCOS
+#define _gwy_sincos sincos
+#else
+static inline void
+_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
+{
+    *s = sin(x);
+    *c = cos(x);
+}
+#endif
+
+/* cosh(x) - 1 safe for small arguments */
+static inline gdouble
+gwy_coshm1(gdouble x)
+{
+    gdouble x2 = x*x;
+    if (x2 > 3e-5)
+        return cosh(x) - 1.0;
+    return x2*(0.5 + x2/24.0);
+}
+
+/* Mean value of xy point cloud (not necessarily centre, that depends on
+ * the density). */
+static void
+mean_x_y(const GwyXY *xy, guint n, gdouble *pxc, gdouble *pyc)
+{
+    gdouble xc = 0.0, yc = 0.0;
+    guint i;
+
+    if (!n) {
+        *pxc = *pyc = 0.0;
+        return;
+    }
+
+    for (i = 0; i < n; i++) {
+        xc += xy[i].x;
+        yc += xy[i].y;
+    }
+
+    *pxc = xc/n;
+    *pyc = yc/n;
+}
+
+/* Minimum and maximum of an array of values. */
+static void
+range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax)
+{
+    gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE;
+    guint i;
+
+    if (!n) {
+        *pmin = *pmax = 0.0;
+        return;
+    }
+
+    for (i = 0; i < n; i++) {
+        if (z[i] < min)
+            min = z[i];
+        if (z[i] > max)
+            max = z[i];
+    }
+
+    *pmin = min;
+    *pmax = max;
 }
 
 /* Approximately cicrumscribe a set of points by finding a containing
@@ -1429,6 +1400,241 @@ circumscribe_x_y(const GwyXY *xy, guint n,
         *pxc = (min[0] + max[0])/2.0;
         *pyc = (min[2] + max[2])/2.0;
     }
+}
+
+/* Project xyz point cloud to a line rotated by angle alpha anti-clockwise
+ * from the horizontal line (x axis). */
+static gdouble
+projection_to_line(const GwyXY *xy,
+                   const gdouble *z,
+                   guint n,
+                   gdouble alpha,
+                   gdouble xc, gdouble yc,
+                   GwyDataLine *mean_line,
+                   GwyDataLine *rms_line,
+                   guint *counts)
+{
+    guint res = gwy_data_line_get_res(mean_line);
+    gdouble *mean = gwy_data_line_get_data(mean_line);
+    gdouble *rms = rms_line ? gwy_data_line_get_data(rms_line) : NULL;
+    gdouble dx = gwy_data_line_get_real(mean_line)/res;
+    gdouble off = gwy_data_line_get_offset(mean_line);
+    gdouble c = cos(alpha), s = sin(alpha), total_ms = 0.0;
+    guint i, total_n = 0;
+    gint j;
+
+    gwy_data_line_clear(mean_line);
+    gwy_clear(counts, res);
+
+    for (i = 0; i < n; i++) {
+        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        x = x*c - y*s;
+        j = (gint)floor((x - off)/dx);
+        if (j >= 0 && j < res) {
+            mean[j] += z[i];
+            counts[j]++;
+        }
+    }
+
+    for (j = 0; j < res; j++) {
+        if (counts[j]) {
+            mean[j] /= counts[j];
+        }
+    }
+
+    if (!rms_line)
+        return 0.0;
+
+    gwy_data_line_clear(rms_line);
+
+    for (i = 0; i < n; i++) {
+        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        x = x*c - y*s;
+        j = (gint)floor((x - off)/dx);
+        if (j >= 0 && j < res)
+            rms[j] += (z[i] - mean[j])*(z[i] - mean[j]);
+    }
+
+    for (j = 0; j < res; j++) {
+        if (counts[j]) {
+            total_ms += rms[j];
+            rms[j] = sqrt(rms[j]/counts[j]);
+            total_n += counts[j];
+        }
+    }
+
+    return sqrt(total_ms/total_n);
+}
+
+/* Find direction along which projections capture best the shape, i.e. most
+ * variance remains in the line-averaged data.  The returned angle is rotation
+ * of the axis anti-clockwise with respect to the x-axis. */
+static gdouble
+estimate_projection_direction(const GwyXY *xy,
+                              const gdouble *z,
+                              guint n)
+{
+    enum { NROUGH = 48, NFINE = 8 };
+
+    GwyDataLine *mean_line, *rms_line;
+    guint *counts;
+    gdouble xc, yc, r, alpha, alpha0, alpha_step, rms;
+    gdouble best_rms = G_MAXDOUBLE, best_alpha = 0.0;
+    guint iter, i, ni, res;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    res = (guint)floor(2.0*sqrt(n) + 1.0);
+
+    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
+    gwy_data_line_set_offset(mean_line, -r);
+    rms_line = gwy_data_line_new_alike(mean_line, FALSE);
+    counts = g_new(guint, res);
+
+    for (iter = 0; iter < 6; iter++) {
+        if (iter == 0) {
+            ni = NROUGH;
+            alpha_step = G_PI/ni;
+            alpha0 = 0.5*alpha_step;
+        }
+        else {
+            /* Choose the fine points so that we do not repeat calculation in
+             * any of the rough points. */
+            ni = NFINE;
+            alpha0 = best_alpha - alpha_step*(NFINE - 1.0)/(NFINE + 1.0);
+            alpha_step = 2.0*alpha_step/(NFINE + 1.0);
+        }
+
+        for (i = 0; i < ni; i++) {
+            alpha = alpha0 + i*alpha_step;
+            rms = projection_to_line(xy, z, n, alpha, xc, yc,
+                                     mean_line, rms_line, counts);
+            gwy_debug("[%u] %g %g", iter, alpha, rms);
+            if (rms < best_rms) {
+                best_rms = rms;
+                best_alpha = alpha;
+            }
+        }
+    }
+
+    g_object_unref(mean_line);
+    g_object_unref(rms_line);
+    g_free(counts);
+
+    return best_alpha;
+}
+
+/* Estimate the period of a periodic structure, knowing already the rotation.
+ * The returned phase is such that if you subtract it from the rotated abscissa
+ * value then the projection will have a positive peak (some kind of maximum)
+ * centered around zero, whatever that means for specific grating-like
+ * structures.  */
+static gboolean
+estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
+                          gdouble alpha, gdouble *pT, gdouble *poff)
+{
+    GwyDataLine *mean_line, *tmp_line;
+    gdouble xc, yc, r, T, t, real, off, a_s, a_c, phi0;
+    const gdouble *mean, *tmp;
+    guint *counts;
+    guint res, i, ibest;
+    gboolean found;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    res = (guint)floor(3.0*sqrt(n) + 1.0);
+
+    *pT = r/4.0;
+    *poff = 0.0;
+
+    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
+    gwy_data_line_set_offset(mean_line, -r);
+    tmp_line = gwy_data_line_new_alike(mean_line, FALSE);
+    counts = g_new(guint, res);
+
+    projection_to_line(xy, z, n, alpha, xc, yc, mean_line, NULL, counts);
+    gwy_data_line_add(mean_line, -gwy_data_line_get_avg(mean_line));
+    gwy_data_line_psdf(mean_line, tmp_line,
+                       GWY_WINDOWING_HANN, GWY_INTERPOLATION_LINEAR);
+    tmp = gwy_data_line_get_data_const(tmp_line);
+
+    found = FALSE;
+    ibest = G_MAXUINT;
+    for (i = 4; i < MIN(res/3, res-3); i++) {
+        if (tmp[i] > tmp[i-2] && tmp[i] > tmp[i-1]
+            && tmp[i] > tmp[i+1] && tmp[i] > tmp[i+2]) {
+            if (ibest == G_MAXUINT || tmp[i] > tmp[ibest]) {
+                found = TRUE;
+                ibest = i;
+            }
+        }
+    }
+    if (!found)
+        goto fail;
+
+    T = *pT = 2.0*G_PI/gwy_data_line_itor(tmp_line, ibest);
+    gwy_debug("found period %g", T);
+
+    mean = gwy_data_line_get_data_const(mean_line);
+    real = gwy_data_line_get_real(mean_line);
+    off = gwy_data_line_get_offset(mean_line);
+    a_s = a_c = 0.0;
+    for (i = 0; i < res; i++) {
+        t = off + real/res*(i + 0.5);
+        a_s += sin(2*G_PI*t/T)*mean[i];
+        a_c += cos(2*G_PI*t/T)*mean[i];
+    }
+    gwy_debug("a_s %g, a_c %g", a_s, a_c);
+
+    phi0 = atan2(a_s, a_c);
+    *poff = phi0*T/(2.0*G_PI) + xc*cos(alpha) - yc*sin(alpha);
+
+fail:
+    g_object_unref(mean_line);
+    g_object_unref(tmp_line);
+    g_free(counts);
+
+    return found;
+}
+
+/**************************************************************************
+ *
+ * Sphere
+ *
+ **************************************************************************/
+
+static gdouble
+sphere_func(gdouble abscissa,
+            G_GNUC_UNUSED gint n_param,
+            const gdouble *param,
+            gpointer user_data,
+            gboolean *fres)
+{
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble kappa = param[3];
+    gdouble x, y, r2k, t, val;
+    guint i;
+
+    g_assert(n_param == 4);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+    /* Rewrite R - sqrt(R² - r²) as κ*r²/(1 + sqrt(1 - κ²r²)) where
+     * r² = x² + y² and κR = 1 to get nice behaviour in the close-to-denegerate
+     * cases, including completely flat surface.  The expression 1.0/kappa
+     * is safe because we cannot get to this branch for κ → 0 unless
+     * simultaneously r → ∞. */
+    r2k = kappa*(x*x + y*y);
+    t = 1.0 - kappa*r2k;
+    if (t > 0.0)
+        val = z0 + r2k/(1.0 + sqrt(t));
+    else
+        val = z0 + 1.0/kappa;
+
+    *fres = TRUE;
+    return val;
 }
 
 static gboolean
@@ -1510,6 +1716,12 @@ sphere_estimate(const GwyXY *xy,
     return TRUE;
 }
 
+/**************************************************************************
+ *
+ * Grating
+ *
+ **************************************************************************/
+
 static gdouble
 grating_func(gdouble abscissa,
              G_GNUC_UNUSED gint n_param,
@@ -1579,201 +1791,6 @@ grating_func(gdouble abscissa,
         val = z0;
 
     return val;
-}
-
-static gdouble
-projection_to_line(const GwyXY *xy,
-                   const gdouble *z,
-                   guint n,
-                   gdouble alpha,
-                   gdouble xc, gdouble yc,
-                   GwyDataLine *mean_line,
-                   GwyDataLine *rms_line,
-                   guint *counts)
-{
-    guint res = gwy_data_line_get_res(mean_line);
-    gdouble *mean = gwy_data_line_get_data(mean_line);
-    gdouble *rms = rms_line ? gwy_data_line_get_data(rms_line) : NULL;
-    gdouble dx = gwy_data_line_get_real(mean_line)/res;
-    gdouble off = gwy_data_line_get_offset(mean_line);
-    gdouble c = cos(alpha), s = sin(alpha), total_ms = 0.0;
-    guint i, total_n = 0;
-    gint j;
-
-    gwy_data_line_clear(mean_line);
-    gwy_clear(counts, res);
-
-    for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
-        x = x*c - y*s;
-        j = (gint)floor((x - off)/dx);
-        if (j >= 0 && j < res) {
-            mean[j] += z[i];
-            counts[j]++;
-        }
-    }
-
-    for (j = 0; j < res; j++) {
-        if (counts[j]) {
-            mean[j] /= counts[j];
-        }
-    }
-
-    if (!rms_line)
-        return 0.0;
-
-    gwy_data_line_clear(rms_line);
-
-    for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
-        x = x*c - y*s;
-        j = (gint)floor((x - off)/dx);
-        if (j >= 0 && j < res)
-            rms[j] += (z[i] - mean[j])*(z[i] - mean[j]);
-    }
-
-    for (j = 0; j < res; j++) {
-        if (counts[j]) {
-            total_ms += rms[j];
-            rms[j] = sqrt(rms[j]/counts[j]);
-            total_n += counts[j];
-        }
-    }
-
-    return sqrt(total_ms/total_n);
-}
-
-/* Find direction along which projections capture best the shape, i.e. most
- * variance remains in the line-averaged data. */
-static gdouble
-estimate_projection_direction(const GwyXY *xy,
-                              const gdouble *z,
-                              guint n)
-{
-    enum { NROUGH = 48, NFINE = 8 };
-
-    GwyDataLine *mean_line, *rms_line;
-    guint *counts;
-    gdouble xc, yc, r, alpha, alpha0, alpha_step, rms;
-    gdouble best_rms = G_MAXDOUBLE, best_alpha = 0.0;
-    guint iter, i, ni, res;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    res = (guint)floor(2.0*sqrt(n) + 1.0);
-
-    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
-    gwy_data_line_set_offset(mean_line, -r);
-    rms_line = gwy_data_line_new_alike(mean_line, FALSE);
-    counts = g_new(guint, res);
-
-    for (iter = 0; iter < 6; iter++) {
-        if (iter == 0) {
-            ni = NROUGH;
-            alpha_step = G_PI/ni;
-            alpha0 = 0.5*alpha_step;
-        }
-        else {
-            /* Choose the fine points so that we do not repeat calculation in
-             * any of the rough points. */
-            ni = NFINE;
-            alpha0 = best_alpha - alpha_step*(NFINE - 1.0)/(NFINE + 1.0);
-            alpha_step = 2.0*alpha_step/(NFINE + 1.0);
-        }
-
-        for (i = 0; i < ni; i++) {
-            alpha = alpha0 + i*alpha_step;
-            rms = projection_to_line(xy, z, n, alpha, xc, yc,
-                                     mean_line, rms_line, counts);
-            gwy_debug("[%u] %g %g", iter, alpha, rms);
-            if (rms < best_rms) {
-                best_rms = rms;
-                best_alpha = alpha;
-            }
-        }
-    }
-
-    g_object_unref(mean_line);
-    g_object_unref(rms_line);
-    g_free(counts);
-
-    return best_alpha;
-}
-
-static gboolean
-estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
-                          gdouble alpha, gdouble *pT, gdouble *poff)
-{
-    GwyDataLine *mean_line, *tmp_line;
-    gdouble xc, yc, r, T, t, real, off, a_s, a_c, phi0;
-    const gdouble *mean, *tmp;
-    guint *counts;
-    guint res, i, ibest;
-    gboolean found;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    res = (guint)floor(3.0*sqrt(n) + 1.0);
-
-    *pT = r/4.0;
-    *poff = 0.0;
-
-    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
-    gwy_data_line_set_offset(mean_line, -r);
-    tmp_line = gwy_data_line_new_alike(mean_line, FALSE);
-    counts = g_new(guint, res);
-
-    projection_to_line(xy, z, n, alpha, xc, yc, mean_line, NULL, counts);
-    gwy_data_line_add(mean_line, -gwy_data_line_get_avg(mean_line));
-    gwy_data_line_psdf(mean_line, tmp_line,
-                       GWY_WINDOWING_HANN, GWY_INTERPOLATION_LINEAR);
-    tmp = gwy_data_line_get_data_const(tmp_line);
-
-#if 0
-    {
-        FILE *fh = fopen("psdf.dat", "w");
-        for (i = 0; i < tmp_line->res; i++)
-            fprintf(fh, "%g %g\n",
-                    gwy_data_line_itor(tmp_line, i+0.5), tmp[i]);
-        fclose(fh);
-    }
-#endif
-
-    found = FALSE;
-    ibest = G_MAXUINT;
-    for (i = 4; i < MIN(res/3, res-3); i++) {
-        if (tmp[i] > tmp[i-2] && tmp[i] > tmp[i-1]
-            && tmp[i] > tmp[i+1] && tmp[i] > tmp[i+2]) {
-            if (ibest == G_MAXUINT || tmp[i] > tmp[ibest]) {
-                found = TRUE;
-                ibest = i;
-            }
-        }
-    }
-    if (!found)
-        goto fail;
-
-    T = *pT = 2.0*G_PI/gwy_data_line_itor(tmp_line, ibest);
-    gwy_debug("found period %g", T);
-
-    mean = gwy_data_line_get_data_const(mean_line);
-    real = gwy_data_line_get_real(mean_line);
-    off = gwy_data_line_get_offset(mean_line);
-    a_s = a_c = 0.0;
-    for (i = 0; i < res; i++) {
-        t = off + real/res*(i + 0.5);
-        a_s += sin(2*G_PI*t/T)*mean[i];
-        a_c += cos(2*G_PI*t/T)*mean[i];
-    }
-    gwy_debug("a_s %g, a_c %g", a_s, a_c);
-
-    phi0 = atan2(a_s, a_c);
-    *poff = phi0*T/(2.0*G_PI) + xc*cos(alpha) - yc*sin(alpha);
-
-fail:
-    g_object_unref(mean_line);
-    g_object_unref(tmp_line);
-    g_free(counts);
-
-    return found;
 }
 
 static gboolean
