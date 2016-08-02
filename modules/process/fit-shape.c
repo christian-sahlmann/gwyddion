@@ -1727,6 +1727,48 @@ estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
     return TRUE;
 }
 
+static gboolean
+common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
+                         gdouble *xc, gdouble *yc, gdouble *z0,
+                         gdouble *height, gdouble *size,
+                         gdouble *a, gdouble *alpha)
+{
+    gdouble xm, ym, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xm, &ym, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    *xc = xm;
+    *yc = ym;
+    *z0 = zmin;
+    *height = zmax - zmin;
+    *size = r/3.0;
+    *a = 1.0;
+    *alpha = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
+                             gdouble *xc, gdouble *yc, gdouble *z0,
+                             gdouble *size, gdouble *h,
+                             gdouble *a, gdouble *alpha)
+{
+    gdouble xm, ym, r, zmin, zmax;
+
+    /* Just initialise the shape parameters with some sane defaults. */
+    *a = 1.0;
+    *alpha = 0.0;
+
+    circumscribe_x_y(xy, n, &xm, &ym, &r);
+    *size = r/3.0;
+
+    range_z(z, n, &zmin, &zmax);
+    return estimate_feature_height(xy, z, n, xm, ym, r, zmin, zmax,
+                                   z0, h, xc, yc);
+}
+
 /**************************************************************************
  *
  * Sphere
@@ -2010,37 +2052,19 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
 static gboolean
 gaussian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    range_z(z, n, &zmin, &zmax);
-
-    param[0] = xc;
-    param[1] = yc;
-    param[2] = zmin;
-    param[3] = zmax - zmin;
-    param[4] = r/3.0;
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    return TRUE;
+    return common_bump_feature_init(xy, z, n,
+                                    param + 0, param + 1, param + 2,
+                                    param + 3, param + 4,
+                                    param + 5, param + 6);
 }
 
 static gboolean
 gaussian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    /* Just initialise the shape parameters with some sane defaults. */
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    param[4] = r/3.0;
-
-    range_z(z, n, &zmin, &zmax);
-    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
-                                   param + 2, param + 3, param + 0, param + 1);
+    return common_bump_feature_estimate(xy, z, n,
+                                        param + 0, param + 1, param + 2,
+                                        param + 3, param + 4,
+                                        param + 5, param + 6);
 }
 
 /**************************************************************************
@@ -2092,37 +2116,19 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
 static gboolean
 lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    range_z(z, n, &zmin, &zmax);
-
-    param[0] = xc;
-    param[1] = yc;
-    param[2] = zmin;
-    param[3] = zmax - zmin;
-    param[4] = r/3.0;
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    return TRUE;
+    return common_bump_feature_init(xy, z, n,
+                                    param + 0, param + 1, param + 2,
+                                    param + 3, param + 4,
+                                    param + 5, param + 6);
 }
 
 static gboolean
 lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    /* Just initialise the shape parameters with some sane defaults. */
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    param[4] = r/3.0;
-
-    range_z(z, n, &zmin, &zmax);
-    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
-                                   param + 2, param + 3, param + 0, param + 1);
+    return common_bump_feature_estimate(xy, z, n,
+                                        param + 0, param + 1, param + 2,
+                                        param + 3, param + 4,
+                                        param + 5, param + 6);
 }
 
 /**************************************************************************
@@ -2178,37 +2184,21 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
 static gboolean
 pyramidx_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    range_z(z, n, &zmin, &zmax);
-
-    param[0] = xc;
-    param[1] = yc;
-    param[2] = zmin;
-    param[3] = zmax - zmin;
-    param[4] = r/3.0;
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    return TRUE;
+    return common_bump_feature_init(xy, z, n,
+                                    param + 0, param + 1, param + 2,
+                                    param + 3, param + 4,
+                                    param + 5, param + 6);
 }
 
 static gboolean
 pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
-    gdouble xc, yc, r, zmin, zmax;
-
-    /* Just initialise the shape parameters with some sane defaults. */
-    param[5] = 1.0;
-    param[6] = 0.0;
-
-    circumscribe_x_y(xy, n, &xc, &yc, &r);
-    param[4] = r/3.0;
-
-    range_z(z, n, &zmin, &zmax);
-    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
-                                   param + 2, param + 3, param + 0, param + 1);
+    /* XXX: The pyramid has minimum projection when oriented along x and y
+     * axes.  But not very deep.  Can we use it to estimate alpha? */
+    return common_bump_feature_estimate(xy, z, n,
+                                        param + 0, param + 1, param + 2,
+                                        param + 3, param + 4,
+                                        param + 5, param + 6);
 }
 
 static const gchar display_key[]  = "/module/fit_shape/display";
