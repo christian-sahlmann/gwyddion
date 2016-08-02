@@ -133,12 +133,12 @@ typedef struct {
     GtkWidget *dialogue;
     GtkWidget *view;
     GtkWidget *function;
-    GtkWidget *display;
     GtkWidget *output;
+    GSList *display;
+    GSList *masking;
     GtkWidget *rss_label;
     GtkWidget *revert;
     GtkWidget *recalculate;
-    GSList *masking;
     GtkWidget *param_table;
     GArray *param_controls;
 } FitShapeControls;
@@ -163,11 +163,11 @@ static GtkWidget*   function_menu_new        (const gchar *name,
                                               FitShapeControls *controls);
 static void         function_changed         (GtkComboBox *combo,
                                               FitShapeControls *controls);
-static void         display_changed          (GtkComboBox *combo,
+static void         display_changed          (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
 static void         output_changed           (GtkComboBox *combo,
                                               FitShapeControls *controls);
-static void         masking_changed          (GtkToggleButton *button,
+static void         masking_changed          (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
 static void         fix_changed              (GtkToggleButton *button,
                                               FitShapeControls *controls);
@@ -437,7 +437,7 @@ fit_shape_dialogue(FitShapeArgs *args,
 
     update_context_data(&controls);
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
-    display_changed(GTK_COMBO_BOX(controls.display), &controls);
+    display_changed(NULL, &controls);
 
     gtk_widget_show_all(dialogue);
     do {
@@ -541,7 +541,7 @@ basic_tab_new(FitShapeControls *controls,
     FitShapeArgs *args = controls->args;
     gint row;
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(7 + 4*(!!mfield), 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -552,20 +552,27 @@ basic_tab_new(FitShapeControls *controls,
                             GTK_OBJECT(controls->function), GWY_HSCALE_WIDGET);
     row++;
 
-    controls->display
-        = gwy_enum_combo_box_new(displays, G_N_ELEMENTS(displays),
-                                 G_CALLBACK(display_changed), controls,
-                                 args->display, TRUE);
-    gwy_table_attach_hscale(table, row, _("_Preview:"), NULL,
-                            GTK_OBJECT(controls->display), GWY_HSCALE_WIDGET);
-    row++;
-
     controls->output
         = gwy_enum_combo_box_new(outputs, G_N_ELEMENTS(outputs),
                                  G_CALLBACK(output_changed), controls,
                                  args->output, TRUE);
     gwy_table_attach_hscale(table, row, _("Output _type:"), NULL,
                             GTK_OBJECT(controls->output), GWY_HSCALE_WIDGET);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new(_("Preview:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->display
+        = gwy_radio_buttons_create(displays, G_N_ELEMENTS(displays),
+                                   G_CALLBACK(display_changed),
+                                   controls, args->display);
+    row = gwy_radio_buttons_attach_to_table(controls->display,
+                                            GTK_TABLE(table), 3, row);
     row++;
 
     if (mfield) {
@@ -817,12 +824,15 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
 }
 
 static void
-display_changed(GtkComboBox *combo, FitShapeControls *controls)
+display_changed(GtkToggleButton *toggle, FitShapeControls *controls)
 {
     GwyPixmapLayer *player;
     GQuark quark;
 
-    controls->args->display = gwy_enum_combo_box_get_active(combo);
+    if (toggle && !gtk_toggle_button_get_active(toggle))
+        return;
+
+    controls->args->display = gwy_radio_buttons_get_current(controls->display);
     player = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
     quark = gwy_app_get_data_key_for_id(controls->args->display);
     gwy_pixmap_layer_set_data_key(player, g_quark_to_string(quark));
@@ -835,14 +845,12 @@ output_changed(GtkComboBox *combo, FitShapeControls *controls)
 }
 
 static void
-masking_changed(GtkToggleButton *button, FitShapeControls *controls)
+masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
 {
-    FitShapeArgs *args = controls->args;
-
-    if (!gtk_toggle_button_get_active(button))
+    if (!gtk_toggle_button_get_active(toggle))
         return;
 
-    args->masking = gwy_radio_buttons_get_current(controls->masking);
+    controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
     update_context_data(controls);
     // TODO: Do anything else here?
 }
@@ -1752,7 +1760,7 @@ common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
 static gboolean
 common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
                              gdouble *xc, gdouble *yc, gdouble *z0,
-                             gdouble *size, gdouble *h,
+                             gdouble *height, gdouble *size,
                              gdouble *a, gdouble *alpha)
 {
     gdouble xm, ym, r, zmin, zmax;
@@ -1766,7 +1774,7 @@ common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
 
     range_z(z, n, &zmin, &zmax);
     return estimate_feature_height(xy, z, n, xm, ym, r, zmin, zmax,
-                                   z0, h, xc, yc);
+                                   z0, height, xc, yc);
 }
 
 /**************************************************************************
