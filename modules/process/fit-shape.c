@@ -19,9 +19,10 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-/* XXX: Write all estimation and fitting functions for point clouds.  This
+/* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
+ * - Recalculate image should update rss.
  * - Weights; either remove them or implement the support properly.
  * - Handle fit failure, estimate failure.
  * - Parameter table export.
@@ -246,6 +247,8 @@ static void         fit_shape_save_args      (GwyContainer *container,
 
 DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(grating);
+DECLARE_SHAPE_FUNC(gaussian);
+DECLARE_SHAPE_FUNC(lorentzian);
 
 static const FitShapeParam sphere_params[] = {
    { "x<sub>0</sub>", 1, 0, },
@@ -264,9 +267,31 @@ static const FitShapeParam grating_params[] = {
    { "c",             0, 0, },
 };
 
+static const FitShapeParam gaussian_params[] = {
+   { "x<sub>0</sub>",    1, 0, },
+   { "y<sub>0</sub>",    1, 0, },
+   { "z<sub>0</sub>",    0, 1, },
+   { "h",                0, 1, },
+   { "σ<sub>mean</sub>", 1, 0, },
+   { "a",                0, 0, },
+   { "α",                0, 0, },
+};
+
+static const FitShapeParam lorentzian_params[] = {
+   { "x<sub>0</sub>",    1, 0, },
+   { "y<sub>0</sub>",    1, 0, },
+   { "z<sub>0</sub>",    0, 1, },
+   { "h",                0, 1, },
+   { "b<sub>mean</sub>", 1, 0, },
+   { "a",                0, 0, },
+   { "α",                0, 0, },
+};
+
 static const FitShapeFunc functions[] = {
-    { N_("Sphere"),  TRUE,  SHAPE_FUNC_ITEM(sphere),  },
-    { N_("Grating"), FALSE, SHAPE_FUNC_ITEM(grating), },
+    { N_("Sphere"),     TRUE,  SHAPE_FUNC_ITEM(sphere),     },
+    { N_("Grating"),    FALSE, SHAPE_FUNC_ITEM(grating),    },
+    { N_("Gaussian"),   FALSE, SHAPE_FUNC_ITEM(gaussian),   },
+    { N_("Lorentzian"), FALSE, SHAPE_FUNC_ITEM(lorentzian), },
 };
 
 /* NB: The default must not require same units because then we could not fall
@@ -1328,7 +1353,7 @@ mean_x_y(const GwyXY *xy, guint n, gdouble *pxc, gdouble *pyc)
 static void
 range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax)
 {
-    gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE;
+    gdouble min, max;
     guint i;
 
     if (!n) {
@@ -1336,7 +1361,8 @@ range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax)
         return;
     }
 
-    for (i = 0; i < n; i++) {
+    min = max = z[0];
+    for (i = 1; i < n; i++) {
         if (z[i] < min)
             min = z[i];
         if (z[i] > max)
@@ -1595,6 +1621,96 @@ fail:
     return found;
 }
 
+/* For a shape that consists of a more or less flat base with some feature
+ * on it, estimate the base plane (z0) and feature height (h).  The height
+ * can be either positive or negative. */
+static gboolean
+estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
+                        gdouble xc, gdouble yc, gdouble r,
+                        gdouble zmin, gdouble zmax,
+                        gdouble *pz0, gdouble *ph,
+                        gdouble *px, gdouble *py)
+{
+    gdouble r2_large = 0.7*r*r, r2_small = 0.1*r*r;
+    gdouble t, xm, ym, zbest, zmean_large = 0.0, zmean_small = 0.0;
+    guint i, n_large = 0, n_small = 0;
+    gboolean positive;
+
+    if (!n) {
+        *pz0 = *ph = 0.0;
+        return FALSE;
+    }
+
+    for (i = 0; i < n; i++) {
+        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        gdouble r2 = x*x + y*y;
+
+        if (r2 <= r2_small) {
+            zmean_small += z[i];
+            n_small++;
+        }
+        else if (r2 >= r2_large) {
+            zmean_large += z[i];
+            n_large++;
+        }
+    }
+
+    g_assert(n_large);   /* circumscribe_x_y() should ensure this. */
+    zmean_large /= n_large;
+
+    if (n_small) {
+        zmean_small /= n_small;
+        positive = (zmean_small >= zmean_large);
+    }
+    else
+        positive = (fabs(zmean_large - zmin) <= fabs(zmean_large - zmax));
+
+    t = zmax - zmin;
+    if (positive) {
+        *pz0 = zmin + 0.05*t;
+        *ph = 0.9*t;
+    }
+    else {
+        *pz0 = zmax - 0.05*t;
+        *ph = -0.9*t;
+    }
+
+    xm = 0.0;
+    ym = 0.0;
+    if (n_small) {
+        if (positive) {
+            zbest = -G_MAXDOUBLE;
+            for (i = 0; i < n; i++) {
+                gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+                gdouble r2 = x*x + y*y;
+
+                if (r2 <= r2_small && z[i] > zbest) {
+                    zbest = z[i];
+                    xm = x;
+                    ym = y;
+                }
+            }
+        }
+        else {
+            zbest = G_MAXDOUBLE;
+            for (i = 0; i < n; i++) {
+                gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+                gdouble r2 = x*x + y*y;
+
+                if (r2 <= r2_small && z[i] < zbest) {
+                    zbest = z[i];
+                    xm = x;
+                    ym = y;
+                }
+            }
+        }
+    }
+    *px = xc + xm;
+    *py = yc + ym;
+
+    return TRUE;
+}
+
 /**************************************************************************
  *
  * Sphere
@@ -1723,11 +1839,8 @@ sphere_estimate(const GwyXY *xy,
  **************************************************************************/
 
 static gdouble
-grating_func(gdouble abscissa,
-             G_GNUC_UNUSED gint n_param,
-             const gdouble *param,
-             gpointer user_data,
-             gboolean *fres)
+grating_func(gdouble abscissa, gint n_param, const gdouble *param,
+             gpointer user_data, gboolean *fres)
 {
 #ifdef FIT_SHAPE_CACHE
     static gdouble c_last = 0.0, coshm1_c_last = 1.0;
@@ -1794,10 +1907,7 @@ grating_func(gdouble abscissa,
 }
 
 static gboolean
-grating_init(const GwyXY *xy,
-             const gdouble *z,
-             guint n,
-             gdouble *param)
+grating_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
     gdouble xc, yc, r, zmin, zmax;
 
@@ -1816,10 +1926,7 @@ grating_init(const GwyXY *xy,
 }
 
 static gboolean
-grating_estimate(const GwyXY *xy,
-                 const gdouble *z,
-                 guint n,
-                 gdouble *param)
+grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
 {
     GwyXY *xyred = NULL;
     gdouble *zred = NULL;
@@ -1856,6 +1963,202 @@ grating_estimate(const GwyXY *xy,
 
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4);
+}
+
+/**************************************************************************
+ *
+ * Gaussian
+ *
+ **************************************************************************/
+
+static gdouble
+gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
+              gpointer user_data, gboolean *fres)
+{
+#ifdef FIT_SHAPE_CACHE
+    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+#endif
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble h = param[3];
+    gdouble sigma = param[4];
+    gdouble a = param[5];
+    gdouble alpha = param[6];
+    gdouble x, y, t, val, ca, sa, s2;
+    guint i;
+
+    g_assert(n_param == 7);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+
+    *fres = TRUE;
+    s2 = sigma*sigma;
+    a = fabs(a);
+    if (G_UNLIKELY(!s2 || !a))
+        return z0;
+
+#ifdef FIT_SHAPE_CACHE
+    if (alpha == alpha_last) {
+        ca = ca_last;
+        sa = sa_last;
+    }
+    else {
+        sincos(alpha, &sa, &ca);
+        ca_last = ca;
+        sa_last = sa;
+        alpha_last = alpha;
+    }
+#else
+    ca = cos(alpha);
+    sa = sin(alpha);
+#endif
+    t = x*ca - y*sa;
+    y = x*sa + y*ca;
+    x = t;
+
+    t = 0.5*(x*x*a + y*y/a)/s2;
+    val = z0 + h*exp(-t);
+
+    return val;
+}
+
+static gboolean
+gaussian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = zmax - zmin;
+    param[4] = r/3.0;
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+gaussian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    /* Just initialise the shape parameters with some sane defaults. */
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    param[4] = r/3.0;
+
+    range_z(z, n, &zmin, &zmax);
+    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
+                                   param + 2, param + 3, param + 0, param + 1);
+}
+
+/**************************************************************************
+ *
+ * Lorentzian
+ *
+ **************************************************************************/
+
+static gdouble
+lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
+                gpointer user_data, gboolean *fres)
+{
+#ifdef FIT_SHAPE_CACHE
+    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+#endif
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble h = param[3];
+    gdouble b = param[4];
+    gdouble a = param[5];
+    gdouble alpha = param[6];
+    gdouble x, y, t, val, ca, sa, b2;
+    guint i;
+
+    g_assert(n_param == 7);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+
+    *fres = TRUE;
+    b2 = b*b;
+    a = fabs(a);
+    if (G_UNLIKELY(!b2 || !a))
+        return z0;
+
+#ifdef FIT_SHAPE_CACHE
+    if (alpha == alpha_last) {
+        ca = ca_last;
+        sa = sa_last;
+    }
+    else {
+        sincos(alpha, &sa, &ca);
+        ca_last = ca;
+        sa_last = sa;
+        alpha_last = alpha;
+    }
+#else
+    ca = cos(alpha);
+    sa = sin(alpha);
+#endif
+    t = x*ca - y*sa;
+    y = x*sa + y*ca;
+    x = t;
+
+    t = (x*x*a + y*y/a)/b2;
+    val = z0 + h/(1.0 + t);
+
+    return val;
+}
+
+static gboolean
+lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    range_z(z, n, &zmin, &zmax);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = zmax - zmin;
+    param[4] = r/3.0;
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    /* Just initialise the shape parameters with some sane defaults. */
+    param[5] = 1.0;
+    param[6] = 0.0;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r);
+    param[4] = r/3.0;
+
+    range_z(z, n, &zmin, &zmax);
+    return estimate_feature_height(xy, z, n, xc, yc, r, zmin, zmax,
+                                   param + 2, param + 3, param + 0, param + 1);
 }
 
 static const gchar display_key[]  = "/module/fit_shape/display";
