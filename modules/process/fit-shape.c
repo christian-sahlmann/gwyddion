@@ -21,6 +21,11 @@
 
 /* XXX: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
+/* TODO:
+ * - Weights; either remove them or implement the support properly.
+ * - Handle fit failure.
+ * - Parameter table export.
+ */
 
 #define DEBUG 1
 #include "config.h"
@@ -1250,6 +1255,26 @@ calculate_function(const FitShapeFunc *func,
     }
 }
 
+#ifdef HAVE_SINCOS
+#define _gwy_sincos sincos
+#else
+static inline void
+_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
+{
+    *s = sin(x);
+    *c = cos(x);
+}
+#endif
+
+static inline gdouble
+gwy_coshm1(gdouble x)
+{
+    gdouble x2 = x*x;
+    if (x2 > 3e-5)
+        return cosh(x) - 1.0;
+    return x2*(0.5 + x2/24.0);
+}
+
 static gdouble
 sphere_func(gdouble abscissa,
             G_GNUC_UNUSED gint n_param,
@@ -1493,7 +1518,7 @@ grating_func(gdouble abscissa,
              gboolean *fres)
 {
 #ifdef FIT_SHAPE_CACHE
-    static gdouble c_last = 0.0, cosh_c_last = 1.0;
+    static gdouble c_last = 0.0, coshm1_c_last = 1.0;
     static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
 #endif
 
@@ -1505,7 +1530,7 @@ grating_func(gdouble abscissa,
     gdouble x0 = param[4];
     gdouble alpha = param[5];
     gdouble c = param[6];
-    gdouble x, y, t, wp2, val, cosh_c, ca, sa;
+    gdouble x, y, t, wp2, val, coshm1_c, ca, sa;
     guint i;
 
     g_assert(n_param == 7);
@@ -1514,16 +1539,20 @@ grating_func(gdouble abscissa,
     x = ctx->xy[i].x;
     y = ctx->xy[i].y;
 
-    /* FIXME: This is pretty unsafe.  Must handle w→0, c→0, ... */
+    *fres = TRUE;
     wp2 = 0.5*w*p;
+    if (G_UNLIKELY(!wp2))
+        return z0;
+
 #ifdef FIT_SHAPE_CACHE
     if (alpha == alpha_last) {
         ca = ca_last;
         sa = sa_last;
     }
     else {
-        ca = ca_last = cos(alpha);
-        sa = sa_last = sin(alpha);
+        sincos(alpha, &sa, &ca);
+        ca_last = ca;
+        sa_last = sa;
         alpha_last = alpha;
     }
 #else
@@ -1535,21 +1564,20 @@ grating_func(gdouble abscissa,
     if (fabs(t) < 1.0) {
 #ifdef FIT_SHAPE_CACHE
         if (c == c_last)
-            cosh_c = cosh_c_last;
+            coshm1_c = coshm1_c_last;
         else {
-            cosh_c = cosh_c_last = cosh(c);
+            coshm1_c = coshm1_c_last = gwy_coshm1(c);
             c_last = c;
         }
 #else
-        cosh_c = cosh(c);
+        coshm1_c = gwy_coshm1(c);
 #endif
 
-        val = z0 + h*(1.0 - (cosh(c*t) - 1.0)/(cosh_c - 1.0));
+        val = z0 + h*(1.0 - gwy_coshm1(c*t)/coshm1_c);
     }
     else
         val = z0;
 
-    *fres = TRUE;
     return val;
 }
 
