@@ -23,9 +23,10 @@
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
  * - Recalculate image should update rss.
- * - Weights; either remove them or implement the support properly.
  * - Handle fit failure, estimate failure.
  * - Parameter table export.
+ * - Display differences for excluded pixels option (otherwise fill them with
+ *   zeros).
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...
  */
@@ -105,7 +106,6 @@ typedef struct {
     gdouble *abscissa;
     GwyXY *xy;
     gdouble *z;
-    gdouble *w;
 } FitShapeContext;
 
 typedef struct {
@@ -191,7 +191,6 @@ static void         fit_context_resize_params(FitShapeContext *ctx,
 static void         fit_context_fill_data    (FitShapeContext *ctx,
                                               GwyDataField *dfield,
                                               GwyDataField *mask,
-                                              GwyDataField *weight,
                                               GwyMaskingType masking);
 static void         fit_context_free         (FitShapeContext *ctx);
 static GwyNLFitter* fit                      (const FitShapeFunc *func,
@@ -1090,7 +1089,7 @@ update_context_data(FitShapeControls *controls)
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
                                      (GObject**)&mfield);
-    fit_context_fill_data(controls->ctx, dfield, mfield, NULL,
+    fit_context_fill_data(controls->ctx, dfield, mfield,
                           controls->args->masking);
 }
 
@@ -1113,11 +1112,10 @@ static void
 fit_context_fill_data(FitShapeContext *ctx,
                       GwyDataField *dfield,
                       GwyDataField *mask,
-                      GwyDataField *weight,
                       GwyMaskingType masking)
 {
     guint n, k, i, j, nn, xres, yres;
-    const gdouble *d, *m, *w;
+    const gdouble *d, *m;
     gdouble dx, dy, xoff, yoff;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -1158,9 +1156,7 @@ fit_context_fill_data(FitShapeContext *ctx,
     ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
     ctx->xy = g_renew(GwyXY, ctx->xy, n);
     ctx->z = g_renew(gdouble, ctx->z, n);
-    ctx->w = g_renew(gdouble, ctx->w, n);
     d = gwy_data_field_get_data_const(dfield);
-    w = weight ? gwy_data_field_get_data_const(weight) : NULL;
 
     n = k = 0;
     for (i = 0; i < yres; i++) {
@@ -1176,7 +1172,6 @@ fit_context_fill_data(FitShapeContext *ctx,
                 ctx->xy[n].x = x;
                 ctx->xy[n].y = y;
                 ctx->z[n] = d[k];
-                ctx->w[n] = w ? w[k] : 1.0;
                 n++;
             }
         }
@@ -1190,7 +1185,6 @@ fit_context_free(FitShapeContext *ctx)
     g_free(ctx->abscissa);
     g_free(ctx->xy);
     g_free(ctx->z);
-    g_free(ctx->w);
     gwy_clear(ctx, 1);
 }
 
@@ -1206,7 +1200,7 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx, gdouble *param,
         gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
 
     rss = gwy_math_nlfit_fit_full(fitter,
-                                  ctx->n, ctx->abscissa, ctx->z, ctx->w,
+                                  ctx->n, ctx->abscissa, ctx->z, NULL,
                                   func->nparams, param, ctx->param_fixed, NULL,
                                   (gpointer)ctx);
     if (rss < 0.0)
@@ -1230,7 +1224,6 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
     nred = ctxred.n = sqrt(ctx->n*(gdouble)NREDLIM);
     ctxred.xy = g_new(GwyXY, nred);
     ctxred.z = g_new(gdouble, nred);
-    /* TODO TODO TODO we must also reduce weights. */
     reduce_data_size(ctx->xy, ctx->z, ctx->n, ctxred.xy, ctxred.z, nred);
     fitter = fit(func, &ctxred, param, NULL, NULL);
     g_free(ctxred.xy);
@@ -1248,7 +1241,7 @@ calculate_field(const FitShapeFunc *func,
 
     gwy_clear(&ctx, 1);
     fit_context_resize_params(&ctx, func->nparams);
-    fit_context_fill_data(&ctx, dfield, NULL, NULL, GWY_MASK_IGNORE);
+    fit_context_fill_data(&ctx, dfield, NULL, GWY_MASK_IGNORE);
     calculate_function(func, &ctx, param, gwy_data_field_get_data(dfield));
     fit_context_free(&ctx);
 }
