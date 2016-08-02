@@ -1326,6 +1326,23 @@ gwy_coshm1(gdouble x)
     return x2*(0.5 + x2/24.0);
 }
 
+#define DEFINE_ALPHA_CACHE(alpha) \
+    static gdouble alpha##_last = 0.0, ca_last = 1.0, sa_last = 0.0
+
+#define HANDLE_ALPHA_CACHE(alpha) \
+    do { \
+        if (alpha == alpha##_last) { \
+            ca = ca_last; \
+            sa = sa_last; \
+        } \
+        else { \
+            sincos(alpha, &sa, &ca); \
+            ca_last = ca; \
+            sa_last = sa; \
+            alpha##_last = alpha; \
+        } \
+    } while (0)
+
 /* Mean value of xy point cloud (not necessarily centre, that depends on
  * the density). */
 static void
@@ -1842,7 +1859,7 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
              gpointer user_data, gboolean *fres)
 {
     static gdouble c_last = 0.0, coshm1_c_last = 1.0;
-    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+    DEFINE_ALPHA_CACHE(alpha);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble w = param[0];
@@ -1866,16 +1883,7 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!wp2))
         return z0;
 
-    if (alpha == alpha_last) {
-        ca = ca_last;
-        sa = sa_last;
-    }
-    else {
-        sincos(alpha, &sa, &ca);
-        ca_last = ca;
-        sa_last = sa;
-        alpha_last = alpha;
-    }
+    HANDLE_ALPHA_CACHE(alpha);
     t = x*ca - y*sa - x0 + wp2;
     t = (t - w*floor(t/w))/wp2 - 1.0;
     if (fabs(t) < 1.0) {
@@ -1963,7 +1971,7 @@ static gdouble
 gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+    DEFINE_ALPHA_CACHE(alpha);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -1988,16 +1996,7 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!s2 || !a))
         return z0;
 
-    if (alpha == alpha_last) {
-        ca = ca_last;
-        sa = sa_last;
-    }
-    else {
-        sincos(alpha, &sa, &ca);
-        ca_last = ca;
-        sa_last = sa;
-        alpha_last = alpha;
-    }
+    HANDLE_ALPHA_CACHE(alpha);
     t = x*ca - y*sa;
     y = x*sa + y*ca;
     x = t;
@@ -2054,7 +2053,7 @@ static gdouble
 lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
                 gpointer user_data, gboolean *fres)
 {
-    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+    DEFINE_ALPHA_CACHE(alpha);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -2079,16 +2078,7 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!b2 || !a))
         return z0;
 
-    if (alpha == alpha_last) {
-        ca = ca_last;
-        sa = sa_last;
-    }
-    else {
-        sincos(alpha, &sa, &ca);
-        ca_last = ca;
-        sa_last = sa;
-        alpha_last = alpha;
-    }
+    HANDLE_ALPHA_CACHE(alpha);
     t = x*ca - y*sa;
     y = x*sa + y*ca;
     x = t;
@@ -2145,7 +2135,7 @@ static gdouble
 pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-    static gdouble alpha_last = 0.0, ca_last = 1.0, sa_last = 0.0;
+    DEFINE_ALPHA_CACHE(alpha);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -2168,16 +2158,7 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!L || !a))
         return z0;
 
-    if (alpha == alpha_last) {
-        ca = ca_last;
-        sa = sa_last;
-    }
-    else {
-        sincos(alpha, &sa, &ca);
-        ca_last = ca;
-        sa_last = sa;
-        alpha_last = alpha;
-    }
+    HANDLE_ALPHA_CACHE(alpha);
     t = x*ca - y*sa;
     y = x*sa + y*ca;
     x = t;
