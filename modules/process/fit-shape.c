@@ -27,7 +27,8 @@
  * - Display differences for excluded pixels option (otherwise fill them with
  *   zeros).
  * - Support parameter transforms between user/internal?  Rad vs. deg,
- *   curvature vs. radius...
+ *   curvature vs. radius...  Maybe better: just add a table with derived
+ *   parameters (so we do not need invertible mapping).
  */
 
 #define DEBUG 1
@@ -50,6 +51,8 @@
 #include "preview.h"
 
 #define FIT_SHAPE_RUN_MODES GWY_RUN_INTERACTIVE
+
+#define FIT_GRADIENT_NAME "__GwyFitDiffGradient"
 
 enum { NREDLIM = 4096 };
 
@@ -83,6 +86,7 @@ typedef struct {
     GwyMaskingType masking;
     FitShapeDisplayType display;
     FitShapeOutputType output;
+    gboolean diff_colourmap;
 } FitShapeArgs;
 
 typedef struct {
@@ -160,9 +164,11 @@ typedef struct {
     gdouble *param_err;
     gdouble rss;
     GwyContainer *mydata;
+    GwyGradient *diff_gradient;
     GtkWidget *dialogue;
     GtkWidget *view;
     GtkWidget *function;
+    GtkWidget *diff_colourmap;
     GtkWidget *output;
     GSList *display;
     GSList *masking;
@@ -196,10 +202,13 @@ static void         function_changed         (GtkComboBox *combo,
                                               FitShapeControls *controls);
 static void         display_changed          (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
+static void         diff_colourmap_changed   (GtkToggleButton *toggle,
+                                              FitShapeControls *controls);
 static void         output_changed           (GtkComboBox *combo,
                                               FitShapeControls *controls);
 static void         masking_changed          (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
+static void         update_colourmap_key     (FitShapeControls *controls);
 static void         fix_changed              (GtkToggleButton *button,
                                               FitShapeControls *controls);
 static void         param_value_activate     (GtkEntry *entry,
@@ -214,6 +223,7 @@ static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
 static void         update_fields            (FitShapeControls *controls);
+static void         update_diff_gradient     (FitShapeControls *controls);
 static void         update_fit_message       (FitShapeControls *controls);
 static void         update_fit_results       (FitShapeControls *controls,
                                               GwyNLFitter *fitter);
@@ -340,6 +350,7 @@ static const FitShapeFunc functions[] = {
 static const FitShapeArgs fit_shape_defaults = {
     "Grating", GWY_MASK_IGNORE,
     FIT_SHAPE_DISPLAY_RESULT, FIT_SHAPE_OUTPUT_FIT,
+    TRUE,
 };
 
 static GwyModuleInfo module_info = {
@@ -399,6 +410,7 @@ fit_shape_dialogue(FitShapeArgs *args,
               *hbox2, *label;
     FitShapeControls controls;
     FitShapeEstimateCache estimcache;
+
     FitShapeContext ctx;
     gint response;
 
@@ -409,6 +421,11 @@ fit_shape_dialogue(FitShapeArgs *args,
     controls.ctx = &ctx;
     controls.estimcache = &estimcache;
     controls.id = id;
+
+    controls.diff_gradient = gwy_inventory_new_item(gwy_gradients(),
+                                                    GWY_GRADIENT_DEFAULT,
+                                                    FIT_GRADIENT_NAME);
+    gwy_resource_use(GWY_RESOURCE(controls.diff_gradient));
 
     dialogue = gtk_dialog_new_with_buttons(_("Fit Shape"), NULL, 0,
                                            gwy_sgettext("verb|_Fit"),
@@ -440,6 +457,8 @@ fit_shape_dialogue(FitShapeArgs *args,
     dfield = gwy_data_field_duplicate(dfield);
     gwy_container_set_object_by_name(controls.mydata, "/2/data", dfield);
     g_object_unref(dfield);
+    gwy_container_set_const_string_by_name(controls.mydata, "/2/data/palette",
+                                           FIT_GRADIENT_NAME);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
@@ -520,6 +539,8 @@ fit_shape_dialogue(FitShapeArgs *args,
     gtk_widget_destroy(dialogue);
 
 finalise:
+    gwy_resource_release(GWY_RESOURCE(controls.diff_gradient));
+    gwy_inventory_delete_item(gwy_gradients(), FIT_GRADIENT_NAME);
     g_object_unref(controls.mydata);
     g_free(controls.param);
     g_free(controls.alt_param);
@@ -586,7 +607,7 @@ basic_tab_new(FitShapeControls *controls,
     FitShapeArgs *args = controls->args;
     gint row;
 
-    table = gtk_table_new(7 + 4*(!!mfield), 4, FALSE);
+    table = gtk_table_new(8 + 4*(!!mfield), 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -618,6 +639,17 @@ basic_tab_new(FitShapeControls *controls,
                                    controls, args->display);
     row = gwy_radio_buttons_attach_to_table(controls->display,
                                             GTK_TABLE(table), 3, row);
+    row++;
+
+    controls->diff_colourmap
+        = gtk_check_button_new_with_mnemonic(_("Show differences with "
+                                               "adapted color map"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->diff_colourmap),
+                                 args->diff_colourmap);
+    gtk_table_attach(GTK_TABLE(table), controls->diff_colourmap,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls->diff_colourmap, "toggled",
+                     G_CALLBACK(diff_colourmap_changed), controls);
     row++;
 
     if (mfield) {
@@ -884,6 +916,15 @@ display_changed(GtkToggleButton *toggle, FitShapeControls *controls)
     player = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
     quark = gwy_app_get_data_key_for_id(controls->args->display);
     gwy_pixmap_layer_set_data_key(player, g_quark_to_string(quark));
+    update_colourmap_key(controls);
+}
+
+static void
+diff_colourmap_changed(GtkToggleButton *toggle,
+                       FitShapeControls *controls)
+{
+    controls->args->diff_colourmap = gtk_toggle_button_get_active(toggle);
+    update_colourmap_key(controls);
 }
 
 static void
@@ -903,6 +944,23 @@ masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
     controls->state = FIT_SHAPE_INITIALISED;
     update_fit_message(controls);
     // TODO: Do anything else here?
+}
+
+static void
+update_colourmap_key(FitShapeControls *controls)
+{
+    GwyPixmapLayer *player;
+
+    player = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+    if (controls->args->diff_colourmap
+        && controls->args->display == FIT_SHAPE_DISPLAY_DIFF) {
+        gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(player),
+                                         "/2/data/palette");
+    }
+    else {
+        gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(player),
+                                         "/0/data/palette");
+    }
 }
 
 static void
@@ -1129,6 +1187,57 @@ update_fields(FitShapeControls *controls)
     gwy_data_field_data_changed(resfield);
     gwy_data_field_subtract_fields(difffield, dfield, resfield);
     gwy_data_field_data_changed(difffield);
+    update_diff_gradient(controls);
+}
+
+static void
+update_diff_gradient(FitShapeControls *controls)
+{
+    static const GwyRGBA rgba_negative = { 0.0, 0.0, 1.0, 1.0 };
+    static const GwyRGBA rgba_positive = { 1.0, 0.0, 0.0, 1.0 };
+    static const GwyRGBA rgba_neutral = { 1.0, 1.0, 1.0, 1.0 };
+
+    GwyDataField *difffield;
+    GwyGradient *gradient = controls->diff_gradient;
+    gdouble min, max;
+
+    difffield = gwy_container_get_object_by_name(controls->mydata, "/2/data");
+    gwy_data_field_get_min_max(difffield, &min, &max);
+    gwy_gradient_reset(gradient);
+
+    /* Stretch the scale to the range when all the data are too high or too
+     * low. */
+    if (min >= 0.0) {
+        gwy_gradient_set_point_color(gradient, 0, &rgba_neutral);
+        gwy_gradient_set_point_color(gradient, 1, &rgba_positive);
+    }
+    else if (max <= 0.0) {
+        gwy_gradient_set_point_color(gradient, 0, &rgba_negative);
+        gwy_gradient_set_point_color(gradient, 1, &rgba_neutral);
+    }
+    else {
+        /* Otherwise make zero neutral and map the two colours to both side,
+         * with the same scale. */
+        gdouble zero = -min/(max - min);
+        GwyGradientPoint zero_pt = { zero, rgba_neutral };
+        GwyRGBA rgba;
+        gint pos;
+
+        if (zero <= 0.5) {
+            gwy_rgba_interpolate(&rgba_neutral, &rgba_negative,
+                                 zero/(1.0 - zero), &rgba);
+            gwy_gradient_set_point_color(gradient, 0, &rgba);
+            gwy_gradient_set_point_color(gradient, 1, &rgba_positive);
+        }
+        else {
+            gwy_gradient_set_point_color(gradient, 0, &rgba_negative);
+            gwy_rgba_interpolate(&rgba_neutral, &rgba_positive,
+                                 (1.0 - zero)/zero, &rgba);
+            gwy_gradient_set_point_color(gradient, 1, &rgba);
+        }
+        pos = gwy_gradient_insert_point_sorted(gradient, &zero_pt);
+        g_assert(pos == 1);
+    }
 }
 
 static void
@@ -2381,10 +2490,11 @@ pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                                         estimcache);
 }
 
-static const gchar display_key[]  = "/module/fit_shape/display";
-static const gchar function_key[] = "/module/fit_shape/function";
-static const gchar masking_key[]  = "/module/fit_shape/masking";
-static const gchar output_key[]   = "/module/fit_shape/output";
+static const gchar diff_colourmap_key[] = "/module/fit_shape/diff_colourmap";
+static const gchar display_key[]        = "/module/fit_shape/display";
+static const gchar function_key[]       = "/module/fit_shape/function";
+static const gchar masking_key[]        = "/module/fit_shape/masking";
+static const gchar output_key[]         = "/module/fit_shape/output";
 
 static void
 fit_shape_sanitize_args(FitShapeArgs *args)
@@ -2396,6 +2506,7 @@ fit_shape_sanitize_args(FitShapeArgs *args)
                                             GWY_TYPE_MASKING_TYPE);
     args->display = MIN(args->display, FIT_SHAPE_DISPLAY_DIFF);
     args->output = MIN(args->output, FIT_SHAPE_OUTPUT_BOTH);
+    args->diff_colourmap = !!args->diff_colourmap;
 
     ok = FALSE;
     for (i = 0; i < G_N_ELEMENTS(functions); i++) {
@@ -2419,6 +2530,8 @@ fit_shape_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, display_key, &args->display);
     gwy_container_gis_enum_by_name(container, masking_key, &args->masking);
     gwy_container_gis_enum_by_name(container, output_key, &args->output);
+    gwy_container_gis_boolean_by_name(container, diff_colourmap_key,
+                                      &args->diff_colourmap);
     fit_shape_sanitize_args(args);
 }
 
@@ -2431,6 +2544,8 @@ fit_shape_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, display_key, args->display);
     gwy_container_set_enum_by_name(container, masking_key, args->masking);
     gwy_container_set_enum_by_name(container, output_key, args->output);
+    gwy_container_set_boolean_by_name(container, diff_colourmap_key,
+                                      args->diff_colourmap);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
