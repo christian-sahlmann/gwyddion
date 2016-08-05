@@ -23,7 +23,6 @@
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
  * - Recalculate image should update rss.
- * - Handle fit failure, estimate failure.
  * - Parameter table export.
  * - Display differences for excluded pixels option (otherwise fill them with
  *   zeros).
@@ -66,6 +65,18 @@ typedef enum {
     FIT_SHAPE_OUTPUT_DIFF = 2,
     FIT_SHAPE_OUTPUT_BOTH = 3,
 } FitShapeOutputType;
+
+typedef enum {
+    FIT_SHAPE_INITIALISED      = 0,
+    FIT_SHAPE_ESTIMATED        = 1,
+    FIT_SHAPE_QUICK_FITTED     = 2,
+    FIT_SHAPE_FITTED           = 3,
+    FIT_SHAPE_USER             = 4,
+    FIT_SHAPE_ESTIMATE_FAILED  = 5,
+    FIT_SHAPE_QUICK_FIT_FAILED = 6,
+    FIT_SHAPE_FIT_FAILED       = 7,
+    FIT_SHAPE_FIT_CANCELLED    = 8,
+} FitShapeState;
 
 typedef struct {
     const gchar *function;
@@ -141,6 +152,7 @@ typedef struct {
     FitShapeArgs *args;
     FitShapeContext *ctx;
     FitShapeEstimateCache *estimcache;
+    FitShapeState state;
     gint id;
     guint function_id;
     gdouble *param;
@@ -155,6 +167,7 @@ typedef struct {
     GSList *display;
     GSList *masking;
     GtkWidget *rss_label;
+    GtkWidget *fit_message;
     GtkWidget *revert;
     GtkWidget *recalculate;
     GtkWidget *param_table;
@@ -201,6 +214,7 @@ static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
 static void         update_fields            (FitShapeControls *controls);
+static void         update_fit_message       (FitShapeControls *controls);
 static void         update_fit_results       (FitShapeControls *controls,
                                               GwyNLFitter *fitter);
 static void         update_context_data      (FitShapeControls *controls);
@@ -214,11 +228,13 @@ static void         fit_context_free         (FitShapeContext *ctx);
 static GwyNLFitter* fit                      (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
                                               gdouble *param,
+                                              gdouble *rss,
                                               GwySetFractionFunc set_fraction,
                                               GwySetMessageFunc set_message);
 static GwyNLFitter* fit_reduced              (const FitShapeFunc *func,
                                               const FitShapeContext *ctx,
-                                              gdouble *param);
+                                              gdouble *param,
+                                              gdouble *rss);
 static void         calculate_field          (const FitShapeFunc *func,
                                               const gdouble *param,
                                               GwyDataField *dfield);
@@ -457,6 +473,12 @@ fit_shape_dialogue(FitShapeArgs *args,
 
     controls.rss_label = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.rss_label, FALSE, FALSE, 2);
+
+    hbox2 = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
+
+    controls.fit_message = gtk_label_new(NULL);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.fit_message, FALSE, FALSE, 2);
 
     update_context_data(&controls);
     function_changed(GTK_COMBO_BOX(controls.function), &controls);
@@ -842,9 +864,11 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     fit_context_resize_params(ctx, nparams);
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
                      controls->estimcache);
+    controls->state = FIT_SHAPE_INITIALISED;
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     update_param_table(controls, controls->param, NULL);
     update_fields(controls);
+    update_fit_message(controls);
 }
 
 static void
@@ -876,6 +900,8 @@ masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
 
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
     update_context_data(controls);
+    controls->state = FIT_SHAPE_INITIALISED;
+    update_fit_message(controls);
     // TODO: Do anything else here?
 }
 
@@ -900,7 +926,9 @@ param_value_activate(GtkEntry *entry, FitShapeControls *controls)
     controls->param[i] *= cntrl->magnitude;
     /* This (a) clears error labels in the table (b) reformats the parameter,
      * e.g. by moving the power-of-10 base appropriately. */
+    controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
+    update_fit_message(controls);
 }
 
 static void
@@ -928,14 +956,18 @@ revert_params(FitShapeControls *controls)
     for (i = 0; i < nparams; i++)
         GWY_SWAP(gdouble, controls->param[i], controls->alt_param[i]);
 
+    controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
+    update_fit_message(controls);
 }
 
 static void
 recalculate_image(FitShapeControls *controls)
 {
+    controls->state = FIT_SHAPE_USER;
     update_all_param_values(controls);
     update_fields(controls);
+    update_fit_message(controls);
 }
 
 static void
@@ -997,8 +1029,12 @@ fit_shape_estimate(FitShapeControls *controls)
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start estimate");
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
-    func->estimate(ctx->xy, ctx->z, ctx->n, controls->param,
-                   controls->estimcache);
+    if (func->estimate(ctx->xy, ctx->z, ctx->n, controls->param,
+                       controls->estimcache))
+        controls->state = FIT_SHAPE_ESTIMATED;
+    else
+        controls->state = FIT_SHAPE_ESTIMATE_FAILED;
+
     /* XXX: We honour fixed parameters by reverting to previous values and
      * pretending nothing happened.  Is it OK? */
     for (i = 0; i < nparams; i++) {
@@ -1008,6 +1044,7 @@ fit_shape_estimate(FitShapeControls *controls)
     }
     update_fields(controls);
     update_fit_results(controls, NULL);
+    update_fit_message(controls);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
 
@@ -1017,12 +1054,18 @@ fit_shape_reduced_fit(FitShapeControls *controls)
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
     GwyNLFitter *fitter;
+    gdouble rss;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start reduced fit");
     update_all_param_values(controls);
     memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
-    fitter = fit_reduced(func, ctx, controls->param);
+    fitter = fit_reduced(func, ctx, controls->param, &rss);
+    if (rss >= 0.0)
+        controls->state = FIT_SHAPE_QUICK_FITTED;
+    else
+        controls->state = FIT_SHAPE_QUICK_FIT_FAILED;
+
 #ifdef DEBUG
     {
         guint i;
@@ -1032,6 +1075,7 @@ fit_shape_reduced_fit(FitShapeControls *controls)
 #endif
     update_fields(controls);
     update_fit_results(controls, fitter);
+    update_fit_message(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
@@ -1042,13 +1086,22 @@ fit_shape_full_fit(FitShapeControls *controls)
     const FitShapeFunc *func = functions + controls->function_id;
     const FitShapeContext *ctx = controls->ctx;
     GwyNLFitter *fitter;
+    gdouble rss;
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialogue), _("Fitting..."));
     gwy_debug("start fit");
     update_all_param_values(controls);
     memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
-    fitter = fit(func, ctx, controls->param,
+    fitter = fit(func, ctx, controls->param, &rss,
                  gwy_app_wait_set_fraction, gwy_app_wait_set_message);
+
+    if (rss >= 0.0)
+        controls->state = FIT_SHAPE_FITTED;
+    else if (rss == -2.0)
+        controls->state = FIT_SHAPE_FIT_CANCELLED;
+    else
+        controls->state = FIT_SHAPE_FIT_FAILED;
+
 #ifdef DEBUG
     {
         guint i;
@@ -1058,6 +1111,7 @@ fit_shape_full_fit(FitShapeControls *controls)
 #endif
     update_fields(controls);
     update_fit_results(controls, fitter);
+    update_fit_message(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_finish();
 }
@@ -1078,6 +1132,24 @@ update_fields(FitShapeControls *controls)
 }
 
 static void
+update_fit_message(FitShapeControls *controls)
+{
+    GdkColor gdkcolor = { 0, 51118, 0, 0 };
+    const gchar *message = "";
+
+    if (controls->state == FIT_SHAPE_ESTIMATE_FAILED)
+        message = _("Parameter estimation failed");
+    else if (controls->state == FIT_SHAPE_FIT_FAILED
+             || controls->state == FIT_SHAPE_QUICK_FIT_FAILED)
+        message = _("Fit failed");
+    else if (controls->state == FIT_SHAPE_FIT_CANCELLED)
+        message = _("Fit was interruped");
+
+    gtk_widget_modify_fg(controls->fit_message, GTK_STATE_NORMAL, &gdkcolor);
+    gtk_label_set_text(GTK_LABEL(controls->fit_message), message);
+}
+
+static void
 update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 {
     const FitShapeFunc *func = functions + controls->function_id;
@@ -1087,6 +1159,7 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     guint k, n = ctx->n, i, nparams = func->nparams;
     GwySIUnit *zunit;
     GwySIValueFormat *vf;
+    gboolean show_errors;
     guchar buf[48];
 
     for (k = 0; k < n; k++) {
@@ -1105,7 +1178,13 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     }
     controls->rss = sqrt(rss/n);
 
-    if (fitter) {
+    show_errors = (fitter
+                   && controls->state != FIT_SHAPE_FIT_CANCELLED
+                   && controls->state != FIT_SHAPE_FIT_FAILED
+                   && controls->state != FIT_SHAPE_QUICK_FIT_FAILED
+                   && controls->state != FIT_SHAPE_ESTIMATE_FAILED);
+
+    if (show_errors) {
         for (i = 0; i < nparams; i++)
             controls->param_err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
@@ -1123,7 +1202,7 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     gwy_si_unit_value_format_free(vf);
 
     update_param_table(controls, controls->param,
-                       fitter ? controls->param_err : NULL);
+                       show_errors ? controls->param_err : NULL);
 }
 
 static void
@@ -1235,43 +1314,42 @@ fit_context_free(FitShapeContext *ctx)
 }
 
 static GwyNLFitter*
-fit(const FitShapeFunc *func, const FitShapeContext *ctx, gdouble *param,
+fit(const FitShapeFunc *func, const FitShapeContext *ctx,
+    gdouble *param, gdouble *rss,
     GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     GwyNLFitter *fitter;
-    gdouble rss;
 
     fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
     if (set_fraction || set_message)
         gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
 
-    rss = gwy_math_nlfit_fit_full(fitter,
-                                  ctx->n, ctx->abscissa, ctx->z, NULL,
-                                  func->nparams, param, ctx->param_fixed, NULL,
-                                  (gpointer)ctx);
-    if (rss < 0.0)
-        g_warning("Fit failed.");
+    *rss = gwy_math_nlfit_fit_full(fitter,
+                                   ctx->n, ctx->abscissa, ctx->z, NULL,
+                                   func->nparams, param, ctx->param_fixed, NULL,
+                                   (gpointer)ctx);
+    gwy_debug("rss from nlfit %g", *rss);
 
     return fitter;
 }
 
 static GwyNLFitter*
 fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
-            gdouble *param)
+            gdouble *param, gdouble *rss)
 {
     GwyNLFitter *fitter;
     FitShapeContext ctxred;
     guint nred;
 
     if (ctx->n <= NREDLIM)
-        return NULL;
+        return fit(func, ctx, param, rss, NULL, NULL);
 
     ctxred = *ctx;
     nred = ctxred.n = sqrt(ctx->n*(gdouble)NREDLIM);
     ctxred.xy = g_new(GwyXY, nred);
     ctxred.z = g_new(gdouble, nred);
     reduce_data_size(ctx->xy, ctx->z, ctx->n, ctxred.xy, ctxred.z, nred);
-    fitter = fit(func, &ctxred, param, NULL, NULL);
+    fitter = fit(func, &ctxred, param, rss, NULL, NULL);
     g_free(ctxred.xy);
     g_free(ctxred.z);
 
