@@ -583,7 +583,10 @@ gwy_gradient_insert_point_sorted(GwyGradient *gradient,
     }
     g_assert(i < points->len);
 
+    if (i != points->len-1)
+        i++;
     g_array_insert_val(points, i, pt);
+
     gwy_gradient_changed(gradient);
 
     return i;
