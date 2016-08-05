@@ -254,6 +254,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     }
 
     if (set_fraction && !set_fraction(1.0/(nlfit->maxiter + 1))) {
+        nlfit->eval = FALSE;
         g_free(w);
         g_free(resid);
         g_free(origparam);
@@ -329,10 +330,8 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             for (i = 0; i < n_dat; i++) {
                 nlfit->dmarq(x[i], n_param, param, fixed, nlfit->fmarq,
                              user_data, der, &nlfit->eval);
-                if (!nlfit->eval) {
-                    sumr = -1.0;
+                if (!nlfit->eval)
                     break;
-                }
 
                 /* acummulate derivatives by slave parameters in master */
                 for (j = 0; j < n_param; j++) {
@@ -437,12 +436,11 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             break;
 
         if (set_fraction && !set_fraction((gdouble)miter/nlfit->maxiter)) {
+            nlfit->eval = FALSE;
             sumr = -2.0;
             break;
         }
     } while (!end);
-
-    sumr1 = sumr;
 
     /* Parameter errors computation */
     if (nlfit->eval) {
