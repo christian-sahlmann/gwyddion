@@ -1311,7 +1311,6 @@ calculate_function(const FitShapeFunc *func,
     }
 }
 
-/* FIXME: Weights? */
 static void
 reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
                  GwyXY *xyred, gdouble *zred, guint nred)
@@ -1324,10 +1323,10 @@ reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
         redindex[i] = i;
 
     for (i = 0; i < nred; i++) {
-        j = g_rand_int_range(rng, 0, n-nred);
+        j = g_rand_int_range(rng, 0, n-i);
         xyred[i] = xy[redindex[j]];
         zred[i] = z[redindex[j]];
-        redindex[j] = redindex[n-1-nred];
+        redindex[j] = redindex[n-1 - i];
     }
 
     g_rand_free(rng);
