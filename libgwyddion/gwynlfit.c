@@ -186,8 +186,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     GwySetFractionFunc set_fraction = NULL;
     GwySetMessageFunc set_message = NULL;
     gdouble mlambda = 1e-4;
-    gdouble sumr = G_MAXDOUBLE;
-    gdouble sumr1;
+    gdouble sumr1, sumr = G_MAXDOUBLE;
     gdouble *der, *v, *xr, *saveparam, *origparam, *resid, *a, *save_a;
     gdouble *w = NULL;
     gint *var_param_id;
@@ -246,13 +245,19 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                                    n_param, param, user_data, resid);
     sumr = sumr1;
 
-    if (!nlfit->eval || (set_fraction
-                         && !set_fraction(1.0/(nlfit->maxiter + 1)))) {
+    if (!nlfit->eval) {
         g_warning("Initial residua evaluation failed");
         g_free(w);
         g_free(resid);
         g_free(origparam);
         return -1.0;
+    }
+
+    if (set_fraction && !set_fraction(1.0/(nlfit->maxiter + 1))) {
+        g_free(w);
+        g_free(resid);
+        g_free(origparam);
+        return -2.0;
     }
 
     if (set_message)
@@ -324,8 +329,10 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             for (i = 0; i < n_dat; i++) {
                 nlfit->dmarq(x[i], n_param, param, fixed, nlfit->fmarq,
                              user_data, der, &nlfit->eval);
-                if (!nlfit->eval)
+                if (!nlfit->eval) {
+                    sumr = -1.0;
                     break;
+                }
 
                 /* acummulate derivatives by slave parameters in master */
                 for (j = 0; j < n_param; j++) {
@@ -355,8 +362,10 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                 memcpy(save_a, a, covar_size*sizeof(gdouble));
                 memcpy(saveparam, param, n_param*sizeof(gdouble));
             }
-            else
+            else {
+                sumr = -1.0;
                 break;
+            }
         }
         while (!is_pos_def) {
             if (!first_pass)
@@ -406,6 +415,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         /* Catch failed evaluation even if it's not reported. */
         if (gwy_isinf(sumr1) || gwy_isnan(sumr1)) {
             nlfit->eval = FALSE;
+            sumr = -1.0;
             break;
         }
 
@@ -426,8 +436,10 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         if (++miter >= nlfit->maxiter)
             break;
 
-        if (set_fraction && !set_fraction((gdouble)miter/nlfit->maxiter))
+        if (set_fraction && !set_fraction((gdouble)miter/nlfit->maxiter)) {
+            sumr = -2.0;
             break;
+        }
     } while (!end);
 
     sumr1 = sumr;
