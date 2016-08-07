@@ -23,7 +23,6 @@
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
  * - Parameter table export.
- * - Correlation matrix
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
@@ -51,6 +50,10 @@
 #define FIT_SHAPE_RUN_MODES GWY_RUN_INTERACTIVE
 
 #define FIT_GRADIENT_NAME "__GwyFitDiffGradient"
+
+/* Lower symmetric part indexing */
+/* i MUST be greater or equal than j */
+#define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
 enum { NREDLIM = 4096 };
 
@@ -177,7 +180,11 @@ typedef struct {
     GtkWidget *revert;
     GtkWidget *recalculate;
     GtkWidget *param_table;
+    GtkWidget *correl_table;
     GArray *param_controls;
+    GPtrArray *correl_values;
+    GPtrArray *correl_hlabels;
+    GPtrArray *correl_vlabels;
 } FitShapeControls;
 
 static gboolean     module_register          (void);
@@ -198,6 +205,8 @@ static gint         basic_tab_add_masking    (FitShapeControls *controls,
                                               gint row);
 static GtkWidget*   parameters_tab_new       (FitShapeControls *controls);
 static void         fit_param_table_resize   (FitShapeControls *controls);
+static GtkWidget*   results_tab_new          (FitShapeControls *controls);
+static void         fit_correl_table_resize  (FitShapeControls *controls);
 static GtkWidget*   function_menu_new        (const gchar *name,
                                               GwyDataField *dfield,
                                               FitShapeControls *controls);
@@ -224,6 +233,8 @@ static void         recalculate_image        (FitShapeControls *controls);
 static void         update_param_table       (FitShapeControls *controls,
                                               const gdouble *param,
                                               const gdouble *param_err);
+static void         update_correl_table      (FitShapeControls *controls,
+                                              GwyNLFitter *fitter);
 static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
@@ -489,6 +500,10 @@ fit_shape_dialogue(FitShapeArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
                              gtk_label_new(_("Parameters")));
 
+    widget = results_tab_new(&controls);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
+                             gtk_label_new(_("Results")));
+
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
 
@@ -551,6 +566,9 @@ finalise:
     g_free(controls.alt_param);
     g_free(controls.param_err);
     g_array_free(controls.param_controls, TRUE);
+    g_ptr_array_free(controls.correl_values, TRUE);
+    g_ptr_array_free(controls.correl_hlabels, TRUE);
+    g_ptr_array_free(controls.correl_vlabels, TRUE);
     fit_context_free(controls.ctx);
 }
 
@@ -841,6 +859,100 @@ fit_param_table_resize(FitShapeControls *controls)
 }
 
 static GtkWidget*
+results_tab_new(FitShapeControls *controls)
+{
+    GtkWidget *vbox, *scwin, *label;
+    GtkTable *table;
+
+    vbox = gtk_vbox_new(FALSE, 4);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+
+    label = gwy_label_new_header(_("Correlation Matrix"));
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+    gtk_box_pack_start(GTK_BOX(vbox), scwin, FALSE, FALSE, 0);
+
+    controls->correl_table = gtk_table_new(1, 1, TRUE);
+    table = GTK_TABLE(controls->correl_table);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scwin),
+                                          controls->correl_table);
+
+    controls->correl_values = g_ptr_array_new();
+    controls->correl_hlabels = g_ptr_array_new();
+    controls->correl_vlabels = g_ptr_array_new();
+
+    return vbox;
+}
+
+static void
+fit_correl_table_resize(FitShapeControls *controls)
+{
+    GtkTable *table;
+    GtkWidget *label;
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, j, nparams;
+    const FitShapeParam *param;
+    GPtrArray *vlabels = controls->correl_vlabels,
+              *hlabels = controls->correl_hlabels,
+              *values = controls->correl_values;
+
+    nparams = func->nparams;
+    gwy_debug("%u -> %u", hlabels->len, nparams);
+    if (hlabels->len == nparams)
+        return;
+
+    for (i = 0; i < hlabels->len; i++)
+        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(hlabels, i));
+    g_ptr_array_set_size(hlabels, 0);
+
+    for (i = 0; i < vlabels->len; i++)
+        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(vlabels, i));
+    g_ptr_array_set_size(vlabels, 0);
+
+    for (i = 0; i < values->len; i++)
+        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(values, i));
+    g_ptr_array_set_size(values, 0);
+
+    table = GTK_TABLE(controls->correl_table);
+    gtk_table_resize(table, nparams+1, nparams+1);
+
+    for (i = 0; i < nparams; i++) {
+        param = func->param + i;
+        label = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_label_set_markup(GTK_LABEL(label), param->name);
+        gtk_table_attach(table, label, 0, 1, i, i+1, GTK_FILL, 0, 0, 0);
+        g_ptr_array_add(vlabels, label);
+    }
+
+    for (i = 0; i < nparams; i++) {
+        param = func->param + i;
+        label = gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(label), param->name);
+        gtk_table_attach(table, label, i+1, i+2, nparams, nparams+1,
+                         GTK_FILL, 0, 0, 0);
+        g_ptr_array_add(hlabels, label);
+    }
+
+    for (i = 0; i < nparams; i++) {
+        for (j = 0; j <= i; j++) {
+            label = gtk_label_new(NULL);
+            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+            gtk_table_attach(table, label, j+1, j+2, i, i+1, GTK_FILL, 0, 0, 0);
+            g_ptr_array_add(values, label);
+        }
+    }
+
+    gtk_widget_show_all(controls->correl_table);
+}
+
+static GtkWidget*
 function_menu_new(const gchar *name, GwyDataField *dfield,
                   FitShapeControls *controls)
 {
@@ -920,12 +1032,14 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     for (i = 0; i < nparams; i++)
         controls->param_err[i] = -1.0;
     fit_param_table_resize(controls);
+    fit_correl_table_resize(controls);
     fit_context_resize_params(ctx, nparams);
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
                      controls->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     update_param_table(controls, controls->param, NULL);
+    update_correl_table(controls, NULL);
     update_fields(controls);
     update_fit_message(controls);
 }
@@ -1022,6 +1136,7 @@ param_value_activate(GtkEntry *entry, FitShapeControls *controls)
      * e.g. by moving the power-of-10 base appropriately. */
     controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
+    update_correl_table(controls, NULL);
     update_fit_message(controls);
 }
 
@@ -1052,6 +1167,7 @@ revert_params(FitShapeControls *controls)
 
     controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
+    update_correl_table(controls, NULL);
     update_fit_message(controls);
 }
 
@@ -1112,6 +1228,32 @@ update_param_table(FitShapeControls *controls,
 
     gwy_si_unit_value_format_free(vf);
     g_object_unref(unit);
+}
+
+static void
+update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, j, nparams = func->nparams;
+    GPtrArray *values = controls->correl_values;
+
+    g_assert(values->len == (nparams + 1)*nparams/2);
+
+    for (i = 0; i < nparams; i++) {
+        for (j = 0; j <= i; j++) {
+            GtkWidget *label = g_ptr_array_index(values, i*(i + 1)/2 + j);
+
+            if (fitter) {
+                gchar buf[16];
+                gdouble c = gwy_math_nlfit_get_correlations(fitter, i, j);
+
+                g_snprintf(buf, sizeof(buf), "%.3f", c);
+                gtk_label_set_text(GTK_LABEL(label), buf);
+            }
+            else
+                gtk_label_set_text(GTK_LABEL(label), "");
+        }
+    }
 }
 
 static void
@@ -1371,6 +1513,7 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 
     update_param_table(controls, controls->param,
                        show_errors ? controls->param_err : NULL);
+    update_correl_table(controls, show_errors ? fitter : NULL);
 }
 
 static void
