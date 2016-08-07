@@ -22,7 +22,6 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Recalculate image should update rss.
  * - Parameter table export.
  * - Correlation matrix
  * - Support parameter transforms between user/internal?  Rad vs. deg,
@@ -1062,6 +1061,7 @@ recalculate_image(FitShapeControls *controls)
     controls->state = FIT_SHAPE_USER;
     update_all_param_values(controls);
     update_fields(controls);
+    update_fit_results(controls, NULL);
     update_fit_message(controls);
 }
 
