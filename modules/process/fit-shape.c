@@ -24,8 +24,7 @@
 /* TODO:
  * - Recalculate image should update rss.
  * - Parameter table export.
- * - Display differences for excluded pixels option (otherwise fill them with
- *   zeros).
+ * - Correlation matrix
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
@@ -87,6 +86,7 @@ typedef struct {
     FitShapeDisplayType display;
     FitShapeOutputType output;
     gboolean diff_colourmap;
+    gboolean diff_excluded;
 } FitShapeArgs;
 
 typedef struct {
@@ -169,6 +169,7 @@ typedef struct {
     GtkWidget *view;
     GtkWidget *function;
     GtkWidget *diff_colourmap;
+    GtkWidget *diff_excluded;
     GtkWidget *output;
     GSList *display;
     GSList *masking;
@@ -193,6 +194,9 @@ static void         create_output            (FitShapeControls *controls,
 static GtkWidget*   basic_tab_new            (FitShapeControls *controls,
                                               GwyDataField *dfield,
                                               GwyDataField *mfield);
+static gint         basic_tab_add_masking    (FitShapeControls *controls,
+                                              GtkWidget *table,
+                                              gint row);
 static GtkWidget*   parameters_tab_new       (FitShapeControls *controls);
 static void         fit_param_table_resize   (FitShapeControls *controls);
 static GtkWidget*   function_menu_new        (const gchar *name,
@@ -203,6 +207,8 @@ static void         function_changed         (GtkComboBox *combo,
 static void         display_changed          (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
 static void         diff_colourmap_changed   (GtkToggleButton *toggle,
+                                              FitShapeControls *controls);
+static void         diff_excluded_changed    (GtkToggleButton *toggle,
                                               FitShapeControls *controls);
 static void         output_changed           (GtkComboBox *combo,
                                               FitShapeControls *controls);
@@ -350,7 +356,7 @@ static const FitShapeFunc functions[] = {
 static const FitShapeArgs fit_shape_defaults = {
     "Grating", GWY_MASK_IGNORE,
     FIT_SHAPE_DISPLAY_RESULT, FIT_SHAPE_OUTPUT_FIT,
-    TRUE,
+    TRUE, TRUE,
 };
 
 static GwyModuleInfo module_info = {
@@ -643,7 +649,7 @@ basic_tab_new(FitShapeControls *controls,
 
     controls->diff_colourmap
         = gtk_check_button_new_with_mnemonic(_("Show differences with "
-                                               "adapted color map"));
+                                               "_adapted color map"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->diff_colourmap),
                                  args->diff_colourmap);
     gtk_table_attach(GTK_TABLE(table), controls->diff_colourmap,
@@ -652,22 +658,44 @@ basic_tab_new(FitShapeControls *controls,
                      G_CALLBACK(diff_colourmap_changed), controls);
     row++;
 
-    if (mfield) {
-        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-        label = gwy_label_new_header(_("Masking Mode"));
-        gtk_table_attach(GTK_TABLE(table), label,
-                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-        row++;
-
-        controls->masking
-            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
-                                       G_CALLBACK(masking_changed),
-                                       controls, args->masking);
-        row = gwy_radio_buttons_attach_to_table(controls->masking,
-                                                GTK_TABLE(table), 3, row);
-    }
+    if (mfield)
+        row = basic_tab_add_masking(controls, table, row);
 
     return table;
+}
+
+static gint
+basic_tab_add_masking(FitShapeControls *controls, GtkWidget *table, gint row)
+{
+    GtkWidget *label;
+    FitShapeArgs *args = controls->args;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(masking_changed),
+                                   controls, args->masking);
+    row = gwy_radio_buttons_attach_to_table(controls->masking,
+                                            GTK_TABLE(table), 3, row);
+    row++;
+
+    controls->diff_excluded
+        = gtk_check_button_new_with_mnemonic(_("Calculate differences "
+                                               "for e_xcluded pixels"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->diff_excluded),
+                                 args->diff_excluded);
+    gtk_table_attach(GTK_TABLE(table), controls->diff_excluded,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls->diff_excluded, "toggled",
+                     G_CALLBACK(diff_excluded_changed), controls);
+    row++;
+
+    return row;
 }
 
 static GtkWidget*
@@ -928,6 +956,15 @@ diff_colourmap_changed(GtkToggleButton *toggle,
 }
 
 static void
+diff_excluded_changed(GtkToggleButton *toggle,
+                       FitShapeControls *controls)
+{
+    controls->args->diff_excluded = gtk_toggle_button_get_active(toggle);
+    if (controls->args->masking != GWY_MASK_IGNORE)
+        update_fields(controls);
+}
+
+static void
 output_changed(GtkComboBox *combo, FitShapeControls *controls)
 {
     controls->args->output = gwy_enum_combo_box_get_active(combo);
@@ -1177,7 +1214,8 @@ fit_shape_full_fit(FitShapeControls *controls)
 static void
 update_fields(FitShapeControls *controls)
 {
-    GwyDataField *dfield, *resfield, *difffield;
+    GwyDataField *dfield, *resfield, *difffield, *mask = NULL;
+    GwyMaskingType masking = controls->args->masking;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     resfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
@@ -1186,6 +1224,27 @@ update_fields(FitShapeControls *controls)
                     controls->param, resfield);
     gwy_data_field_data_changed(resfield);
     gwy_data_field_subtract_fields(difffield, dfield, resfield);
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                         (GObject**)&mask)) {
+        guint xres = gwy_data_field_get_xres(mask);
+        guint yres = gwy_data_field_get_yres(mask);
+        const gdouble *m = gwy_data_field_get_data_const(mask);
+        gdouble *d = gwy_data_field_get_data(difffield);
+        guint n = xres*yres, k;
+
+        if (masking == GWY_MASK_INCLUDE) {
+            for (k = 0; k < n; k++) {
+                if (m[k] <= 0.0)
+                    d[k] = 0.0;
+            }
+        }
+        else if (masking == GWY_MASK_EXCLUDE) {
+            for (k = 0; k < n; k++) {
+                if (m[k] > 0.0)
+                    d[k] = 0.0;
+            }
+        }
+    }
     gwy_data_field_data_changed(difffield);
     update_diff_gradient(controls);
 }
@@ -2491,6 +2550,7 @@ pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static const gchar diff_colourmap_key[] = "/module/fit_shape/diff_colourmap";
+static const gchar diff_excluded_key[]  = "/module/fit_shape/diff_excluded";
 static const gchar display_key[]        = "/module/fit_shape/display";
 static const gchar function_key[]       = "/module/fit_shape/function";
 static const gchar masking_key[]        = "/module/fit_shape/masking";
@@ -2507,6 +2567,7 @@ fit_shape_sanitize_args(FitShapeArgs *args)
     args->display = MIN(args->display, FIT_SHAPE_DISPLAY_DIFF);
     args->output = MIN(args->output, FIT_SHAPE_OUTPUT_BOTH);
     args->diff_colourmap = !!args->diff_colourmap;
+    args->diff_excluded = !!args->diff_excluded;
 
     ok = FALSE;
     for (i = 0; i < G_N_ELEMENTS(functions); i++) {
@@ -2532,6 +2593,8 @@ fit_shape_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, output_key, &args->output);
     gwy_container_gis_boolean_by_name(container, diff_colourmap_key,
                                       &args->diff_colourmap);
+    gwy_container_gis_boolean_by_name(container, diff_excluded_key,
+                                      &args->diff_excluded);
     fit_shape_sanitize_args(args);
 }
 
@@ -2546,6 +2609,8 @@ fit_shape_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, output_key, args->output);
     gwy_container_set_boolean_by_name(container, diff_colourmap_key,
                                       args->diff_colourmap);
+    gwy_container_set_boolean_by_name(container, diff_excluded_key,
+                                      args->diff_excluded);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
