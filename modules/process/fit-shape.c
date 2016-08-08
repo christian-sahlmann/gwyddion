@@ -990,12 +990,14 @@ function_menu_new(const gchar *name, GwyDataField *dfield,
     GArray *entries = g_array_new(FALSE, FALSE, sizeof(GwyEnum));
     GtkWidget *combo;
     GwyEnum *model;
-    guint i, n, active = G_MAXUINT;
+    guint i, n;
 
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
     zunit = gwy_data_field_get_si_unit_z(dfield);
     same_units = gwy_si_unit_equal(xyunit, zunit);
 
+    /* First try to find function @name. */
+    controls->function_id = G_MAXUINT;
     for (i = 0; i < G_N_ELEMENTS(functions); i++) {
         GwyEnum entry;
 
@@ -1004,36 +1006,28 @@ function_menu_new(const gchar *name, GwyDataField *dfield,
 
         entry.name = functions[i].name;
         entry.value = i;
-        controls->function_id = i;
-        if (gwy_strequal(entry.name, name))
-            active = entries->len;
         g_array_append_val(entries, entry);
+        if (gwy_strequal(entry.name, name))
+            controls->function_id = i;
     }
 
-    if (active == G_MAXUINT) {
+    /* If it was excluded fall back to the default function. */
+    if (controls->function_id == G_MAXUINT) {
         name = fit_shape_defaults.function;
         for (i = 0; i < G_N_ELEMENTS(functions); i++) {
-            GwyEnum entry;
-
             if (functions[i].needs_same_units && !same_units)
                 continue;
-
-            entry.name = functions[i].name;
-            entry.value = i;
-            controls->function_id = i;
-            if (gwy_strequal(entry.name, name))
-                active = entries->len;
-            g_array_append_val(entries, entry);
+            if (gwy_strequal(functions[i].name, name))
+                controls->function_id = i;
         }
-
-        g_assert(active != G_MAXUINT);
     }
+    g_assert(controls->function_id != G_MAXUINT);
 
     n = entries->len;
     model = (GwyEnum*)g_array_free(entries, FALSE);
     combo = gwy_enum_combo_box_new(model, n,
                                    G_CALLBACK(function_changed), controls,
-                                   active, TRUE);
+                                   controls->function_id, TRUE);
     g_object_set_data(G_OBJECT(combo), "model", model);
     g_object_weak_ref(G_OBJECT(combo), (GWeakNotify)g_free, model);
 
@@ -1044,15 +1038,13 @@ static void
 function_changed(GtkComboBox *combo, FitShapeControls *controls)
 {
     guint i = gwy_enum_combo_box_get_active(combo);
-    const GwyEnum *model = (const GwyEnum*)g_object_get_data(G_OBJECT(combo),
-                                                             "model");
     FitShapeContext *ctx = controls->ctx;
     const FitShapeFunc *func;
     guint nparams;
 
-    controls->function_id = model[i].value;
-    controls->args->function = model[i].name;
+    controls->function_id = i;
     func = functions + controls->function_id;
+    controls->args->function = func->name;
     nparams = func->nparams;
 
     controls->param = g_renew(gdouble, controls->param, nparams);
