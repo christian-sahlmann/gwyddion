@@ -119,9 +119,6 @@ typedef struct {
     gint power_z;
 } FitShapeParam;
 
-/* XXX: We may need two sets of parameters: nice to fit (e.g. curvature
- * for spheres) and nice for user (e.g. radius for sphere).  A one-to-one
- * transformation function between the two sets is then required. */
 typedef struct {
     const gchar *name;
     gboolean needs_same_units;
@@ -308,18 +305,12 @@ static void         fit_shape_save_args      (GwyContainer *container,
     &name##_func, &name##_estimate, &name##_init, \
     G_N_ELEMENTS(name##_params), name##_params
 
-DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(grating);
+DECLARE_SHAPE_FUNC(pring);
+DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(gaussian);
 DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
-
-static const FitShapeParam sphere_params[] = {
-   { "x<sub>0</sub>", 1, 0, },
-   { "y<sub>0</sub>", 1, 0, },
-   { "z<sub>0</sub>", 0, 1, },
-   { "C",             0, 1, },
-};
 
 static const FitShapeParam grating_params[] = {
    { "w",             1, 0, },
@@ -329,6 +320,23 @@ static const FitShapeParam grating_params[] = {
    { "x<sub>0</sub>", 1, 0, },
    { "α",             0, 0, },
    { "c",             0, 0, },
+};
+
+static const FitShapeParam pring_params[] = {
+   { "x<sub>0</sub>", 1, 0, },
+   { "y<sub>0</sub>", 1, 0, },
+   { "z<sub>0</sub>", 0, 1, },
+   { "R",             1, 0, },
+   { "w",             1, 0, },
+   { "h",             0, 1, },
+   { "s",             0, 1, },
+};
+
+static const FitShapeParam sphere_params[] = {
+   { "x<sub>0</sub>", 1, 0, },
+   { "y<sub>0</sub>", 1, 0, },
+   { "z<sub>0</sub>", 0, 1, },
+   { "C",             0, 1, },
 };
 
 static const FitShapeParam gaussian_params[] = {
@@ -362,8 +370,9 @@ static const FitShapeParam pyramidx_params[] = {
 };
 
 static const FitShapeFunc functions[] = {
+    { N_("Grating (simple)"),  FALSE, SHAPE_FUNC_ITEM(grating),    },
+    { N_("Ring"),              FALSE, SHAPE_FUNC_ITEM(pring),      },
     { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
-    { N_("Grating"),           FALSE, SHAPE_FUNC_ITEM(grating),    },
     { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
     { N_("Lorentzian"),        FALSE, SHAPE_FUNC_ITEM(lorentzian), },
     { N_("Pyramid (diamond)"), FALSE, SHAPE_FUNC_ITEM(pyramidx),   },
@@ -372,7 +381,7 @@ static const FitShapeFunc functions[] = {
 /* NB: The default must not require same units because then we could not fall
  * back to it. */
 static const FitShapeArgs fit_shape_defaults = {
-    "Grating", GWY_MASK_IGNORE,
+    "Grating (simple)", GWY_MASK_IGNORE,
     FIT_SHAPE_DISPLAY_RESULT, FIT_SHAPE_OUTPUT_FIT,
     TRUE, TRUE,
 };
@@ -1787,7 +1796,7 @@ _gwy_sincos(gdouble x, gdouble *s, gdouble *c)
 }
 #endif
 
-/* cosh(x) - 1 safe for small arguments */
+/* cosh(x) - 1, safe for small arguments */
 static inline gdouble
 gwy_coshm1(gdouble x)
 {
@@ -2412,7 +2421,7 @@ sphere_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 
 /**************************************************************************
  *
- * Grating
+ * Grating (simple)
  *
  **************************************************************************/
 
@@ -2529,6 +2538,91 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
                                      estimcache);
+}
+
+/**************************************************************************
+ *
+ * Ring
+ *
+ **************************************************************************/
+
+static gdouble
+pring_func(gdouble abscissa, gint n_param, const gdouble *param,
+           gpointer user_data, gboolean *fres)
+{
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble R = param[3];
+    gdouble h = param[4];
+    gdouble w = param[5];
+    gdouble s = param[6];
+    gdouble x, y, r, r2, rinner, router;
+    guint i;
+
+    g_assert(n_param == 7);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+    r2 = x*x + y*y;
+
+    *fres = TRUE;
+
+    if (w <= 0.0)
+        return r2 <= R*R ? z0 - 0.5*s : z0 + 0.5*s;
+
+    if (h == 0.0) {
+        if (r2 >= R*R)
+            return z0 + 0.5*s;
+        else if (r2 < (R - w)*(R - w))
+            return z0 - 0.5*s;
+
+        r = (R - sqrt(r2))/w;
+        return z0 + s*(0.5 - r*r);
+    }
+
+    r = sqrt(r2) - R;
+    rinner = fmax(1.0 + 0.5*s/h, 0.0);
+    router = fmax(1.0 - 0.5*s/h, 0.0);
+    rinner = -0.5*fabs(w)*sqrt(rinner);
+    router = 0.5*fabs(w)*sqrt(router);
+    if (r <= rinner)
+        return z0 - 0.5*s;
+    if (r >= router)
+        return z0 + 0.5*s;
+
+    r *= 2.0/w;
+    return z0 + h*(1.0 - r*r);
+}
+
+static gboolean
+pring_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+           FitShapeEstimateCache *estimcache)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = r/3.0;
+    param[4] = r/12.0;
+    param[5] = zmax - zmin;
+    param[6] = (zmax - zmin)/12.0;
+
+    return TRUE;
+}
+
+static gboolean
+pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+               FitShapeEstimateCache *estimcache)
+{
+    g_warning("Implement me!");
+    return TRUE;
 }
 
 /**************************************************************************
