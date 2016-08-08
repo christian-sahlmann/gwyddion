@@ -22,10 +22,10 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Parameter table export.
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
+ * - Align parameter table properly (with UTF-8 string lengths).
  */
 
 #define DEBUG 1
@@ -156,15 +156,20 @@ typedef struct {
 
 typedef struct {
     FitShapeArgs *args;
+    /* These are actually non-GUI and could be separated for some
+     * non-interactive use. */
     FitShapeContext *ctx;
     FitShapeEstimateCache *estimcache;
     FitShapeState state;
     gint id;
+    gchar *title;
     guint function_id;
     gdouble *param;
     gdouble *alt_param;
     gdouble *param_err;
+    gdouble *correl;
     gdouble rss;
+    /* This is GUI but we use the fields in mydata. */
     GwyContainer *mydata;
     GwyGradient *diff_gradient;
     GtkWidget *dialogue;
@@ -238,9 +243,11 @@ static void         update_correl_table      (FitShapeControls *controls,
 static void         fit_shape_estimate       (FitShapeControls *controls);
 static void         fit_shape_reduced_fit    (FitShapeControls *controls);
 static void         fit_shape_full_fit       (FitShapeControls *controls);
+static void         fit_copy_correl_matrix   (FitShapeControls *controls,
+                                              GwyNLFitter *fitter);
 static void         update_fields            (FitShapeControls *controls);
 static void         update_diff_gradient     (FitShapeControls *controls);
-static void         update_fit_message       (FitShapeControls *controls);
+static void         update_fit_state         (FitShapeControls *controls);
 static void         update_fit_results       (FitShapeControls *controls,
                                               GwyNLFitter *fitter);
 static void         update_context_data      (FitShapeControls *controls);
@@ -274,6 +281,7 @@ static void         reduce_data_size         (const GwyXY *xy,
                                               GwyXY *xyred,
                                               gdouble *zred,
                                               guint nred);
+static GString*     create_fit_report        (FitShapeControls *controls);
 static void         fit_shape_load_args      (GwyContainer *container,
                                               FitShapeArgs *args);
 static void         fit_shape_save_args      (GwyContainer *container,
@@ -426,8 +434,8 @@ fit_shape_dialogue(FitShapeArgs *args,
               *hbox2, *label;
     FitShapeControls controls;
     FitShapeEstimateCache estimcache;
-
     FitShapeContext ctx;
+    GString *report;
     gint response;
 
     gwy_clear(&ctx, 1);
@@ -437,6 +445,7 @@ fit_shape_dialogue(FitShapeArgs *args,
     controls.ctx = &ctx;
     controls.estimcache = &estimcache;
     controls.id = id;
+    controls.title = gwy_app_get_data_field_title(data, id);
 
     controls.diff_gradient = gwy_inventory_new_item(gwy_gradients(),
                                                     GWY_GRADIENT_DEFAULT,
@@ -444,6 +453,8 @@ fit_shape_dialogue(FitShapeArgs *args,
     gwy_resource_use(GWY_RESOURCE(controls.diff_gradient));
 
     dialogue = gtk_dialog_new_with_buttons(_("Fit Shape"), NULL, 0,
+                                           GTK_STOCK_SAVE,
+                                           RESPONSE_SAVE,
                                            gwy_sgettext("verb|_Fit"),
                                            RESPONSE_REFINE,
                                            gwy_sgettext("verb|_Quick Fit"),
@@ -549,6 +560,13 @@ fit_shape_dialogue(FitShapeArgs *args,
             fit_shape_estimate(&controls);
             break;
 
+            case RESPONSE_SAVE:
+            report = create_fit_report(&controls);
+            gwy_save_auxiliary_data(_("Save Fit Report"), GTK_WINDOW(dialogue),
+                                    -1, report->str);
+            g_string_free(report, TRUE);
+            break;
+
             default:
             g_assert_not_reached();
             break;
@@ -565,6 +583,8 @@ finalise:
     g_free(controls.param);
     g_free(controls.alt_param);
     g_free(controls.param_err);
+    g_free(controls.correl);
+    g_free(controls.title);
     g_array_free(controls.param_controls, TRUE);
     g_ptr_array_free(controls.correl_values, TRUE);
     g_ptr_array_free(controls.correl_hlabels, TRUE);
@@ -1029,6 +1049,8 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     controls->param = g_renew(gdouble, controls->param, nparams);
     controls->alt_param = g_renew(gdouble, controls->alt_param, nparams);
     controls->param_err = g_renew(gdouble, controls->param_err, nparams);
+    controls->correl = g_renew(gdouble, controls->correl,
+                               (nparams + 1)*nparams/2);
     for (i = 0; i < nparams; i++)
         controls->param_err[i] = -1.0;
     fit_param_table_resize(controls);
@@ -1037,11 +1059,12 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
                      controls->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
+    fit_copy_correl_matrix(controls, NULL);
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
     update_fields(controls);
-    update_fit_message(controls);
+    update_fit_state(controls);
 }
 
 static void
@@ -1092,7 +1115,7 @@ masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
     update_context_data(controls);
     controls->state = FIT_SHAPE_INITIALISED;
-    update_fit_message(controls);
+    update_fit_state(controls);
     // TODO: Do anything else here?
 }
 
@@ -1137,7 +1160,7 @@ param_value_activate(GtkEntry *entry, FitShapeControls *controls)
     controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
-    update_fit_message(controls);
+    update_fit_state(controls);
 }
 
 static void
@@ -1168,7 +1191,7 @@ revert_params(FitShapeControls *controls)
     controls->state = FIT_SHAPE_USER;
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
-    update_fit_message(controls);
+    update_fit_state(controls);
 }
 
 static void
@@ -1178,7 +1201,7 @@ recalculate_image(FitShapeControls *controls)
     update_all_param_values(controls);
     update_fields(controls);
     update_fit_results(controls, NULL);
-    update_fit_message(controls);
+    update_fit_state(controls);
 }
 
 static void
@@ -1245,9 +1268,8 @@ update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
 
             if (fitter) {
                 gchar buf[16];
-                gdouble c = gwy_math_nlfit_get_correlations(fitter, i, j);
-
-                g_snprintf(buf, sizeof(buf), "%.3f", c);
+                g_snprintf(buf, sizeof(buf), "%.3f",
+                           SLi(controls->correl, i, j));
                 gtk_label_set_text(GTK_LABEL(label), buf);
             }
             else
@@ -1281,7 +1303,7 @@ fit_shape_estimate(FitShapeControls *controls)
     }
     update_fields(controls);
     update_fit_results(controls, NULL);
-    update_fit_message(controls);
+    update_fit_state(controls);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
 
@@ -1310,9 +1332,10 @@ fit_shape_reduced_fit(FitShapeControls *controls)
             gwy_debug("[%u] %g", i, controls->param[i]);
     }
 #endif
+    fit_copy_correl_matrix(controls, fitter);
     update_fields(controls);
     update_fit_results(controls, fitter);
-    update_fit_message(controls);
+    update_fit_state(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
@@ -1346,11 +1369,33 @@ fit_shape_full_fit(FitShapeControls *controls)
             gwy_debug("[%u] %g", i, controls->param[i]);
     }
 #endif
+    fit_copy_correl_matrix(controls, fitter);
     update_fields(controls);
     update_fit_results(controls, fitter);
-    update_fit_message(controls);
+    update_fit_state(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_finish();
+}
+
+static void
+fit_copy_correl_matrix(FitShapeControls *controls, GwyNLFitter *fitter)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, j, nparams = func->nparams;
+
+    gwy_clear(controls->correl, (nparams + 1)*nparams/2);
+
+    if (controls->state == FIT_SHAPE_FITTED
+        || controls->state == FIT_SHAPE_QUICK_FITTED) {
+        g_return_if_fail(fitter && fitter->covar);
+
+        for (i = 0; i < nparams; i++) {
+            for (j = 0; j <= i; j++) {
+                SLi(controls->correl, i, j)
+                    = gwy_math_nlfit_get_correlations(fitter, i, j);
+            }
+        }
+    }
 }
 
 static void
@@ -1442,7 +1487,7 @@ update_diff_gradient(FitShapeControls *controls)
 }
 
 static void
-update_fit_message(FitShapeControls *controls)
+update_fit_state(FitShapeControls *controls)
 {
     GdkColor gdkcolor = { 0, 51118, 0, 0 };
     const gchar *message = "";
@@ -1457,6 +1502,10 @@ update_fit_message(FitShapeControls *controls)
 
     gtk_widget_modify_fg(controls->fit_message, GTK_STATE_NORMAL, &gdkcolor);
     gtk_label_set_text(GTK_LABEL(controls->fit_message), message);
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialogue),
+                                      RESPONSE_SAVE,
+                                      controls->state == FIT_SHAPE_FITTED);
 }
 
 static void
@@ -2690,6 +2739,85 @@ pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                                         param + 3, param + 4,
                                         param + 5, param + 6,
                                         estimcache);
+}
+
+/**************************************************************************
+ *
+ * Misc.
+ *
+ **************************************************************************/
+
+static GString*
+create_fit_report(FitShapeControls *controls)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    GwyDataField *dfield;
+    GwySIUnit *xyunit, *zunit, *unit;
+    gchar *s, *unitstr;
+    GString *report;
+    guint i, j, xres, yres, nparams;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    unit = gwy_si_unit_new(NULL);
+
+    report = g_string_new(NULL);
+
+    g_string_append(report, _("===== Fit Results ====="));
+    g_string_append_c(report, '\n');
+    g_string_append_printf(report, _("Data:             %s\n"),
+                           controls->title);
+    g_string_append_printf(report, _("Number of points: %d of %d\n"),
+                           controls->ctx->n, xres*yres);
+    g_string_append_printf(report, _("Fitted function:  %s\n"), func->name);
+    g_string_append_c(report, '\n');
+    g_string_append_printf(report, _("Results\n"));
+
+    nparams = func->nparams;
+    for (i = 0; i < nparams; i++) {
+        const FitShapeParam *fitparam = func->param + i;
+
+        if (!pango_parse_markup(fitparam->name, -1, 0, NULL, &s, NULL, NULL)) {
+            g_warning("Parameter name is not valid Pango markup");
+            s = g_strdup(fitparam->name);
+        }
+        gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
+                                   zunit, fitparam->power_z,
+                                   unit);
+        unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(report, "%6s = %g ± %g %s\n",
+                               s, controls->param[i], controls->param_err[i],
+                               unitstr);
+        g_free(unitstr);
+        g_free(s);
+    }
+    g_string_append_c(report, '\n');
+
+    unitstr = gwy_si_unit_get_string(zunit, GWY_SI_UNIT_FORMAT_PLAIN);
+    g_string_append_printf(report, _("%s %g %s\n"),
+                           _("Mean square difference:"),
+                           controls->rss, unitstr);
+    g_free(unitstr);
+    g_string_append_c(report, '\n');
+
+    g_string_append_printf(report, _("Correlation matrix\n"));
+    for (i = 0; i < nparams; i++) {
+        g_string_append(report, "  ");
+        for (j = 0; j <= i; j++) {
+            g_string_append_printf(report, "% .03f",
+                                   SLi(controls->correl, i, j));
+            if (j != i)
+                g_string_append_c(report, ' ');
+        }
+        g_string_append_c(report, '\n');
+    }
+
+    g_object_unref(unit);
+
+    return report;
 }
 
 static const gchar diff_colourmap_key[] = "/module/fit_shape/diff_colourmap";
