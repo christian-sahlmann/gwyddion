@@ -51,6 +51,8 @@ typedef enum {
     GRAPH_MAX  = 0,
     GRAPH_RMS  = 1,
     GRAPH_NMAX = 2,
+    GRAPH_SKEW = 3,
+    GRAPH_KURTOSIS = 4,
     GRAPH_NFLAGS,
 } GraphFlags;
 
@@ -165,6 +167,8 @@ static const gchar* graph_flags[GRAPH_NFLAGS] = {
     N_("Maximum"),
     N_("RMS"),
     N_("Number of maxima"),
+    N_("Skew"),
+    N_("Kurtosis"),
 };
 
 static const ColSynthArgs col_synth_defaults = {
@@ -185,7 +189,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates columnar surfaces by a simple growth algorithm."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2014",
 };
@@ -318,6 +322,7 @@ run_noninteractive(ColSynthArgs *args,
         GwyGraphModel *gmodel;
         GwySIUnit *unit;
         gchar *s, *title;
+        gboolean is_log = (i != GRAPH_SKEW && i != GRAPH_KURTOSIS);
 
         if (!gcmodels[i])
             continue;
@@ -332,7 +337,7 @@ run_noninteractive(ColSynthArgs *args,
         g_object_set(gmodel,
                      "title", title,
                      "x-logarithmic", TRUE,
-                     "y-logarithmic", TRUE,
+                     "y-logarithmic", is_log,
                      "axis-label-bottom", _("Mean deposited thickness"),
                      "axis-label-left", _(graph_flags[i]),
                      NULL);
@@ -453,7 +458,7 @@ col_synth_dialog(ColSynthArgs *args,
     row = 0;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.1, 2000.0, 0.001, 1.0, 0);
+                                           0.001, 2000.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
     gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
                             controls.coverage, GWY_HSCALE_SQRT);
@@ -630,6 +635,7 @@ update_controls(ColSynthControls *controls,
                              args->phi * 180.0/G_PI);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi_spread),
                              args->phi_spread);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->melting), args->melting);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->relaxation),
                                   args->relaxation);
     for (i = 0; i < GRAPH_NFLAGS; i++) {
@@ -888,10 +894,17 @@ col_synth_do(const ColSynthArgs *args,
                 height = zmax*zscale;
                 g_array_append_val(evolution[GRAPH_MAX], height);
             }
-            if (evolution[GRAPH_RMS]) {
-                gdouble rms;
-                rms = gwy_data_field_get_rms(dfield) * zscale;
-                g_array_append_val(evolution[GRAPH_RMS], rms);
+            if (evolution[GRAPH_RMS] || evolution[GRAPH_SKEW]) {
+                gdouble rms, skew, kurtosis;
+                gwy_data_field_get_stats(dfield, NULL,
+                                         NULL, &rms, &skew, &kurtosis);
+                rms *= zscale;
+                if (evolution[GRAPH_RMS])
+                    g_array_append_val(evolution[GRAPH_RMS], rms);
+                if (evolution[GRAPH_SKEW])
+                    g_array_append_val(evolution[GRAPH_SKEW], skew);
+                if (evolution[GRAPH_KURTOSIS])
+                    g_array_append_val(evolution[GRAPH_KURTOSIS], kurtosis);
             }
             if (evolution[GRAPH_NMAX]) {
                 gdouble nmax;
