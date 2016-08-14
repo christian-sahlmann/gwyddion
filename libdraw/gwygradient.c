@@ -900,9 +900,11 @@ static void
 gwy_gradient_changed(GwyGradient *gradient)
 {
     gwy_debug("%s", GWY_RESOURCE(gradient)->name->str);
-    if (gradient->pixels)
-        gwy_gradient_sample(gradient, GWY_GRADIENT_DEFAULT_SIZE,
-                            gradient->pixels);
+    if (gradient->pixels) {
+        gradient->pixels = gwy_gradient_sample(gradient,
+                                               GWY_GRADIENT_DEFAULT_SIZE,
+                                               gradient->pixels);
+    }
     gwy_resource_data_changed(GWY_RESOURCE(gradient));
 }
 
