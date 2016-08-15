@@ -25,6 +25,8 @@
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
+ * - Parameter flags (angle: show as degrees; abs: flip to positive when
+ *   fitted as negative).
  * - Align parameter table properly (with UTF-8 string lengths).
  */
 
@@ -40,6 +42,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
+#include <libprocess/peaks.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -95,6 +98,7 @@ typedef struct {
     gboolean have_mean;
     gboolean have_circle;
     gboolean have_zrange;
+    gboolean have_zstats;
     /* Plain mean values */
     gdouble xm;
     gdouble ym;
@@ -105,6 +109,10 @@ typedef struct {
     /* Value range. */
     gdouble zmin;
     gdouble zmax;
+    /* Simple value stats. */
+    gdouble zmean;
+    gdouble zrms;
+    gdouble zskew;
 } FitShapeEstimateCache;
 
 typedef gboolean (*FitShapeEstimate)(const GwyXY *xy,
@@ -1887,6 +1895,66 @@ range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax,
     }
 }
 
+/* Simple stats of an array of values. */
+static void
+stat_z(const gdouble *z, guint n, gdouble *zmean, gdouble *zrms, gdouble *zskew,
+       FitShapeEstimateCache *estimcache)
+{
+    gdouble s = 0.0, s2 = 0.0, s3 = 0.0;
+    guint i;
+
+    if (estimcache && estimcache->have_zstats) {
+        gwy_debug("using cache %p", estimcache);
+        if (zmean)
+            *zmean = estimcache->zmean;
+        if (zrms)
+            *zrms = estimcache->zrms;
+        if (zskew)
+            *zskew = estimcache->zskew;
+        return;
+    }
+
+    if (!n) {
+        if (zmean)
+            *zmean = 0.0;
+        if (zrms)
+            *zrms = 0.0;
+        if (zskew)
+            *zskew = 0.0;
+        return;
+    }
+
+    for (i = 0; i < n; i++)
+        s += z[i];
+    s /= n;
+
+    for (i = 0; i < n; i++) {
+        gdouble d = z[i] - s;
+        s2 += d*d;
+        s3 += d*d*d;
+    }
+
+    if (s2) {
+        s2 = sqrt(s2/n);
+        s3 /= n*s2*s2*s2;
+    }
+
+    if (zmean)
+        *zmean = s;
+    if (zrms)
+        *zrms = s2;
+    if (zskew)
+        *zskew = s3;
+
+    if (estimcache) {
+        gwy_debug("filling cache %p", estimcache);
+        estimcache->have_zstats = TRUE;
+        estimcache->zmean = s;
+        estimcache->zrms = s2;
+        estimcache->zskew = s3;
+    }
+}
+
 /* Approximately cicrumscribe a set of points by finding a containing
  * octagon. */
 static void
@@ -2538,15 +2606,17 @@ static gdouble
 pring_func(gdouble abscissa, gint n_param, const gdouble *param,
            gpointer user_data, gboolean *fres)
 {
+    static gdouble s_h_last = 0.0, rinner_last = 1.0, router_last = 1.0;
+
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
     gdouble R = param[3];
-    gdouble h = param[4];
-    gdouble w = param[5];
+    gdouble w = param[4];
+    gdouble h = param[5];
     gdouble s = param[6];
-    gdouble x, y, r, r2, rinner, router;
+    gdouble x, y, r, r2, s_h, rinner, router;
     guint i;
 
     g_assert(n_param == 7);
@@ -2558,10 +2628,10 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
 
     *fres = TRUE;
 
-    if (w <= 0.0)
+    if (G_UNLIKELY(w <= 0.0))
         return r2 <= R*R ? z0 - 0.5*s : z0 + 0.5*s;
 
-    if (h == 0.0) {
+    if (G_UNLIKELY(h == 0.0)) {
         if (r2 >= R*R)
             return z0 + 0.5*s;
         else if (r2 < (R - w)*(R - w))
@@ -2572,12 +2642,22 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
     }
 
     r = sqrt(r2) - R;
-    rinner = fmax(1.0 + 0.5*s/h, 0.0);
-    router = fmax(1.0 - 0.5*s/h, 0.0);
-    rinner = -0.5*fabs(w)*sqrt(rinner);
-    router = 0.5*fabs(w)*sqrt(router);
+    s_h = s/h;
+    if (s_h == s_h_last) {
+        rinner = rinner_last;
+        router = router_last;
+    }
+    else {
+        rinner = rinner_last = sqrt(fmax(1.0 + 0.5*s_h, 0.0));
+        router = router_last = sqrt(fmax(1.0 - 0.5*s_h, 0.0));
+        s_h_last = s_h;
+    }
+
+    rinner *= -0.5*fabs(w);
     if (r <= rinner)
         return z0 - 0.5*s;
+
+    router *= 0.5*fabs(w);
     if (r >= router)
         return z0 + 0.5*s;
 
@@ -2606,10 +2686,91 @@ pring_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
+pring_estimate_projection(const GwyXY *xy, const gdouble *z, guint n,
+                          gdouble xc, gdouble yc, gdouble r,
+                          gboolean vertical, gboolean upwards,
+                          GwyDataLine *proj, GwyXY *projdata, guint *counts,
+                          GwyPeaks *peaks, gdouble *param)
+{
+    guint i, j, res;
+    const gdouble *d;
+    gdouble c, width[2];
+
+    c = (vertical ? yc : xc);
+    projection_to_line(xy, z, n, vertical ? -0.5*G_PI : 0.0,
+                       xc, yc, proj, NULL, counts);
+    if (!upwards)
+        gwy_data_line_multiply(proj, -1.0);
+
+    res = gwy_data_line_get_res(proj);
+    d = gwy_data_line_get_data(proj);
+    for (i = j = 0; i < res; i++) {
+        if (counts[i] > 5) {
+            projdata[j].x = c + r*((2.0*i + 1.0)/res - 1.0);
+            projdata[j].y = d[i];
+            j++;
+        }
+    }
+    if (gwy_peaks_analyze_xy(peaks, projdata, j, 2) != 2)
+        return FALSE;
+
+    gwy_peaks_get_quantity(peaks, GWY_PEAK_ABSCISSA, param);
+    gwy_peaks_get_quantity(peaks, GWY_PEAK_WIDTH, width);
+    param[2] = 0.5*(width[0] + width[1]);
+    return TRUE;
+}
+
+static gboolean
 pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                FitShapeEstimateCache *estimcache)
 {
-    g_warning("Implement me!");
+    GwyDataLine *proj;
+    GwyXY *projdata;
+    GwyPeaks *peaks;
+    gdouble xc, yc, r, zmin, zmax, zskew;
+    gdouble xestim[3], yestim[3];
+    guint *counts;
+    gboolean ok = TRUE;
+    guint res;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+    stat_z(z, n, NULL, NULL, &zskew, estimcache);
+    res = (guint)floor(2.0*sqrt(n) + 1.0);
+    if (zskew < 0.0)
+        GWY_SWAP(gdouble, zmin, zmax);
+
+    proj = gwy_data_line_new(res, 2.0*r, FALSE);
+    gwy_data_line_set_offset(proj, -r);
+    counts = g_new(guint, res);
+    projdata = g_new(GwyXY, res);
+
+    peaks = gwy_peaks_new();
+    gwy_peaks_set_order(peaks, GWY_PEAK_ORDER_ABSCISSA);
+    gwy_peaks_set_background(peaks, GWY_PEAK_BACKGROUND_MMSTEP);
+
+    ok = (pring_estimate_projection(xy, z, n, xc, yc, r, FALSE, zskew >= 0.0,
+                                    proj, projdata, counts, peaks, xestim)
+          && pring_estimate_projection(xy, z, n, xc, yc, r, TRUE, zskew >= 0.0,
+                                       proj, projdata, counts, peaks, yestim));
+
+    g_free(counts);
+    g_object_unref(proj);
+    gwy_peaks_free(peaks);
+
+    if (!ok)
+        return FALSE;
+
+    param[0] = 0.5*(xestim[0] + xestim[1]);
+    param[1] = 0.5*(yestim[0] + yestim[1]);
+    param[2] = zmin;
+    param[3] = 0.25*(yestim[1] - yestim[0] + xestim[1] - xestim[0]);
+    /* A bit too high value is OK because at least the estimated function
+     * does not miss the ring completely. */
+    param[4] = 1.5*(xestim[2] + yestim[2]);
+    param[5] = zmax - zmin;
+    param[6] = (zmax - zmin)/12.0;
+
     return TRUE;
 }
 
