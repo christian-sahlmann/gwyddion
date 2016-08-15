@@ -384,6 +384,83 @@ gwy_rand_gen_set_int(GwyRandGenSet *rngset,
     return g_rand_int(rngset->rngs[i].rng);
 }
 
+/**
+ * gwy_rand_gen_set_choose_shuffle:
+ * @rngset: A set of pseudorandom number generators.
+ * @i: Index of a generator from the set.
+ * @n: Total number of possible indices.
+ * @nchoose: Number of values to choose (at most equal to @n).  It is permitted
+ *           to pass zero; the function returns %NULL then.
+ *
+ * Chooses randomly a subset of indices, in random order.
+ *
+ * The function creates an array containing integers from the set
+ * {0, 1, 2, ..., n-1}, each at most once, in random order.
+ *
+ * To generate a permutation, simply pass @nchoose equal to @n.
+ *
+ * Returns: A newly allocated array of @nchoose integers.
+ *
+ * Since: 2.46
+ **/
+guint*
+gwy_rand_gen_set_choose_shuffle(GwyRandGenSet *rngset,
+                                guint i,
+                                guint n,
+                                guint nchoose)
+{
+    GRand *rng;
+    guint *indices;
+    guint j, k;
+
+    g_return_val_if_fail(rngset, NULL);
+    g_return_val_if_fail(i < rngset->n, NULL);
+    g_return_val_if_fail(nchoose <= n, NULL);
+    if (!nchoose)
+        return NULL;
+
+    rng = rngset->rngs[i].rng;
+    /* XXX: This is not a good theoretical threshold.  We should do some
+     * benchmarking because rng is a comparatively slow operation. */
+    if (nchoose < (guint)sqrt(n)) {
+        /* Generate indices directly and check for repetition. */
+        indices = g_new(guint, nchoose);
+
+        for (k = 0; k < nchoose; k++) {
+            gboolean found;
+
+            do {
+                indices[k] = g_rand_int_range(rng, 0, n);
+                found = FALSE;
+                for (j = 0; j < k; j++) {
+                    if (indices[j] == indices[k]) {
+                        found = TRUE;
+                        break;
+                    }
+                }
+            } while (found);
+        }
+    }
+    else {
+        /* Use Knuth's shuffling algorithm (truncated to @nchoose). */
+        indices = g_new(guint, n);
+
+        for (k = 0; k < n; k++)
+            indices[k] = k;
+
+        for (k = 0; k < nchoose; k++) {
+            j = g_rand_int_range(rng, 0, n-k);
+            if (G_LIKELY(j)) {
+                GWY_SWAP(guint, indices[k], indices[k+j]);
+            }
+        }
+
+        indices = g_renew(guint, indices, nchoose);
+    }
+
+    return indices;
+}
+
 /************************** Documentation ****************************/
 
 /**

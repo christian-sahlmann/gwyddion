@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2014 David Necas (Yeti).
+ *  Copyright (C) 2014-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,35 +29,39 @@ G_BEGIN_DECLS
 
 typedef struct _GwyRandGenSet GwyRandGenSet;
 
-GwyRandGenSet* gwy_rand_gen_set_new        (guint n);
-void           gwy_rand_gen_set_init       (GwyRandGenSet *rngset,
-                                            guint seed);
-void           gwy_rand_gen_set_free       (GwyRandGenSet *rngset);
-GRand*         gwy_rand_gen_set_rng        (GwyRandGenSet *rngset,
-                                            guint i);
-gdouble        gwy_rand_gen_set_range      (GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble lower,
-                                            gdouble upper);
-gdouble        gwy_rand_gen_set_uniform    (GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble sigma);
-gdouble        gwy_rand_gen_set_gaussian   (GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble sigma);
-gdouble        gwy_rand_gen_set_exponential(GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble sigma);
-gdouble        gwy_rand_gen_set_triangular (GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble sigma);
-gdouble        gwy_rand_gen_set_multiplier (GwyRandGenSet *rngset,
-                                            guint i,
-                                            gdouble range);
-gdouble        gwy_rand_gen_set_double     (GwyRandGenSet *rngset,
-                                            guint i);
-guint32        gwy_rand_gen_set_int        (GwyRandGenSet *rngset,
-                                            guint i);
+GwyRandGenSet* gwy_rand_gen_set_new           (guint n);
+void           gwy_rand_gen_set_init          (GwyRandGenSet *rngset,
+                                               guint seed);
+void           gwy_rand_gen_set_free          (GwyRandGenSet *rngset);
+GRand*         gwy_rand_gen_set_rng           (GwyRandGenSet *rngset,
+                                               guint i);
+gdouble        gwy_rand_gen_set_range         (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble lower,
+                                               gdouble upper);
+gdouble        gwy_rand_gen_set_uniform       (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble sigma);
+gdouble        gwy_rand_gen_set_gaussian      (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble sigma);
+gdouble        gwy_rand_gen_set_exponential   (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble sigma);
+gdouble        gwy_rand_gen_set_triangular    (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble sigma);
+gdouble        gwy_rand_gen_set_multiplier    (GwyRandGenSet *rngset,
+                                               guint i,
+                                               gdouble range);
+gdouble        gwy_rand_gen_set_double        (GwyRandGenSet *rngset,
+                                               guint i);
+guint32        gwy_rand_gen_set_int           (GwyRandGenSet *rngset,
+                                               guint i);
+guint*         gwy_rand_gen_set_choose_shuffle(GwyRandGenSet *rngset,
+                                               guint i,
+                                               guint n,
+                                               guint nchoose);
 
 G_END_DECLS
 
