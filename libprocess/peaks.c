@@ -119,7 +119,7 @@ gwy_peaks_set_order(GwyPeaks *peaks,
 }
 
 /**
- * gwy_peaks_analyse_xy:
+ * gwy_peaks_analyze_xy:
  * @peaks: A peak analyser.
  * @xydata: Curve points (array with @n items) that must be ordered by @x
  *          values in ascending order.
@@ -136,7 +136,7 @@ gwy_peaks_set_order(GwyPeaks *peaks,
  * Since: 2.46
  **/
 guint
-gwy_peaks_analyse_xy(GwyPeaks *peaks,
+gwy_peaks_analyze_xy(GwyPeaks *peaks,
                      const GwyXY *xydata,
                      guint n,
                      guint maxpeaks)
@@ -151,14 +151,14 @@ gwy_peaks_analyse_xy(GwyPeaks *peaks,
         data[i] = xydata[i].x;
         data[n+i] = xydata[i].y;
     }
-    retval = gwy_peaks_analyse(peaks, data, data+n, n, maxpeaks);
+    retval = gwy_peaks_analyze(peaks, data, data+n, n, maxpeaks);
     g_free(data);
 
     return retval;
 }
 
 /**
- * gwy_peaks_analyse:
+ * gwy_peaks_analyze:
  * @peaks: A peak analyser.
  * @xdata: Abscissa values (array with @n items), must be ordered in ascending
  *         order.
@@ -176,7 +176,7 @@ gwy_peaks_analyse_xy(GwyPeaks *peaks,
  * Since: 2.46
  **/
 guint
-gwy_peaks_analyse(GwyPeaks *peaks,
+gwy_peaks_analyze(GwyPeaks *peaks,
                   const gdouble *xdata,
                   const gdouble *ydata,
                   guint n,

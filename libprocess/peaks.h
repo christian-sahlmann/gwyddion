@@ -53,11 +53,11 @@ void      gwy_peaks_set_background(GwyPeaks *peaks,
                                    GwyPeakBackgroundType background);
 void      gwy_peaks_set_order     (GwyPeaks *peaks,
                                    GwyPeakOrderType order);
-guint     gwy_peaks_analyse_xy    (GwyPeaks *peaks,
+guint     gwy_peaks_analyze_xy    (GwyPeaks *peaks,
                                    const GwyXY *xydata,
                                    guint n,
                                    guint maxpeaks);
-guint     gwy_peaks_analyse       (GwyPeaks *peaks,
+guint     gwy_peaks_analyze       (GwyPeaks *peaks,
                                    const gdouble *xdata,
                                    const gdouble *ydata,
                                    guint n,
