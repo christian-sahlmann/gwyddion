@@ -49,6 +49,7 @@
 #include <libprocess/level.h>
 #include <libprocess/tip.h>
 #include <libprocess/surface.h>
+#include <libprocess/peaks.h>
 #include <libprocess/triangulation.h>
 #include <libprocess/gwycalibration.h>
 #include <libprocess/gwycaldata.h>

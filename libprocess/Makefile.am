@@ -34,6 +34,7 @@ libgwyprocess2include_HEADERS = \
 	inttrans.h \
 	level.h \
 	linestats.h \
+	peaks.h \
 	simplefft.h \
 	spectra.h \
 	spline.h \
@@ -68,6 +69,7 @@ MKENUM_NAME = gwyprocesstypes
 MKENUM_ID = GWY_PROCESS_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwyprocessenums.h \
+	$(srcdir)/peaks.h \
 	$(srcdir)/gwygrainvalue.h
 include $(top_srcdir)/utils/mkenum.mk
 
@@ -120,6 +122,7 @@ libgwyprocess2_la_SOURCES = \
 	linestats.c \
 	monte-carlo-unc.c \
 	morph_lib.c \
+	peaks.c \
 	simplefft.c \
 	spectra.c \
 	spline.c \
