@@ -1396,6 +1396,7 @@ create_fit_report(FitArgs *args)
         g_object_unref(unitp);
         g_string_append_printf(report, "%4s = %g ± %g %s\n",
                                s, arg->value, arg->error, unitstr);
+        g_free(unitstr);
         g_free(s);
     }
     g_object_unref(unitx);
