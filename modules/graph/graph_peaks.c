@@ -24,6 +24,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/peaks.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwynullstore.h>
@@ -40,18 +41,6 @@ enum {
     COLUMN_WIDTH,
 };
 
-typedef enum {
-    PEAK_ORDER_ABSCISSA,
-    PEAK_ORDER_PROMINENCE,
-    PEAK_ORDER_NTYPES,
-} PeaksOrderType;
-
-typedef enum {
-    PEAK_BACKGROUND_ZERO,
-    PEAK_BACKGROUND_MMSTEP,
-    PEAK_BACKGROUND_NTYPES,
-} PeaksBackgroundType;
-
 typedef struct {
     gdouble prominence;
     gdouble x;
@@ -64,8 +53,8 @@ typedef struct {
 typedef struct {
     gint curve;
     gint npeaks;
-    PeaksBackgroundType background;
-    PeaksOrderType order;
+    GwyPeakBackgroundType background;
+    GwyPeakOrderType order;
 } PeaksArgs;
 
 typedef struct {
@@ -106,21 +95,21 @@ static void       npeaks_changed      (GtkAdjustment *adj,
 static void       sort_peaks          (GArray *peaks,
                                        GArray *peaks_sorted,
                                        gint npeaks,
-                                       PeaksOrderType order);
+                                       GwyPeakOrderType order);
 static void       select_peaks        (PeaksControls *controls);
 static void       graph_peaks_save    (PeaksControls *controls);
 static void       graph_peaks_copy    (PeaksControls *controls);
 static gchar*     format_report       (PeaksControls *controls);
 static void       analyse_peaks       (GwyGraphCurveModel *gcmodel,
                                        GArray *peaks,
-                                       PeaksBackgroundType background);
+                                       GwyPeakBackgroundType background);
 static void       load_args           (GwyContainer *container,
                                        PeaksArgs *args);
 static void       save_args           (GwyContainer *container,
                                        PeaksArgs *args);
 
 static const PeaksArgs peaks_defaults = {
-    0, 5, PEAK_ORDER_ABSCISSA, PEAK_BACKGROUND_MMSTEP,
+    0, 5, GWY_PEAK_ORDER_ABSCISSA, GWY_PEAK_BACKGROUND_MMSTEP,
 };
 
 static GwyModuleInfo module_info = {
@@ -128,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Finds peaks on graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -164,13 +153,13 @@ static void
 graph_peaks_dialogue(GwyGraphModel *parent_gmodel, PeaksArgs *args)
 {
     static const GwyEnum order_types[] = {
-        { N_("Position"),   PEAK_ORDER_ABSCISSA,   },
-        { N_("Prominence"), PEAK_ORDER_PROMINENCE, },
+        { N_("Position"),   GWY_PEAK_ORDER_ABSCISSA,   },
+        { N_("Prominence"), GWY_PEAK_ORDER_PROMINENCE, },
     };
 
     static const GwyEnum background_types[] = {
-        { N_("Zero"),              PEAK_BACKGROUND_ZERO,   },
-        { N_("Bilateral minimum"), PEAK_BACKGROUND_MMSTEP, },
+        { N_("Zero"),              GWY_PEAK_BACKGROUND_ZERO,   },
+        { N_("Bilateral minimum"), GWY_PEAK_BACKGROUND_MMSTEP, },
     };
 
     GtkWidget *dialogue, *hbox, *table, *label, *scwin, *hbox2, *button;
@@ -613,11 +602,11 @@ compare_peak_abscissa(gconstpointer a, gconstpointer b)
 
 static void
 sort_peaks(GArray *peaks, GArray *peaks_sorted, gint npeaks,
-           PeaksOrderType order)
+           GwyPeakOrderType order)
 {
     g_array_set_size(peaks_sorted, 0);
     g_array_append_vals(peaks_sorted, peaks->data, npeaks);
-    if (order == PEAK_ORDER_ABSCISSA)
+    if (order == GWY_PEAK_ORDER_ABSCISSA)
         g_array_sort(peaks_sorted, compare_peak_abscissa);
 }
 
@@ -721,158 +710,52 @@ format_report(PeaksControls *controls)
     return g_string_free(text, FALSE);
 }
 
-static gint
-compare_double_descending(gconstpointer a, gconstpointer b)
-{
-    const gdouble da = *(const gdouble*)a;
-    const gdouble db = *(const gdouble*)b;
-
-    if (da > db)
-        return -1;
-    if (da < db)
-        return 1;
-    return 0;
-}
-
 static void
 analyse_peaks(GwyGraphCurveModel *gcmodel, GArray *peaks,
-              PeaksBackgroundType background)
+              GwyPeakBackgroundType background)
 {
-    gdouble *ydata_filtered;
-    const gdouble *xdata, *ydata;
-    gint n, i, k, flatsize;
+    GwyPeaks *analyser;
+    gint n, i;
 
-    g_array_set_size(peaks, 0);
-    n = gwy_graph_curve_model_get_ndata(gcmodel);
-    xdata = gwy_graph_curve_model_get_xdata(gcmodel);
-    ydata = gwy_graph_curve_model_get_ydata(gcmodel);
-    ydata_filtered = g_new(gdouble, n);
+    analyser = gwy_peaks_new();
+    gwy_peaks_set_order(analyser, GWY_PEAK_ORDER_PROMINENCE);
+    gwy_peaks_set_background(analyser, background);
+    /* We want all the peaks because we control the number in the GUI
+     * ourselves. */
+    n = gwy_peaks_analyze(analyser,
+                          gwy_graph_curve_model_get_xdata(gcmodel),
+                          gwy_graph_curve_model_get_ydata(gcmodel),
+                          gwy_graph_curve_model_get_ndata(gcmodel),
+                          G_MAXUINT);
+    g_array_set_size(peaks, n);
+    if (n) {
+        Peak *p = &g_array_index(peaks, Peak, 0);
+        gdouble *values = g_new(gdouble, n);
 
-    /* Perform simple closing first. */
-    ydata_filtered[0] = ydata[0];
-    for (i = 1; i+1 < n; i++) {
-        gdouble y = ydata[i];
-        gdouble yl = 0.5*(ydata[i+1] + ydata[i-1]);
-        ydata_filtered[i] = MAX(y, yl);
-    }
-    ydata_filtered[n-1] = ydata[n-1];
+        gwy_peaks_get_quantity(analyser, GWY_PEAK_PROMINENCE, values);
+        for (i = 0; i < n; i++)
+            p[i].prominence = values[i];
 
-    /* Find local maxima. */
-    flatsize = 0;
-    for (i = 1; i+1 < n; i++) {
-        gdouble y = ydata_filtered[i];
-        gdouble yp = ydata_filtered[i-1];
-        gdouble yn = ydata_filtered[i+1];
+        gwy_peaks_get_quantity(analyser, GWY_PEAK_ABSCISSA, values);
+        for (i = 0; i < n; i++)
+            p[i].x = values[i];
 
-        /* The normal cases. */
-        if (y < yp || y < yn)
-            continue;
-        if (y > yp && y > yn) {
-            Peak peak;
-            peak.i = i;
-            g_array_append_val(peaks, peak);
-            continue;
-        }
+        gwy_peaks_get_quantity(analyser, GWY_PEAK_HEIGHT, values);
+        for (i = 0; i < n; i++)
+            p[i].height = values[i];
 
-        /* Flat tops. */
-        if (y == yn && y > yp)
-            flatsize = 0;
-        else if (y == yn && y == yp)
-            flatsize++;
-        else if (y == yp && y > yn) {
-            Peak peak;
-            peak.i = i - flatsize/2;
-            g_array_append_val(peaks, peak);
-        }
+        gwy_peaks_get_quantity(analyser, GWY_PEAK_AREA, values);
+        for (i = 0; i < n; i++)
+            p[i].area = values[i];
+
+        gwy_peaks_get_quantity(analyser, GWY_PEAK_WIDTH, values);
+        for (i = 0; i < n; i++)
+            p[i].dispersion = values[i];
+
+        g_free(values);
     }
 
-    g_free(ydata_filtered);
-
-    /* Analyse prominence. */
-    for (k = 0; k < peaks->len; k++) {
-        Peak *peak = &g_array_index(peaks, Peak, k);
-        gint ileft, iright;
-        gdouble yleft, yright, arealeft, arearight, disp2left, disp2right;
-
-        /* Find the peak extents. */
-        for (ileft = peak->i - 1;
-             ileft && ydata[ileft] == ydata[ileft+1];
-             ileft--)
-            ;
-        while (ileft && ydata[ileft] > ydata[ileft-1])
-            ileft--;
-        yleft = ydata[ileft];
-
-        for (iright = peak->i + 1;
-             iright+1 < n && ydata[iright] == ydata[iright-1];
-             iright++)
-            ;
-        while (iright+1 < n && ydata[iright] > ydata[iright+1])
-            iright++;
-        yright = ydata[iright];
-
-        if (background == PEAK_BACKGROUND_ZERO) {
-            yleft = yright = 0.0;
-        }
-
-        /* Calculate height, area, etc. */
-        arealeft = arearight = 0.0;
-        disp2left = disp2right = 0.0;
-        peak->x = xdata[peak->i];
-        for (i = ileft; i < peak->i; i++) {
-            gdouble xl = xdata[i] - peak->x, xr = xdata[i+1] - peak->x,
-                    yl = ydata[i] - yleft, yr = ydata[i+1] - yleft;
-            arealeft += (xr - xl)*(yl + yr)/2.0;
-            disp2left += (xr*xr*xr*(3.0*yr + yl)
-                          - xl*xl*xl*(3.0*yl + yr)
-                          - xl*xr*(xl + xr)*(yr - yl))/12.0;
-        }
-        for (i = iright; i > peak->i; i--) {
-            gdouble xl = xdata[i-1] - peak->x, xr = xdata[i] - peak->x,
-                    yl = ydata[i-1] - yright, yr = ydata[i] - yright;
-            arearight += (xr - xl)*(yl + yr)/2.0;
-            disp2right += (xr*xr*xr*(3.0*yr + yl)
-                           - xl*xl*xl*(3.0*yl + yr)
-                           - xl*xr*(xl + xr)*(yr - yl))/12.0;
-        }
-
-        peak->area = arealeft + arearight;
-        peak->dispersion = sqrt(0.5*(disp2left/arealeft
-                                     + disp2right/arearight));
-        i = peak->i;
-        peak->height = ydata[i] - 0.5*(yleft + yright);
-        if (ydata[i] > ydata[i-1] || ydata[i] > ydata[i+1]) {
-            gdouble epsp = ydata[i] - ydata[i+1];
-            gdouble epsm = ydata[i] - ydata[i-1];
-            gdouble dp = xdata[i+1] - xdata[i];
-            gdouble dm = xdata[i] - xdata[i-1];
-            peak->x += 0.5*(epsm*dp*dp - epsp*dm*dm)/(epsm*dp + epsp*dm);
-        }
-    }
-
-    for (k = 0; k < peaks->len; ) {
-        Peak *peak = &g_array_index(peaks, Peak, k);
-        gdouble xleft = (k > 0
-                         ? g_array_index(peaks, Peak, k-1).x
-                         : xdata[0]);
-        gdouble xright = (k+1 < peaks->len
-                          ? g_array_index(peaks, Peak, k+1).x
-                          : xdata[n-1]);
-
-        if (peak->height <= 0.0
-            || peak->area <= 0.0
-            || peak->x >= xright
-            || peak->x <= xleft) {
-            g_array_remove_index(peaks, k);
-        }
-        else {
-            peak->prominence = log(peak->height * peak->area
-                                   * (xright - peak->x) * (peak->x - xleft));
-            k++;
-        }
-    }
-
-    g_array_sort(peaks, compare_double_descending);
+    gwy_peaks_free(analyser);
 }
 
 static const gchar background_key[] = "/module/graph_peaks/background";
@@ -883,8 +766,8 @@ static void
 sanitize_args(PeaksArgs *args)
 {
     args->npeaks = CLAMP(args->npeaks, 1, 128);
-    args->order = MIN(args->order, PEAK_ORDER_NTYPES-1);
-    args->background = MIN(args->background, PEAK_BACKGROUND_NTYPES-1);
+    args->order = MIN(args->order, GWY_PEAK_ORDER_PROMINENCE);
+    args->background = MIN(args->background, GWY_PEAK_BACKGROUND_MMSTEP);
 }
 
 static void
