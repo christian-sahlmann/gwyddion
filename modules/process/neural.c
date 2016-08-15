@@ -121,9 +121,6 @@ typedef struct {
 } NeuralApplyControls;
 
 static gboolean module_register             (void);
-static void     shuffle                     (guint *a,
-                                             guint n,
-                                             GRand *rng);
 static void     neural_train                (GwyContainer *data,
                                              GwyRunType run);
 static void     neural_apply                (GwyContainer *data,
@@ -1067,17 +1064,6 @@ reinit_network(NeuralTrainControls *controls)
     neural_network_data_init(nndata, NULL);
     controls->calculated = FALSE;
     GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
-}
-
-G_GNUC_UNUSED static void
-shuffle(guint *a, guint n, GRand *rng)
-{
-    guint i;
-
-    for (i = 0; i < n; i++) {
-        guint j = g_rand_int_range(rng, i, n);
-        GWY_SWAP(guint, a[i], a[j]);
-    }
 }
 
 static void

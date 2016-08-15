@@ -1754,21 +1754,17 @@ static void
 reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
                  GwyXY *xyred, gdouble *zred, guint nred)
 {
-    GRand *rng = g_rand_new();
-    guint *redindex = g_new(guint, n);
-    guint i, j;
-
-    for (i = 0; i < n; i++)
-        redindex[i] = i;
+    GwyRandGenSet *rngset = gwy_rand_gen_set_new(1);
+    guint *redindex = gwy_rand_gen_set_choose_shuffle(rngset, 0, n, nred);
+    guint i;
 
     for (i = 0; i < nred; i++) {
-        j = g_rand_int_range(rng, 0, n-i);
-        xyred[i] = xy[redindex[j]];
-        zred[i] = z[redindex[j]];
-        redindex[j] = redindex[n-1 - i];
+        xyred[i] = xy[redindex[i]];
+        zred[i] = z[redindex[i]];
     }
 
-    g_rand_free(rng);
+    g_free(redindex);
+    gwy_rand_gen_set_free(rngset);
 }
 
 /**************************************************************************
