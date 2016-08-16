@@ -51,8 +51,6 @@ typedef struct {
     GwyLineStatQuantity output_type;
     gboolean options_visible;
     gboolean instant_update;
-    gint resolution;
-    gboolean fixres;
     GwyOrientation direction;
     GwyMaskingType masking;
     GwyInterpolationType interpolation;
@@ -67,6 +65,7 @@ struct _GwyToolLineStats {
     GwyRectSelectionLabels *rlabels;
 
     GwyDataLine *line;
+    GwyDataLine *weights;
 
     GtkWidget *graph;
     GwyGraphModel *gmodel;
@@ -76,8 +75,6 @@ struct _GwyToolLineStats {
     GtkWidget *instant_update;
     GSList *direction;
     GSList *masking;
-    GtkObject *resolution;
-    GtkWidget *fixres;
     GtkWidget *interpolation;
     GtkWidget *interpolation_label;
     GtkWidget *update;
@@ -96,7 +93,7 @@ struct _GwyToolLineStatsClass {
 
 static gboolean module_register(void);
 
-static GType    gwy_tool_line_stats_get_type              (void)                      G_GNUC_CONST;
+static GType    gwy_tool_line_stats_get_type              (void)                        G_GNUC_CONST;
 static void     gwy_tool_line_stats_finalize              (GObject *object);
 static void     gwy_tool_line_stats_init_dialog           (GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_data_switched         (GwyTool *gwytool,
@@ -110,10 +107,6 @@ static void     gwy_tool_line_stats_selection_changed     (GwyPlainTool *plain_t
 static void     gwy_tool_line_stats_update_sensitivity    (GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_update_curve          (GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_instant_update_changed(GtkToggleButton *check,
-                                                           GwyToolLineStats *tool);
-static void     gwy_tool_line_stats_resolution_changed    (GwyToolLineStats *tool,
-                                                           GtkAdjustment *adj);
-static void     gwy_tool_line_stats_fixres_changed        (GtkToggleButton *check,
                                                            GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_output_type_changed   (GtkComboBox *combo,
                                                            GwyToolLineStats *tool);
@@ -135,6 +128,10 @@ static void     gwy_tool_line_stats_apply                 (GwyToolLineStats *too
 static void     calculate_avg_rms_for_rms                 (GwyDataLine *dline,
                                                            gdouble *avg,
                                                            gdouble *rms);
+static gint     set_data_from_dataline_filtered           (GwyGraphCurveModel *gcmodel,
+                                                           GwyDataLine *dline,
+                                                           GwyDataLine *weight,
+                                                           gdouble threshold);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -148,7 +145,6 @@ static GwyModuleInfo module_info = {
 };
 
 static const gchar direction_key[]       = "/module/linestats/direction";
-static const gchar fixres_key[]          = "/module/linestats/fixres";
 static const gchar instant_update_key[]  = "/module/linestats/instant_update";
 static const gchar interpolation_key[]   = "/module/linestats/interpolation";
 static const gchar masking_key[]         = "/module/linestats/masking";
@@ -160,8 +156,6 @@ static const ToolArgs default_args = {
     GWY_LINE_STAT_MEAN,
     FALSE,
     TRUE,
-    120,
-    FALSE,
     GWY_ORIENTATION_HORIZONTAL,
     GWY_MASK_IGNORE,
     GWY_INTERPOLATION_LINEAR,
@@ -236,10 +230,6 @@ gwy_tool_line_stats_finalize(GObject *object)
                                       tool->args.options_visible);
     gwy_container_set_boolean_by_name(settings, instant_update_key,
                                       tool->args.instant_update);
-    gwy_container_set_int32_by_name(settings, resolution_key,
-                                    tool->args.resolution);
-    gwy_container_set_boolean_by_name(settings, fixres_key,
-                                      tool->args.fixres);
     gwy_container_set_enum_by_name(settings, masking_key,
                                    tool->args.masking);
     gwy_container_set_enum_by_name(settings, interpolation_key,
@@ -248,6 +238,7 @@ gwy_tool_line_stats_finalize(GObject *object)
                                    tool->args.direction);
 
     gwy_object_unref(tool->line);
+    gwy_object_unref(tool->weights);
     gwy_object_unref(tool->gmodel);
 
     G_OBJECT_CLASS(gwy_tool_line_stats_parent_class)->finalize(object);
@@ -276,10 +267,6 @@ gwy_tool_line_stats_init(GwyToolLineStats *tool)
                                       &tool->args.options_visible);
     gwy_container_gis_boolean_by_name(settings, instant_update_key,
                                       &tool->args.instant_update);
-    gwy_container_gis_int32_by_name(settings, resolution_key,
-                                    &tool->args.resolution);
-    gwy_container_gis_boolean_by_name(settings, fixres_key,
-                                      &tool->args.fixres);
     gwy_container_gis_enum_by_name(settings, masking_key,
                                    &tool->args.masking);
     tool->args.masking = gwy_enum_sanitize_value(tool->args.masking,
@@ -295,6 +282,7 @@ gwy_tool_line_stats_init(GwyToolLineStats *tool)
         = gwy_enum_sanitize_value(tool->args.direction, GWY_TYPE_ORIENTATION);
 
     tool->line = gwy_data_line_new(4, 1.0, FALSE);
+    tool->weights = gwy_data_line_new(4, 1.0, FALSE);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -381,7 +369,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
                      G_CALLBACK(gwy_tool_line_stats_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(11, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(12, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -397,23 +385,6 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
     g_signal_connect(tool->instant_update, "toggled",
                      G_CALLBACK(gwy_tool_line_stats_instant_update_changed),
                      tool);
-    row++;
-
-    tool->resolution = gtk_adjustment_new(tool->args.resolution,
-                                          MIN_RESOLUTION, MAX_RESOLUTION,
-                                          1, 10, 0);
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Fix res.:"), NULL,
-                            tool->resolution,
-                            GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
-    g_signal_connect_swapped(tool->resolution, "value-changed",
-                             G_CALLBACK(gwy_tool_line_stats_resolution_changed),
-                             tool);
-    tool->fixres = gwy_table_hscale_get_check(tool->resolution);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->fixres),
-                                 tool->args.fixres);
-    g_signal_connect(tool->fixres, "toggled",
-                     G_CALLBACK(gwy_tool_line_stats_fixres_changed), tool);
-    gtk_table_set_row_spacing(table, row, 8);
     row++;
 
     tool->direction = gwy_radio_buttons_create
@@ -584,10 +555,6 @@ static void
 gwy_tool_line_stats_update_sensitivity(GwyToolLineStats *tool)
 {
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
-
-    gwy_table_hscale_set_sensitive(tool->resolution, tool->args.fixres);
-    gtk_widget_set_sensitive(tool->interpolation, tool->args.fixres);
-    gtk_widget_set_sensitive(tool->interpolation_label, tool->args.fixres);
 }
 
 static void
@@ -659,14 +626,10 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     gwy_data_field_get_line_stats_mask(plain_tool->data_field,
                                        plain_tool->mask_field,
                                        tool->args.masking,
-                                       tool->line,
+                                       tool->line, tool->weights,
                                        isel[0], isel[1], w, h,
                                        tool->args.output_type,
                                        tool->args.direction);
-    if (tool->args.fixres)
-        gwy_data_line_resample(tool->line,
-                               tool->args.resolution,
-                               tool->args.interpolation);
 
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
@@ -677,7 +640,13 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     else
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
 
-    gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
+    if (!set_data_from_dataline_filtered(gcmodel,
+                                         tool->line, tool->weights, 5.0)) {
+        gtk_label_set_text(GTK_LABEL(tool->average_label), "");
+        gwy_graph_model_remove_all_curves(tool->gmodel);
+        return;
+    }
+
     title = gettext(gwy_enum_to_string(tool->args.output_type,
                                        sf_types, G_N_ELEMENTS(sf_types)));
     g_object_set(gcmodel, "description", title, NULL);
@@ -707,24 +676,6 @@ gwy_tool_line_stats_instant_update_changed(GtkToggleButton *check,
     gwy_tool_line_stats_update_sensitivity(tool);
     if (tool->args.instant_update)
         gwy_tool_line_stats_update_curve(tool);
-}
-
-static void
-gwy_tool_line_stats_resolution_changed(GwyToolLineStats *tool,
-                                       GtkAdjustment *adj)
-{
-    tool->args.resolution = gwy_adjustment_get_int(adj);
-    /* Resolution can be changed only when fixres == TRUE */
-    gwy_tool_line_stats_update_curve(tool);
-}
-
-static void
-gwy_tool_line_stats_fixres_changed(GtkToggleButton *check,
-                                   GwyToolLineStats *tool)
-{
-    tool->args.fixres = gtk_toggle_button_get_active(check);
-    gwy_tool_line_stats_update_sensitivity(tool);
-    gwy_tool_line_stats_update_curve(tool);
 }
 
 static void
@@ -845,6 +796,44 @@ calculate_avg_rms_for_rms(GwyDataLine *dline, gdouble *avg, gdouble *rms)
 
     *avg = sqrt(s2);
     *rms = 0.5*sqrt(s4)/(*avg);
+}
+
+static gint
+set_data_from_dataline_filtered(GwyGraphCurveModel *gcmodel,
+                                GwyDataLine *dline, GwyDataLine *weight,
+                                gdouble threshold)
+{
+    gint res, i, n = 0;
+    gdouble off, dx;
+    gdouble *xdata, *ydata;
+    const gdouble *d, *w;
+
+    res = gwy_data_line_get_res(dline);
+    dx = gwy_data_line_get_real(dline)/res;
+    off = gwy_data_line_get_offset(dline);
+    d = gwy_data_line_get_data(dline);
+    w = gwy_data_line_get_data(weight);
+
+    xdata = g_new(gdouble, res);
+    ydata = g_new(gdouble, res);
+    for (i = 0; i < res; i++) {
+        if (w[i] >= threshold) {
+            xdata[n] = i*dx + off;
+            ydata[n] = d[i];
+            n++;
+        }
+    }
+
+    if (n)
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, n);
+    else {
+        xdata[0] = ydata[0] = 0.0;
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, 1);
+    }
+
+    g_free(xdata);
+    g_free(ydata);
+    return n;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
