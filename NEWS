@@ -6,7 +6,10 @@ Libraries:
 - libgwyddion: GwySIUnit can parse prefixed spelled out unit names such as
   "Millimetre" or "nanoampere".
 - libgwyddion: Gaussian fitting function estimator was improved.
+- libgwyddion: GwyRandGenSet function for random shuffled subsets was added.
 - libgwyddion: GwyNLFitter can report progress.
+- libgwyprocess: GwyPeaks, graph curve peak finder with functionality similar
+  to the Graph Peaks module, was added.
 - libgwyprocess: An obscure case of GwyTriangulation failure now fails
   gracefully instead of on a failed assertion.
 - libgwyprocess: gwy_data_line_get_psdf() should finally actually work.
@@ -37,6 +40,8 @@ Modules:
   can be transparent (for vector formats that used to be the only possibility).
 - Diffusion synthesis: Incorrect behaviour for non-square images was fixed.
 - Fit sphere: It can create the fitted shape or the difference as the output.
+- Selection manager tool: Can copy selection coordinates to the clipboard or
+  export them to a file.
 - Find graph peaks: A peak filtering bug resulting in sometimes the module
   not finding any useful peaks was fixed.
 
