@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,6 +54,7 @@ typedef struct {
     gint resolution;
     gboolean fixres;
     GwyOrientation direction;
+    GwyMaskingType masking;
     GwyInterpolationType interpolation;
     GwyAppDataId target;
 } ToolArgs;
@@ -74,6 +75,7 @@ struct _GwyToolLineStats {
     GtkWidget *output_type;
     GtkWidget *instant_update;
     GSList *direction;
+    GSList *masking;
     GtkObject *resolution;
     GtkWidget *fixres;
     GtkWidget *interpolation;
@@ -102,6 +104,7 @@ static void     gwy_tool_line_stats_data_switched         (GwyTool *gwytool,
 static void     gwy_tool_line_stats_response              (GwyTool *tool,
                                                            gint response_id);
 static void     gwy_tool_line_stats_data_changed          (GwyPlainTool *plain_tool);
+static void     gwy_tool_line_stats_mask_changed          (GwyPlainTool *plain_tool);
 static void     gwy_tool_line_stats_selection_changed     (GwyPlainTool *plain_tool,
                                                            gint hint);
 static void     gwy_tool_line_stats_update_sensitivity    (GwyToolLineStats *tool);
@@ -117,6 +120,8 @@ static void     gwy_tool_line_stats_output_type_changed   (GtkComboBox *combo,
 static void     gwy_tool_line_stats_direction_changed     (GObject *button,
                                                            GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_interpolation_changed (GtkComboBox *combo,
+                                                           GwyToolLineStats *tool);
+static void     gwy_tool_line_stats_masking_changed       (GtkWidget *button,
                                                            GwyToolLineStats *tool);
 static void     gwy_tool_line_stats_update_target_graphs  (GwyToolLineStats *tool);
 static gboolean filter_target_graphs                      (GwyContainer *data,
@@ -137,7 +142,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -146,6 +151,7 @@ static const gchar direction_key[]       = "/module/linestats/direction";
 static const gchar fixres_key[]          = "/module/linestats/fixres";
 static const gchar instant_update_key[]  = "/module/linestats/instant_update";
 static const gchar interpolation_key[]   = "/module/linestats/interpolation";
+static const gchar masking_key[]         = "/module/linestats/masking";
 static const gchar options_visible_key[] = "/module/linestats/options_visible";
 static const gchar output_type_key[]     = "/module/linestats/output_type";
 static const gchar resolution_key[]      = "/module/linestats/resolution";
@@ -157,6 +163,7 @@ static const ToolArgs default_args = {
     120,
     FALSE,
     GWY_ORIENTATION_HORIZONTAL,
+    GWY_MASK_IGNORE,
     GWY_INTERPOLATION_LINEAR,
     GWY_APP_DATA_ID_NONE,
 };
@@ -210,6 +217,7 @@ gwy_tool_line_stats_class_init(GwyToolLineStatsClass *klass)
     tool_class->response = gwy_tool_line_stats_response;
 
     ptool_class->data_changed = gwy_tool_line_stats_data_changed;
+    ptool_class->mask_changed = gwy_tool_line_stats_mask_changed;
     ptool_class->selection_changed = gwy_tool_line_stats_selection_changed;
 }
 
@@ -232,6 +240,8 @@ gwy_tool_line_stats_finalize(GObject *object)
                                     tool->args.resolution);
     gwy_container_set_boolean_by_name(settings, fixres_key,
                                       tool->args.fixres);
+    gwy_container_set_enum_by_name(settings, masking_key,
+                                   tool->args.masking);
     gwy_container_set_enum_by_name(settings, interpolation_key,
                                    tool->args.interpolation);
     gwy_container_set_enum_by_name(settings, direction_key,
@@ -270,6 +280,10 @@ gwy_tool_line_stats_init(GwyToolLineStats *tool)
                                     &tool->args.resolution);
     gwy_container_gis_boolean_by_name(settings, fixres_key,
                                       &tool->args.fixres);
+    gwy_container_gis_enum_by_name(settings, masking_key,
+                                   &tool->args.masking);
+    tool->args.masking = gwy_enum_sanitize_value(tool->args.masking,
+                                                 GWY_TYPE_MASKING_TYPE);
     gwy_container_gis_enum_by_name(settings, interpolation_key,
                                    &tool->args.interpolation);
     tool->args.interpolation
@@ -367,7 +381,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
                      G_CALLBACK(gwy_tool_line_stats_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(7, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(11, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -448,6 +462,19 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
                              tool);
     row++;
 
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    tool->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(gwy_tool_line_stats_masking_changed),
+                                   tool,
+                                   tool->args.masking);
+    row = gwy_radio_buttons_attach_to_table(tool->masking, table, 3, row);
+
     tool->gmodel = gwy_graph_model_new();
 
     tool->graph = gwy_graph_new(tool->gmodel);
@@ -519,6 +546,13 @@ gwy_tool_line_stats_data_changed(GwyPlainTool *plain_tool)
 {
     GwyToolLineStats *tool = GWY_TOOL_LINE_STATS(plain_tool);
     gwy_tool_line_stats_update_curve(tool);
+}
+
+static void
+gwy_tool_line_stats_mask_changed(GwyPlainTool *plain_tool)
+{
+    if (GWY_TOOL_LINE_STATS(plain_tool)->args.masking != GWY_MASK_IGNORE)
+        gwy_tool_line_stats_update_curve(GWY_TOOL_LINE_STATS(plain_tool));
 }
 
 static void
@@ -622,7 +656,9 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
         return;
     }
 
-    gwy_data_field_area_get_line_stats(plain_tool->data_field, NULL,
+    gwy_data_field_get_line_stats_mask(plain_tool->data_field,
+                                       plain_tool->mask_field,
+                                       tool->args.masking,
                                        tool->line,
                                        isel[0], isel[1], w, h,
                                        tool->args.output_type,
@@ -714,6 +750,21 @@ gwy_tool_line_stats_interpolation_changed(GtkComboBox *combo,
 {
     tool->args.interpolation = gwy_enum_combo_box_get_active(combo);
     gwy_tool_line_stats_update_curve(tool);
+}
+
+static void
+gwy_tool_line_stats_masking_changed(GtkWidget *button,
+                                    GwyToolLineStats *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->args.masking = gwy_radio_button_get_value(button);
+    if (plain_tool->data_field && plain_tool->mask_field)
+        gwy_tool_line_stats_update_curve(tool);
 }
 
 static void
