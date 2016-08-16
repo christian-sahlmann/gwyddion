@@ -5950,47 +5950,6 @@ extract_field_row_masked(GwyDataField *dfield,
     return n;
 }
 
-static void
-calc_field_row_linestat_masked(GwyDataField *dfield,
-                               GwyDataField *mask,
-                               GwyMaskingType masking,
-                               GwyDataLine *dline,
-                               LineStatFunc func,
-                               gdouble filler_value,
-                               gint col, gint row,
-                               gint width, gint height)
-{
-    GwyDataLine *buf;
-    gint i, n;
-    gdouble *ldata, *bufdata;
-    gdouble dx = gwy_data_field_get_xmeasure(dfield);
-
-    gwy_data_line_resample(dline, height, GWY_INTERPOLATION_NONE);
-    gwy_data_line_set_real(dline, gwy_data_field_itor(dfield, height));
-    gwy_data_line_set_offset(dline, gwy_data_field_itor(dfield, row));
-    ldata = dline->data;
-
-    buf = gwy_data_line_new(width, width*dx, FALSE);
-    bufdata = buf->data;
-
-    for (i = 0; i < height; i++) {
-        n = extract_field_row_masked(dfield, mask, masking, bufdata,
-                                     col, row + i, width);
-        if (n) {
-            /* Temporarily shorten the dataline to avoid reallocations. */
-            buf->res = n;
-            buf->real = n*dx;
-            ldata[i] = func(buf);
-            buf->res = width;
-            buf->real = width*dx;
-        }
-        else
-            ldata[i] = filler_value;
-    }
-
-    g_object_unref(buf);
-}
-
 static gint
 extract_field_column_masked(GwyDataField *dfield,
                             GwyDataField *mask,
@@ -6029,10 +5988,65 @@ extract_field_column_masked(GwyDataField *dfield,
 }
 
 static void
+calc_field_row_linestat_masked(GwyDataField *dfield,
+                               GwyDataField *mask,
+                               GwyMaskingType masking,
+                               GwyDataLine *dline,
+                               GwyDataLine *weights,
+                               LineStatFunc func,
+                               gdouble filler_value,
+                               gint col, gint row,
+                               gint width, gint height)
+{
+    GwyDataLine *buf;
+    gint i, n;
+    gdouble *ldata, *wdata, *bufdata;
+    gdouble dx = gwy_data_field_get_xmeasure(dfield);
+
+    gwy_data_line_resample(dline, height, GWY_INTERPOLATION_NONE);
+    gwy_data_line_set_real(dline, gwy_data_field_itor(dfield, height));
+    gwy_data_line_set_offset(dline, gwy_data_field_itor(dfield, row));
+    ldata = dline->data;
+
+    if (weights) {
+        gwy_data_line_resample(weights, height, GWY_INTERPOLATION_NONE);
+        gwy_data_line_set_real(weights, gwy_data_field_itor(dfield, height));
+        gwy_data_line_set_offset(weights, gwy_data_field_itor(dfield, row));
+        gwy_data_line_clear(weights);
+        wdata = weights->data;
+    }
+    else
+        wdata = NULL;
+
+    buf = gwy_data_line_new(width, width*dx, FALSE);
+    bufdata = buf->data;
+
+    for (i = 0; i < height; i++) {
+        n = extract_field_row_masked(dfield, mask, masking, bufdata,
+                                     col, row + i, width);
+        if (n) {
+            /* Temporarily shorten the dataline to avoid reallocations. */
+            buf->res = n;
+            buf->real = n*dx;
+            ldata[i] = func(buf);
+            buf->res = width;
+            buf->real = width*dx;
+            if (wdata)
+                wdata[i] = n;
+        }
+        else
+            ldata[i] = filler_value;
+    }
+
+    g_object_unref(buf);
+}
+
+static void
 calc_field_column_linestat_masked(GwyDataField *dfield,
                                   GwyDataField *mask,
                                   GwyMaskingType masking,
                                   GwyDataLine *dline,
+                                  GwyDataLine *weights,
                                   LineStatFunc func,
                                   gdouble filler_value,
                                   gint col, gint row,
@@ -6040,13 +6054,23 @@ calc_field_column_linestat_masked(GwyDataField *dfield,
 {
     GwyDataLine *buf;
     gint i, n;
-    gdouble *ldata, *bufdata;
+    gdouble *ldata, *wdata, *bufdata;
     gdouble dy = gwy_data_field_get_ymeasure(dfield);
 
     gwy_data_line_resample(dline, width, GWY_INTERPOLATION_NONE);
     gwy_data_line_set_real(dline, gwy_data_field_jtor(dfield, width));
     gwy_data_line_set_offset(dline, gwy_data_field_jtor(dfield, col));
     ldata = dline->data;
+
+    if (weights) {
+        gwy_data_line_resample(weights, width, GWY_INTERPOLATION_NONE);
+        gwy_data_line_set_real(weights, gwy_data_field_jtor(dfield, width));
+        gwy_data_line_set_offset(weights, gwy_data_field_jtor(dfield, col));
+        gwy_data_line_clear(weights);
+        wdata = weights->data;
+    }
+    else
+        wdata = NULL;
 
     buf = gwy_data_line_new(height, height*dy, FALSE);
     bufdata = buf->data;
@@ -6061,6 +6085,8 @@ calc_field_column_linestat_masked(GwyDataField *dfield,
             ldata[i] = func(buf);
             buf->res = height;
             buf->real = height*dy;
+            if (wdata)
+                wdata[i] = n;
         }
         else
             ldata[i] = filler_value;
@@ -6116,6 +6142,10 @@ gwy_data_line_get_Rz_destructive(GwyDataLine *dline)
  *           masking modes.
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to the number of rows (columns).
+ * @weights: A data line to store number of data points contributing to each
+ *           value in @target_line, or %NULL.  It is useful when masking is
+ *           used to possibly exclude values calculated from too few data
+ *           points.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -6135,6 +6165,7 @@ gwy_data_field_get_line_stats_mask(GwyDataField *data_field,
                                    GwyDataField *mask,
                                    GwyMaskingType masking,
                                    GwyDataLine *target_line,
+                                   GwyDataLine *weights,
                                    gint col, gint row,
                                    gint width, gint height,
                                    GwyLineStatQuantity quantity,
@@ -6182,19 +6213,21 @@ gwy_data_field_get_line_stats_mask(GwyDataField *data_field,
 
     if (orientation == GWY_ORIENTATION_VERTICAL) {
         calc_field_column_linestat_masked(data_field, mask, masking,
-                                          target_line, func, 0.0,
+                                          target_line, weights, func, 0.0,
                                           col, row, width, height);
     }
     else {
         calc_field_row_linestat_masked(data_field, mask, masking,
-                                       target_line, func, 0.0,
+                                       target_line, weights, func, 0.0,
                                        col, row, width, height);
     }
 
     xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
+
     lunit = gwy_data_line_get_si_unit_x(target_line);
     gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lunit));
-    zunit = gwy_data_field_get_si_unit_z(data_field);
+
     lunit = gwy_data_line_get_si_unit_y(target_line);
     switch (quantity) {
         case GWY_LINE_STAT_LENGTH:
@@ -6224,6 +6257,13 @@ gwy_data_field_get_line_stats_mask(GwyDataField *data_field,
         default:
         g_assert_not_reached();
         break;
+    }
+
+    if (weights) {
+        lunit = gwy_data_line_get_si_unit_x(weights);
+        gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lunit));
+        lunit = gwy_data_line_get_si_unit_y(weights);
+        gwy_si_unit_set_from_string(lunit, NULL);
     }
 }
 
@@ -6260,7 +6300,8 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                                    GwyOrientation orientation)
 {
     gwy_data_field_get_line_stats_mask(data_field, mask, GWY_MASK_INCLUDE,
-                                       target_line, col, row, width, height,
+                                       target_line, NULL,
+                                       col, row, width, height,
                                        quantity, orientation);
 }
 
