@@ -6,8 +6,13 @@ Libraries:
 - libgwyddion: GwySIUnit can parse prefixed spelled out unit names such as
   "Millimetre" or "nanoampere".
 - libgwyddion: Gaussian fitting function estimator was improved.
+- libgwyddion: GwyNLFitter can report progress.
 - libgwyprocess: An obscure case of GwyTriangulation failure now fails
   gracefully instead of on a failed assertion.
+- libgwyprocess: gwy_data_line_get_psdf() should finally actually work.
+- libgwyprocess: GwyDataField line-stats function with proper masking support
+  was added.
+- libdraw: Memory handling bugs in GwyGradient updates were fixed.
 - libgwyapp: Critical _gwy_app_log_start_message_capture() error when opening
   files from standalone Python scripts was fixed.
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
@@ -15,6 +20,10 @@ Libraries:
 
 Modules:
 - Dektak XML (new): Imports Dektak XML profilometry data.
+- Dimension (new): Imports old Dimension 3100D files (experimental).
+- Fit shape (new): Fits various geometrical shapes on entire 2D data.
+- Row/column statistics tool: Masking support was added.  The misguided fixed
+  resolution option was removed.
 - XYZize: XYZ log is created for the new XYZ data, not volume data log.
 - Pygwy: Containers can be directly indexed both by strings and integers
   (quarks).  Overrides for Container methods get_value() and set_value() were
