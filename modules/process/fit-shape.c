@@ -25,8 +25,6 @@
  * - Support parameter transforms between user/internal?  Rad vs. deg,
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
- * - Parameter flags (angle: show as degrees; abs: flip to positive when
- *   fitted as negative).
  * - Align parameter table properly (with UTF-8 string lengths).
  */
 
@@ -85,6 +83,11 @@ typedef enum {
     FIT_SHAPE_FIT_CANCELLED    = 8,
 } FitShapeState;
 
+typedef enum {
+    FIT_SHAPE_PARAM_ANGLE  = 1 << 0,
+    FIT_SHAPE_PARAM_ABSVAL = 1 << 1,
+} FitShapeParamFlags;
+
 typedef struct {
     const gchar *function;
     GwyMaskingType masking;
@@ -125,6 +128,7 @@ typedef struct {
     const char *name;
     gint power_xy;
     gint power_z;
+    FitShapeParamFlags flags;
 } FitShapeParam;
 
 typedef struct {
@@ -321,60 +325,60 @@ DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
 
 static const FitShapeParam grating_params[] = {
-   { "w",             1, 0, },
-   { "p",             0, 0, },
-   { "h",             0, 1, },
-   { "z<sub>0</sub>", 0, 1, },
-   { "x<sub>0</sub>", 1, 0, },
-   { "α",             0, 0, },
-   { "c",             0, 0, },
+   { "w",             1, 0, 0,                      },
+   { "p",             0, 0, 0,                      },
+   { "h",             0, 1, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "c",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
 };
 
 static const FitShapeParam pring_params[] = {
-   { "x<sub>0</sub>", 1, 0, },
-   { "y<sub>0</sub>", 1, 0, },
-   { "z<sub>0</sub>", 0, 1, },
-   { "R",             1, 0, },
-   { "w",             1, 0, },
-   { "h",             0, 1, },
-   { "s",             0, 1, },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "y<sub>0</sub>", 1, 0, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "R",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "w",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h",             0, 1, 0,                      },
+   { "s",             0, 1, 0,                      },
 };
 
 static const FitShapeParam sphere_params[] = {
-   { "x<sub>0</sub>", 1, 0, },
-   { "y<sub>0</sub>", 1, 0, },
-   { "z<sub>0</sub>", 0, 1, },
-   { "C",             0, 1, },
+   { "x<sub>0</sub>", 1, 0, 0, },
+   { "y<sub>0</sub>", 1, 0, 0, },
+   { "z<sub>0</sub>", 0, 1, 0, },
+   { "C",             0, 1, 0, },
 };
 
 static const FitShapeParam gaussian_params[] = {
-   { "x<sub>0</sub>",    1, 0, },
-   { "y<sub>0</sub>",    1, 0, },
-   { "z<sub>0</sub>",    0, 1, },
-   { "h",                0, 1, },
-   { "σ<sub>mean</sub>", 1, 0, },
-   { "a",                0, 0, },
-   { "α",                0, 0, },
+   { "x<sub>0</sub>",     1, 0, 0,                      },
+   { "y<sub>0</sub>",     1, 0, 0,                      },
+   { "z<sub>0</sub>",     0, 1, 0,                      },
+   { "h",                 0, 1, 0,                      },
+   { "σ<sub>mean</sub>",  1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",                 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 static const FitShapeParam lorentzian_params[] = {
-   { "x<sub>0</sub>",    1, 0, },
-   { "y<sub>0</sub>",    1, 0, },
-   { "z<sub>0</sub>",    0, 1, },
-   { "h",                0, 1, },
-   { "b<sub>mean</sub>", 1, 0, },
-   { "a",                0, 0, },
-   { "α",                0, 0, },
+   { "x<sub>0</sub>",    1, 0, 0,                      },
+   { "y<sub>0</sub>",    1, 0, 0,                      },
+   { "z<sub>0</sub>",    0, 1, 0,                      },
+   { "h",                0, 1, 0,                      },
+   { "b<sub>mean</sub>", 1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",                0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",                0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 static const FitShapeParam pyramidx_params[] = {
-   { "x<sub>0</sub>", 1, 0, },
-   { "y<sub>0</sub>", 1, 0, },
-   { "z<sub>0</sub>", 0, 1, },
-   { "h",             0, 1, },
-   { "L",             1, 0, },
-   { "a",             0, 0, },
-   { "α",             0, 0, },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "y<sub>0</sub>", 1, 0, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "h",             0, 1, 0,                      },
+   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 static const FitShapeFunc functions[] = {
@@ -1156,14 +1160,27 @@ fix_changed(GtkToggleButton *button, FitShapeControls *controls)
 }
 
 static void
-param_value_activate(GtkEntry *entry, FitShapeControls *controls)
+update_param_value(FitShapeControls *controls, guint i)
 {
-    guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(entry), "id"));
+    const FitShapeFunc *func = functions + controls->function_id;
     FitParamControl *cntrl = &g_array_index(controls->param_controls,
                                             FitParamControl, i);
+    GtkEntry *entry = GTK_ENTRY(cntrl->value);
 
     controls->param[i] = g_strtod(gtk_entry_get_text(entry), NULL);
     controls->param[i] *= cntrl->magnitude;
+    if (func->param[i].flags & FIT_SHAPE_PARAM_ANGLE)
+        controls->param[i] *= G_PI/180.0;
+    if (func->param[i].flags & FIT_SHAPE_PARAM_ABSVAL)
+        controls->param[i] = fabs(controls->param[i]);
+}
+
+static void
+param_value_activate(GtkEntry *entry, FitShapeControls *controls)
+{
+    guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(entry), "id"));
+
+    update_param_value(controls, i);
     /* This (a) clears error labels in the table (b) reformats the parameter,
      * e.g. by moving the power-of-10 base appropriately. */
     controls->state = FIT_SHAPE_USER;
@@ -1176,15 +1193,8 @@ static void
 update_all_param_values(FitShapeControls *controls)
 {
     guint i;
-
-    for (i = 0; i < controls->param_controls->len; i++) {
-        FitParamControl *cntrl = &g_array_index(controls->param_controls,
-                                                FitParamControl, i);
-        GtkEntry *entry = GTK_ENTRY(cntrl->value);
-
-        controls->param[i] = g_strtod(gtk_entry_get_text(entry), NULL);
-        controls->param[i] *= cntrl->magnitude;
-    }
+    for (i = 0; i < controls->param_controls->len; i++)
+        update_param_value(controls, i);
 }
 
 static void
@@ -1236,9 +1246,15 @@ update_param_table(FitShapeControls *controls,
         gdouble v;
 
         v = param[i];
-        gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
-                                   zunit, fitparam->power_z,
-                                   unit);
+        if (fitparam->flags & FIT_SHAPE_PARAM_ANGLE) {
+            v *= 180.0/G_PI;
+            gwy_si_unit_set_from_string(unit, "deg");
+        }
+        else {
+            gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
+                                       zunit, fitparam->power_z,
+                                       unit);
+        }
         vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
         g_snprintf(buf, sizeof(buf), "%.*f", vf->precision+3, v/vf->magnitude);
         gtk_entry_set_text(GTK_ENTRY(cntrl->value), buf);
@@ -1252,6 +1268,8 @@ update_param_table(FitShapeControls *controls,
         }
 
         v = param_err[i];
+        if (fitparam->flags & FIT_SHAPE_PARAM_ANGLE)
+            v *= 180.0/G_PI;
         vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
         g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, v/vf->magnitude);
         gtk_label_set_text(GTK_LABEL(cntrl->error), buf);
@@ -1688,6 +1706,7 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
     GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     GwyNLFitter *fitter;
+    guint i;
 
     fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
     if (set_fraction || set_message)
@@ -1698,6 +1717,13 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
                                    func->nparams, param, ctx->param_fixed, NULL,
                                    (gpointer)ctx);
     gwy_debug("rss from nlfit %g", *rss);
+
+    for (i = 0; i < func->nparams; i++) {
+        if (func->param[i].flags & FIT_SHAPE_PARAM_ANGLE)
+            param[i] = fmod(param[i], 2.0*G_PI);
+        if (func->param[i].flags & FIT_SHAPE_PARAM_ABSVAL)
+            param[i] = fabs(param[i]);
+    }
 
     return fitter;
 }
@@ -2613,7 +2639,7 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble yc = param[1];
     gdouble z0 = param[2];
     gdouble R = param[3];
-    gdouble w = param[4];
+    gdouble w = fabs(param[4]);
     gdouble h = param[5];
     gdouble s = param[6];
     gdouble x, y, r, r2, s_h, rinner, router;
@@ -2628,7 +2654,7 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
 
     *fres = TRUE;
 
-    if (G_UNLIKELY(w <= 0.0))
+    if (G_UNLIKELY(w == 0.0))
         return r2 <= R*R ? z0 - 0.5*s : z0 + 0.5*s;
 
     if (G_UNLIKELY(h == 0.0)) {
@@ -2653,11 +2679,11 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
         s_h_last = s_h;
     }
 
-    rinner *= -0.5*fabs(w);
+    rinner *= -0.5*w;
     if (r <= rinner)
         return z0 - 0.5*s;
 
-    router *= 0.5*fabs(w);
+    router *= 0.5*w;
     if (r >= router)
         return z0 + 0.5*s;
 
@@ -2792,7 +2818,7 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble z0 = param[2];
     gdouble h = param[3];
     gdouble sigma = param[4];
-    gdouble a = param[5];
+    gdouble a = fabs(param[5]);
     gdouble alpha = param[6];
     gdouble x, y, t, val, ca, sa, s2;
     guint i;
@@ -2805,7 +2831,6 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
 
     *fres = TRUE;
     s2 = sigma*sigma;
-    a = fabs(a);
     if (G_UNLIKELY(!s2 || !a))
         return z0;
 
@@ -2860,7 +2885,7 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble z0 = param[2];
     gdouble h = param[3];
     gdouble b = param[4];
-    gdouble a = param[5];
+    gdouble a = fabs(param[5]);
     gdouble alpha = param[6];
     gdouble x, y, t, val, ca, sa, b2;
     guint i;
@@ -2873,7 +2898,6 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
 
     *fres = TRUE;
     b2 = b*b;
-    a = fabs(a);
     if (G_UNLIKELY(!b2 || !a))
         return z0;
 
@@ -2928,7 +2952,7 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble z0 = param[2];
     gdouble h = param[3];
     gdouble L = param[4];
-    gdouble a = param[5];
+    gdouble a = fabs(param[5]);
     gdouble alpha = param[6];
     gdouble x, y, t, val, ca, sa, q;
     guint i;
@@ -3022,18 +3046,25 @@ create_fit_report(FitShapeControls *controls)
     nparams = func->nparams;
     for (i = 0; i < nparams; i++) {
         const FitShapeParam *fitparam = func->param + i;
+        gdouble param = controls->param[i], err = controls->param_err[i];
 
         if (!pango_parse_markup(fitparam->name, -1, 0, NULL, &s, NULL, NULL)) {
             g_warning("Parameter name is not valid Pango markup");
             s = g_strdup(fitparam->name);
         }
-        gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
-                                   zunit, fitparam->power_z,
-                                   unit);
-        unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
-        g_string_append_printf(report, "%6s = %g ± %g %s\n",
-                               s, controls->param[i], controls->param_err[i],
-                               unitstr);
+        if (fitparam->flags & FIT_SHAPE_PARAM_ANGLE) {
+            param *= 180.0/G_PI;
+            err *= 180.0/G_PI;
+            unitstr = g_strdup("deg");
+        }
+        else {
+            gwy_si_unit_power_multiply(xyunit, fitparam->power_xy,
+                                       zunit, fitparam->power_z,
+                                       unit);
+            unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        }
+        g_string_append_printf(report, "%6s = %g ± %g%s%s\n",
+                               s, param, err, *unitstr ? " " : "", unitstr);
         g_free(unitstr);
         g_free(s);
     }
