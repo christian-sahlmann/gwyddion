@@ -945,49 +945,51 @@ fit_correl_table_resize(FitShapeControls *controls)
 
     nparams = func->nparams;
     gwy_debug("%u -> %u", hlabels->len, nparams);
-    if (hlabels->len == nparams)
-        return;
+    if (hlabels->len != nparams) {
+        for (i = 0; i < hlabels->len; i++)
+            gtk_widget_destroy((GtkWidget*)g_ptr_array_index(hlabels, i));
+        g_ptr_array_set_size(hlabels, 0);
 
-    for (i = 0; i < hlabels->len; i++)
-        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(hlabels, i));
-    g_ptr_array_set_size(hlabels, 0);
+        for (i = 0; i < vlabels->len; i++)
+            gtk_widget_destroy((GtkWidget*)g_ptr_array_index(vlabels, i));
+        g_ptr_array_set_size(vlabels, 0);
 
-    for (i = 0; i < vlabels->len; i++)
-        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(vlabels, i));
-    g_ptr_array_set_size(vlabels, 0);
+        for (i = 0; i < values->len; i++)
+            gtk_widget_destroy((GtkWidget*)g_ptr_array_index(values, i));
+        g_ptr_array_set_size(values, 0);
 
-    for (i = 0; i < values->len; i++)
-        gtk_widget_destroy((GtkWidget*)g_ptr_array_index(values, i));
-    g_ptr_array_set_size(values, 0);
+        table = GTK_TABLE(controls->correl_table);
+        gtk_table_resize(table, nparams+1, nparams+1);
 
-    table = GTK_TABLE(controls->correl_table);
-    gtk_table_resize(table, nparams+1, nparams+1);
-
-    for (i = 0; i < nparams; i++) {
-        param = func->param + i;
-        label = gtk_label_new(NULL);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_label_set_markup(GTK_LABEL(label), param->name);
-        gtk_table_attach(table, label, 0, 1, i, i+1, GTK_FILL, 0, 0, 0);
-        g_ptr_array_add(vlabels, label);
-    }
-
-    for (i = 0; i < nparams; i++) {
-        param = func->param + i;
-        label = gtk_label_new(NULL);
-        gtk_label_set_markup(GTK_LABEL(label), param->name);
-        gtk_table_attach(table, label, i+1, i+2, nparams, nparams+1,
-                         GTK_FILL, 0, 0, 0);
-        g_ptr_array_add(hlabels, label);
-    }
-
-    for (i = 0; i < nparams; i++) {
-        for (j = 0; j <= i; j++) {
+        for (i = 0; i < nparams; i++) {
             label = gtk_label_new(NULL);
             gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-            gtk_table_attach(table, label, j+1, j+2, i, i+1, GTK_FILL, 0, 0, 0);
-            g_ptr_array_add(values, label);
+            gtk_table_attach(table, label, 0, 1, i, i+1, GTK_FILL, 0, 0, 0);
+            g_ptr_array_add(vlabels, label);
         }
+
+        for (i = 0; i < nparams; i++) {
+            label = gtk_label_new(NULL);
+            gtk_table_attach(table, label, i+1, i+2, nparams, nparams+1,
+                             GTK_FILL, 0, 0, 0);
+            g_ptr_array_add(hlabels, label);
+        }
+
+        for (i = 0; i < nparams; i++) {
+            for (j = 0; j <= i; j++) {
+                label = gtk_label_new(NULL);
+                gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+                gtk_table_attach(table, label, j+1, j+2, i, i+1,
+                                 GTK_FILL, 0, 0, 0);
+                g_ptr_array_add(values, label);
+            }
+        }
+    }
+
+    for (i = 0; i < nparams; i++) {
+        param = func->param + i;
+        gtk_label_set_markup(g_ptr_array_index(vlabels, i), param->name);
+        gtk_label_set_markup(g_ptr_array_index(hlabels, i), param->name);
     }
 
     gtk_widget_show_all(controls->correl_table);
