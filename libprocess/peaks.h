@@ -24,6 +24,7 @@
 
 #include <glib.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/dataline.h>
 
 G_BEGIN_DECLS
 
@@ -47,25 +48,28 @@ typedef enum {
 
 typedef struct _GwyPeaks GwyPeaks;
 
-GwyPeaks* gwy_peaks_new           (void);
-void      gwy_peaks_free          (GwyPeaks *peaks);
-void      gwy_peaks_set_background(GwyPeaks *peaks,
-                                   GwyPeakBackgroundType background);
-void      gwy_peaks_set_order     (GwyPeaks *peaks,
-                                   GwyPeakOrderType order);
-guint     gwy_peaks_analyze_xy    (GwyPeaks *peaks,
-                                   const GwyXY *xydata,
-                                   guint n,
-                                   guint maxpeaks);
-guint     gwy_peaks_analyze       (GwyPeaks *peaks,
-                                   const gdouble *xdata,
-                                   const gdouble *ydata,
-                                   guint n,
-                                   guint maxpeaks);
-guint     gwy_peaks_n_peaks       (GwyPeaks *peaks);
-void      gwy_peaks_get_quantity  (GwyPeaks *peaks,
-                                   GwyPeakQuantity quantity,
-                                   gdouble *data);
+GwyPeaks* gwy_peaks_new             (void);
+void      gwy_peaks_free            (GwyPeaks *peaks);
+void      gwy_peaks_set_background  (GwyPeaks *peaks,
+                                     GwyPeakBackgroundType background);
+void      gwy_peaks_set_order       (GwyPeaks *peaks,
+                                     GwyPeakOrderType order);
+guint     gwy_peaks_analyze         (GwyPeaks *peaks,
+                                     const gdouble *xdata,
+                                     const gdouble *ydata,
+                                     guint n,
+                                     guint maxpeaks);
+guint     gwy_peaks_analyze_xy      (GwyPeaks *peaks,
+                                     const GwyXY *xydata,
+                                     guint n,
+                                     guint maxpeaks);
+guint     gwy_peaks_analyze_dataline(GwyPeaks *peaks,
+                                     GwyDataLine *dline,
+                                     guint maxpeaks);
+guint     gwy_peaks_n_peaks         (GwyPeaks *peaks);
+void      gwy_peaks_get_quantity    (GwyPeaks *peaks,
+                                     GwyPeakQuantity quantity,
+                                     gdouble *data);
 
 G_END_DECLS
 

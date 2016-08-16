@@ -158,6 +158,47 @@ gwy_peaks_analyze_xy(GwyPeaks *peaks,
 }
 
 /**
+ * gwy_peaks_analyze_dataline:
+ * @peaks: A peak analyser.
+ * @dline: Curve data as a data line.
+ * @maxpeaks: Maximum number of the most prominent peaks to locate.
+ *
+ * Finds peaks a graph curve given as GwyDataLine.
+ *
+ * The peaks are remembered by the analyser and their properties can be
+ * subsequently requested using gwy_peaks_get_quantity().
+ *
+ * Returns: The number of peaks found.
+ *
+ * Since: 2.46
+ **/
+guint
+gwy_peaks_analyze_dataline(GwyPeaks *peaks,
+                           GwyDataLine *dline,
+                           guint maxpeaks)
+{
+    gdouble *xdata;
+    gdouble xoff, dx;
+    guint i, n, retval;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(dline), 0);
+    g_return_val_if_fail(peaks, 0);
+
+    n = gwy_data_line_get_res(dline);
+    dx = gwy_data_line_get_real(dline)/n;
+    xoff = gwy_data_line_get_offset(dline);
+    xdata = g_new(gdouble, n);
+    for (i = 0; i < n; i++)
+        xdata[i] = (i + 0.5)*dx + xoff;
+    retval = gwy_peaks_analyze(peaks, xdata, gwy_data_line_get_data(dline), n,
+                               maxpeaks);
+    g_free(xdata);
+
+    return retval;
+}
+
+
+/**
  * gwy_peaks_analyze:
  * @peaks: A peak analyser.
  * @xdata: Abscissa values (array with @n items), must be ordered in ascending
