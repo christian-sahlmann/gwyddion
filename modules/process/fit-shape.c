@@ -26,7 +26,6 @@
  * - Correlation table colour-coding?
  */
 
-#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
