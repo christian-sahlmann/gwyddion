@@ -322,6 +322,24 @@ static gdouble sphere_calc_err_R(const gdouble *param,
                                  const gdouble *param_err,
                                  const gdouble *correl);
 
+static gdouble gaussian_calc_sigma1    (const gdouble *param);
+static gdouble gaussian_calc_err_sigma1(const gdouble *param,
+                                        const gdouble *param_err,
+                                        const gdouble *correl);
+static gdouble gaussian_calc_sigma2    (const gdouble *param);
+static gdouble gaussian_calc_err_sigma2(const gdouble *param,
+                                        const gdouble *param_err,
+                                        const gdouble *correl);
+
+static gdouble lorentzian_calc_b1    (const gdouble *param);
+static gdouble lorentzian_calc_err_b1(const gdouble *param,
+                                      const gdouble *param_err,
+                                      const gdouble *correl);
+static gdouble lorentzian_calc_b2    (const gdouble *param);
+static gdouble lorentzian_calc_err_b2(const gdouble *param,
+                                      const gdouble *param_err,
+                                      const gdouble *correl);
+
 #define DECLARE_SHAPE_FUNC(name) \
     static gdouble name##_func(gdouble abscissa, \
                                gint n_param, \
@@ -403,7 +421,10 @@ static const FitShapeParam gaussian_params[] = {
    { "α",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
-#define gaussian_secondary NULL
+static const FitShapeSecondary gaussian_secondary[] = {
+   { "σ<sub>1</sub>", 1, 0, 0, gaussian_calc_sigma1, gaussian_calc_err_sigma1, },
+   { "σ<sub>2</sub>", 1, 0, 0, gaussian_calc_sigma2, gaussian_calc_err_sigma2, },
+};
 
 static const FitShapeParam lorentzian_params[] = {
    { "x<sub>0</sub>",    1, 0, 0,                      },
@@ -415,7 +436,10 @@ static const FitShapeParam lorentzian_params[] = {
    { "α",                0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
-#define lorentzian_secondary NULL
+static const FitShapeSecondary lorentzian_secondary[] = {
+   { "σ<sub>1</sub>", 1, 0, 0, lorentzian_calc_b1, lorentzian_calc_err_b1, },
+   { "σ<sub>2</sub>", 1, 0, 0, lorentzian_calc_b2, lorentzian_calc_err_b2, },
+};
 
 static const FitShapeParam pyramidx_params[] = {
    { "x<sub>0</sub>", 1, 0, 0,                      },
@@ -3161,6 +3185,46 @@ gaussian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                                         estimcache);
 }
 
+static gdouble
+gaussian_calc_sigma1(const gdouble *param)
+{
+    return param[4]/sqrt(fabs(param[5]));
+}
+
+static gdouble
+gaussian_calc_err_sigma1(const gdouble *param,
+                         const gdouble *param_err,
+                         const gdouble *correl)
+{
+    gdouble sigma1 = gaussian_calc_sigma1(param);
+    gdouble diff[7];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[4] = sigma1/param[4];
+    diff[5] = -0.5*sigma1/param[5];
+    return dotprod_with_correl(diff, param_err, correl, 7);
+}
+
+static gdouble
+gaussian_calc_sigma2(const gdouble *param)
+{
+    return param[4]*sqrt(fabs(param[5]));
+}
+
+static gdouble
+gaussian_calc_err_sigma2(const gdouble *param,
+                         const gdouble *param_err,
+                         const gdouble *correl)
+{
+    gdouble sigma1 = gaussian_calc_sigma1(param);
+    gdouble diff[7];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[4] = sigma1/param[4];
+    diff[5] = 0.5*sigma1/param[5];
+    return dotprod_with_correl(diff, param_err, correl, 7);
+}
+
 /**************************************************************************
  *
  * Lorentzian
@@ -3226,6 +3290,46 @@ lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                                         param + 3, param + 4,
                                         param + 5, param + 6,
                                         estimcache);
+}
+
+static gdouble
+lorentzian_calc_b1(const gdouble *param)
+{
+    return param[4]/sqrt(fabs(param[5]));
+}
+
+static gdouble
+lorentzian_calc_err_b1(const gdouble *param,
+                       const gdouble *param_err,
+                       const gdouble *correl)
+{
+    gdouble b1 = lorentzian_calc_b1(param);
+    gdouble diff[7];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[4] = b1/param[4];
+    diff[5] = -0.5*b1/param[5];
+    return dotprod_with_correl(diff, param_err, correl, 7);
+}
+
+static gdouble
+lorentzian_calc_b2(const gdouble *param)
+{
+    return param[4]*sqrt(fabs(param[5]));
+}
+
+static gdouble
+lorentzian_calc_err_b2(const gdouble *param,
+                       const gdouble *param_err,
+                       const gdouble *correl)
+{
+    gdouble b1 = lorentzian_calc_b1(param);
+    gdouble diff[7];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[4] = b1/param[4];
+    diff[5] = 0.5*b1/param[5];
+    return dotprod_with_correl(diff, param_err, correl, 7);
 }
 
 /**************************************************************************
