@@ -22,9 +22,6 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Support parameter transforms between user/internal?  Rad vs. deg,
- *   curvature vs. radius...  Maybe better: just add a table with derived
- *   parameters (so we do not need invertible mapping).
  * - Align parameter table properly (with UTF-8 string lengths).
  * - Correlation table colour-coding?
  */
@@ -169,7 +166,7 @@ typedef struct {
 } FitShapeContext;
 
 typedef struct {
-    GtkWidget *fix;
+    GtkWidget *fix;          /* Unused for secondary */
     GtkWidget *name;
     GtkWidget *equals;
     GtkWidget *value;
@@ -177,7 +174,7 @@ typedef struct {
     GtkWidget *pm;
     GtkWidget *error;
     GtkWidget *error_unit;
-    gdouble magnitude;
+    gdouble magnitude;       /* Unused for secondary */
 } FitParamControl;
 
 typedef struct {
@@ -218,6 +215,8 @@ typedef struct {
     GPtrArray *correl_values;
     GPtrArray *correl_hlabels;
     GPtrArray *correl_vlabels;
+    GtkWidget *secondary_table;
+    GArray *secondary_controls;
 } FitShapeControls;
 
 static gboolean     module_register           (void);
@@ -240,6 +239,7 @@ static GtkWidget*   parameters_tab_new        (FitShapeControls *controls);
 static void         fit_param_table_resize    (FitShapeControls *controls);
 static GtkWidget*   results_tab_new           (FitShapeControls *controls);
 static void         fit_correl_table_resize   (FitShapeControls *controls);
+static void         fit_secondary_table_resize(FitShapeControls *controls);
 static GtkWidget*   function_menu_new         (const gchar *name,
                                                GwyDataField *dfield,
                                                FitShapeControls *controls);
@@ -269,6 +269,7 @@ static void         update_param_table        (FitShapeControls *controls,
                                                const gdouble *param_err);
 static void         update_correl_table       (FitShapeControls *controls,
                                                GwyNLFitter *fitter);
+static void         update_secondary_table    (FitShapeControls *controls);
 static void         fit_shape_estimate        (FitShapeControls *controls);
 static void         fit_shape_reduced_fit     (FitShapeControls *controls);
 static void         fit_shape_full_fit        (FitShapeControls *controls);
@@ -659,6 +660,7 @@ finalise:
     g_ptr_array_free(controls.correl_values, TRUE);
     g_ptr_array_free(controls.correl_hlabels, TRUE);
     g_ptr_array_free(controls.correl_vlabels, TRUE);
+    g_array_free(controls.secondary_controls, TRUE);
     fit_context_free(controls.ctx);
 }
 
@@ -817,7 +819,7 @@ parameters_tab_new(FitShapeControls *controls)
 
     controls->param_table = gtk_table_new(1, 8, FALSE);
     table = GTK_TABLE(controls->param_table);
-    gtk_table_set_row_spacing(table, 0, 2);
+    gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 2);
     gtk_table_set_col_spacing(table, 0, 6);
     gtk_table_set_col_spacing(table, 4, 6);
@@ -977,6 +979,21 @@ results_tab_new(FitShapeControls *controls)
     controls->correl_hlabels = g_ptr_array_new();
     controls->correl_vlabels = g_ptr_array_new();
 
+    controls->secondary_table = gtk_table_new(1, 7, FALSE);
+    table = GTK_TABLE(controls->secondary_table);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 2);
+    gtk_table_set_col_spacing(table, 3, 6);
+    gtk_table_set_col_spacing(table, 4, 6);
+    gtk_table_set_col_spacing(table, 6, 6);
+    gtk_box_pack_start(GTK_BOX(vbox), controls->secondary_table,
+                       FALSE, FALSE, 0);
+
+    gtk_table_attach(table, gwy_label_new_header(_("Derived Quantities")),
+                     0, 7, 0, 1, GTK_FILL, 0, 0, 0);
+
+    controls->secondary_controls = g_array_new(FALSE, FALSE,
+                                               sizeof(FitParamControl));
     return vbox;
 }
 
@@ -1042,6 +1059,83 @@ fit_correl_table_resize(FitShapeControls *controls)
     }
 
     gtk_widget_show_all(controls->correl_table);
+}
+
+static void
+fit_secondary_table_resize(FitShapeControls *controls)
+{
+    GtkTable *table;
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, row, old_nsecondary, nsecondary;
+
+    old_nsecondary = controls->secondary_controls->len;
+    nsecondary = func->nsecondary;
+    gwy_debug("%u -> %u", old_nsecondary, nsecondary);
+    for (i = old_nsecondary; i > nsecondary; i--) {
+        FitParamControl *cntrl = &g_array_index(controls->secondary_controls,
+                                                FitParamControl, i-1);
+        gtk_widget_destroy(cntrl->name);
+        gtk_widget_destroy(cntrl->equals);
+        gtk_widget_destroy(cntrl->value);
+        gtk_widget_destroy(cntrl->value_unit);
+        gtk_widget_destroy(cntrl->pm);
+        gtk_widget_destroy(cntrl->error);
+        gtk_widget_destroy(cntrl->error_unit);
+        g_array_set_size(controls->secondary_controls, i-1);
+    }
+
+    table = GTK_TABLE(controls->secondary_table);
+    gtk_table_resize(table, 1+nsecondary, 8);
+    row = old_nsecondary + 1;
+
+    for (i = old_nsecondary; i < nsecondary; i++) {
+        FitParamControl cntrl;
+
+        cntrl.name = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.name), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.name,
+                         0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.equals = gtk_label_new("=");
+        gtk_table_attach(table, cntrl.equals, 1, 2, row, row+1, 0, 0, 0, 0);
+
+        cntrl.value = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.value), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.value,
+                         2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.value_unit = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.value_unit), 0.0, 0.5);
+        gtk_table_attach(table, cntrl.value_unit,
+                         3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.pm = gtk_label_new("±");
+        gtk_table_attach(table, cntrl.pm, 4, 5, row, row+1, 0, 0, 0, 0);
+
+        cntrl.error = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.error), 1.0, 0.5);
+        gtk_table_attach(table, cntrl.error,
+                         5, 6, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.error_unit = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(cntrl.error_unit), 0.0, 0.5);
+        gtk_table_attach(table, cntrl.error_unit,
+                         6, 7, row, row+1, GTK_FILL, 0, 0, 0);
+
+        cntrl.magnitude = 1.0;
+        g_array_append_val(controls->secondary_controls, cntrl);
+        row++;
+    }
+
+    for (i = 0; i < nsecondary; i++) {
+        FitParamControl *cntrl = &g_array_index(controls->secondary_controls,
+                                                FitParamControl, i);
+        const FitShapeSecondary *secparam = func->secondary + i;
+
+        gtk_label_set_markup(GTK_LABEL(cntrl->name), secparam->name);
+    }
+
+    gtk_widget_show_all(controls->secondary_table);
 }
 
 static GtkWidget*
@@ -1123,6 +1217,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
         controls->param_err[i] = -1.0;
     fit_param_table_resize(controls);
     fit_correl_table_resize(controls);
+    fit_secondary_table_resize(controls);
     fit_context_resize_params(ctx, nparams);
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
                      controls->estimcache);
@@ -1243,6 +1338,7 @@ param_value_activate(GtkEntry *entry, FitShapeControls *controls)
     calculate_secondary_params(controls);
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
+    update_secondary_table(controls);
     update_fit_state(controls);
 }
 
@@ -1268,6 +1364,7 @@ revert_params(FitShapeControls *controls)
     calculate_secondary_params(controls);
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
+    update_secondary_table(controls);
     update_fit_state(controls);
 }
 
@@ -1369,6 +1466,65 @@ update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
      * though there is a number to display now. */
     if (fitter)
         gtk_widget_queue_resize(controls->correl_table);
+}
+
+static void
+update_secondary_table(FitShapeControls *controls)
+{
+    const FitShapeFunc *func = functions + controls->function_id;
+    guint i, nsecondary = func->nsecondary;
+    GwyDataField *dfield;
+    GwySIUnit *unit, *xyunit, *zunit;
+    GwySIValueFormat *vf = NULL;
+    gboolean is_fitted = (controls->state == FIT_SHAPE_FITTED
+                          || controls->state == FIT_SHAPE_QUICK_FITTED);
+
+    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    unit = gwy_si_unit_new(NULL);
+
+    for (i = 0; i < nsecondary; i++) {
+        FitParamControl *cntrl = &g_array_index(controls->secondary_controls,
+                                                FitParamControl, i);
+        const FitShapeSecondary *secparam = func->secondary + i;
+        guchar buf[32];
+        gdouble v;
+
+        v = controls->secondary[i];
+        if (secparam->flags & FIT_SHAPE_PARAM_ANGLE) {
+            v *= 180.0/G_PI;
+            gwy_si_unit_set_from_string(unit, "deg");
+        }
+        else {
+            gwy_si_unit_power_multiply(xyunit, secparam->power_xy,
+                                       zunit, secparam->power_z,
+                                       unit);
+        }
+        vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision+3, v/vf->magnitude);
+        gtk_label_set_text(GTK_LABEL(cntrl->value), buf);
+        gtk_label_set_markup(GTK_LABEL(cntrl->value_unit), vf->units);
+
+        if (!is_fitted) {
+            gtk_label_set_text(GTK_LABEL(cntrl->error), "");
+            gtk_label_set_text(GTK_LABEL(cntrl->error_unit), "");
+            continue;
+        }
+
+        v = controls->secondary_err[i];
+        if (secparam->flags & FIT_SHAPE_PARAM_ANGLE)
+            v *= 180.0/G_PI;
+        vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, v/vf->magnitude);
+        gtk_label_set_text(GTK_LABEL(cntrl->error), buf);
+        gtk_label_set_markup(GTK_LABEL(cntrl->error_unit), vf->units);
+    }
+
+    if (vf)
+        gwy_si_unit_value_format_free(vf);
+
+    g_object_unref(unit);
 }
 
 static void
@@ -1640,8 +1796,12 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     guint k, n = ctx->n, i, nparams = func->nparams;
     GwySIUnit *zunit;
     GwySIValueFormat *vf;
-    gboolean show_errors;
+    gboolean is_fitted = (controls->state == FIT_SHAPE_FITTED
+                          || controls->state == FIT_SHAPE_QUICK_FITTED);
     guchar buf[48];
+
+    if (is_fitted)
+        g_return_if_fail(fitter);
 
     for (k = 0; k < n; k++) {
         gboolean fres;
@@ -1659,13 +1819,7 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     }
     controls->rss = sqrt(rss/n);
 
-    show_errors = (fitter
-                   && controls->state != FIT_SHAPE_FIT_CANCELLED
-                   && controls->state != FIT_SHAPE_FIT_FAILED
-                   && controls->state != FIT_SHAPE_QUICK_FIT_FAILED
-                   && controls->state != FIT_SHAPE_ESTIMATE_FAILED);
-
-    if (show_errors) {
+    if (is_fitted) {
         for (i = 0; i < nparams; i++)
             controls->param_err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
@@ -1684,8 +1838,9 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 
     calculate_secondary_params(controls);
     update_param_table(controls, controls->param,
-                       show_errors ? controls->param_err : NULL);
-    update_correl_table(controls, show_errors ? fitter : NULL);
+                       is_fitted ? controls->param_err : NULL);
+    update_correl_table(controls, is_fitted ? fitter : NULL);
+    update_secondary_table(controls);
 }
 
 static void
@@ -3161,7 +3316,7 @@ create_fit_report(FitShapeControls *controls)
     GwySIUnit *xyunit, *zunit, *unit;
     gchar *s, *unitstr;
     GString *report;
-    guint i, j, xres, yres, nparams;
+    guint i, j, xres, yres, nparams, nsecondary;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
@@ -3216,7 +3371,9 @@ create_fit_report(FitShapeControls *controls)
     g_free(unitstr);
     g_string_append_c(report, '\n');
 
-    g_string_append_printf(report, _("Correlation matrix\n"));
+    g_string_append(report, _("Correlation Matrix"));
+    g_string_append_c(report, '\n');
+
     for (i = 0; i < nparams; i++) {
         g_string_append(report, "  ");
         for (j = 0; j <= i; j++) {
@@ -3227,6 +3384,40 @@ create_fit_report(FitShapeControls *controls)
         }
         g_string_append_c(report, '\n');
     }
+    g_string_append_c(report, '\n');
+
+    nsecondary = func->nsecondary;
+    if (nsecondary) {
+        g_string_append(report, _("Derived Quantities"));
+        g_string_append_c(report, '\n');
+    }
+    for (i = 0; i < nsecondary; i++) {
+        const FitShapeSecondary *secparam = func->secondary + i;
+        gdouble param = controls->secondary[i],
+                err = controls->secondary_err[i];
+
+        if (!pango_parse_markup(secparam->name, -1, 0, NULL, &s, NULL, NULL)) {
+            g_warning("Parameter name is not valid Pango markup");
+            s = g_strdup(secparam->name);
+        }
+        if (secparam->flags & FIT_SHAPE_PARAM_ANGLE) {
+            param *= 180.0/G_PI;
+            err *= 180.0/G_PI;
+            unitstr = g_strdup("deg");
+        }
+        else {
+            gwy_si_unit_power_multiply(xyunit, secparam->power_xy,
+                                       zunit, secparam->power_z,
+                                       unit);
+            unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        }
+        g_string_append_printf(report, "%6s = %g ± %g%s%s\n",
+                               s, param, err, *unitstr ? " " : "", unitstr);
+        g_free(unitstr);
+        g_free(s);
+    }
+    if (nsecondary)
+        g_string_append_c(report, '\n');
 
     g_object_unref(unit);
 
