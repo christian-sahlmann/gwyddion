@@ -26,6 +26,7 @@
  *   curvature vs. radius...  Maybe better: just add a table with derived
  *   parameters (so we do not need invertible mapping).
  * - Align parameter table properly (with UTF-8 string lengths).
+ * - Correlation table colour-coding?
  */
 
 #define DEBUG 1
@@ -125,14 +126,25 @@ typedef gboolean (*FitShapeEstimate)(const GwyXY *xy,
                                      FitShapeEstimateCache *estimcache);
 
 typedef gdouble (*FitShapeCalcParam)(const gdouble *param);
+typedef gdouble (*FitShapeCalcError)(const gdouble *param,
+                                     const gdouble *param_err,
+                                     const gdouble *correl);
 
 typedef struct {
     const char *name;
     gint power_xy;
     gint power_z;
     FitShapeParamFlags flags;
-    FitShapeCalcParam calc;    /* Only for secondary (derived) parameters. */
 } FitShapeParam;
+
+typedef struct {
+    const char *name;
+    gint power_xy;
+    gint power_z;
+    FitShapeParamFlags flags;
+    FitShapeCalcParam calc;
+    FitShapeCalcError calc_err;
+} FitShapeSecondary;
 
 typedef struct {
     const gchar *name;
@@ -143,7 +155,7 @@ typedef struct {
     guint nparams;
     guint nsecondary;
     const FitShapeParam *param;
-    const FitShapeParam *secondary;
+    const FitShapeSecondary *secondary;
 } FitShapeFunc;
 
 typedef struct {
@@ -181,8 +193,9 @@ typedef struct {
     gdouble *param;
     gdouble *alt_param;
     gdouble *param_err;
-    gdouble *secondary;
     gdouble *correl;
+    gdouble *secondary;
+    gdouble *secondary_err;
     gdouble rss;
     /* This is GUI but we use the fields in mydata. */
     GwyContainer *mydata;
@@ -303,7 +316,10 @@ static void         fit_shape_load_args       (GwyContainer *container,
 static void         fit_shape_save_args       (GwyContainer *container,
                                                FitShapeArgs *args);
 
-static gdouble sphere_calc_R(const gdouble *param);
+static gdouble sphere_calc_R    (const gdouble *param);
+static gdouble sphere_calc_err_R(const gdouble *param,
+                                 const gdouble *param_err,
+                                 const gdouble *correl);
 
 #define DECLARE_SHAPE_FUNC(name) \
     static gdouble name##_func(gdouble abscissa, \
@@ -322,15 +338,15 @@ static gdouble sphere_calc_R(const gdouble *param);
                                 gdouble *param, \
                                 FitShapeEstimateCache *estimcache);
 
-/* XXX: This is a dirty trick assuming sizeof(FitShapeParam) > sizeof(NULL)
+/* XXX: This is a dirty trick assuming sizeof(FitShapeSecondary) > sizeof(NULL)
  * so that we get zero nsecondary when name##_secondary is defined to NULL
- * and correct array size otherwise.  It should be safe because FitShapeParam
- * is a struct that contains at least two pointers plus other stuff, but it is
- * dirty anyway. */
+ * and correct array size otherwise.  It should be safe because
+ * FitShapeSecondary is a struct that contains at least two pointers plus other
+ * stuff, but it is dirty anyway. */
 #define SHAPE_FUNC_ITEM(name) \
     &name##_func, &name##_estimate, &name##_init, \
     G_N_ELEMENTS(name##_params), \
-    sizeof(name##_secondary)/sizeof(FitShapeParam), \
+    sizeof(name##_secondary)/sizeof(FitShapeSecondary), \
     name##_params, \
     name##_secondary
 
@@ -342,72 +358,72 @@ DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
 
 static const FitShapeParam grating_params[] = {
-   { "w",             1, 0, 0,                      NULL, },
-   { "p",             0, 0, 0,                      NULL, },
-   { "h",             0, 1, 0,                      NULL, },
-   { "z<sub>0</sub>", 0, 1, 0,                      NULL, },
-   { "x<sub>0</sub>", 1, 0, 0,                      NULL, },
-   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  NULL, },
-   { "c",             0, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
+   { "w",             1, 0, 0,                      },
+   { "p",             0, 0, 0,                      },
+   { "h",             0, 1, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "c",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
 };
 
 #define grating_secondary NULL
 
 static const FitShapeParam pring_params[] = {
-   { "x<sub>0</sub>", 1, 0, 0,                      NULL, },
-   { "y<sub>0</sub>", 1, 0, 0,                      NULL, },
-   { "z<sub>0</sub>", 0, 1, 0,                      NULL, },
-   { "R",             1, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "w",             1, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "h",             0, 1, 0,                      NULL, },
-   { "s",             0, 1, 0,                      NULL, },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "y<sub>0</sub>", 1, 0, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "R",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "w",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h",             0, 1, 0,                      },
+   { "s",             0, 1, 0,                      },
 };
 
 #define pring_secondary NULL
 
 static const FitShapeParam sphere_params[] = {
-   { "x<sub>0</sub>", 1,  0, 0, NULL, },
-   { "y<sub>0</sub>", 1,  0, 0, NULL, },
-   { "z<sub>0</sub>", 0,  1, 0, NULL, },
-   { "C",             0, -1, 0, NULL, },
+   { "x<sub>0</sub>", 1,  0, 0, },
+   { "y<sub>0</sub>", 1,  0, 0, },
+   { "z<sub>0</sub>", 0,  1, 0, },
+   { "C",             0, -1, 0, },
 };
 
-static const FitShapeParam sphere_secondary[] = {
-   { "R", 0, 1, 0, sphere_calc_R, },
+static const FitShapeSecondary sphere_secondary[] = {
+   { "R", 0, 1, 0, sphere_calc_R, sphere_calc_err_R, },
 };
 
 static const FitShapeParam gaussian_params[] = {
-   { "x<sub>0</sub>",     1, 0, 0,                      NULL, },
-   { "y<sub>0</sub>",     1, 0, 0,                      NULL, },
-   { "z<sub>0</sub>",     0, 1, 0,                      NULL, },
-   { "h",                 0, 1, 0,                      NULL, },
-   { "σ<sub>mean</sub>",  1, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "a",                 0, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "α",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  NULL, },
+   { "x<sub>0</sub>",     1, 0, 0,                      },
+   { "y<sub>0</sub>",     1, 0, 0,                      },
+   { "z<sub>0</sub>",     0, 1, 0,                      },
+   { "h",                 0, 1, 0,                      },
+   { "σ<sub>mean</sub>",  1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",                 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 #define gaussian_secondary NULL
 
 static const FitShapeParam lorentzian_params[] = {
-   { "x<sub>0</sub>",    1, 0, 0,                      NULL, },
-   { "y<sub>0</sub>",    1, 0, 0,                      NULL, },
-   { "z<sub>0</sub>",    0, 1, 0,                      NULL, },
-   { "h",                0, 1, 0,                      NULL, },
-   { "b<sub>mean</sub>", 1, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "a",                0, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "α",                0, 0, FIT_SHAPE_PARAM_ANGLE,  NULL, },
+   { "x<sub>0</sub>",    1, 0, 0,                      },
+   { "y<sub>0</sub>",    1, 0, 0,                      },
+   { "z<sub>0</sub>",    0, 1, 0,                      },
+   { "h",                0, 1, 0,                      },
+   { "b<sub>mean</sub>", 1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",                0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",                0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 #define lorentzian_secondary NULL
 
 static const FitShapeParam pyramidx_params[] = {
-   { "x<sub>0</sub>", 1, 0, 0,                      NULL, },
-   { "y<sub>0</sub>", 1, 0, 0,                      NULL, },
-   { "z<sub>0</sub>", 0, 1, 0,                      NULL, },
-   { "h",             0, 1, 0,                      NULL, },
-   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "a",             0, 0, FIT_SHAPE_PARAM_ABSVAL, NULL, },
-   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  NULL, },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "y<sub>0</sub>", 1, 0, 0,                      },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "h",             0, 1, 0,                      },
+   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 #define pyramidx_secondary NULL
@@ -636,6 +652,7 @@ finalise:
     g_free(controls.alt_param);
     g_free(controls.param_err);
     g_free(controls.secondary);
+    g_free(controls.secondary_err);
     g_free(controls.correl);
     g_free(controls.title);
     g_array_free(controls.param_controls, TRUE);
@@ -1098,6 +1115,8 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     controls->param_err = g_renew(gdouble, controls->param_err, nparams);
     controls->secondary = g_renew(gdouble, controls->secondary,
                                   func->nsecondary);
+    controls->secondary_err = g_renew(gdouble, controls->secondary_err,
+                                      func->nsecondary);
     controls->correl = g_renew(gdouble, controls->correl,
                                (nparams + 1)*nparams/2);
     for (i = 0; i < nparams; i++)
@@ -1456,11 +1475,12 @@ fit_copy_correl_matrix(FitShapeControls *controls, GwyNLFitter *fitter)
 {
     const FitShapeFunc *func = functions + controls->function_id;
     guint i, j, nparams = func->nparams;
+    gboolean is_fitted = (controls->state == FIT_SHAPE_FITTED
+                          || controls->state == FIT_SHAPE_QUICK_FITTED);
 
     gwy_clear(controls->correl, (nparams + 1)*nparams/2);
 
-    if (controls->state == FIT_SHAPE_FITTED
-        || controls->state == FIT_SHAPE_QUICK_FITTED) {
+    if (is_fitted) {
         g_return_if_fail(fitter && fitter->covar);
 
         for (i = 0; i < nparams; i++) {
@@ -1477,13 +1497,26 @@ calculate_secondary_params(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
     guint i, nsecondary = func->nsecondary;
+    gboolean is_fitted = (controls->state == FIT_SHAPE_FITTED
+                          || controls->state == FIT_SHAPE_QUICK_FITTED);
 
     for (i = 0; i < nsecondary; i++) {
-        const FitShapeParam *secondaryparam = func->secondary + i;
+        const FitShapeSecondary *secparam = func->secondary + i;
 
-        g_return_if_fail(secondaryparam->calc);
-        controls->secondary[i] = secondaryparam->calc(controls->param);
-        gwy_debug("[%u] %g", i, controls->secondary[i]);
+        g_return_if_fail(secparam->calc);
+        controls->secondary[i] = secparam->calc(controls->param);
+
+        if (is_fitted) {
+            g_return_if_fail(secparam->calc_err);
+            controls->secondary_err[i] = secparam->calc_err(controls->param,
+                                                            controls->param_err,
+                                                            controls->correl);
+        }
+        else
+            controls->secondary_err[i] = 0.0;
+
+        gwy_debug("[%u] %g +- %g",
+                  i, controls->secondary[i], controls->secondary_err[i]);
     }
 }
 
@@ -2447,6 +2480,28 @@ common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
     return estimate_feature_height(xy, z, n, z0, height, xc, yc, estimcache);
 }
 
+static gdouble
+dotprod_with_correl(const gdouble *diff,
+                    const gdouble *param_err,
+                    const gdouble *correl,
+                    guint n)
+{
+    guint i, j;
+    gdouble s = 0.0;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (diff[j] != 0 && diff[j] != 0) {
+                gdouble c_ij = (j <= i) ? SLi(correl, i, j) : SLi(correl, j, i);
+                gdouble s_ij = c_ij*param_err[i]*param_err[j];
+                s += s_ij*diff[i]*diff[j];
+            }
+        }
+    }
+
+    return sqrt(fmax(s, 0.0));
+}
+
 /**************************************************************************
  *
  * Sphere
@@ -2575,6 +2630,14 @@ static gdouble
 sphere_calc_R(const gdouble *param)
 {
     return 1.0/param[3];
+}
+
+static gdouble
+sphere_calc_err_R(const gdouble *param,
+                  const gdouble *param_err,
+                  G_GNUC_UNUSED const gdouble *correl)
+{
+    return param_err[3]/(param[3]*param[3]);
 }
 
 /**************************************************************************
