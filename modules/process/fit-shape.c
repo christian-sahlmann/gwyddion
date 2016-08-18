@@ -369,6 +369,7 @@ static gdouble lorentzian_calc_err_b2(const gdouble *param,
     name##_secondary
 
 DECLARE_SHAPE_FUNC(grating);
+DECLARE_SHAPE_FUNC(grating3);
 DECLARE_SHAPE_FUNC(pring);
 DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(gaussian);
@@ -376,9 +377,9 @@ DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
 
 static const FitShapeParam grating_params[] = {
-   { "w",             1, 0, 0,                      },
-   { "p",             0, 0, 0,                      },
+   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "h",             0, 1, 0,                      },
+   { "p",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "z<sub>0</sub>", 0, 1, 0,                      },
    { "x<sub>0</sub>", 1, 0, 0,                      },
    { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
@@ -386,6 +387,22 @@ static const FitShapeParam grating_params[] = {
 };
 
 #define grating_secondary NULL
+
+static const FitShapeParam grating3_params[] = {
+   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h<sub>1</sub>", 0, 1, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h<sub>2</sub>", 0, 1, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h<sub>3</sub>", 0, 1, FIT_SHAPE_PARAM_ABSVAL, },
+   { "p",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "q<sub>1</sub>", 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "q<sub>2</sub>", 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "q<sub>3</sub>", 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "z<sub>0</sub>", 0, 1, 0,                      },
+   { "x<sub>0</sub>", 1, 0, 0,                      },
+   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+};
+
+#define grating3_secondary NULL
 
 static const FitShapeParam pring_params[] = {
    { "x<sub>0</sub>", 1, 0, 0,                      },
@@ -454,6 +471,7 @@ static const FitShapeParam pyramidx_params[] = {
 
 static const FitShapeFunc functions[] = {
     { N_("Grating (simple)"),  FALSE, SHAPE_FUNC_ITEM(grating),    },
+    { N_("Grating (3-level)"), FALSE, SHAPE_FUNC_ITEM(grating3),   },
     { N_("Ring"),              FALSE, SHAPE_FUNC_ITEM(pring),      },
     { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
     { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
@@ -2832,14 +2850,14 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     DEFINE_ALPHA_CACHE(alpha);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
-    gdouble w = param[0];
-    gdouble p = param[1];
-    gdouble h = param[2];
+    gdouble L = fabs(param[0]);
+    gdouble h = param[1];
+    gdouble p = fabs(param[2]);
     gdouble z0 = param[3];
     gdouble x0 = param[4];
     gdouble alpha = param[5];
     gdouble c = param[6];
-    gdouble x, y, t, wp2, val, coshm1_c, ca, sa;
+    gdouble x, y, t, Lp2, val, coshm1_c, ca, sa;
     guint i;
 
     g_assert(n_param == 7);
@@ -2849,13 +2867,13 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     y = ctx->xy[i].y;
 
     *fres = TRUE;
-    wp2 = 0.5*w*p;
-    if (G_UNLIKELY(!wp2))
+    Lp2 = 0.5*L*p;
+    if (G_UNLIKELY(!Lp2))
         return z0;
 
     HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa - x0 + wp2;
-    t = (t - w*floor(t/w))/wp2 - 1.0;
+    t = x*ca - y*sa - x0 + Lp2;
+    t = (t - L*floor(t/L))/Lp2 - 1.0;
     if (fabs(t) < 1.0) {
         if (c == c_last)
             coshm1_c = coshm1_c_last;
@@ -2882,8 +2900,8 @@ grating_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     range_z(z, n, &zmin, &zmax, estimcache);
 
     param[0] = r/4.0;
-    param[1] = 0.5;
-    param[2] = zmax - zmin;
+    param[1] = zmax - zmin;
+    param[2] = 0.5;
     param[3] = zmin;
     param[4] = 0.0;
     param[5] = 0.0;
@@ -2902,13 +2920,13 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gdouble t;
 
     /* Just initialise the percentage and shape with some sane defaults. */
-    param[1] = 0.5;
+    param[2] = 0.5;
     param[6] = 5.0;
 
     /* Simple height parameter estimate. */
-    range_z(z, n, param+3, param+2, estimcache);
-    t = param[2] - param[3];
-    param[2] = 0.9*t;
+    range_z(z, n, param+3, param+1, estimcache);
+    t = param[1] - param[3];
+    param[1] = 0.9*t;
     param[3] += 0.05*t;
 
     /* First we estimate the orientation (alpha). */
@@ -2937,6 +2955,156 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
                                      estimcache);
+}
+
+/**************************************************************************
+ *
+ * Grating (3-level)
+ *
+ **************************************************************************/
+
+static gdouble
+grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
+              gpointer user_data, gboolean *fres)
+{
+    DEFINE_ALPHA_CACHE(alpha);
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble L = fabs(param[0]);
+    gdouble h1 = fabs(param[1]);
+    gdouble h2 = fabs(param[2]);
+    gdouble h3 = fabs(param[3]);
+    gdouble p = fmin(fabs(param[4]), 1.0);
+    gdouble q1 = fabs(param[5]);
+    gdouble q2 = fabs(param[6]);
+    gdouble q3 = fabs(param[7]);
+    gdouble z0 = param[8];
+    gdouble x0 = param[9];
+    gdouble alpha = param[10];
+    gdouble x, y, t, Lp2, ca, sa, Ll, Lu;
+    guint i;
+
+    g_assert(n_param == 11);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x;
+    y = ctx->xy[i].y;
+
+    *fres = TRUE;
+    Lp2 = 0.5*L*p;
+    if (G_UNLIKELY(!Lp2))
+        return z0;
+
+    HANDLE_ALPHA_CACHE(alpha);
+    t = x*ca - y*sa - x0 + Lp2;
+    t -= L*floor(t/L) + Lp2;
+    t = fabs(t);
+
+    Lu = Lp2;
+    if (t >= Lu)
+        return z0;
+
+    Ll = Lu;
+    Lu = Ll/(1.0 + q1);
+    if (t >= Lu) {
+        if (G_UNLIKELY(Lu == Ll))
+            return z0;
+        return z0 + h1/(Lu - Ll)*(fabs(t) - Ll);
+    }
+
+    Ll = Lu;
+    Lu = Ll/(1.0 + q2);
+    z0 += h1;
+    if (t >= Lu) {
+        if (G_UNLIKELY(Lu == Ll))
+            return z0;
+        return z0 + h2/(Lu - Ll)*(fabs(t) - Ll);
+    }
+
+    Ll = Lu;
+    Lu = Ll/(1.0 + q3);
+    z0 += h2;
+    if (t >= Lu) {
+        if (G_UNLIKELY(Lu == Ll))
+            return z0;
+        return z0 + h3/(Lu - Ll)*(fabs(t) - Ll);
+    }
+
+    return z0 + h3;
+}
+
+static gboolean
+grating3_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+              FitShapeEstimateCache *estimcache)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+
+    param[0] = r/4.0;
+    param[1] = 0.1*(zmax - zmin);
+    param[2] = 0.8*(zmax - zmin);
+    param[3] = 0.1*(zmax - zmin);
+    param[4] = 0.7;
+    param[5] = 0.5;
+    param[6] = 0.2;
+    param[7] = 0.5;
+    param[8] = zmin;
+    param[9] = 0.0;
+    param[10] = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+                  FitShapeEstimateCache *estimcache)
+{
+#if 0
+    GwyXY *xyred = NULL;
+    gdouble *zred = NULL;
+    guint nred = 0;
+    gdouble t;
+
+    /* Just initialise the percentage and shape with some sane defaults. */
+    param[2] = 0.5;
+    param[6] = 5.0;
+
+    /* Simple height parameter estimate. */
+    range_z(z, n, param+3, param+1, estimcache);
+    t = param[1] - param[3];
+    param[1] = 0.9*t;
+    param[3] += 0.05*t;
+
+    /* First we estimate the orientation (alpha). */
+    if (n > NREDLIM) {
+        nred = sqrt(n*(gdouble)NREDLIM);
+        xyred = g_new(GwyXY, nred);
+        zred = g_new(gdouble, nred);
+        reduce_data_size(xy, z, n, xyred, zred, nred);
+    }
+
+    if (nred) {
+        /* Make sure caching still works for the reduced data. */
+        FitShapeEstimateCache estimcachered;
+        gwy_clear(&estimcachered, 1);
+        param[5] = estimate_projection_direction(xyred, zred, nred,
+                                                 &estimcachered);
+    }
+    else
+        param[5] = estimate_projection_direction(xy, z, n, estimcache);
+
+    if (nred) {
+        g_free(xyred);
+        g_free(zred);
+    }
+
+    /* Then we extract a representative profile with this orientation. */
+    return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
+                                     estimcache);
+#endif
+    return TRUE;
 }
 
 /**************************************************************************
