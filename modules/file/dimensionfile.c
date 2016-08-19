@@ -37,7 +37,12 @@
 #define MAGIC "\x5c\x26\x14\x00"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
-enum { HEADER_SIZE = 40960 };
+enum {
+    HEADER_SIZE = 0xa000,
+    /* Could be the other way round.  I only have square images. */
+    XRES_OFFSET = 0x0a90,
+    YRES_OFFSET = 0x0aa8,
+};
 
 static gboolean      module_register(void);
 static gint          dimfile_detect (const GwyFileDetectInfo *fileinfo,
@@ -113,9 +118,10 @@ dimfile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint xres = 512, yres = 512;  /* XXX: Have no idea where to read them. */
+    guint xres, yres;
     gchar **images = NULL;
     guint nimages, i, imagesize;
+    const guchar *p;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -130,6 +136,16 @@ dimfile_load(const gchar *filename,
         err_FILE_TYPE(error, "Dimension");
         goto fail;
     }
+
+    p = buffer + XRES_OFFSET;
+    xres = gwy_get_guint16_le(&p);
+    if (err_DIMENSION(error, xres))
+        goto fail;
+
+    p = buffer + YRES_OFFSET;
+    yres = gwy_get_guint16_le(&p);
+    if (err_DIMENSION(error, yres))
+        goto fail;
 
     images = find_images(buffer, HEADER_SIZE);
     nimages = g_strv_length(images);
