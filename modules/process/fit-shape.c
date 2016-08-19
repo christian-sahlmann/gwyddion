@@ -316,28 +316,11 @@ static void         fit_shape_load_args       (GwyContainer *container,
 static void         fit_shape_save_args       (GwyContainer *container,
                                                FitShapeArgs *args);
 
-static gdouble sphere_calc_R    (const gdouble *param);
-static gdouble sphere_calc_err_R(const gdouble *param,
-                                 const gdouble *param_err,
-                                 const gdouble *correl);
-
-static gdouble gaussian_calc_sigma1    (const gdouble *param);
-static gdouble gaussian_calc_err_sigma1(const gdouble *param,
-                                        const gdouble *param_err,
-                                        const gdouble *correl);
-static gdouble gaussian_calc_sigma2    (const gdouble *param);
-static gdouble gaussian_calc_err_sigma2(const gdouble *param,
-                                        const gdouble *param_err,
-                                        const gdouble *correl);
-
-static gdouble lorentzian_calc_b1    (const gdouble *param);
-static gdouble lorentzian_calc_err_b1(const gdouble *param,
-                                      const gdouble *param_err,
-                                      const gdouble *correl);
-static gdouble lorentzian_calc_b2    (const gdouble *param);
-static gdouble lorentzian_calc_err_b2(const gdouble *param,
-                                      const gdouble *param_err,
-                                      const gdouble *correl);
+#define DECLARE_SECONDARY(funcname,name) \
+    static gdouble funcname##_calc_##name    (const gdouble *param); \
+    static gdouble funcname##_calc_err_##name(const gdouble *param, \
+                                              const gdouble *param_err, \
+                                              const gdouble *correl);
 
 #define DECLARE_SHAPE_FUNC(name) \
     static gdouble name##_func(gdouble abscissa, \
@@ -376,6 +359,17 @@ DECLARE_SHAPE_FUNC(gaussian);
 DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
 
+DECLARE_SECONDARY(sphere, R);
+DECLARE_SECONDARY(gaussian, sigma1);
+DECLARE_SECONDARY(gaussian, sigma2);
+DECLARE_SECONDARY(lorentzian, b1);
+DECLARE_SECONDARY(lorentzian, b2);
+DECLARE_SECONDARY(grating3, h);
+DECLARE_SECONDARY(grating3, L0);
+DECLARE_SECONDARY(grating3, L1);
+DECLARE_SECONDARY(grating3, L2);
+DECLARE_SECONDARY(grating3, L3);
+
 static const FitShapeParam grating_params[] = {
    { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "h",             0, 1, 0,                      },
@@ -402,7 +396,13 @@ static const FitShapeParam grating3_params[] = {
    { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
-#define grating3_secondary NULL
+static const FitShapeSecondary grating3_secondary[] = {
+   { "h",             0, 1, 0, grating3_calc_h,  grating3_calc_err_h,  },
+   { "L<sub>0</sub>", 1, 0, 0, grating3_calc_L0, grating3_calc_err_L0, },
+   { "L<sub>1</sub>", 1, 0, 0, grating3_calc_L1, grating3_calc_err_L1, },
+   { "L<sub>2</sub>", 1, 0, 0, grating3_calc_L2, grating3_calc_err_L2, },
+   { "L<sub>3</sub>", 1, 0, 0, grating3_calc_L3, grating3_calc_err_L3, },
+};
 
 static const FitShapeParam pring_params[] = {
    { "x<sub>0</sub>", 1, 0, 0,                      },
@@ -3009,7 +3009,7 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (t >= Lu) {
         if (G_UNLIKELY(Lu == Ll))
             return z0;
-        return z0 + h1/(Lu - Ll)*(fabs(t) - Ll);
+        return z0 + h1/(Lu - Ll)*(t - Ll);
     }
 
     Ll = Lu;
@@ -3018,7 +3018,7 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (t >= Lu) {
         if (G_UNLIKELY(Lu == Ll))
             return z0;
-        return z0 + h2/(Lu - Ll)*(fabs(t) - Ll);
+        return z0 + h2/(Lu - Ll)*(t - Ll);
     }
 
     Ll = Lu;
@@ -3027,7 +3027,7 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (t >= Lu) {
         if (G_UNLIKELY(Lu == Ll))
             return z0;
-        return z0 + h3/(Lu - Ll)*(fabs(t) - Ll);
+        return z0 + h3/(Lu - Ll)*(t - Ll);
     }
 
     return z0 + h3;
@@ -3061,21 +3061,23 @@ static gboolean
 grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
-#if 0
     GwyXY *xyred = NULL;
     gdouble *zred = NULL;
     guint nred = 0;
-    gdouble t;
+    gdouble zmin, zmax;
 
     /* Just initialise the percentage and shape with some sane defaults. */
-    param[2] = 0.5;
-    param[6] = 5.0;
+    param[4] = 0.7;
+    param[5] = 0.5;
+    param[6] = 0.2;
+    param[7] = 0.5;
 
     /* Simple height parameter estimate. */
-    range_z(z, n, param+3, param+1, estimcache);
-    t = param[1] - param[3];
-    param[1] = 0.9*t;
-    param[3] += 0.05*t;
+    range_z(z, n, &zmin, &zmax, estimcache);
+    param[1] = 0.1*(zmax - zmin);
+    param[2] = 0.8*(zmax - zmin);
+    param[3] = 0.1*(zmax - zmin);
+    param[8] = zmin;
 
     /* First we estimate the orientation (alpha). */
     if (n > NREDLIM) {
@@ -3089,11 +3091,11 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
         /* Make sure caching still works for the reduced data. */
         FitShapeEstimateCache estimcachered;
         gwy_clear(&estimcachered, 1);
-        param[5] = estimate_projection_direction(xyred, zred, nred,
-                                                 &estimcachered);
+        param[10] = estimate_projection_direction(xyred, zred, nred,
+                                                  &estimcachered);
     }
     else
-        param[5] = estimate_projection_direction(xy, z, n, estimcache);
+        param[10] = estimate_projection_direction(xy, z, n, estimcache);
 
     if (nred) {
         g_free(xyred);
@@ -3101,10 +3103,111 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     }
 
     /* Then we extract a representative profile with this orientation. */
-    return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
+    return estimate_period_and_phase(xy, z, n, param[10], param + 0, param + 9,
                                      estimcache);
-#endif
-    return TRUE;
+}
+
+static gdouble
+grating3_calc_h(const gdouble *param)
+{
+    return param[1] + param[2] + param[3];
+}
+
+static gdouble
+grating3_calc_err_h(G_GNUC_UNUSED const gdouble *param,
+                    const gdouble *param_err,
+                    const gdouble *correl)
+{
+    gdouble diff[G_N_ELEMENTS(grating3_params)];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[1] = diff[2] = diff[3] = 1.0;
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+grating3_calc_L0(const gdouble *param)
+{
+    return param[0]*param[4];
+}
+
+static gdouble
+grating3_calc_err_L0(const gdouble *param,
+                         const gdouble *param_err,
+                         const gdouble *correl)
+{
+    gdouble diff[G_N_ELEMENTS(grating3_params)];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[0] = param[4];
+    diff[4] = param[0];
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+grating3_calc_L1(const gdouble *param)
+{
+    return grating3_calc_L0(param)/(1.0 + param[5]);
+}
+
+static gdouble
+grating3_calc_err_L1(const gdouble *param,
+                     const gdouble *param_err,
+                     const gdouble *correl)
+{
+    gdouble L1 = grating3_calc_L1(param);
+    gdouble diff[G_N_ELEMENTS(grating3_params)];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[0] = L1/param[0];
+    diff[4] = L1/param[4];
+    diff[5] = -L1/(1.0 + param[5]);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+grating3_calc_L2(const gdouble *param)
+{
+    return grating3_calc_L1(param)/(1.0 + param[6]);
+}
+
+static gdouble
+grating3_calc_err_L2(const gdouble *param,
+                     const gdouble *param_err,
+                     const gdouble *correl)
+{
+    gdouble L2 = grating3_calc_L2(param);
+    gdouble diff[G_N_ELEMENTS(grating3_params)];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[0] = L2/param[0];
+    diff[4] = L2/param[4];
+    diff[5] = -L2/(1.0 + param[5]);
+    diff[6] = -L2/(1.0 + param[6]);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+grating3_calc_L3(const gdouble *param)
+{
+    return grating3_calc_L2(param)/(1.0 + param[7]);
+}
+
+static gdouble
+grating3_calc_err_L3(const gdouble *param,
+                     const gdouble *param_err,
+                     const gdouble *correl)
+{
+    gdouble L3 = grating3_calc_L3(param);
+    gdouble diff[G_N_ELEMENTS(grating3_params)];
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[0] = L3/param[0];
+    diff[4] = L3/param[4];
+    diff[5] = -L3/(1.0 + param[5]);
+    diff[6] = -L3/(1.0 + param[6]);
+    diff[7] = -L3/(1.0 + param[7]);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 /**************************************************************************
@@ -3364,12 +3467,12 @@ gaussian_calc_err_sigma1(const gdouble *param,
                          const gdouble *correl)
 {
     gdouble sigma1 = gaussian_calc_sigma1(param);
-    gdouble diff[7];
+    gdouble diff[G_N_ELEMENTS(gaussian_params)];
 
     gwy_clear(diff, G_N_ELEMENTS(diff));
     diff[4] = sigma1/param[4];
     diff[5] = -0.5*sigma1/param[5];
-    return dotprod_with_correl(diff, param_err, correl, 7);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 static gdouble
@@ -3384,12 +3487,12 @@ gaussian_calc_err_sigma2(const gdouble *param,
                          const gdouble *correl)
 {
     gdouble sigma1 = gaussian_calc_sigma1(param);
-    gdouble diff[7];
+    gdouble diff[G_N_ELEMENTS(gaussian_params)];
 
     gwy_clear(diff, G_N_ELEMENTS(diff));
     diff[4] = sigma1/param[4];
     diff[5] = 0.5*sigma1/param[5];
-    return dotprod_with_correl(diff, param_err, correl, 7);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 /**************************************************************************
@@ -3471,12 +3574,12 @@ lorentzian_calc_err_b1(const gdouble *param,
                        const gdouble *correl)
 {
     gdouble b1 = lorentzian_calc_b1(param);
-    gdouble diff[7];
+    gdouble diff[G_N_ELEMENTS(lorentzian_params)];
 
     gwy_clear(diff, G_N_ELEMENTS(diff));
     diff[4] = b1/param[4];
     diff[5] = -0.5*b1/param[5];
-    return dotprod_with_correl(diff, param_err, correl, 7);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 static gdouble
@@ -3491,12 +3594,12 @@ lorentzian_calc_err_b2(const gdouble *param,
                        const gdouble *correl)
 {
     gdouble b1 = lorentzian_calc_b1(param);
-    gdouble diff[7];
+    gdouble diff[G_N_ELEMENTS(lorentzian_params)];
 
     gwy_clear(diff, G_N_ELEMENTS(diff));
     diff[4] = b1/param[4];
     diff[5] = 0.5*b1/param[5];
-    return dotprod_with_correl(diff, param_err, correl, 7);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 /**************************************************************************
