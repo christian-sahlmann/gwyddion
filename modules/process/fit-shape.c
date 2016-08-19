@@ -25,7 +25,7 @@
  * - Align parameter table properly (with UTF-8 string lengths).
  * - Correlation table colour-coding?
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -162,6 +162,8 @@ typedef struct {
     gdouble *abscissa;
     GwyXY *xy;
     gdouble *z;
+
+    FitShapeEstimateCache estimcache;
 } FitShapeContext;
 
 typedef struct {
@@ -181,9 +183,7 @@ typedef struct {
     /* These are actually non-GUI and could be separated for some
      * non-interactive use. */
     FitShapeContext *ctx;
-    FitShapeEstimateCache *estimcache;
     FitShapeContext *red_ctx;
-    FitShapeEstimateCache *red_estimcache;
     gboolean have_reduced_context;
     FitShapeState state;
     gint id;
@@ -542,21 +542,16 @@ fit_shape_dialogue(FitShapeArgs *args,
     GtkWidget *dialogue, *notebook, *widget, *vbox, *hbox, *alignment,
               *hbox2, *label;
     FitShapeControls controls;
-    FitShapeEstimateCache estimcache, red_estimcache;
     FitShapeContext ctx, red_ctx;
     GString *report;
     gint response;
 
     gwy_clear(&controls, 1);
     gwy_clear(&ctx, 1);
-    gwy_clear(&estimcache, 1);
     gwy_clear(&red_ctx, 1);
-    gwy_clear(&red_estimcache, 1);
     controls.args = args;
     controls.ctx = &ctx;
-    controls.estimcache = &estimcache;
     controls.red_ctx = &red_ctx;
-    controls.red_estimcache = &red_estimcache;
     controls.id = id;
     controls.title = gwy_app_get_data_field_title(data, id);
 
@@ -1266,7 +1261,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     fit_context_resize_params(ctx, nparams);
     fit_context_resize_params(controls->red_ctx, nparams);
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
-                     controls->estimcache);
+                     &ctx->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
     fit_copy_correl_matrix(controls, NULL);
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
@@ -1578,7 +1573,7 @@ static void
 fit_shape_estimate(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
-    const FitShapeContext *ctx;
+    FitShapeContext *ctx;
     guint i, nparams = func->nparams;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
@@ -1586,7 +1581,7 @@ fit_shape_estimate(FitShapeControls *controls)
     ctx = (controls->have_reduced_context ? controls->red_ctx : controls->ctx);
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     if (func->estimate(ctx->xy, ctx->z, ctx->n, controls->param,
-                       controls->estimcache))
+                       &ctx->estimcache))
         controls->state = FIT_SHAPE_ESTIMATED;
     else
         controls->state = FIT_SHAPE_ESTIMATE_FAILED;
@@ -1903,7 +1898,7 @@ update_context_data(FitShapeControls *controls)
     gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
                                      (GObject**)&mfield);
     fit_context_fill_data(ctx, dfield, mfield, controls->args->masking);
-    gwy_clear(controls->estimcache, 1);
+    gwy_clear(&ctx->estimcache, 1);
 
     red_ctx->n = (ctx->n <= NREDLIM
                   ? NREDLIM
@@ -1924,7 +1919,7 @@ update_context_data(FitShapeControls *controls)
     red_ctx->z = g_renew(gdouble, red_ctx->z, red_ctx->n);
     reduce_data_size(ctx->xy, ctx->z, ctx->n,
                      red_ctx->xy, red_ctx->z, red_ctx->n);
-    gwy_clear(controls->red_estimcache, 1);
+    gwy_clear(&red_ctx->estimcache, 1);
 }
 
 static void
