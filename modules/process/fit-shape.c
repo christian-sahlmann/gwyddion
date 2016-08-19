@@ -53,7 +53,7 @@
 /* i MUST be greater or equal than j */
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
-enum { NREDLIM = 4096 };
+enum { NREDLIM = 8192 };
 
 typedef enum {
     FIT_SHAPE_DISPLAY_DATA   = 0,
@@ -182,6 +182,9 @@ typedef struct {
      * non-interactive use. */
     FitShapeContext *ctx;
     FitShapeEstimateCache *estimcache;
+    FitShapeContext *red_ctx;
+    FitShapeEstimateCache *red_estimcache;
+    gboolean have_reduced_context;
     FitShapeState state;
     gint id;
     gchar *title;
@@ -293,10 +296,6 @@ static GwyNLFitter* fit                       (const FitShapeFunc *func,
                                                gdouble *rss,
                                                GwySetFractionFunc set_fraction,
                                                GwySetMessageFunc set_message);
-static GwyNLFitter* fit_reduced               (const FitShapeFunc *func,
-                                               const FitShapeContext *ctx,
-                                               gdouble *param,
-                                               gdouble *rss);
 static void         calculate_field           (const FitShapeFunc *func,
                                                const gdouble *param,
                                                GwyDataField *dfield);
@@ -543,17 +542,21 @@ fit_shape_dialogue(FitShapeArgs *args,
     GtkWidget *dialogue, *notebook, *widget, *vbox, *hbox, *alignment,
               *hbox2, *label;
     FitShapeControls controls;
-    FitShapeEstimateCache estimcache;
-    FitShapeContext ctx;
+    FitShapeEstimateCache estimcache, red_estimcache;
+    FitShapeContext ctx, red_ctx;
     GString *report;
     gint response;
 
-    gwy_clear(&ctx, 1);
     gwy_clear(&controls, 1);
+    gwy_clear(&ctx, 1);
     gwy_clear(&estimcache, 1);
+    gwy_clear(&red_ctx, 1);
+    gwy_clear(&red_estimcache, 1);
     controls.args = args;
     controls.ctx = &ctx;
     controls.estimcache = &estimcache;
+    controls.red_ctx = &red_ctx;
+    controls.red_estimcache = &red_estimcache;
     controls.id = id;
     controls.title = gwy_app_get_data_field_title(data, id);
 
@@ -703,6 +706,7 @@ finalise:
     g_ptr_array_free(controls.correl_vlabels, TRUE);
     g_array_free(controls.secondary_controls, TRUE);
     fit_context_free(controls.ctx);
+    fit_context_free(controls.red_ctx);
 }
 
 /* NB: We reuse fields from mydata.  It is possible only because they are
@@ -1260,6 +1264,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     fit_correl_table_resize(controls);
     fit_secondary_table_resize(controls);
     fit_context_resize_params(ctx, nparams);
+    fit_context_resize_params(controls->red_ctx, nparams);
     func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
                      controls->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
@@ -1346,9 +1351,10 @@ fix_changed(GtkToggleButton *button, FitShapeControls *controls)
 {
     gboolean fixed = gtk_toggle_button_get_active(button);
     guint i = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "id"));
-    const FitShapeContext *ctx = controls->ctx;
+    FitShapeContext *ctx = controls->ctx, *red_ctx = controls->red_ctx;
 
     ctx->param_fixed[i] = fixed;
+    red_ctx->param_fixed[i] = fixed;
 }
 
 static void
@@ -1572,11 +1578,12 @@ static void
 fit_shape_estimate(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
-    const FitShapeContext *ctx = controls->ctx;
+    const FitShapeContext *ctx;
     guint i, nparams = func->nparams;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start estimate");
+    ctx = (controls->have_reduced_context ? controls->red_ctx : controls->ctx);
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
     if (func->estimate(ctx->xy, ctx->z, ctx->n, controls->param,
                        controls->estimcache))
@@ -1601,15 +1608,16 @@ static void
 fit_shape_reduced_fit(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
-    const FitShapeContext *ctx = controls->ctx;
+    const FitShapeContext *ctx;
     GwyNLFitter *fitter;
     gdouble rss;
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start reduced fit");
+    ctx = (controls->have_reduced_context ? controls->red_ctx : controls->ctx);
     update_all_param_values(controls);
     memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
-    fitter = fit_reduced(func, ctx, controls->param, &rss);
+    fitter = fit(func, ctx, controls->param, &rss, NULL, NULL);
     if (rss >= 0.0)
         controls->state = FIT_SHAPE_QUICK_FITTED;
     else
@@ -1887,14 +1895,36 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 static void
 update_context_data(FitShapeControls *controls)
 {
+    FitShapeContext *ctx = controls->ctx, *red_ctx = controls->red_ctx;
     GwyDataField *dfield, *mfield = NULL;
+    guint i;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
                                      (GObject**)&mfield);
-    fit_context_fill_data(controls->ctx, dfield, mfield,
-                          controls->args->masking);
+    fit_context_fill_data(ctx, dfield, mfield, controls->args->masking);
     gwy_clear(controls->estimcache, 1);
+
+    red_ctx->n = (ctx->n <= NREDLIM
+                  ? NREDLIM
+                  : (guint)(NREDLIM*pow((gdouble)ctx->n/NREDLIM, 0.333)));
+    gwy_debug("reduced data size %u", red_ctx->n);
+
+    if (red_ctx->n == ctx->n) {
+        /* Nothing should touch the reduced context then. */
+        controls->have_reduced_context = FALSE;
+        return;
+    }
+
+    controls->have_reduced_context = TRUE;
+    red_ctx->abscissa = g_renew(gdouble, red_ctx->abscissa, red_ctx->n);
+    for (i = 0; i < red_ctx->n; i++)
+        red_ctx->abscissa[i] = i;
+    red_ctx->xy = g_renew(GwyXY, red_ctx->xy, red_ctx->n);
+    red_ctx->z = g_renew(gdouble, red_ctx->z, red_ctx->n);
+    reduce_data_size(ctx->xy, ctx->z, ctx->n,
+                     red_ctx->xy, red_ctx->z, red_ctx->n);
+    gwy_clear(controls->red_estimcache, 1);
 }
 
 static void
@@ -2000,6 +2030,8 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
     GwyNLFitter *fitter;
     guint i;
 
+    gwy_debug("ctx %p", ctx);
+    gwy_debug("ctx data (%u) %p %p %p", ctx->n, ctx->abscissa, ctx->xy, ctx->z);
     fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
     if (set_fraction || set_message)
         gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
@@ -2016,29 +2048,6 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
         if (func->param[i].flags & FIT_SHAPE_PARAM_ABSVAL)
             param[i] = fabs(param[i]);
     }
-
-    return fitter;
-}
-
-static GwyNLFitter*
-fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
-            gdouble *param, gdouble *rss)
-{
-    GwyNLFitter *fitter;
-    FitShapeContext ctxred;
-    guint nred;
-
-    if (ctx->n <= NREDLIM)
-        return fit(func, ctx, param, rss, NULL, NULL);
-
-    ctxred = *ctx;
-    nred = ctxred.n = sqrt(ctx->n*(gdouble)NREDLIM);
-    ctxred.xy = g_new(GwyXY, nred);
-    ctxred.z = g_new(gdouble, nred);
-    reduce_data_size(ctx->xy, ctx->z, ctx->n, ctxred.xy, ctxred.z, nred);
-    fitter = fit(func, &ctxred, param, rss, NULL, NULL);
-    g_free(ctxred.xy);
-    g_free(ctxred.z);
 
     return fitter;
 }
@@ -2914,9 +2923,6 @@ static gboolean
 grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                  FitShapeEstimateCache *estimcache)
 {
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
-    guint nred = 0;
     gdouble t;
 
     /* Just initialise the percentage and shape with some sane defaults. */
@@ -2930,27 +2936,7 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[3] += 0.05*t;
 
     /* First we estimate the orientation (alpha). */
-    if (n > NREDLIM) {
-        nred = sqrt(n*(gdouble)NREDLIM);
-        xyred = g_new(GwyXY, nred);
-        zred = g_new(gdouble, nred);
-        reduce_data_size(xy, z, n, xyred, zred, nred);
-    }
-
-    if (nred) {
-        /* Make sure caching still works for the reduced data. */
-        FitShapeEstimateCache estimcachered;
-        gwy_clear(&estimcachered, 1);
-        param[5] = estimate_projection_direction(xyred, zred, nred,
-                                                 &estimcachered);
-    }
-    else
-        param[5] = estimate_projection_direction(xy, z, n, estimcache);
-
-    if (nred) {
-        g_free(xyred);
-        g_free(zred);
-    }
+    param[5] = estimate_projection_direction(xy, z, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
@@ -3061,9 +3047,6 @@ static gboolean
 grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
-    guint nred = 0;
     gdouble zmin, zmax;
 
     /* Just initialise the percentage and shape with some sane defaults. */
@@ -3080,27 +3063,7 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[8] = zmin;
 
     /* First we estimate the orientation (alpha). */
-    if (n > NREDLIM) {
-        nred = sqrt(n*(gdouble)NREDLIM);
-        xyred = g_new(GwyXY, nred);
-        zred = g_new(gdouble, nred);
-        reduce_data_size(xy, z, n, xyred, zred, nred);
-    }
-
-    if (nred) {
-        /* Make sure caching still works for the reduced data. */
-        FitShapeEstimateCache estimcachered;
-        gwy_clear(&estimcachered, 1);
-        param[10] = estimate_projection_direction(xyred, zred, nred,
-                                                  &estimcachered);
-    }
-    else
-        param[10] = estimate_projection_direction(xy, z, n, estimcache);
-
-    if (nred) {
-        g_free(xyred);
-        g_free(zred);
-    }
+    param[10] = estimate_projection_direction(xy, z, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[10], param + 0, param + 9,
