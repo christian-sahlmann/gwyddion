@@ -42,6 +42,8 @@ enum {
     /* Could be the other way round.  I only have square images. */
     XRES_OFFSET = 0x0a90,
     YRES_OFFSET = 0x0aa8,
+    /* Other locations with identical content: 0x2eb7, 0x3343. */
+    XYREAL_OFFSET = 0x09df,
 };
 
 static gboolean      module_register(void);
@@ -118,9 +120,11 @@ dimfile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint xres, yres;
+    GwySIUnit *xyunit = NULL;
+    guint xres, yres, nimages, i, imagesize;
+    gdouble xreal, yreal;
     gchar **images = NULL;
-    guint nimages, i, imagesize;
+    gint power10;
     const guchar *p;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -137,6 +141,7 @@ dimfile_load(const gchar *filename,
         goto fail;
     }
 
+    /* Pixel dimensions. */
     p = buffer + XRES_OFFSET;
     xres = gwy_get_guint16_le(&p);
     if (err_DIMENSION(error, xres))
@@ -147,6 +152,32 @@ dimfile_load(const gchar *filename,
     if (err_DIMENSION(error, yres))
         goto fail;
 
+    /* Physical dimensions. */
+    p = buffer + XYREAL_OFFSET;
+    xreal = fabs(gwy_get_gfloat_le(&p));
+    if (!(xreal > 0.0)) {
+        g_warning("Real size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    yreal = xreal;
+
+    for (i = 0; i < 16; i++) {
+        if (!p[i])
+            break;
+    }
+    if (i < 16) {
+        xyunit = gwy_si_unit_new_parse(p, &power10);
+        xreal *= pow10(power10);
+        yreal *= pow10(power10);
+    }
+    else {
+        g_warning("Real size not followed by a unit.  Assuming nm.");
+        xyunit = gwy_si_unit_new("m");
+        xreal *= 1e-9;
+        yreal *= 1e-9;
+    }
+
+    /* Try to locate the images. */
     images = find_images(buffer, HEADER_SIZE);
     nimages = g_strv_length(images);
     imagesize = xres*yres*sizeof(guint16);
@@ -155,7 +186,9 @@ dimfile_load(const gchar *filename,
 
     container = gwy_container_new();
     for (i = 0; i < nimages; i++) {
-        dfield = gwy_data_field_new(xres, yres, xres, yres, FALSE);
+        dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+        gwy_serializable_clone(G_OBJECT(xyunit),
+                               G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)));
         gwy_convert_raw_data(buffer + HEADER_SIZE + i*imagesize, xres*yres, 1,
                              GWY_RAW_DATA_SINT16, G_LITTLE_ENDIAN,
                              gwy_data_field_get_data(dfield), 1.0, 0.0);
@@ -170,6 +203,7 @@ dimfile_load(const gchar *filename,
 
 fail:
     g_strfreev(images);
+    gwy_object_unref(xyunit);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
