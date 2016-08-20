@@ -87,7 +87,9 @@ gwy_peaks_free(GwyPeaks *peaks)
  *
  * Sets the background type a peak analyser will use.
  *
- * The default background is %GWY_PEAK_BACKGROUND_MMSTEP.
+ * The default background is %GWY_PEAK_BACKGROUND_MMSTEP.  Note that the new
+ * background type will only be used in future analyses; it does not change the
+ * results of the already performed analysis.
  *
  * Since: 2.46
  **/
@@ -106,7 +108,9 @@ gwy_peaks_set_background(GwyPeaks *peaks,
  *
  * Sets the order type a peak analyser will use.
  *
- * The default order is %GWY_PEAK_ORDER_ABSCISSA.
+ * The default order is %GWY_PEAK_ORDER_ABSCISSA.  Note that the new order will
+ * only be effective in future analyses; it does not change the results of the
+ * already performed analysis.
  *
  * Since: 2.46
  **/
@@ -456,6 +460,17 @@ compare_abscissa_ascending(gconstpointer a, gconstpointer b)
  * SECTION:gwypeaks
  * @title: GwyPeaks
  * @short_description: Graph peak analyser
+ *
+ * One #GwyPeaks analyser can be used repeatedly to find and characterise
+ * peaks in several data sets.
+ *
+ * Feed the curve data to the analyser using functions such as
+ * gwy_peaks_analyze(), gwy_peaks_analyze_dataline() or gwy_peaks_analyze_xy().
+ * It will process the data, locate peaks and remember their various
+ * characteristics that you can subsequently obtain using
+ * gwy_peaks_get_quantity().  The results are static; if you change the
+ * analyser settings (or the curve data) you need to re-run the analysis
+ * function.
  **/
 
 /**
@@ -463,6 +478,47 @@ compare_abscissa_ascending(gconstpointer a, gconstpointer b)
  *
  * #GwyPeaks is an opaque data structure and should be only manipulated
  * with the functions below.
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GwyPeakBackgroundType:
+ * @GWY_PEAK_BACKGROUND_ZERO: The background is fixed at zero value.
+ * @GWY_PEAK_BACKGROUND_MMSTEP: The background is a step function connecting
+ *                              the nearest minima on the left and right side.
+ *
+ * Type of background available in graph peak analysers.
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GwyPeakOrderType:
+ * @GWY_PEAK_ORDER_ABSCISSA: Peaks are ordered by abscissa values, from
+ *                           left to right.
+ * @GWY_PEAK_ORDER_PROMINENCE: Peaks are ordered by prominence, from most
+ *                             to least prominent.
+ *
+ * Type of peak ordering by in the graph peak analyser results.
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GwyPeakQuantity:
+ * @GWY_PEAK_PROMINENCE: Compound quantity characteristing the overall peak
+ *                       prominence (taking into account height, area,
+ *                       distance from other peaks, ...).
+ * @GWY_PEAK_ABSCISSA: Position of peak maximum.
+ * @GWY_PEAK_HEIGHT: Peak height (with respect to the chosen background
+ *                   function).
+ * @GWY_PEAK_AREA: Peak area (with respect to the chosen background
+ *                 function).
+ * @GWY_PEAK_WIDTH: Peak width, more or less corresponding to standard
+ *                  deviation.
+ *
+ * Type of pcharacteristics graph peak analysers can provide.
  *
  * Since: 2.46
  **/
