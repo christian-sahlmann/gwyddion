@@ -22,8 +22,6 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Create output as surfaces when input is surface
- * - Note the fitted data type in the report
  * - Align parameter table properly (with UTF-8 string lengths).
  * - Correlation table colour-coding?
  */
@@ -65,10 +63,9 @@ typedef enum {
 } FitShapeDisplayType;
 
 typedef enum {
-    FIT_SHAPE_OUTPUT_NONE = 0,
-    FIT_SHAPE_OUTPUT_FIT  = 1,
-    FIT_SHAPE_OUTPUT_DIFF = 2,
-    FIT_SHAPE_OUTPUT_BOTH = 3,
+    FIT_SHAPE_OUTPUT_FIT  = 0,
+    FIT_SHAPE_OUTPUT_DIFF = 1,
+    FIT_SHAPE_OUTPUT_BOTH = 2,
 } FitShapeOutputType;
 
 typedef enum {
@@ -164,7 +161,8 @@ typedef struct {
     guint n;
     gdouble *abscissa;
     GwyXY *xy;
-    gdouble *z;
+    gdouble *z;              /* Data */
+    gdouble *f;              /* Function values. */
 } FitShapeContext;
 
 typedef struct {
@@ -234,6 +232,8 @@ static void          fit_shape_dialogue          (FitShapeArgs *args,
                                                   GwyDataField *mfield,
                                                   GwySurface *surface);
 static void          create_output_fields        (FitShapeControls *controls,
+                                                  GwyContainer *data);
+static void          create_output_xyz           (FitShapeControls *controls,
                                                   GwyContainer *data);
 static GtkWidget*    basic_tab_new               (FitShapeControls *controls,
                                                   GwyDataField *dfield,
@@ -747,7 +747,7 @@ fit_shape_dialogue(FitShapeArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     if (controls.pageno == GWY_PAGE_XYZS)
-        g_warning("Implement me!");
+        create_output_xyz(&controls, data);
     else
         create_output_fields(&controls, data);
 
@@ -811,6 +811,51 @@ create_output_fields(FitShapeControls *controls, GwyContainer *data)
     }
 }
 
+static void
+create_output_xyz(FitShapeControls *controls, GwyContainer *data)
+{
+    FitShapeArgs *args = controls->args;
+    FitShapeContext *ctx = controls->ctx;
+    GwySurface *surface, *newsurface;
+    gint id = controls->id, newid;
+    const GwyXYZ *sxyz;
+    GwyXYZ *xyz;
+    guint n, i;
+
+    surface = gwy_container_get_object_by_name(controls->mydata, "/surface/0");
+    g_return_if_fail(gwy_surface_get_npoints(surface) == ctx->n);
+    sxyz = gwy_surface_get_data_const(surface);
+    n = ctx->n;
+
+    if (args->output == FIT_SHAPE_OUTPUT_FIT
+        || args->output == FIT_SHAPE_OUTPUT_BOTH) {
+        newsurface = gwy_surface_duplicate(surface);
+        xyz = gwy_surface_get_data(newsurface);
+        for (i = 0; i < n; i++)
+            xyz[i].z = ctx->f[i];
+
+        newid = gwy_app_data_browser_add_surface(newsurface, data, TRUE);
+        /* XXX: Some surface-sync-data-items should go here. */
+        gwy_app_xyz_log_add_xyz(data, id, newid);
+        gwy_app_set_surface_title(data, newid, _("Fitted shape"));
+        g_object_unref(newsurface);
+    }
+
+    if (args->output == FIT_SHAPE_OUTPUT_DIFF
+        || args->output == FIT_SHAPE_OUTPUT_BOTH) {
+        newsurface = gwy_surface_duplicate(surface);
+        xyz = gwy_surface_get_data(newsurface);
+        for (i = 0; i < n; i++)
+            xyz[i].z = sxyz[i].z - ctx->f[i];
+
+        newid = gwy_app_data_browser_add_surface(newsurface, data, TRUE);
+        /* XXX: Some surface-sync-data-items should go here. */
+        gwy_app_xyz_log_add_xyz(data, id, newid);
+        gwy_app_set_surface_title(data, newid, _("Difference"));
+        g_object_unref(newsurface);
+    }
+}
+
 static GtkWidget*
 basic_tab_new(FitShapeControls *controls,
               GwyDataField *dfield, GwyDataField *mfield)
@@ -821,7 +866,6 @@ basic_tab_new(FitShapeControls *controls,
         { N_("Difference"),   FIT_SHAPE_DISPLAY_DIFF,   },
     };
     static const GwyEnum outputs[] = {
-        { N_("None"),         FIT_SHAPE_OUTPUT_NONE, },
         { N_("Fitted shape"), FIT_SHAPE_OUTPUT_FIT,  },
         { N_("Difference"),   FIT_SHAPE_OUTPUT_DIFF, },
         { N_("Both"),         FIT_SHAPE_OUTPUT_BOTH, },
@@ -1336,6 +1380,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     calculate_secondary_params(controls);
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
+    update_fit_results(controls, NULL);
     update_fields(controls);
     update_fit_state(controls);
 }
@@ -1388,8 +1433,8 @@ masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
     update_context_data(controls);
     controls->state = FIT_SHAPE_INITIALISED;
+    update_fit_results(controls, NULL);
     update_fit_state(controls);
-    // TODO: Do anything else here?
 }
 
 static void
@@ -1482,8 +1527,8 @@ recalculate_image(FitShapeControls *controls)
 {
     controls->state = FIT_SHAPE_USER;
     update_all_param_values(controls);
-    update_fields(controls);
     update_fit_results(controls, NULL);
+    update_fields(controls);
     update_fit_state(controls);
 }
 
@@ -1659,8 +1704,8 @@ fit_shape_estimate(FitShapeControls *controls)
         if (ctx->param_fixed[i])
             controls->param[i] = controls->alt_param[i];
     }
-    update_fields(controls);
     update_fit_results(controls, NULL);
+    update_fields(controls);
     update_fit_state(controls);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
 }
@@ -1691,8 +1736,8 @@ fit_shape_reduced_fit(FitShapeControls *controls)
     }
 #endif
     fit_copy_correl_matrix(controls, fitter);
-    update_fields(controls);
     update_fit_results(controls, fitter);
+    update_fields(controls);
     update_fit_state(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_cursor_finish(GTK_WINDOW(controls->dialogue));
@@ -1728,8 +1773,8 @@ fit_shape_full_fit(FitShapeControls *controls)
     }
 #endif
     fit_copy_correl_matrix(controls, fitter);
-    update_fields(controls);
     update_fit_results(controls, fitter);
+    update_fields(controls);
     update_fit_state(controls);
     gwy_math_nlfit_free(fitter);
     gwy_app_wait_finish();
@@ -1785,6 +1830,8 @@ calculate_secondary_params(FitShapeControls *controls)
     }
 }
 
+/* XXX: We could properly re-render all the fields from XYZ data if the input
+ * is a Surface.  But would it ever make a visible difference? */
 static void
 update_fields(FitShapeControls *controls)
 {
@@ -1794,6 +1841,9 @@ update_fields(FitShapeControls *controls)
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     resfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
     difffield = gwy_container_get_object_by_name(controls->mydata, "/2/data");
+    /* FIXME: We do have the theoretical values in ctx->z.  We could *mostly*
+     * take them directly, except when masking is used and we want also the
+     * values in the excluded points – those are not in ctx->z. */
     calculate_field(functions + controls->function_id,
                     controls->param, resfield);
     gwy_data_field_data_changed(resfield);
@@ -1918,6 +1968,8 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 
         z = func->function((gdouble)k, nparams, controls->param,
                            (gpointer)ctx, &fres);
+        ctx->f[k] = z;
+
         if (!fres) {
             g_warning("Cannot evaluate function for pixel.");
         }
@@ -2036,6 +2088,7 @@ fit_context_fill_data(FitShapeContext *ctx,
     ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
     ctx->xy = g_renew(GwyXY, ctx->xy, n);
     ctx->z = g_renew(gdouble, ctx->z, n);
+    ctx->f = g_renew(gdouble, ctx->f, n);
     d = gwy_data_field_get_data_const(dfield);
 
     n = k = 0;
@@ -2065,6 +2118,7 @@ fit_context_free(FitShapeContext *ctx)
     g_free(ctx->abscissa);
     g_free(ctx->xy);
     g_free(ctx->z);
+    g_free(ctx->f);
     gwy_clear(ctx, 1);
 }
 
@@ -2079,6 +2133,7 @@ fit_context_fill_xyz(FitShapeContext *ctx, GwySurface *surface)
     ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
     ctx->xy = g_renew(GwyXY, ctx->xy, n);
     ctx->z = g_renew(gdouble, ctx->z, n);
+    ctx->f = g_renew(gdouble, ctx->f, n);
     xyz = gwy_surface_get_data_const(surface);
 
     for (i = 0; i < n; i++) {
