@@ -1294,6 +1294,26 @@ gwy_app_get_surface_meta_key_for_id(gint id)
 }
 
 /**
+ * gwy_app_get_surface_preview_key_for_id:
+ * @id: Numerical id of an XYZ surface in file (container).
+ *
+ * Calculates XYZ surface preview quark identifier from its id.
+ *
+ * Returns: The quark key identifying preview data field of XUZ surface with
+ *          number @id.
+ *
+ * Since: 2.46
+ **/
+GQuark
+gwy_app_get_surface_preview_key_for_id(gint id)
+{
+    static GQuark quarks[CACHED_IDS] = { 0, };
+
+    return gwy_app_get_any_key_for_id(id, SURFACE_PREFIX "/%d/preview",
+                                      G_N_ELEMENTS(quarks), quarks);
+}
+
+/**
  * gwy_app_set_data_field_title:
  * @data: A data container.
  * @id: The data channel id.

@@ -201,6 +201,7 @@ GQuark gwy_app_get_brick_meta_key_for_id     (gint id);
 GQuark gwy_app_get_surface_title_key_for_id  (gint id);
 GQuark gwy_app_get_surface_palette_key_for_id(gint id);
 GQuark gwy_app_get_surface_meta_key_for_id   (gint id);
+GQuark gwy_app_get_surface_preview_key_for_id(gint id);
 void   gwy_app_set_data_field_title          (GwyContainer *data,
                                               gint id,
                                               const gchar *name);

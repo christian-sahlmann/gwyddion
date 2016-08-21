@@ -403,14 +403,11 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
                                    GtkTreeIter *iter,
                                    GObject *object)
 {
-    gchar key[24];
-    GQuark quark;
+    GQuark quark = gwy_app_get_data_key_for_id(id);
 
     gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_CHANNELS], id, iter,
                                   object);
-    g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -518,12 +515,9 @@ gwy_app_data_proxy_connect_mask(GwyAppDataProxy *proxy,
 {
     GwyAppDataAssociation *assoc;
     GtkTreeIter iter;
-    gchar key[24];
-    GQuark quark;
+    GQuark quark = gwy_app_get_mask_key_for_id(id);
 
-    g_snprintf(key, sizeof(key), "/%d/mask", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -975,14 +969,11 @@ gwy_app_data_proxy_connect_brick(GwyAppDataProxy *proxy,
                                  GtkTreeIter *iter,
                                  GObject *object)
 {
-    gchar key[24];
-    GQuark quark;
+    GQuark quark = gwy_app_get_brick_key_for_id(id);
 
     gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_VOLUMES], id, iter,
                                   object);
-    g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -1078,12 +1069,9 @@ gwy_app_data_proxy_connect_preview(GwyAppDataProxy *proxy,
 {
     GwyAppDataAssociation *assoc;
     GtkTreeIter iter;
-    gchar key[32];
-    GQuark quark;
+    GQuark quark = gwy_app_get_brick_preview_key_for_id(id);
 
-    g_snprintf(key, sizeof(key), BRICK_PREFIX "/%d/preview", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -1205,14 +1193,11 @@ gwy_app_data_proxy_connect_surface(GwyAppDataProxy *proxy,
                                    GtkTreeIter *iter,
                                    GObject *object)
 {
-    gchar key[24];
-    GQuark quark;
+    GQuark quark = gwy_app_get_surface_key_for_id(id);
 
     gwy_app_data_proxy_add_object(&proxy->lists[GWY_PAGE_XYZS], id, iter,
                                   object);
-    g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -1313,12 +1298,9 @@ gwy_app_data_proxy_connect_raster(GwyAppDataProxy *proxy,
 {
     GwyAppDataAssociation *assoc;
     GtkTreeIter iter;
-    gchar key[32];
-    GQuark quark;
+    GQuark quark = gwy_app_get_surface_preview_key_for_id(id);
 
-    g_snprintf(key, sizeof(key), SURFACE_PREFIX "/%d/preview", id);
     gwy_debug("%p: %d in %p", object, id, proxy->container);
-    quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
 
@@ -2562,13 +2544,13 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
     data = browser->current->container;
 
     gtk_tree_model_get(model, iter, MODEL_ID, &channel, -1);
-    g_snprintf(key, sizeof(key), "/%d/mask", channel);
-    has_mask = gwy_container_contains_by_name(data, key);
-    g_snprintf(key, sizeof(key), "/%d/show", channel);
-    has_show = gwy_container_contains_by_name(data, key);
-    g_snprintf(key, sizeof(key), "/%d/data/cal_zunc", channel); //FIXME, all the fields should be present
+    has_mask = gwy_container_contains(data,
+                                      gwy_app_get_mask_key_for_id(channel));
+    has_show = gwy_container_contains(data,
+                                      gwy_app_get_show_key_for_id(channel));
+    //FIXME, all the fields should be present
+    g_snprintf(key, sizeof(key), "/%d/data/cal_zunc", channel);
     has_cal = gwy_container_contains_by_name(data, key);
-
 
     g_snprintf(key, sizeof(key), "%s%s%s",
                has_mask ? "M" : "",
@@ -2859,8 +2841,7 @@ gwy_app_data_browser_create_channel(GwyAppDataBrowser *browser,
     g_signal_connect(data_window, "drag-data-received",
                      G_CALLBACK(gwy_app_window_dnd_data_received), browser);
 
-    g_snprintf(key, sizeof(key), "/%d/mask", id);
-    quark = g_quark_from_string(key);
+    quark = gwy_app_get_mask_key_for_id(id);
     _gwy_app_sync_mask(proxy->container, quark, GWY_DATA_VIEW(data_view));
     _gwy_app_update_data_range_type(GWY_DATA_VIEW(data_view), id);
 
@@ -3076,10 +3057,8 @@ gwy_app_data_browser_channel_name_edited(GtkCellRenderer *renderer,
         gwy_app_set_data_field_title(proxy->container, id, NULL);
     }
     else {
-        gchar key[32];
-
-        g_snprintf(key, sizeof(key), "/%d/data/title", id);
-        gwy_container_set_string_by_name(proxy->container, key, title);
+        gwy_container_set_string(proxy->container,
+                                 gwy_app_get_data_title_key_for_id(id), title);
     }
 
     gwy_app_data_list_disable_edit(renderer, GUINT_TO_POINTER(TRUE));
@@ -3575,11 +3554,11 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
 {
     GtkWidget *graph, *curves, *graph_window;
     GtkTreeModel *model;
-    gchar key[40];
+    GQuark quark;
     GObject *gmodel;
 
-    g_snprintf(key, sizeof(key), "%s/%d", GRAPH_PREFIX, id);
-    gwy_container_gis_object_by_name(proxy->container, key, &gmodel);
+    quark = gwy_app_get_graph_key_for_id(id);
+    gwy_container_gis_object(proxy->container, quark, &gmodel);
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), NULL);
 
     graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
@@ -3597,7 +3576,7 @@ gwy_app_data_browser_create_graph(GwyAppDataBrowser *browser,
     g_signal_connect(graph_window, "delete-event",
                      G_CALLBACK(gwy_app_data_browser_graph_deleted), NULL);
     _gwy_app_graph_window_setup(GWY_GRAPH_WINDOW(graph_window),
-                                proxy->container, g_quark_from_string(key));
+                                proxy->container, quark);
 
     /* Graph DnD */
     gtk_drag_dest_set(graph_window, GTK_DEST_DEFAULT_ALL,
@@ -4142,10 +4121,8 @@ gwy_app_data_browser_brick_name_edited(GtkCellRenderer *renderer,
         gwy_app_set_brick_title(proxy->container, id, NULL);
     }
     else {
-        gchar key[32];
-
-        g_snprintf(key, sizeof(key), "/brick/%d/title", id);
-        gwy_container_set_string_by_name(proxy->container, key, title);
+        gwy_container_set_string(proxy->container,
+                                 gwy_app_get_brick_title_key_for_id(id), title);
     }
 
     gwy_app_data_list_disable_edit(renderer, GUINT_TO_POINTER(TRUE));
@@ -4161,14 +4138,13 @@ gwy_app_data_browser_brick_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
     const guchar *title = _("Untitled");
     GwyContainer *data;
-    gchar key[32];
     gint id;
 
     /* XXX: browser->current must match what is visible in the browser */
     data = browser->current->container;
     gtk_tree_model_get(model, iter, MODEL_ID, &id, -1);
-    g_snprintf(key, sizeof(key), "/brick/%d/title", id);
-    gwy_container_gis_string_by_name(data, key, &title);
+    gwy_container_gis_string(data, gwy_app_get_brick_title_key_for_id(id),
+                             &title);
     g_object_set(renderer, "text", title, NULL);
 }
 
@@ -4595,10 +4571,9 @@ gwy_app_data_browser_surface_name_edited(GtkCellRenderer *renderer,
         gwy_app_set_surface_title(proxy->container, id, NULL);
     }
     else {
-        gchar key[32];
-
-        g_snprintf(key, sizeof(key), "/surface/%d/title", id);
-        gwy_container_set_string_by_name(proxy->container, key, title);
+        gwy_container_set_string(proxy->container,
+                                 gwy_app_get_surface_title_key_for_id(id),
+                                 title);
     }
 
     gwy_app_data_list_disable_edit(renderer, GUINT_TO_POINTER(TRUE));
@@ -4614,14 +4589,13 @@ gwy_app_data_browser_surface_render_title(G_GNUC_UNUSED GtkTreeViewColumn *colum
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
     const guchar *title = _("Untitled");
     GwyContainer *data;
-    gchar key[32];
     gint id;
 
     /* XXX: browser->current must match what is visible in the browser */
     data = browser->current->container;
     gtk_tree_model_get(model, iter, MODEL_ID, &id, -1);
-    g_snprintf(key, sizeof(key), "/surface/%d/title", id);
-    gwy_container_gis_string_by_name(data, key, &title);
+    gwy_container_gis_string(data, gwy_app_get_surface_title_key_for_id(id),
+                             &title);
     g_object_set(renderer, "text", title, NULL);
 }
 
