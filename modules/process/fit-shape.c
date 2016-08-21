@@ -22,6 +22,8 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
+ * - Create output as surfaces when input is surface
+ * - Note the fitted data type in the report
  * - Align parameter table properly (with UTF-8 string lengths).
  * - Correlation table colour-coding?
  */
@@ -41,6 +43,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libgwymodule/gwymodule-xyz.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 #include "preview.h"
@@ -183,6 +186,7 @@ typedef struct {
     FitShapeContext *ctx;
     FitShapeEstimateCache *estimcache;
     FitShapeState state;
+    GwyAppPage pageno;
     gint id;
     gchar *title;
     guint function_id;
@@ -218,103 +222,111 @@ typedef struct {
     GArray *secondary_controls;
 } FitShapeControls;
 
-static gboolean     module_register           (void);
-static void         fit_shape                 (GwyContainer *data,
-                                               GwyRunType run);
-static void         fit_shape_dialogue        (FitShapeArgs *args,
-                                               GwyContainer *data,
-                                               gint id,
-                                               GwyDataField *dfield,
-                                               GwyDataField *mfield);
-static void         create_output             (FitShapeControls *controls,
-                                               GwyContainer *data);
-static GtkWidget*   basic_tab_new             (FitShapeControls *controls,
-                                               GwyDataField *dfield,
-                                               GwyDataField *mfield);
-static gint         basic_tab_add_masking     (FitShapeControls *controls,
-                                               GtkWidget *table,
-                                               gint row);
-static GtkWidget*   parameters_tab_new        (FitShapeControls *controls);
-static void         fit_param_table_resize    (FitShapeControls *controls);
-static GtkWidget*   results_tab_new           (FitShapeControls *controls);
-static void         fit_correl_table_resize   (FitShapeControls *controls);
-static void         fit_secondary_table_resize(FitShapeControls *controls);
-static GtkWidget*   function_menu_new         (const gchar *name,
-                                               GwyDataField *dfield,
-                                               FitShapeControls *controls);
-static void         function_changed          (GtkComboBox *combo,
-                                               FitShapeControls *controls);
-static void         display_changed           (GtkToggleButton *toggle,
-                                               FitShapeControls *controls);
-static void         diff_colourmap_changed    (GtkToggleButton *toggle,
-                                               FitShapeControls *controls);
-static void         diff_excluded_changed     (GtkToggleButton *toggle,
-                                               FitShapeControls *controls);
-static void         output_changed            (GtkComboBox *combo,
-                                               FitShapeControls *controls);
-static void         masking_changed           (GtkToggleButton *toggle,
-                                               FitShapeControls *controls);
-static void         update_colourmap_key      (FitShapeControls *controls);
-static void         fix_changed               (GtkToggleButton *button,
-                                               FitShapeControls *controls);
-static void         param_value_activate      (GtkEntry *entry,
-                                               FitShapeControls *controls);
-static void         update_all_param_values   (FitShapeControls *controls);
-static void         revert_params             (FitShapeControls *controls);
-static void         calculate_secondary_params(FitShapeControls *controls);
-static void         recalculate_image         (FitShapeControls *controls);
-static void         update_param_table        (FitShapeControls *controls,
-                                               const gdouble *param,
-                                               const gdouble *param_err);
-static void         update_correl_table       (FitShapeControls *controls,
-                                               GwyNLFitter *fitter);
-static void         update_secondary_table    (FitShapeControls *controls);
-static void         fit_shape_estimate        (FitShapeControls *controls);
-static void         fit_shape_reduced_fit     (FitShapeControls *controls);
-static void         fit_shape_full_fit        (FitShapeControls *controls);
-static void         fit_copy_correl_matrix    (FitShapeControls *controls,
-                                               GwyNLFitter *fitter);
-static void         update_fields             (FitShapeControls *controls);
-static void         update_diff_gradient      (FitShapeControls *controls);
-static void         update_fit_state          (FitShapeControls *controls);
-static void         update_fit_results        (FitShapeControls *controls,
-                                               GwyNLFitter *fitter);
-static void         update_context_data       (FitShapeControls *controls);
-static void         fit_context_resize_params (FitShapeContext *ctx,
-                                               guint n_param);
-static void         fit_context_fill_data     (FitShapeContext *ctx,
-                                               GwyDataField *dfield,
-                                               GwyDataField *mask,
-                                               GwyMaskingType masking);
-static void         fit_context_free          (FitShapeContext *ctx);
-static GwyNLFitter* fit                       (const FitShapeFunc *func,
-                                               const FitShapeContext *ctx,
-                                               gdouble *param,
-                                               gdouble *rss,
-                                               GwySetFractionFunc set_fraction,
-                                               GwySetMessageFunc set_message);
-static GwyNLFitter* fit_reduced               (const FitShapeFunc *func,
-                                               const FitShapeContext *ctx,
-                                               gdouble *param,
-                                               gdouble *rss);
-static void         calculate_field           (const FitShapeFunc *func,
-                                               const gdouble *param,
-                                               GwyDataField *dfield);
-static void         calculate_function        (const FitShapeFunc *func,
-                                               const FitShapeContext *ctx,
-                                               const gdouble *param,
-                                               gdouble *z);
-static void         reduce_data_size          (const GwyXY *xy,
-                                               const gdouble *z,
-                                               guint n,
-                                               GwyXY *xyred,
-                                               gdouble *zred,
-                                               guint nred);
-static GString*     create_fit_report         (FitShapeControls *controls);
-static void         fit_shape_load_args       (GwyContainer *container,
-                                               FitShapeArgs *args);
-static void         fit_shape_save_args       (GwyContainer *container,
-                                               FitShapeArgs *args);
+static gboolean      module_register             (void);
+static void          fit_shape                   (GwyContainer *data,
+                                                  GwyRunType run);
+static void          fit_shape_xyz               (GwyContainer *data,
+                                                  GwyRunType run);
+static void          fit_shape_dialogue          (FitShapeArgs *args,
+                                                  GwyContainer *data,
+                                                  gint id,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield,
+                                                  GwySurface *surface);
+static void          create_output_fields        (FitShapeControls *controls,
+                                                  GwyContainer *data);
+static GtkWidget*    basic_tab_new               (FitShapeControls *controls,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mfield);
+static gint          basic_tab_add_masking       (FitShapeControls *controls,
+                                                  GtkWidget *table,
+                                                  gint row);
+static GtkWidget*    parameters_tab_new          (FitShapeControls *controls);
+static void          fit_param_table_resize      (FitShapeControls *controls);
+static GtkWidget*    results_tab_new             (FitShapeControls *controls);
+static void          fit_correl_table_resize     (FitShapeControls *controls);
+static void          fit_secondary_table_resize  (FitShapeControls *controls);
+static GtkWidget*    function_menu_new           (const gchar *name,
+                                                  GwyDataField *dfield,
+                                                  FitShapeControls *controls);
+static void          function_changed            (GtkComboBox *combo,
+                                                  FitShapeControls *controls);
+static void          display_changed             (GtkToggleButton *toggle,
+                                                  FitShapeControls *controls);
+static void          diff_colourmap_changed      (GtkToggleButton *toggle,
+                                                  FitShapeControls *controls);
+static void          diff_excluded_changed       (GtkToggleButton *toggle,
+                                                  FitShapeControls *controls);
+static void          output_changed              (GtkComboBox *combo,
+                                                  FitShapeControls *controls);
+static void          masking_changed             (GtkToggleButton *toggle,
+                                                  FitShapeControls *controls);
+static void          update_colourmap_key        (FitShapeControls *controls);
+static void          fix_changed                 (GtkToggleButton *button,
+                                                  FitShapeControls *controls);
+static void          param_value_activate        (GtkEntry *entry,
+                                                  FitShapeControls *controls);
+static void          update_all_param_values     (FitShapeControls *controls);
+static void          revert_params               (FitShapeControls *controls);
+static void          calculate_secondary_params  (FitShapeControls *controls);
+static void          recalculate_image           (FitShapeControls *controls);
+static void          update_param_table          (FitShapeControls *controls,
+                                                  const gdouble *param,
+                                                  const gdouble *param_err);
+static void          update_correl_table         (FitShapeControls *controls,
+                                                  GwyNLFitter *fitter);
+static void          update_secondary_table      (FitShapeControls *controls);
+static void          fit_shape_estimate          (FitShapeControls *controls);
+static void          fit_shape_reduced_fit       (FitShapeControls *controls);
+static void          fit_shape_full_fit          (FitShapeControls *controls);
+static void          fit_copy_correl_matrix      (FitShapeControls *controls,
+                                                  GwyNLFitter *fitter);
+static void          update_fields               (FitShapeControls *controls);
+static void          update_diff_gradient        (FitShapeControls *controls);
+static void          update_fit_state            (FitShapeControls *controls);
+static void          update_fit_results          (FitShapeControls *controls,
+                                                  GwyNLFitter *fitter);
+static void          update_context_data         (FitShapeControls *controls);
+static void          fit_context_resize_params   (FitShapeContext *ctx,
+                                                  guint n_param);
+static void          fit_context_fill_data       (FitShapeContext *ctx,
+                                                  GwyDataField *dfield,
+                                                  GwyDataField *mask,
+                                                  GwyMaskingType masking);
+static void          fit_context_fill_xyz        (FitShapeContext *ctx,
+                                                  GwySurface *surface);
+static void          fit_context_free            (FitShapeContext *ctx);
+static GwyNLFitter*  fit                         (const FitShapeFunc *func,
+                                                  const FitShapeContext *ctx,
+                                                  gdouble *param,
+                                                  gdouble *rss,
+                                                  GwySetFractionFunc set_fraction,
+                                                  GwySetMessageFunc set_message);
+static GwyNLFitter*  fit_reduced                 (const FitShapeFunc *func,
+                                                  const FitShapeContext *ctx,
+                                                  gdouble *param,
+                                                  gdouble *rss);
+static void          calculate_field             (const FitShapeFunc *func,
+                                                  const gdouble *param,
+                                                  GwyDataField *dfield);
+static void          calculate_function          (const FitShapeFunc *func,
+                                                  const FitShapeContext *ctx,
+                                                  const gdouble *param,
+                                                  gdouble *z);
+static void          reduce_data_size            (const GwyXY *xy,
+                                                  const gdouble *z,
+                                                  guint n,
+                                                  GwyXY *xyred,
+                                                  gdouble *zred,
+                                                  guint nred);
+static GwyDataField* create_surface_preview_field(GwySurface *surface,
+                                                  gint max_xres,
+                                                  gint max_yres);
+static GString*      create_fit_report           (FitShapeControls *controls);
+static void          fit_shape_load_args         (GwyContainer *container,
+                                                  FitShapeArgs *args);
+static void          fit_shape_save_args         (GwyContainer *container,
+                                                  FitShapeArgs *args);
 
 #define DECLARE_SECONDARY(funcname,name) \
     static gdouble funcname##_calc_##name    (const gdouble *param); \
@@ -509,6 +521,13 @@ module_register(void)
                               FIT_SHAPE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Fit geometrical shapes"));
+    gwy_xyz_func_register("xyz_fit_shape",
+                          (GwyXYZFunc)&fit_shape_xyz,
+                          N_("/_Fit Shape.."),
+                          NULL,
+                          FIT_SHAPE_RUN_MODES,
+                          GWY_MENU_FLAG_XYZ,
+                          N_("Fit geometrical shapes"));
 
     return TRUE;
 }
@@ -529,7 +548,28 @@ fit_shape(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    fit_shape_dialogue(&args, data, id, dfield, mfield);
+    fit_shape_dialogue(&args, data, id, dfield, mfield, NULL);
+
+    fit_shape_save_args(gwy_app_settings_get(), &args);
+
+}
+
+static void
+fit_shape_xyz(GwyContainer *data, GwyRunType run)
+{
+    FitShapeArgs args;
+    GwySurface *surface;
+    gint id;
+
+    g_return_if_fail(run & FIT_SHAPE_RUN_MODES);
+
+    fit_shape_load_args(gwy_app_settings_get(), &args);
+    gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &id,
+                                     0);
+    g_return_if_fail(surface);
+
+    fit_shape_dialogue(&args, data, id, NULL, NULL, surface);
 
     fit_shape_save_args(gwy_app_settings_get(), &args);
 
@@ -538,13 +578,15 @@ fit_shape(GwyContainer *data, GwyRunType run)
 static void
 fit_shape_dialogue(FitShapeArgs *args,
                    GwyContainer *data, gint id,
-                   GwyDataField *dfield, GwyDataField *mfield)
+                   GwyDataField *dfield, GwyDataField *mfield,
+                   GwySurface *surface)
 {
     GtkWidget *dialogue, *notebook, *widget, *vbox, *hbox, *alignment,
               *hbox2, *label;
     FitShapeControls controls;
     FitShapeEstimateCache estimcache;
     FitShapeContext ctx;
+    GwyDataField *mydfield = NULL;
     GString *report;
     gint response;
 
@@ -555,7 +597,21 @@ fit_shape_dialogue(FitShapeArgs *args,
     controls.ctx = &ctx;
     controls.estimcache = &estimcache;
     controls.id = id;
-    controls.title = gwy_app_get_data_field_title(data, id);
+
+    if (surface) {
+        controls.pageno = GWY_PAGE_XYZS;
+        controls.title = gwy_app_get_surface_title(data, id);
+        mydfield = create_surface_preview_field(surface,
+                                                PREVIEW_SIZE, PREVIEW_SIZE);
+        dfield = mydfield;
+    }
+    else if (dfield) {
+        controls.pageno = GWY_PAGE_CHANNELS;
+        controls.title = gwy_app_get_data_field_title(data, id);
+    }
+    else {
+        g_return_if_reached();
+    }
 
     controls.diff_gradient = gwy_inventory_new_item(gwy_gradients(),
                                                     GWY_GRADIENT_DEFAULT,
@@ -577,7 +633,10 @@ fit_shape_dialogue(FitShapeArgs *args,
                                            GTK_RESPONSE_OK,
                                            NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialogue), GTK_RESPONSE_OK);
-    gwy_help_add_to_proc_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
+    if (controls.pageno == GWY_PAGE_XYZS)
+        gwy_help_add_to_xyz_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
+    else
+        gwy_help_add_to_proc_dialog(GTK_DIALOG(dialogue), GWY_HELP_DEFAULT);
     controls.dialogue = dialogue;
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -585,6 +644,10 @@ fit_shape_dialogue(FitShapeArgs *args,
                        FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
+    if (surface) {
+        gwy_container_set_object_by_name(controls.mydata,
+                                         "/surface/0", surface);
+    }
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     if (mfield)
         gwy_container_set_object_by_name(controls.mydata, "/0/mask", mfield);
@@ -683,13 +746,18 @@ fit_shape_dialogue(FitShapeArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    create_output(&controls, data);
+    if (controls.pageno == GWY_PAGE_XYZS)
+        g_warning("Implement me!");
+    else
+        create_output_fields(&controls, data);
+
     gtk_widget_destroy(dialogue);
 
 finalise:
     gwy_resource_release(GWY_RESOURCE(controls.diff_gradient));
     gwy_inventory_delete_item(gwy_gradients(), FIT_GRADIENT_NAME);
     g_object_unref(controls.mydata);
+    gwy_object_unref(mydfield);
     g_free(controls.param);
     g_free(controls.alt_param);
     g_free(controls.param_err);
@@ -708,7 +776,7 @@ finalise:
 /* NB: We reuse fields from mydata.  It is possible only because they are
  * newly created and we are going to destroy mydata anyway. */
 static void
-create_output(FitShapeControls *controls, GwyContainer *data)
+create_output_fields(FitShapeControls *controls, GwyContainer *data)
 {
     FitShapeArgs *args = controls->args;
     GwyDataField *dfield;
@@ -1887,13 +1955,21 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
 static void
 update_context_data(FitShapeControls *controls)
 {
-    GwyDataField *dfield, *mfield = NULL;
+    GwyDataField *dfield = NULL, *mfield = NULL;
+    GwySurface *surface = NULL;
 
-    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-    gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
-                                     (GObject**)&mfield);
-    fit_context_fill_data(controls->ctx, dfield, mfield,
-                          controls->args->masking);
+    if (controls->pageno == GWY_PAGE_XYZS) {
+        surface = gwy_container_get_object_by_name(controls->mydata,
+                                                   "/surface/0");
+        fit_context_fill_xyz(controls->ctx, surface);
+    }
+    else {
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+        gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                         (GObject**)&mfield);
+        fit_context_fill_data(controls->ctx, dfield, mfield,
+                              controls->args->masking);
+    }
     gwy_clear(controls->estimcache, 1);
 }
 
@@ -1910,8 +1986,8 @@ fit_context_resize_params(FitShapeContext *ctx,
     }
 }
 
-/* Construct separate xy[], z[] and w[] arrays from data field pixels under
- * the mask. */
+/* Construct separate xy[] and z[] arrays from data field pixels under the
+ * mask. */
 static void
 fit_context_fill_data(FitShapeContext *ctx,
                       GwyDataField *dfield,
@@ -1990,6 +2066,27 @@ fit_context_free(FitShapeContext *ctx)
     g_free(ctx->xy);
     g_free(ctx->z);
     gwy_clear(ctx, 1);
+}
+
+/* Construct separate xy[] and z[] arrays from XYZ surface data. */
+static void
+fit_context_fill_xyz(FitShapeContext *ctx, GwySurface *surface)
+{
+    guint i, n;
+    const GwyXYZ *xyz;
+
+    ctx->n = n = gwy_surface_get_npoints(surface);
+    ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
+    ctx->xy = g_renew(GwyXY, ctx->xy, n);
+    ctx->z = g_renew(gdouble, ctx->z, n);
+    xyz = gwy_surface_get_data_const(surface);
+
+    for (i = 0; i < n; i++) {
+        ctx->abscissa[i] = i;
+        ctx->xy[i].x = xyz[i].x;
+        ctx->xy[i].y = xyz[i].y;
+        ctx->z[i] = xyz[i].z;
+    }
 }
 
 static GwyNLFitter*
@@ -2091,6 +2188,91 @@ reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
 
     g_free(redindex);
     gwy_rand_gen_set_free(rngset);
+}
+
+/* XXX: This is a copy of _gwy_app_create_surface_preview_field(). */
+static GwyDataField*
+create_surface_preview_field(GwySurface *surface,
+                             gint max_xres, gint max_yres)
+{
+    GwyDataField *raster;
+    gint n = surface->n;
+    gint xres, yres;
+    gdouble xmin, xmax, ymin, ymax, q, h;
+
+    g_return_val_if_fail(max_xres >= 2, NULL);
+    g_return_val_if_fail(max_yres >= 2, NULL);
+
+    gwy_surface_get_xrange(surface, &xmin, &xmax);
+    if (xmin == xmax) {
+        if (xmax) {
+            xmin = 0.5*xmax;
+            xmax = 1.5*xmax;
+        }
+        else
+            xmax = 1.0;
+    }
+
+    gwy_surface_get_yrange(surface, &ymin, &ymax);
+    if (ymin == ymax) {
+        if (ymax) {
+            ymin = 0.5*ymax;
+            ymax = 1.5*ymax;
+        }
+        else
+            ymax = 1.0;
+    }
+
+    q = (ymax - ymin)/(xmax - xmin);
+    if (q <= 1.0) {
+        yres = GWY_ROUND(sqrt(4.0*q*n));
+        yres = MAX(yres, 2);
+        h = (ymax - ymin)/yres;
+        xres = GWY_ROUND((xmax - xmin)/h);
+        if (CLAMP(xres, 4, max_xres) != xres) {
+            xres = CLAMP(xres, 4, max_xres);
+            h = (xmax - xmin)/xres;
+            yres = (gint)ceil((ymax - ymin)/h);
+        }
+    }
+    else {
+        xres = GWY_ROUND(sqrt(4.0/q*n));
+        xres = MAX(xres, 2);
+        h = (xmax - xmin)/xres;
+        yres = GWY_ROUND((ymax - ymin)/h);
+        if (CLAMP(yres, 4, max_yres) != yres) {
+            yres = CLAMP(yres, 4, max_yres);
+            h = (ymax - ymin)/yres;
+            xres = (gint)ceil((xmax - xmin)/h);
+        }
+    }
+
+    xmin -= 0.5*h;
+    ymin -= 0.5*h;
+    xmax += 0.5*h;
+    ymax += 0.5*h;
+    if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
+        gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
+        xmin -= 0.5*excess;
+        xmax += 0.5*excess;
+    }
+    else {
+        gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
+        ymin -= 0.5*excess;
+        ymax += 0.5*excess;
+    }
+
+    raster = gwy_data_field_new(xres, yres, xmax - xmin, ymax - ymin, FALSE);
+    gwy_data_field_set_xoffset(raster, xmin);
+    gwy_data_field_set_yoffset(raster, ymin);
+    gwy_data_field_average_xyz(raster, NULL, surface->data, n);
+
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(raster)));
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(raster)));
+
+    return raster;
 }
 
 /**************************************************************************
