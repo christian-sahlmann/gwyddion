@@ -367,11 +367,13 @@ DECLARE_SHAPE_FUNC(grating);
 DECLARE_SHAPE_FUNC(grating3);
 DECLARE_SHAPE_FUNC(pring);
 DECLARE_SHAPE_FUNC(sphere);
+DECLARE_SHAPE_FUNC(cylinder);
 DECLARE_SHAPE_FUNC(gaussian);
 DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
 
 DECLARE_SECONDARY(sphere, R);
+DECLARE_SECONDARY(cylinder, R);
 DECLARE_SECONDARY(gaussian, sigma1);
 DECLARE_SECONDARY(gaussian, sigma2);
 DECLARE_SECONDARY(lorentzian, b1);
@@ -439,6 +441,17 @@ static const FitShapeSecondary sphere_secondary[] = {
    { "R", 0, 1, 0, sphere_calc_R, sphere_calc_err_R, },
 };
 
+static const FitShapeParam cylinder_params[] = {
+   { "x<sub>0</sub>", 1, 0,  0,                      },
+   { "z<sub>0</sub>", 0, 1,  0,                      },
+   { "C",             0, -1, 0,                      },
+   { "α",             0, 0,  FIT_SHAPE_PARAM_ANGLE,  },
+};
+
+static const FitShapeSecondary cylinder_secondary[] = {
+   { "R", 0, 1, 0, cylinder_calc_R, cylinder_calc_err_R, },
+};
+
 static const FitShapeParam gaussian_params[] = {
    { "x<sub>0</sub>",     1, 0, 0,                      },
    { "y<sub>0</sub>",     1, 0, 0,                      },
@@ -486,6 +499,7 @@ static const FitShapeFunc functions[] = {
     { N_("Grating (3-level)"), FALSE, SHAPE_FUNC_ITEM(grating3),   },
     { N_("Ring"),              FALSE, SHAPE_FUNC_ITEM(pring),      },
     { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
+    { N_("Cylinder (lying)"),  TRUE,  SHAPE_FUNC_ITEM(cylinder),   },
     { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
     { N_("Lorentzian"),        FALSE, SHAPE_FUNC_ITEM(lorentzian), },
     { N_("Pyramid (diamond)"), FALSE, SHAPE_FUNC_ITEM(pyramidx),   },
@@ -3069,6 +3083,179 @@ static gdouble
 sphere_calc_err_R(const gdouble *param,
                   const gdouble *param_err,
                   G_GNUC_UNUSED const gdouble *correl)
+{
+    return param_err[3]/(param[3]*param[3]);
+}
+
+/**************************************************************************
+ *
+ * Cylinder (lying)
+ *
+ **************************************************************************/
+
+/* XXX: We might want
+ * - finite-size cylinders
+ * - cylinders cut elsewhere than in the half
+ * Unfortunately, the derivatives by the corresponding parameters are often
+ * zero (or something odd) because of the sharp boundaries in the function that
+ * either catch a data point inside some region or not. */
+static gdouble
+cylinder_func(gdouble abscissa,
+              G_GNUC_UNUSED gint n_param,
+              const gdouble *param,
+              gpointer user_data,
+              gboolean *fres)
+{
+    DEFINE_ALPHA_CACHE(alpha);
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble x0 = param[0];
+    gdouble z0 = param[1];
+    gdouble kappa = param[2];
+    gdouble alpha = param[3];
+    gdouble x, y, r2k, t, val, ca, sa;
+    guint i;
+
+    g_assert(n_param == 4);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x;
+    y = ctx->xy[i].y;
+
+    *fres = TRUE;
+
+    HANDLE_ALPHA_CACHE(alpha);
+    t = x*ca - y*sa - x0;
+    r2k = kappa*t*t;
+    t = 1.0 - kappa*r2k;
+    if (t > 0.0)
+        val = z0 + r2k/(1.0 + sqrt(t));
+    else
+        val = z0 + 1.0/kappa;
+
+    return val;
+}
+
+static gboolean
+cylinder_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+              FitShapeEstimateCache *estimcache)
+{
+    gdouble xc, yc, r, zmin, zmax, zmean;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+    stat_z(z, n, &zmean, NULL, NULL, estimcache);
+
+    param[0] = xc;
+    if (fabs(zmean - zmin) > fabs(zmean - zmax)) {
+        param[1] = zmax;
+        param[2] = 2.0*(zmin - zmax)/(r*r);
+    }
+    else {
+        param[1] = zmin;
+        param[2] = 2.0*(zmax - zmin)/(r*r);
+    }
+    param[3] = 0.0;
+    param[4] = 0.0;
+
+    return TRUE;
+}
+
+/* Fit the data with a rotationally symmetric parabola and use its parameters
+ * for the spherical surface estimate. */
+static gboolean
+cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+                  FitShapeEstimateCache *estimcache)
+{
+    GwyDataLine *mean_line;
+    gdouble xc, yc, r, zmin, zmax, t, alpha;
+    GwyXY *xyred = NULL;
+    gdouble *zred = NULL;
+    guint *counts = NULL;
+    guint i, mpos, res, nred = 0;
+    gint d2sign;
+    const gdouble *d;
+
+    /* First we estimate the orientation (alpha). */
+    if (n > NREDLIM) {
+        nred = sqrt(n*(gdouble)NREDLIM);
+        xyred = g_new(GwyXY, nred);
+        zred = g_new(gdouble, nred);
+        reduce_data_size(xy, z, n, xyred, zred, nred);
+    }
+
+    if (nred) {
+        /* Make sure caching still works for the reduced data. */
+        FitShapeEstimateCache estimcachered;
+        gwy_clear(&estimcachered, 1);
+        alpha = estimate_projection_direction(xyred, zred, nred,
+                                              &estimcachered);
+    }
+    else
+        alpha = estimate_projection_direction(xy, z, n, estimcache);
+
+    if (nred) {
+        g_free(xyred);
+        g_free(zred);
+    }
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+
+    res = (guint)floor(3.0*sqrt(n) + 1.0);
+    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
+    counts = g_new(guint, res);
+    gwy_data_line_set_offset(mean_line, -r);
+    projection_to_line(xy, z, n, alpha, xc, yc, mean_line, NULL, counts);
+    d = gwy_data_line_get_data(mean_line);
+
+    d2sign = 0;
+    for (i = 1; i < res-1; i++) {
+        if (d[i] < 0.5*(d[i-1] + d[i+1]))
+            d2sign += 1;
+        else if (d[i] > 0.5*(d[i-1] + d[i+1]))
+            d2sign -= 1;
+    }
+    gwy_debug("d2sign %d", d2sign);
+
+    if (d2sign > 0)
+        gwy_data_line_multiply(mean_line, -1.0);
+    mpos = 0;
+    for (i = 1; i < res; i++) {
+        if (d[i] > d[mpos])
+            mpos = i;
+    }
+
+    t = 2.0*r/res*mpos - r;
+    param[0] = ((xc + t*cos(alpha))*cos(alpha)
+                - (yc - t*sin(alpha))*sin(alpha));
+
+    if (d2sign > 0) {
+        param[1] = zmin;
+        param[2] = 4.0*(zmax - zmin)/(r*r);
+    }
+    else {
+        param[1] = zmax;
+        param[2] = 4.0*(zmin - zmax)/(r*r);
+    }
+    param[3] = alpha;
+
+    g_free(counts);
+    g_object_unref(mean_line);
+
+    return TRUE;
+}
+
+static gdouble
+cylinder_calc_R(const gdouble *param)
+{
+    return 1.0/param[3];
+}
+
+static gdouble
+cylinder_calc_err_R(const gdouble *param,
+                    const gdouble *param_err,
+                    G_GNUC_UNUSED const gdouble *correl)
 {
     return param_err[3]/(param[3]*param[3]);
 }
