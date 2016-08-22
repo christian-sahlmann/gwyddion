@@ -2985,7 +2985,7 @@ sphere_func(gdouble abscissa,
     if (t > 0.0)
         val = z0 + r2k/(1.0 + sqrt(t));
     else
-        val = z0 + 1.0/kappa;
+        val = z0 + 2.0/kappa;
 
     *fres = TRUE;
     return val;
@@ -3131,7 +3131,7 @@ cylinder_func(gdouble abscissa,
     if (t > 0.0)
         val = z0 + r2k/(1.0 + sqrt(t));
     else
-        val = z0 + 1.0/kappa;
+        val = z0 + 2.0/kappa;
 
     return val;
 }
