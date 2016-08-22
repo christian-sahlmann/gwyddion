@@ -3249,7 +3249,7 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 static gdouble
 cylinder_calc_R(const gdouble *param)
 {
-    return 1.0/param[3];
+    return 1.0/param[2];
 }
 
 static gdouble
@@ -3257,7 +3257,7 @@ cylinder_calc_err_R(const gdouble *param,
                     const gdouble *param_err,
                     G_GNUC_UNUSED const gdouble *correl)
 {
-    return param_err[3]/(param[3]*param[3]);
+    return param_err[2]/(param[2]*param[2]);
 }
 
 /**************************************************************************
