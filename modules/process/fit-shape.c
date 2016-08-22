@@ -3924,16 +3924,25 @@ create_fit_report(FitShapeControls *controls)
 {
     const FitShapeFunc *func = functions + controls->function_id;
     GwyDataField *dfield;
+    GwySurface *surface;
     GwySIUnit *xyunit, *zunit, *unit;
     gchar *s, *unitstr;
     GString *report;
-    guint i, j, xres, yres, nparams, nsecondary;
+    guint n, i, j, nparams, nsecondary;
 
-    dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-    xyunit = gwy_data_field_get_si_unit_xy(dfield);
-    zunit = gwy_data_field_get_si_unit_z(dfield);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
+    if (controls->pageno == GWY_PAGE_XYZS) {
+        surface = gwy_container_get_object_by_name(controls->mydata,
+                                                   "/surface/0");
+        xyunit = gwy_surface_get_si_unit_xy(surface);
+        zunit = gwy_surface_get_si_unit_z(surface);
+        n = gwy_surface_get_npoints(surface);
+    }
+    else {
+        dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
+        xyunit = gwy_data_field_get_si_unit_xy(dfield);
+        zunit = gwy_data_field_get_si_unit_z(dfield);
+        n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
+    }
     unit = gwy_si_unit_new(NULL);
 
     report = g_string_new(NULL);
@@ -3943,7 +3952,7 @@ create_fit_report(FitShapeControls *controls)
     g_string_append_printf(report, _("Data:             %s\n"),
                            controls->title);
     g_string_append_printf(report, _("Number of points: %d of %d\n"),
-                           controls->ctx->n, xres*yres);
+                           controls->ctx->n, n);
     g_string_append_printf(report, _("Fitted function:  %s\n"), func->name);
     g_string_append_c(report, '\n');
     g_string_append_printf(report, _("Results\n"));
