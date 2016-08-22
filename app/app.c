@@ -1968,6 +1968,10 @@ update_surface_preview(GwyDataWindow *data_window)
         g_object_unref(densitymap);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(raster), NULL);
     }
+    else {
+        gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                               G_OBJECT(gwy_data_field_get_si_unit_z(raster)));
+    }
     gwy_data_field_data_changed(raster);
 }
 
