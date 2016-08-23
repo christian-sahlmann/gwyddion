@@ -243,8 +243,9 @@ static gint          basic_tab_add_masking       (FitShapeControls *controls,
                                                   gint row);
 static GtkWidget*    parameters_tab_new          (FitShapeControls *controls);
 static void          fit_param_table_resize      (FitShapeControls *controls);
-static GtkWidget*    results_tab_new             (FitShapeControls *controls);
+static GtkWidget*    correl_tab_new              (FitShapeControls *controls);
 static void          fit_correl_table_resize     (FitShapeControls *controls);
+static GtkWidget*    secondary_tab_new           (FitShapeControls *controls);
 static void          fit_secondary_table_resize  (FitShapeControls *controls);
 static GtkWidget*    function_menu_new           (const gchar *name,
                                                   GwyDataField *dfield,
@@ -698,9 +699,13 @@ fit_shape_dialogue(FitShapeArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
                              gtk_label_new(_("Parameters")));
 
-    widget = results_tab_new(&controls);
+    widget = correl_tab_new(&controls);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
-                             gtk_label_new(_("Results")));
+                             gtk_label_new(_("Correlation Matrix")));
+
+    widget = secondary_tab_new(&controls);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), widget,
+                             gtk_label_new(_("Derived Quantities")));
 
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
@@ -885,14 +890,17 @@ basic_tab_new(FitShapeControls *controls,
         { N_("Both"),         FIT_SHAPE_OUTPUT_BOTH, },
     };
 
-    GtkWidget *table, *label;
+    GtkWidget *table, *label, *hbox;
     FitShapeArgs *args = controls->args;
     gint row;
+
+    hbox = gtk_hbox_new(FALSE, 0);
 
     table = gtk_table_new(8 + 4*(!!mfield), 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
     controls->function = function_menu_new(args->function, dfield, controls);
@@ -937,7 +945,7 @@ basic_tab_new(FitShapeControls *controls,
     if (mfield)
         row = basic_tab_add_masking(controls, table, row);
 
-    return table;
+    return hbox;
 }
 
 static gint
@@ -1011,16 +1019,14 @@ parameters_tab_new(FitShapeControls *controls)
     controls->recalculate = gtk_button_new_with_mnemonic(_("_Recalculate "
                                                            "Image"));
     gtk_size_group_add_widget(sizegroup, controls->recalculate);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->recalculate, FALSE, FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->recalculate, FALSE, FALSE, 0);
     g_signal_connect_swapped(controls->recalculate, "clicked",
                              G_CALLBACK(recalculate_image), controls);
 
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
     controls->revert = gtk_button_new_with_mnemonic(_("Revert to "
                                                       "_Previous Values"));
     gtk_size_group_add_widget(sizegroup, controls->revert);
-    gtk_box_pack_start(GTK_BOX(hbox), controls->revert, FALSE, FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->revert, FALSE, FALSE, 0);
     g_signal_connect_swapped(controls->revert, "clicked",
                              G_CALLBACK(revert_params), controls);
 
@@ -1075,7 +1081,7 @@ fit_param_table_resize(FitShapeControls *controls)
         gtk_table_attach(table, cntrl.equals, 2, 3, row, row+1, 0, 0, 0, 0);
 
         cntrl.value = gtk_entry_new();
-        gtk_entry_set_width_chars(GTK_ENTRY(cntrl.value), 10);
+        gtk_entry_set_width_chars(GTK_ENTRY(cntrl.value), 12);
         gtk_table_attach(table, cntrl.value,
                          3, 4, row, row+1, GTK_FILL, 0, 0, 0);
         g_object_set_data(G_OBJECT(cntrl.value), "id", GUINT_TO_POINTER(i));
@@ -1118,21 +1124,15 @@ fit_param_table_resize(FitShapeControls *controls)
 }
 
 static GtkWidget*
-results_tab_new(FitShapeControls *controls)
+correl_tab_new(FitShapeControls *controls)
 {
-    GtkWidget *vbox, *scwin, *label;
+    GtkWidget *scwin;
     GtkTable *table;
 
-    vbox = gtk_vbox_new(FALSE, 4);
-    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
-
-    label = gwy_label_new_header(_("Correlation Matrix"));
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
     scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(scwin), 4);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
-    gtk_box_pack_start(GTK_BOX(vbox), scwin, FALSE, FALSE, 0);
 
     controls->correl_table = gtk_table_new(1, 1, TRUE);
     table = GTK_TABLE(controls->correl_table);
@@ -1146,22 +1146,7 @@ results_tab_new(FitShapeControls *controls)
     controls->correl_hlabels = g_ptr_array_new();
     controls->correl_vlabels = g_ptr_array_new();
 
-    controls->secondary_table = gtk_table_new(1, 7, FALSE);
-    table = GTK_TABLE(controls->secondary_table);
-    gtk_table_set_row_spacings(table, 2);
-    gtk_table_set_col_spacings(table, 2);
-    gtk_table_set_col_spacing(table, 3, 6);
-    gtk_table_set_col_spacing(table, 4, 6);
-    gtk_table_set_col_spacing(table, 6, 6);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->secondary_table,
-                       FALSE, FALSE, 0);
-
-    gtk_table_attach(table, gwy_label_new_header(_("Derived Quantities")),
-                     0, 7, 0, 1, GTK_FILL, 0, 0, 0);
-
-    controls->secondary_controls = g_array_new(FALSE, FALSE,
-                                               sizeof(FitParamControl));
-    return vbox;
+    return scwin;
 }
 
 static void
@@ -1226,6 +1211,25 @@ fit_correl_table_resize(FitShapeControls *controls)
     }
 
     gtk_widget_show_all(controls->correl_table);
+}
+
+static GtkWidget*
+secondary_tab_new(FitShapeControls *controls)
+{
+    GtkTable *table;
+
+    controls->secondary_table = gtk_table_new(1, 7, FALSE);
+    table = GTK_TABLE(controls->secondary_table);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 2);
+    gtk_table_set_col_spacing(table, 3, 6);
+    gtk_table_set_col_spacing(table, 4, 6);
+    gtk_table_set_col_spacing(table, 6, 6);
+
+    controls->secondary_controls = g_array_new(FALSE, FALSE,
+                                               sizeof(FitParamControl));
+    return controls->secondary_table;
 }
 
 static void
