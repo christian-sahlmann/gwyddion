@@ -391,7 +391,7 @@ static const FitShapeParam grating_params[] = {
    { "p",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "z<sub>0</sub>", 0, 1, 0,                      },
    { "x<sub>0</sub>", 1, 0, 0,                      },
-   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "φ",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
    { "c",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
 };
 
@@ -408,7 +408,7 @@ static const FitShapeParam grating3_params[] = {
    { "q<sub>3</sub>", 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "z<sub>0</sub>", 0, 1, 0,                      },
    { "x<sub>0</sub>", 1, 0, 0,                      },
-   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "φ",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
 static const FitShapeSecondary grating3_secondary[] = {
@@ -420,13 +420,15 @@ static const FitShapeSecondary grating3_secondary[] = {
 };
 
 static const FitShapeParam pring_params[] = {
-   { "x<sub>0</sub>", 1, 0, 0,                      },
-   { "y<sub>0</sub>", 1, 0, 0,                      },
-   { "z<sub>0</sub>", 0, 1, 0,                      },
-   { "R",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "w",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "h",             0, 1, 0,                      },
-   { "s",             0, 1, 0,                      },
+   { "x<sub>0</sub>",  1, 0, 0,                      },
+   { "y<sub>0</sub>",  1, 0, 0,                      },
+   { "z<sub>0</sub>",  0, 1, 0,                      },
+   { "R",              1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "w",              1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h",              0, 1, 0,                      },
+   { "s",              0, 1, 0,                      },
+   { "b<sub>x</sub>", -1, 1, 0,                      },
+   { "b<sub>y</sub>", -1, 1, 0,                      },
 };
 
 #define pring_secondary NULL
@@ -443,10 +445,11 @@ static const FitShapeSecondary sphere_secondary[] = {
 };
 
 static const FitShapeParam cylinder_params[] = {
-   { "x<sub>0</sub>", 1, 0,  0,                      },
-   { "z<sub>0</sub>", 0, 1,  0,                      },
-   { "C",             0, -1, 0,                      },
-   { "α",             0, 0,  FIT_SHAPE_PARAM_ANGLE,  },
+   { "x<sub>0</sub>",  1,  0, 0,                     },
+   { "z<sub>0</sub>",  0,  1, 0,                     },
+   { "C",              0, -1, 0,                     },
+   { "φ",              0,  0, FIT_SHAPE_PARAM_ANGLE, },
+   { "b<sub>∥</sub>", -1,  1, 0,                     },
 };
 
 static const FitShapeSecondary cylinder_secondary[] = {
@@ -460,7 +463,9 @@ static const FitShapeParam gaussian_params[] = {
    { "h",                 0, 1, 0,                      },
    { "σ<sub>mean</sub>",  1, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "a",                 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "α",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "φ",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "b<sub>x</sub>",    -1, 1, 0,                      },
+   { "b<sub>y</sub>",    -1, 1, 0,                      },
 };
 
 static const FitShapeSecondary gaussian_secondary[] = {
@@ -473,24 +478,28 @@ static const FitShapeParam lorentzian_params[] = {
    { "y<sub>0</sub>",    1, 0, 0,                      },
    { "z<sub>0</sub>",    0, 1, 0,                      },
    { "h",                0, 1, 0,                      },
-   { "b<sub>mean</sub>", 1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "β<sub>mean</sub>", 1, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "a",                0, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "α",                0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "φ",                0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "b<sub>x</sub>",   -1, 1, 0,                      },
+   { "b<sub>y</sub>",   -1, 1, 0,                      },
 };
 
 static const FitShapeSecondary lorentzian_secondary[] = {
-   { "σ<sub>1</sub>", 1, 0, 0, lorentzian_calc_b1, lorentzian_calc_err_b1, },
-   { "σ<sub>2</sub>", 1, 0, 0, lorentzian_calc_b2, lorentzian_calc_err_b2, },
+   { "β<sub>1</sub>", 1, 0, 0, lorentzian_calc_b1, lorentzian_calc_err_b1, },
+   { "β<sub>2</sub>", 1, 0, 0, lorentzian_calc_b2, lorentzian_calc_err_b2, },
 };
 
 static const FitShapeParam pyramidx_params[] = {
-   { "x<sub>0</sub>", 1, 0, 0,                      },
-   { "y<sub>0</sub>", 1, 0, 0,                      },
-   { "z<sub>0</sub>", 0, 1, 0,                      },
-   { "h",             0, 1, 0,                      },
-   { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "a",             0, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "α",             0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "x<sub>0</sub>",  1, 0, 0,                      },
+   { "y<sub>0</sub>",  1, 0, 0,                      },
+   { "z<sub>0</sub>",  0, 1, 0,                      },
+   { "h",              0, 1, 0,                      },
+   { "L",              1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",              0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "α",              0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "b<sub>x</sub>", -1, 1, 0,                      },
+   { "b<sub>y</sub>", -1, 1, 0,                      },
 };
 
 #define pyramidx_secondary NULL
@@ -2375,20 +2384,20 @@ gwy_coshm1(gdouble x)
     return x2*(0.5 + x2/24.0);
 }
 
-#define DEFINE_ALPHA_CACHE(alpha) \
-    static gdouble alpha##_last = 0.0, ca_last = 1.0, sa_last = 0.0
+#define DEFINE_PHI_CACHE(phi) \
+    static gdouble phi##_last = 0.0, ca_last = 1.0, sa_last = 0.0
 
-#define HANDLE_ALPHA_CACHE(alpha) \
+#define HANDLE_PHI_CACHE(phi) \
     do { \
-        if (alpha == alpha##_last) { \
-            ca = ca_last; \
-            sa = sa_last; \
+        if (phi == phi##_last) { \
+            cphi = ca_last; \
+            sphi = sa_last; \
         } \
         else { \
-            sincos(alpha, &sa, &ca); \
-            ca_last = ca; \
-            sa_last = sa; \
-            alpha##_last = alpha; \
+            sincos(phi, &sphi, &cphi); \
+            ca_last = cphi; \
+            sa_last = sphi; \
+            phi##_last = phi; \
         } \
     } while (0)
 
@@ -2600,13 +2609,13 @@ circumscribe_x_y(const GwyXY *xy, guint n,
     }
 }
 
-/* Project xyz point cloud to a line rotated by angle alpha anti-clockwise
+/* Project xyz point cloud to a line rotated by angle phi anti-clockwise
  * from the horizontal line (x axis). */
 static gdouble
 projection_to_line(const GwyXY *xy,
                    const gdouble *z,
                    guint n,
-                   gdouble alpha,
+                   gdouble phi,
                    gdouble xc, gdouble yc,
                    GwyDataLine *mean_line,
                    GwyDataLine *rms_line,
@@ -2617,7 +2626,7 @@ projection_to_line(const GwyXY *xy,
     gdouble *rms = rms_line ? gwy_data_line_get_data(rms_line) : NULL;
     gdouble dx = gwy_data_line_get_real(mean_line)/res;
     gdouble off = gwy_data_line_get_offset(mean_line);
-    gdouble c = cos(alpha), s = sin(alpha), total_ms = 0.0;
+    gdouble c = cos(phi), s = sin(phi), total_ms = 0.0;
     guint i, total_n = 0;
     gint j;
 
@@ -2677,7 +2686,7 @@ estimate_projection_direction(const GwyXY *xy,
 
     GwyDataLine *mean_line, *rms_line;
     guint *counts;
-    gdouble xc, yc, r, alpha, alpha0, alpha_step, rms;
+    gdouble xc, yc, r, phi, alpha0, alpha_step, rms;
     gdouble best_rms = G_MAXDOUBLE, best_alpha = 0.0;
     guint iter, i, ni, res;
 
@@ -2704,13 +2713,13 @@ estimate_projection_direction(const GwyXY *xy,
         }
 
         for (i = 0; i < ni; i++) {
-            alpha = alpha0 + i*alpha_step;
-            rms = projection_to_line(xy, z, n, alpha, xc, yc,
+            phi = alpha0 + i*alpha_step;
+            rms = projection_to_line(xy, z, n, phi, xc, yc,
                                      mean_line, rms_line, counts);
-            gwy_debug("[%u] %g %g", iter, alpha, rms);
+            gwy_debug("[%u] %g %g", iter, phi, rms);
             if (rms < best_rms) {
                 best_rms = rms;
-                best_alpha = alpha;
+                best_alpha = phi;
             }
         }
     }
@@ -2729,7 +2738,7 @@ estimate_projection_direction(const GwyXY *xy,
  * structures.  */
 static gboolean
 estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
-                          gdouble alpha, gdouble *pT, gdouble *poff,
+                          gdouble phi, gdouble *pT, gdouble *poff,
                           FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *mean_line, *tmp_line;
@@ -2750,7 +2759,7 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
     tmp_line = gwy_data_line_new_alike(mean_line, FALSE);
     counts = g_new(guint, res);
 
-    projection_to_line(xy, z, n, alpha, xc, yc, mean_line, NULL, counts);
+    projection_to_line(xy, z, n, phi, xc, yc, mean_line, NULL, counts);
     gwy_data_line_add(mean_line, -gwy_data_line_get_avg(mean_line));
     gwy_data_line_psdf(mean_line, tmp_line,
                        GWY_WINDOWING_HANN, GWY_INTERPOLATION_LINEAR);
@@ -2785,7 +2794,7 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
     gwy_debug("a_s %g, a_c %g", a_s, a_c);
 
     phi0 = atan2(a_s, a_c);
-    *poff = phi0*T/(2.0*G_PI) + xc*cos(alpha) - yc*sin(alpha);
+    *poff = phi0*T/(2.0*G_PI) + xc*cos(phi) - yc*sin(phi);
 
 fail:
     g_object_unref(mean_line);
@@ -2894,7 +2903,7 @@ static gboolean
 common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
                          gdouble *xc, gdouble *yc, gdouble *z0,
                          gdouble *height, gdouble *size,
-                         gdouble *a, gdouble *alpha,
+                         gdouble *a, gdouble *phi,
                          FitShapeEstimateCache *estimcache)
 {
     gdouble xm, ym, r, zmin, zmax;
@@ -2908,7 +2917,7 @@ common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
     *height = zmax - zmin;
     *size = r/3.0;
     *a = 1.0;
-    *alpha = 0.0;
+    *phi = 0.0;
 
     return TRUE;
 }
@@ -2917,14 +2926,14 @@ static gboolean
 common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
                              gdouble *xc, gdouble *yc, gdouble *z0,
                              gdouble *height, gdouble *size,
-                             gdouble *a, gdouble *alpha,
+                             gdouble *a, gdouble *phi,
                              FitShapeEstimateCache *estimcache)
 {
     gdouble xm, ym, r;
 
     /* Just initialise the shape parameters with some sane defaults. */
     *a = 1.0;
-    *alpha = 0.0;
+    *phi = 0.0;
     circumscribe_x_y(xy, n, &xm, &ym, &r, estimcache);
     *size = r/3.0;
 
@@ -3110,17 +3119,18 @@ cylinder_func(gdouble abscissa,
               gpointer user_data,
               gboolean *fres)
 {
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble x0 = param[0];
     gdouble z0 = param[1];
     gdouble kappa = param[2];
-    gdouble alpha = param[3];
-    gdouble x, y, r2k, t, val, ca, sa;
+    gdouble phi = param[3];
+    gdouble bparallel = param[4];
+    gdouble x, y, r2k, t, val, cphi, sphi;
     guint i;
 
-    g_assert(n_param == 4);
+    g_assert(n_param == 5);
 
     i = (guint)abscissa;
     x = ctx->xy[i].x;
@@ -3128,8 +3138,9 @@ cylinder_func(gdouble abscissa,
 
     *fres = TRUE;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa - x0;
+    HANDLE_PHI_CACHE(phi);
+    z0 += bparallel*(x*sphi + y*cphi);
+    t = x*cphi - y*sphi - x0;
     r2k = kappa*t*t;
     t = 1.0 - kappa*r2k;
     if (t > 0.0)
@@ -3172,7 +3183,7 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *mean_line;
-    gdouble xc, yc, r, zmin, zmax, t, alpha;
+    gdouble xc, yc, r, zmin, zmax, t, phi;
     GwyXY *xyred = NULL;
     gdouble *zred = NULL;
     guint *counts = NULL;
@@ -3180,7 +3191,7 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gint d2sign;
     const gdouble *d;
 
-    /* First we estimate the orientation (alpha). */
+    /* First we estimate the orientation (phi). */
     if (n > NREDLIM) {
         nred = sqrt(n*(gdouble)NREDLIM);
         xyred = g_new(GwyXY, nred);
@@ -3192,11 +3203,11 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
         /* Make sure caching still works for the reduced data. */
         FitShapeEstimateCache estimcachered;
         gwy_clear(&estimcachered, 1);
-        alpha = estimate_projection_direction(xyred, zred, nred,
+        phi = estimate_projection_direction(xyred, zred, nred,
                                               &estimcachered);
     }
     else
-        alpha = estimate_projection_direction(xy, z, n, estimcache);
+        phi = estimate_projection_direction(xy, z, n, estimcache);
 
     if (nred) {
         g_free(xyred);
@@ -3210,7 +3221,7 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
     counts = g_new(guint, res);
     gwy_data_line_set_offset(mean_line, -r);
-    projection_to_line(xy, z, n, alpha, xc, yc, mean_line, NULL, counts);
+    projection_to_line(xy, z, n, phi, xc, yc, mean_line, NULL, counts);
     d = gwy_data_line_get_data(mean_line);
 
     d2sign = 0;
@@ -3231,8 +3242,7 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     }
 
     t = 2.0*r/res*mpos - r;
-    param[0] = ((xc + t*cos(alpha))*cos(alpha)
-                - (yc - t*sin(alpha))*sin(alpha));
+    param[0] = ((xc + t*cos(phi))*cos(phi) - (yc - t*sin(phi))*sin(phi));
 
     if (d2sign > 0) {
         param[1] = zmin;
@@ -3242,7 +3252,8 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
         param[1] = zmax;
         param[2] = 4.0*(zmin - zmax)/(r*r);
     }
-    param[3] = alpha;
+    param[3] = phi;
+    param[4] = 0.0;
 
     g_free(counts);
     g_object_unref(mean_line);
@@ -3275,7 +3286,7 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
              gpointer user_data, gboolean *fres)
 {
     static gdouble c_last = 0.0, coshm1_c_last = 1.0;
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble L = fabs(param[0]);
@@ -3283,9 +3294,9 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble p = fabs(param[2]);
     gdouble z0 = param[3];
     gdouble x0 = param[4];
-    gdouble alpha = param[5];
+    gdouble phi = param[5];
     gdouble c = param[6];
-    gdouble x, y, t, Lp2, val, coshm1_c, ca, sa;
+    gdouble x, y, t, Lp2, val, coshm1_c, cphi, sphi;
     guint i;
 
     g_assert(n_param == 7);
@@ -3299,8 +3310,8 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!Lp2))
         return z0;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa - x0 + Lp2;
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi - x0 + Lp2;
     t = (t - L*floor(t/L))/Lp2 - 1.0;
     if (fabs(t) < 1.0) {
         if (c == c_last)
@@ -3357,7 +3368,7 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[1] = 0.9*t;
     param[3] += 0.05*t;
 
-    /* First we estimate the orientation (alpha). */
+    /* First we estimate the orientation (phi). */
     if (n > NREDLIM) {
         nred = sqrt(n*(gdouble)NREDLIM);
         xyred = g_new(GwyXY, nred);
@@ -3395,7 +3406,7 @@ static gdouble
 grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble L = fabs(param[0]);
@@ -3408,8 +3419,8 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble q3 = fabs(param[7]);
     gdouble z0 = param[8];
     gdouble x0 = param[9];
-    gdouble alpha = param[10];
-    gdouble x, y, t, Lp2, ca, sa, Ll, Lu;
+    gdouble phi = param[10];
+    gdouble x, y, t, Lp2, cphi, sphi, Ll, Lu;
     guint i;
 
     g_assert(n_param == 11);
@@ -3423,8 +3434,8 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     if (G_UNLIKELY(!Lp2))
         return z0;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa - x0 + Lp2;
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi - x0 + Lp2;
     t -= L*floor(t/L) + Lp2;
     t = fabs(t);
 
@@ -3507,7 +3518,7 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[3] = 0.1*(zmax - zmin);
     param[8] = zmin;
 
-    /* First we estimate the orientation (alpha). */
+    /* First we estimate the orientation (phi). */
     if (n > NREDLIM) {
         nred = sqrt(n*(gdouble)NREDLIM);
         xyred = g_new(GwyXY, nred);
@@ -3658,14 +3669,17 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble w = fabs(param[4]);
     gdouble h = param[5];
     gdouble s = param[6];
+    gdouble bx = param[7];
+    gdouble by = param[8];
     gdouble x, y, r, r2, s_h, rinner, router;
     guint i;
 
-    g_assert(n_param == 7);
+    g_assert(n_param == 9);
 
     i = (guint)abscissa;
     x = ctx->xy[i].x - xc;
     y = ctx->xy[i].y - yc;
+    z0 += bx*x + by*y;
     r2 = x*x + y*y;
 
     *fres = TRUE;
@@ -3723,6 +3737,8 @@ pring_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[4] = r/12.0;
     param[5] = zmax - zmin;
     param[6] = (zmax - zmin)/12.0;
+    param[7] = 0.0;
+    param[8] = 0.0;
 
     return TRUE;
 }
@@ -3812,6 +3828,8 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[4] = 1.5*(xestim[2] + yestim[2]);
     param[5] = zmax - zmin;
     param[6] = (zmax - zmin)/12.0;
+    param[7] = 0.0;
+    param[8] = 0.0;
 
     return TRUE;
 }
@@ -3826,7 +3844,7 @@ static gdouble
 gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -3835,24 +3853,27 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble h = param[3];
     gdouble sigma = param[4];
     gdouble a = fabs(param[5]);
-    gdouble alpha = param[6];
-    gdouble x, y, t, val, ca, sa, s2;
+    gdouble phi = param[6];
+    gdouble bx = param[7];
+    gdouble by = param[8];
+    gdouble x, y, t, val, cphi, sphi, s2;
     guint i;
 
-    g_assert(n_param == 7);
+    g_assert(n_param == 9);
 
     i = (guint)abscissa;
     x = ctx->xy[i].x - xc;
     y = ctx->xy[i].y - yc;
+    z0 += bx*x + by*y;
 
     *fres = TRUE;
     s2 = sigma*sigma;
     if (G_UNLIKELY(!s2 || !a))
         return z0;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa;
-    y = x*sa + y*ca;
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi;
+    y = x*sphi + y*cphi;
     x = t;
 
     t = 0.5*(x*x*a + y*y/a)/s2;
@@ -3865,6 +3886,8 @@ static gboolean
 gaussian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_init(xy, z, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
@@ -3876,6 +3899,8 @@ static gboolean
 gaussian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_estimate(xy, z, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
@@ -3933,7 +3958,7 @@ static gdouble
 lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
                 gpointer user_data, gboolean *fres)
 {
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -3942,24 +3967,27 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble h = param[3];
     gdouble b = param[4];
     gdouble a = fabs(param[5]);
-    gdouble alpha = param[6];
-    gdouble x, y, t, val, ca, sa, b2;
+    gdouble phi = param[6];
+    gdouble bx = param[7];
+    gdouble by = param[8];
+    gdouble x, y, t, val, cphi, sphi, b2;
     guint i;
 
-    g_assert(n_param == 7);
+    g_assert(n_param == 9);
 
     i = (guint)abscissa;
     x = ctx->xy[i].x - xc;
     y = ctx->xy[i].y - yc;
+    z0 += bx*x + by*y;
 
     *fres = TRUE;
     b2 = b*b;
     if (G_UNLIKELY(!b2 || !a))
         return z0;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa;
-    y = x*sa + y*ca;
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi;
+    y = x*sphi + y*cphi;
     x = t;
 
     t = (x*x*a + y*y/a)/b2;
@@ -3972,6 +4000,8 @@ static gboolean
 lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                 FitShapeEstimateCache *estimcache)
 {
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_init(xy, z, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
@@ -3983,6 +4013,8 @@ static gboolean
 lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                     FitShapeEstimateCache *estimcache)
 {
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_estimate(xy, z, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
@@ -4040,7 +4072,7 @@ static gdouble
 pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
               gpointer user_data, gboolean *fres)
 {
-    DEFINE_ALPHA_CACHE(alpha);
+    DEFINE_PHI_CACHE(phi);
 
     const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
@@ -4049,23 +4081,26 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble h = param[3];
     gdouble L = param[4];
     gdouble a = fabs(param[5]);
-    gdouble alpha = param[6];
-    gdouble x, y, t, val, ca, sa, q;
+    gdouble phi = param[6];
+    gdouble bx = param[7];
+    gdouble by = param[8];
+    gdouble x, y, t, val, cphi, sphi, q;
     guint i;
 
-    g_assert(n_param == 7);
+    g_assert(n_param == 9);
 
     i = (guint)abscissa;
     x = ctx->xy[i].x - xc;
     y = ctx->xy[i].y - yc;
+    z0 += bx*x + by*y;
 
     *fres = TRUE;
     if (G_UNLIKELY(!L || !a))
         return z0;
 
-    HANDLE_ALPHA_CACHE(alpha);
-    t = x*ca - y*sa;
-    y = x*sa + y*ca;
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi;
+    y = x*sphi + y*cphi;
     x = t;
 
     q = L*sqrt(1.0 + a*a);
@@ -4084,6 +4119,8 @@ static gboolean
 pyramidx_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_init(xy, z, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
@@ -4096,7 +4133,9 @@ pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     /* XXX: The pyramid has minimum projection when oriented along x and y
-     * axes.  But not very deep.  Can we use it to estimate alpha? */
+     * axes.  But not very deep.  Can we use it to estimate phi? */
+    param[7] = 0.0;
+    param[8] = 0.0;
     return common_bump_feature_estimate(xy, z, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
