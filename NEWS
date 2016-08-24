@@ -16,15 +16,22 @@ Libraries:
 - libgwyprocess: GwyDataField line-stats function with proper masking support
   was added.
 - libdraw: Memory handling bugs in GwyGradient updates were fixed.
+- libgwydgets: Graph ASCII export can create multi-column files with a single
+  merged abscissa.  Exported values are always in base units (not power of 10
+  multiplies).
 - libgwyapp: Critical _gwy_app_log_start_message_capture() error when opening
   files from standalone Python scripts was fixed.
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
   Gtk+ main loop is let to run.
+- libgwyapp: Data visibility restoration for files containing volume and XYZ
+  data was fixed.
 
 Modules:
 - Dektak XML (new): Imports Dektak XML profilometry data.
 - Dimension (new): Imports old Dimension 3100D files (experimental).
-- Fit shape (new): Fits various geometrical shapes on entire 2D data.
+- Fit shape (new): Fits various geometrical shapes on entire data.  Available
+  both as image and XYZ data processing function.
+- Fit sphere: Was removed, use new Fit shape module instead.
 - Row/column statistics tool: Masking support was added.  The misguided fixed
   resolution option was removed.
 - XYZize: XYZ log is created for the new XYZ data, not volume data log.
@@ -39,11 +46,12 @@ Modules:
   background colour – and for vector formats and PNG and WebP the background
   can be transparent (for vector formats that used to be the only possibility).
 - Diffusion synthesis: Incorrect behaviour for non-square images was fixed.
-- Fit sphere: It can create the fitted shape or the difference as the output.
 - Selection manager tool: Can copy selection coordinates to the clipboard or
   export them to a file.
 - Find graph peaks: A peak filtering bug resulting in sometimes the module
   not finding any useful peaks was fixed.
+- Rotate: Cartesian grid can be optionally displayed over the data.
+- Grain statistics: The values are displayed with more significant digits.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
