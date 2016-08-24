@@ -94,6 +94,15 @@ static void        gwy_graph_model_get_property      (GObject *object,
                                                       guint prop_id,
                                                       GValue *value,
                                                       GParamSpec *pspec);
+static void        export_with_merged_abscissae      (const GwyGraphModel *gmodel,
+                                                      GwyGraphModelExportStyle export_style,
+                                                      gboolean posix_format,
+                                                      gboolean export_units,
+                                                      gboolean export_labels,
+                                                      gboolean export_metadata,
+                                                      GString *string);
+static gdouble*    merge_abscissae                   (const GwyGraphModel *gmodel,
+                                                      guint *ndata);
 static gboolean    curve_is_equispaced               (const GwyGraphCurveModel *gcmodel);
 static gchar*      ascii_name                        (const gchar *s);
 static void        gwy_graph_model_release_curve     (GwyGraphModel *gmodel,
@@ -1912,44 +1921,41 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                              GString* string)
 {
     GwyGraphCurveModel *cmodel;
-    GwySIValueFormat *xformat = NULL, *yformat = NULL;
-    gdouble xaverage, xrange, yaverage, yrange;
-    gdouble xmult, ymult;
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
     gboolean posix_format = export_style & GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
-    gchar *xname, *yname;
+    gboolean merged_x = export_style & GWY_GRAPH_MODEL_EXPORT_ASCII_MERGED;
+    gchar *xname = NULL, *yname = NULL, *xunitstr = NULL, *yunitstr = NULL;
 
     if (!string)
         string = g_string_new(NULL);
 
-    if ((export_style & ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX)
-        == GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO) {
+    export_style &= ~(GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX
+                      | GWY_GRAPH_MODEL_EXPORT_ASCII_MERGED);
+    if (export_style == GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO) {
+        if (merged_x) {
+            g_warning("Merged abscissae is not available for IGOR PRO style.");
+            merged_x = FALSE;
+        }
         export_units = TRUE;
         posix_format = TRUE;
     }
 
+    if (merged_x) {
+        export_with_merged_abscissae(model, export_style, posix_format,
+                                     export_units, export_labels,
+                                     export_metadata,
+                                     string);
+        return string;
+    }
+
     if (export_units) {
-        xaverage = (model->x_max + model->x_min)/2;
-        xrange = model->x_max - model->x_min;
-        xformat = gwy_si_unit_get_format(model->x_unit,
-                                         GWY_SI_UNIT_FORMAT_MARKUP,
-                                         MAX(xaverage, xrange), xformat);
-        xmult = xformat->magnitude;
-
-        yaverage = (model->y_max + model->y_min)/2;
-        yrange = model->y_max - model->y_min;
-        yformat = gwy_si_unit_get_format(model->y_unit,
-                                         GWY_SI_UNIT_FORMAT_MARKUP,
-                                         MAX(yaverage, yrange), yformat);
-        ymult = yformat->magnitude;
-    }
-    else {
-        xmult = 1;
-        ymult = 1;
+        xunitstr = gwy_si_unit_get_string(model->x_unit,
+                                          GWY_SI_UNIT_FORMAT_MARKUP);
+        yunitstr = gwy_si_unit_get_string(model->y_unit,
+                                          GWY_SI_UNIT_FORMAT_MARKUP);
     }
 
-    export_style &= ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
     switch (export_style) {
         case GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN:
         case GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN:
@@ -1967,7 +1973,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                                        model->left_label->str);
             if (export_units)
                 g_string_append_printf(units, "[%s]     [%s]         ",
-                                       xformat->units, yformat->units);
+                                       xunitstr, yunitstr);
         }
         if (export_metadata)
             g_string_append_printf(string, "%s\n", descriptions->str);
@@ -1990,9 +1996,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j) {
-                    append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                    append_number(string, cmodel->xdata[j], posix_format);
                     g_string_append(string, "  ");
-                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    append_number(string, cmodel->ydata[j], posix_format);
                     g_string_append(string, "            ");
                 }
                 else
@@ -2014,16 +2020,15 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                                        model->left_label->str);
             if (export_units)
                 g_string_append_printf(string, "# [%s]    [%s]\n",
-                                       xformat->units, yformat->units);
+                                       xunitstr, yunitstr);
             for (j = 0; j < cmodel->n; j++) {
-                append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                append_number(string, cmodel->xdata[j], posix_format);
                 g_string_append(string, "   ");
-                append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                append_number(string, cmodel->ydata[j], posix_format);
                 g_string_append_c(string, '\n');
             }
             g_string_append(string, "\n\n");
         }
-
         break;
 
         case GWY_GRAPH_MODEL_EXPORT_ASCII_CSV:
@@ -2042,7 +2047,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                                        model->left_label->str);
             if (export_units)
                 g_string_append_printf(units, "[%s];[%s];",
-                                       xformat->units, yformat->units);
+                                       xunitstr, yunitstr);
         }
         if (export_metadata)
             g_string_append_printf(string, "%s\n", descriptions->str);
@@ -2065,9 +2070,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
                 if (gwy_graph_curve_model_get_ndata(cmodel) > j) {
-                    append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                    append_number(string, cmodel->xdata[j], posix_format);
                     g_string_append_c(string, ';');
-                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    append_number(string, cmodel->ydata[j], posix_format);
                     g_string_append_c(string, ';');
                 }
                 else
@@ -2093,19 +2098,19 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 g_string_append_printf(string, "WAVES/D %s%d\n", yname, i+1);
                 g_string_append(string, "BEGIN\n");
                 for (j = 0; j < cmodel->n; j++) {
-                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    append_number(string, cmodel->ydata[j], posix_format);
                     g_string_append_c(string, '\n');
                 }
                 g_string_append(string, "END\n");
                 g_string_append(string, "X SetScale/I x ");
-                append_number(string, cmodel->xdata[0]/xmult, posix_format);
+                append_number(string, cmodel->xdata[0], posix_format);
                 g_string_append_c(string, ',');
-                append_number(string, cmodel->xdata[cmodel->n-1]/xmult,
+                append_number(string, cmodel->xdata[cmodel->n-1],
                               posix_format);
                 g_string_append_printf(string, ",\"%s\", %s%d; ",
-                                       xformat->units, xname, i+1);
+                                       xunitstr, xname, i+1);
                 g_string_append_printf(string, "SetScale d,0,0,\"%s\", %s%d\n",
-                                       yformat->units, yname, i+1);
+                                       yunitstr, yname, i+1);
             }
             else {
                 g_string_append_printf(string, "WAVES/D %s%d %s%d\n",
@@ -2114,17 +2119,16 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
                 for (j = 0; j < cmodel->n; j++) {
                     append_number(string, cmodel->xdata[j], posix_format);
                     g_string_append_c(string, ' ');
-                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    append_number(string, cmodel->ydata[j], posix_format);
                     g_string_append_c(string, '\n');
                 }
                 g_string_append(string, "END\n");
                 g_string_append_printf(string,
                                        "X SetScale d,0,0,\"%s\", %s%d, %s%d\n",
-                                       yformat->units, xname, i+1, yname, i+1);
+                                       yunitstr, xname, i+1, yname, i+1);
             }
             g_string_append_c(string, '\n');
         }
-
         break;
 
         default:
@@ -2132,7 +2136,118 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         break;
     }
 
+    g_free(xunitstr);
+    g_free(yunitstr);
+    g_free(xname);
+    g_free(yname);
+
     return string;
+}
+
+static void
+export_with_merged_abscissae(const GwyGraphModel *gmodel,
+                             GwyGraphModelExportStyle export_style,
+                             gboolean posix_format,
+                             gboolean export_units,
+                             gboolean export_labels,
+                             gboolean export_metadata,
+                             GString *string)
+{
+    GwyGraphCurveModel *gcmodel;
+    gdouble *mergedxdata;
+    const gdouble **xdata, **ydata;
+    guint n, ncurves, i, k, *j, *ndata;
+    gchar sep = '\t';
+    const gchar *nodata = "---";
+    const gchar *eol = "\n";
+
+    if (export_style == GWY_GRAPH_MODEL_EXPORT_ASCII_CSV) {
+        sep = ';';
+        eol = ";\n";
+        nodata = "";
+    }
+
+    ncurves = gmodel->curves->len;
+    /* TODO: Implement merged export_foo options for the various styles. */
+
+    mergedxdata = merge_abscissae(gmodel, &n);
+    if (!mergedxdata)
+        return;
+
+    xdata = g_new(const gdouble*, ncurves);
+    ydata = g_new(const gdouble*, ncurves);
+    ndata = g_new(guint, ncurves);
+    for (i = 0; i < ncurves; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        ndata[i] = gwy_graph_curve_model_get_ndata(gcmodel);
+        xdata[i] = gwy_graph_curve_model_get_xdata(gcmodel);
+        ydata[i] = gwy_graph_curve_model_get_ydata(gcmodel);
+    }
+
+    j = g_new0(guint, ncurves);
+    for (k = 0; k < n; k++) {
+        append_number(string, mergedxdata[k], posix_format);
+        for (i = 0; i < ncurves; i++) {
+            g_string_append_c(string, sep);
+            if (j[i] >= ndata[i] || mergedxdata[k] < xdata[i][j[i]])
+                g_string_append(string, nodata);
+            else {
+                append_number(string, ydata[i][j[i]], posix_format);
+                j[i]++;
+            }
+        }
+        g_string_append(string, eol);
+    }
+
+    g_free(j);
+    g_free(xdata);
+    g_free(ydata);
+    g_free(ndata);
+    g_free(mergedxdata);
+}
+
+static gdouble*
+merge_abscissae(const GwyGraphModel *gmodel,
+                guint *ndata)
+{
+    GwyGraphCurveModel *gcmodel;
+    gdouble *xdata;
+    guint n, ncurves, i, j;
+
+    ncurves = gmodel->curves->len;
+    n = 0;
+    for (i = 0; i < ncurves; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        n += gwy_graph_curve_model_get_ndata(gcmodel);
+    }
+
+    *ndata = n;
+    if (!n)
+        return NULL;
+
+    xdata = g_new(gdouble, n);
+    n = 0;
+    for (i = 0; i < ncurves; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        j = gwy_graph_curve_model_get_ndata(gcmodel);
+        memcpy(xdata + n, gwy_graph_curve_model_get_xdata(gcmodel),
+               j*sizeof(gdouble));
+        n += j;
+    }
+
+    g_assert(n == *ndata);
+
+    gwy_math_sort(n, xdata);
+    for (i = 1, j = 0; i < n; i++) {
+        if (xdata[i] != xdata[j]) {
+            j++;
+            xdata[j] = xdata[i];
+        }
+    }
+
+    *ndata = j+1;
+
+    return xdata;
 }
 
 static gboolean

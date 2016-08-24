@@ -213,6 +213,11 @@ gwy_graph_curve_type_get_enum(void)
  *                                      other formats, meaning
  *                                      locale-independent C/POSIX format of
  *                                      floating point numbers. (Since 2.26)
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_MERGED: Flag that can be combined with the
+ *                                       other formats (except Igor Pro),
+ *                                       requesting multi-column output with
+ *                                       a single merged abscissa in the first
+ *                                       column. (Since 2.46)
  *
  * Graph ASCII export style.
  **/
