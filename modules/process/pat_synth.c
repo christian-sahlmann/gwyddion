@@ -1539,8 +1539,8 @@ hole_radial_intersection(gdouble q, gdouble A, gdouble R)
     gdouble q21 = 1.0 + q*q;
     gdouble D = R*R*q21 - A1q*A1q;
     gdouble sqrtD = sqrt(MAX(D, 0.0));
-    gdouble x = ((1.0 + q)*A + sqrtD)/q21;
-    return hypot(x, q*x);
+    gdouble x = (1.0 + q)*A + sqrtD;
+    return x/sqrt(q21);
 }
 
 static gdouble
@@ -1555,7 +1555,7 @@ hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
         ry = fabs(y) - (size - rsz);
         r = MAX(rx, ry);
         rr = MIN(rx, ry);
-        if (r <= 0.0 || (r <= rsz && rr <= 0.0) || hypot(rx, ry) <= rsz)
+        if (r <= 0.0 || (r <= rsz && rr <= 0.0) || rx*rx + ry*ry <= rsz*rsz)
             v = -1.0;
         else if (slope) {
             gdouble ss = size + slope;
@@ -1565,7 +1565,7 @@ hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
             r = MAX(rx, ry);
             rr = MIN(rx, ry);
             if (r <= 0.0 || (r <= rsz && rr <= 0.0)
-                || hypot(rx, ry) <= rsz) {
+                || rx*rx + ry*ry <= rsz*rsz) {
                 gdouble q = (rr + ss - rsz)/(r + ss - rsz);
                 if (q <= 1.0 - roundness)
                     v = (r - rsz)/slope;
@@ -1573,7 +1573,7 @@ hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
                     r = hole_radial_intersection(q, ss - rsz, rsz);
                     rr = hole_radial_intersection(q, size - roundness*size,
                                                   roundness*size);
-                    v = (hypot(x, y) - r)/(r - rr);
+                    v = (sqrt(x*x + y*y) - r)/(r - rr);
                 }
             }
         }
