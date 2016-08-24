@@ -366,6 +366,7 @@ static void          fit_shape_save_args         (GwyContainer *container,
 
 DECLARE_SHAPE_FUNC(grating);
 DECLARE_SHAPE_FUNC(grating3);
+DECLARE_SHAPE_FUNC(holes);
 DECLARE_SHAPE_FUNC(pring);
 DECLARE_SHAPE_FUNC(sphere);
 DECLARE_SHAPE_FUNC(cylinder);
@@ -418,6 +419,21 @@ static const FitShapeSecondary grating3_secondary[] = {
    { "L<sub>2</sub>", 1, 0, 0, grating3_calc_L2, grating3_calc_err_L2, },
    { "L<sub>3</sub>", 1, 0, 0, grating3_calc_L3, grating3_calc_err_L3, },
 };
+
+static const FitShapeParam holes_params[] = {
+   { "x<sub>0</sub>",  1, 0, 0,                      },
+   { "y<sub>0</sub>",  1, 0, 0,                      },
+   { "z<sub>0</sub>",  0, 1, 0,                      },
+   { "L",              1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "p",              0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "h",              0, 1, 0,                      },
+   { "s",              0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "r",              0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "φ",              0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+};
+
+/* TBD: hole dimensions, distances from p; radius from r */
+#define holes_secondary NULL
 
 static const FitShapeParam pring_params[] = {
    { "x<sub>0</sub>",  1, 0, 0,                      },
@@ -507,6 +523,7 @@ static const FitShapeParam pyramidx_params[] = {
 static const FitShapeFunc functions[] = {
     { N_("Grating (simple)"),  FALSE, SHAPE_FUNC_ITEM(grating),    },
     { N_("Grating (3-level)"), FALSE, SHAPE_FUNC_ITEM(grating3),   },
+    { N_("Holes"),             FALSE, SHAPE_FUNC_ITEM(holes),      },
     { N_("Ring"),              FALSE, SHAPE_FUNC_ITEM(pring),      },
     { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
     { N_("Cylinder (lying)"),  TRUE,  SHAPE_FUNC_ITEM(cylinder),   },
@@ -516,7 +533,7 @@ static const FitShapeFunc functions[] = {
 };
 
 /* NB: The default must not require same units because then we could not fall
- * back to it. */
+ * back to it in all cases. */
 static const FitShapeArgs fit_shape_defaults = {
     "Grating (simple)", GWY_MASK_IGNORE,
     FIT_SHAPE_DISPLAY_RESULT, FIT_SHAPE_OUTPUT_FIT,
@@ -2385,18 +2402,18 @@ gwy_coshm1(gdouble x)
 }
 
 #define DEFINE_PHI_CACHE(phi) \
-    static gdouble phi##_last = 0.0, ca_last = 1.0, sa_last = 0.0
+    static gdouble phi##_last = 0.0, cphi_last = 1.0, sphi_last = 0.0
 
 #define HANDLE_PHI_CACHE(phi) \
     do { \
         if (phi == phi##_last) { \
-            cphi = ca_last; \
-            sphi = sa_last; \
+            cphi = cphi_last; \
+            sphi = sphi_last; \
         } \
         else { \
             sincos(phi, &sphi, &cphi); \
-            ca_last = cphi; \
-            sa_last = sphi; \
+            cphi_last = cphi; \
+            sphi_last = sphi; \
             phi##_last = phi; \
         } \
     } while (0)
@@ -3647,6 +3664,143 @@ grating3_calc_err_L3(const gdouble *param,
     diff[6] = -L3/(1.0 + param[6]);
     diff[7] = -L3/(1.0 + param[7]);
     return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+/**************************************************************************
+ *
+ * Holes
+ *
+ **************************************************************************/
+
+static inline gdouble
+hole_radial_intersection(gdouble q, gdouble A, gdouble R)
+{
+    gdouble A1q = A*(1.0 - q);
+    gdouble q21 = 1.0 + q*q;
+    gdouble D = R*R*q21 - A1q*A1q;
+    gdouble sqrtD = sqrt(MAX(D, 0.0));
+    gdouble x = (1.0 + q)*A + sqrtD;
+    return x/sqrt(q21);
+}
+
+static gdouble
+hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
+{
+    gdouble rx, ry, r, rr, rsz;
+    gdouble v = 0.0;
+
+    if (roundness) {
+        rsz = roundness*size;
+        rx = fabs(x) - (size - rsz);
+        ry = fabs(y) - (size - rsz);
+        r = MAX(rx, ry);
+        rr = MIN(rx, ry);
+        if (r <= 0.0 || (r <= rsz && rr <= 0.0) || rx*rx + ry*ry <= rsz*rsz)
+            v = -1.0;
+        else if (slope) {
+            gdouble ss = size + slope;
+            rsz = roundness*ss;
+            rx = fabs(x) - (ss - rsz);
+            ry = fabs(y) - (ss - rsz);
+            r = MAX(rx, ry);
+            rr = MIN(rx, ry);
+            if (r <= 0.0 || (r <= rsz && rr <= 0.0)
+                || rx*rx + ry*ry <= rsz*rsz) {
+                gdouble q = (rr + ss - rsz)/(r + ss - rsz);
+                if (q <= 1.0 - roundness)
+                    v = (r - rsz)/slope;
+                else {
+                    r = hole_radial_intersection(q, ss - rsz, rsz);
+                    rr = hole_radial_intersection(q, size - roundness*size,
+                                                  roundness*size);
+                    v = (sqrt(x*x + y*y) - r)/(r - rr);
+                }
+            }
+        }
+    }
+    else {
+        rx = fabs(x) - size;
+        ry = fabs(y) - size;
+        r = MAX(rx, ry);
+        if (r <= 0.0)
+            v = -1.0;
+        else if (r < slope)
+            v = (r - slope)/slope;
+
+        v = sin(x);
+    }
+
+    return v;
+}
+
+static gdouble
+holes_func(gdouble abscissa, gint n_param, const gdouble *param,
+           gpointer user_data, gboolean *fres)
+{
+    DEFINE_PHI_CACHE(phi);
+
+    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble L = fabs(param[3]);
+    gdouble p = fabs(param[4]);
+    gdouble h = param[5];
+    gdouble s = param[6];
+    gdouble r = param[7];
+    gdouble phi = param[8];
+    gdouble x, y, t, cphi, sphi;
+    guint i;
+
+    g_assert(n_param == 9);
+
+    i = (guint)abscissa;
+    x = ctx->xy[i].x - xc;
+    y = ctx->xy[i].y - yc;
+
+    *fres = TRUE;
+
+    if (G_UNLIKELY(L*p == 0.0))
+        return z0;
+
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi;
+    y = x*sphi + y*cphi;
+    x = t;
+
+    x -= L*floor(x/L) + 0.5*L;
+    y -= L*floor(y/L) + 0.5*L;
+
+    return z0 + h*hole_shape(fabs(x), fabs(y), 0.5*L*p, s*0.5*L*p, r);
+}
+
+static gboolean
+holes_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+           FitShapeEstimateCache *estimcache)
+{
+    gdouble xc, yc, r, zmin, zmax;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+
+    param[0] = xc;
+    param[1] = yc;
+    param[2] = zmin;
+    param[3] = r/4.0;
+    param[4] = 0.5;
+    param[5] = zmax - zmin;
+    param[6] = 0.05;
+    param[7] = 0.05;
+    param[8] = 0.0;
+
+    return TRUE;
+}
+
+static gboolean
+holes_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+               FitShapeEstimateCache *estimcache)
+{
+    return TRUE;
 }
 
 /**************************************************************************
