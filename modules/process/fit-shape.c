@@ -3744,7 +3744,7 @@ holes_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble yc = param[1];
     gdouble z0 = param[2];
     gdouble L = fabs(param[3]);
-    gdouble p = fabs(param[4]);
+    gdouble p = param[4];
     gdouble h = param[5];
     gdouble s = param[6];
     gdouble r = param[7];
@@ -3771,7 +3771,11 @@ holes_func(gdouble abscissa, gint n_param, const gdouble *param,
     x -= L*floor(x/L) + 0.5*L;
     y -= L*floor(y/L) + 0.5*L;
 
-    return z0 + h*hole_shape(fabs(x), fabs(y), 0.5*L*p, s*0.5*L*p, r);
+    p = CLAMP(fabs(p), 0.0, 1.0);
+    s = CLAMP(fabs(s), 0.0, 1.0);
+    r = CLAMP(fabs(r), 0.0, 1.0);
+
+    return z0 + h*hole_shape(fabs(x), fabs(y), (1.0 - s)*0.5*L*p, s*0.5*L*p, r);
 }
 
 static gboolean
