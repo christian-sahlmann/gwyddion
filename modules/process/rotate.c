@@ -37,14 +37,17 @@ typedef struct {
     gdouble angle;
     GwyInterpolationType interp;
     gboolean expand;
+    gboolean show_grid;
 } RotateArgs;
 
 typedef struct {
     GtkObject *angle;
     GtkWidget *interp;
     GtkWidget *expand;
+    GtkWidget *show_grid;
     GtkWidget *data_view;
     GwyContainer *data;
+    GwySelection *selection;
     RotateArgs *args;
 } RotateControls;
 
@@ -53,11 +56,13 @@ static void     rotate              (GwyContainer *data,
                                      GwyRunType run);
 static gboolean rotate_dialog       (RotateArgs *args,
                                      GwyContainer *data);
-static void     interp_changed_cb   (GtkWidget *combo,
+static void     interp_changed      (GtkWidget *combo,
                                      RotateControls *controls);
-static void     expand_changed_cb   (GtkWidget *toggle,
+static void     angle_changed       (GtkObject *angle,
                                      RotateControls *controls);
-static void     angle_changed_cb    (GtkObject *angle,
+static void     expand_changed      (GtkWidget *toggle,
+                                     RotateControls *controls);
+static void     show_grid_changed   (GtkWidget *toggle,
                                      RotateControls *controls);
 static void     rotate_preview_draw (RotateControls *controls,
                                      RotateArgs *args);
@@ -73,6 +78,7 @@ static const RotateArgs rotate_defaults = {
     0.0,
     GWY_INTERPOLATION_LINEAR,
     FALSE,
+    TRUE,
 };
 
 static GwyModuleInfo module_info = {
@@ -80,7 +86,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.11",
+    "1.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -221,14 +227,11 @@ create_preview_data(GwyContainer *data)
                                      GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
 
-    dfield = gwy_data_field_duplicate(dfield);
-    dfield_show = gwy_data_field_duplicate(dfield);
-
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
-                            GWY_INTERPOLATION_LINEAR);
+    dfield = gwy_data_field_new_resampled(dfield, xres*zoomval, yres*zoomval,
+                                          GWY_INTERPOLATION_LINEAR);
     dfield_show = gwy_data_field_duplicate(dfield);
 
     gwy_container_set_object_by_name(preview, "/1/data", dfield);
@@ -250,7 +253,7 @@ rotate_dialog(RotateArgs *args,
 {
     GtkWidget *dialog, *table, *hbox;
     RotateControls controls;
-    gint response;
+    gint response, row;
 
     controls.args = args;
 
@@ -272,21 +275,24 @@ rotate_dialog(RotateArgs *args,
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
+    row = 0;
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
                                         -360, 360, 0.1, 30, 0);
-    gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg"),
+    gwy_table_attach_hscale(table, row, _("Rotate by _angle:"), _("deg"),
                             controls.angle, 0);
     g_signal_connect(controls.angle, "value-changed",
-                     G_CALLBACK(angle_changed_cb), &controls);
+                     G_CALLBACK(angle_changed), &controls);
+    row++;
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), &controls,
+                                 G_CALLBACK(interp_changed), &controls,
                                  args->interp, TRUE);
-    gwy_table_attach_hscale(table, 1, _("_Interpolation type:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
+    row++;
 
     controls.expand
         = gtk_check_button_new_with_mnemonic(_("E_xpand result to fit "
@@ -294,16 +300,32 @@ rotate_dialog(RotateArgs *args,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.expand),
                                  args->expand);
     gtk_table_attach(GTK_TABLE(table), controls.expand,
-                     0, 4, 2, 3, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.expand, "toggled",
-                     G_CALLBACK(expand_changed_cb), &controls);
+                     G_CALLBACK(expand_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.show_grid
+        = gtk_check_button_new_with_mnemonic(_("Show grid"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.show_grid),
+                                 args->show_grid);
+    gtk_table_attach(GTK_TABLE(table), controls.show_grid,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.show_grid, "toggled",
+                     G_CALLBACK(show_grid_changed), &controls);
+    row++;
 
     controls.data = create_preview_data(data);
     controls.data_view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
     g_object_unref(controls.data);
+    controls.selection = create_vector_layer(GWY_DATA_VIEW(controls.data_view),
+                                             0, "Lattice", TRUE);
+    gwy_selection_set_max_objects(controls.selection, 1);
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     rotate_dialog_update(&controls, args);
+    show_grid_changed(controls.show_grid, &controls);
     rotate_preview_draw(&controls, args);
 
     gtk_widget_show_all(dialog);
@@ -337,27 +359,14 @@ rotate_dialog(RotateArgs *args,
 }
 
 static void
-interp_changed_cb(GtkWidget *combo,
-                  RotateControls *controls)
+interp_changed(GtkWidget *combo, RotateControls *controls)
 {
     controls->args->interp
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-expand_changed_cb(GtkWidget *toggle,
-                  RotateControls *controls)
-{
-    RotateArgs *args = controls->args;
-
-    args->expand = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
-    rotate_preview_draw(controls, args);
-
-}
-
-static void
-angle_changed_cb(GtkObject *adj,
-                 RotateControls *controls)
+angle_changed(GtkObject *adj, RotateControls *controls)
 {
     RotateArgs *args = controls->args;
 
@@ -365,9 +374,40 @@ angle_changed_cb(GtkObject *adj,
     rotate_preview_draw(controls, args);
 }
 
-static const gchar angle_key[]  = "/module/rotate/angle";
-static const gchar interp_key[] = "/module/rotate/interp";
-static const gchar expand_key[] = "/module/rotate/expand";
+static void
+expand_changed(GtkWidget *toggle, RotateControls *controls)
+{
+    RotateArgs *args = controls->args;
+
+    args->expand = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
+    rotate_preview_draw(controls, args);
+}
+
+static void
+show_grid_changed(GtkWidget *toggle, RotateControls *controls)
+{
+    RotateArgs *args = controls->args;
+    GwySelection *selection = controls->selection;
+    GwyDataField *dfield;
+    gdouble xy[4];
+
+    args->show_grid = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
+    if (!args->show_grid) {
+        gwy_selection_clear(selection);
+        return;
+    }
+
+    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
+    xy[0] = gwy_data_field_get_xreal(dfield)/12.0;
+    xy[1] = xy[2] = 0.0;
+    xy[3] = gwy_data_field_get_yreal(dfield)/12.0;
+    gwy_selection_set_data(selection, 1, xy);
+}
+
+static const gchar angle_key[]     = "/module/rotate/angle";
+static const gchar expand_key[]    = "/module/rotate/expand";
+static const gchar interp_key[]    = "/module/rotate/interp";
+static const gchar show_grid_key[] = "/module/rotate/show_grid";
 
 static void
 rotate_sanitize_args(RotateArgs *args)
@@ -376,6 +416,7 @@ rotate_sanitize_args(RotateArgs *args)
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
     args->expand = !!args->expand;
+    args->show_grid = !!args->show_grid;
 }
 
 static void
@@ -387,6 +428,8 @@ rotate_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_boolean_by_name(container, expand_key, &args->expand);
+    gwy_container_gis_boolean_by_name(container, show_grid_key,
+                                      &args->show_grid);
     rotate_sanitize_args(args);
 }
 
@@ -397,6 +440,8 @@ rotate_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_boolean_by_name(container, expand_key, args->expand);
+    gwy_container_set_boolean_by_name(container, show_grid_key,
+                                      args->show_grid);
 }
 
 static void
@@ -409,6 +454,8 @@ rotate_dialog_update(RotateControls *controls,
                                   args->interp);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->expand),
                                  args->expand);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->show_grid),
+                                 args->show_grid);
 }
 
 static void
