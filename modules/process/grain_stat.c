@@ -54,7 +54,7 @@ static GwyModuleInfo module_info = {
     N_("Displays overall grain statistics."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2015",
 };
@@ -240,8 +240,11 @@ grain_stat(GwyContainer *data, GwyRunType run)
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
 
     v = area;
-    vf = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, NULL);
-    vf2 = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, NULL);
+    vf = gwy_si_unit_get_format_with_digits(siunit2,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            v, 3, NULL);
+    vf2 = gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_PLAIN,
+                                             v, 3, NULL);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -253,8 +256,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
                    str->str, str->str, report);
 
     v = area/ngrains;
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -262,8 +267,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
                    str->str, str2->str, report);
 
     v = size/ngrains;
-    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -274,8 +281,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
     gwy_si_unit_multiply(siunit2, siunit, siunit2);
 
     v = vol_0;
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -283,8 +292,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
                    str->str, str2->str, report);
 
     v = vol_min;
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -292,8 +303,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
                    str->str, str2->str, report);
 
     v = vol_laplace;
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit2, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
@@ -301,8 +314,10 @@ grain_stat(GwyContainer *data, GwyRunType run)
                    str->str, str2->str, report);
 
     v = bound_len;
-    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
-    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_PLAIN, v, vf2);
+    gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       v, 3, vf);
+    gwy_si_unit_get_format_with_digits(siunit, GWY_SI_UNIT_FORMAT_PLAIN,
+                                       v, 3, vf2);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     g_string_printf(str2, "%.*f %s",
                     vf2->precision, v/vf2->magnitude, vf2->units);
