@@ -2083,7 +2083,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         break;
 
         case GWY_GRAPH_MODEL_EXPORT_ASCII_IGORPRO:
-        xname = ascii_name(model->left_label->str);
+        xname = ascii_name(model->bottom_label->str);
         if (!xname)
             xname = g_strdup_printf("x");
 
@@ -2160,15 +2160,58 @@ export_with_merged_abscissae(const GwyGraphModel *gmodel,
     gchar sep = '\t';
     const gchar *nodata = "---";
     const gchar *eol = "\n";
+    const gchar *comment = "";
 
     if (export_style == GWY_GRAPH_MODEL_EXPORT_ASCII_CSV) {
         sep = ';';
         eol = ";\n";
         nodata = "";
     }
+    if (export_style == GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT) {
+        comment = "# ";
+    }
 
     ncurves = gmodel->curves->len;
-    /* TODO: Implement merged export_foo options for the various styles. */
+    if (export_metadata) {
+        g_string_append(string, comment);
+        g_string_append(string, _("Abscissa"));
+        for (i = 0; i < ncurves; i++) {
+            gcmodel = g_ptr_array_index(gmodel->curves, i);
+            g_string_append_c(string, sep);
+            g_string_append(string, gcmodel->description->str);
+        }
+        g_string_append(string, eol);
+    }
+
+    if (export_labels) {
+        g_string_append(string, comment);
+        g_string_append(string, gmodel->bottom_label->str);
+        for (i = 0; i < ncurves; i++) {
+            gcmodel = g_ptr_array_index(gmodel->curves, i);
+            g_string_append_c(string, sep);
+            g_string_append(string, gmodel->left_label->str);
+        }
+        g_string_append(string, eol);
+    }
+
+    if (export_units) {
+        gchar *xunitstr = gwy_si_unit_get_string(gmodel->x_unit,
+                                                 GWY_SI_UNIT_FORMAT_MARKUP);
+        gchar *yunitstr = gwy_si_unit_get_string(gmodel->y_unit,
+                                                 GWY_SI_UNIT_FORMAT_MARKUP);
+
+        g_string_append(string, comment);
+        g_string_append_printf(string, "[%s]", yunitstr);
+        for (i = 0; i < ncurves; i++) {
+            gcmodel = g_ptr_array_index(gmodel->curves, i);
+            g_string_append_c(string, sep);
+            g_string_append_printf(string, "[%s]", yunitstr);
+        }
+        g_string_append(string, eol);
+
+        g_free(xunitstr);
+        g_free(yunitstr);
+    }
 
     mergedxdata = merge_abscissae(gmodel, &n);
     if (!mergedxdata)
