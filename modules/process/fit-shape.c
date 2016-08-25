@@ -385,6 +385,9 @@ DECLARE_SECONDARY(grating3, L0);
 DECLARE_SECONDARY(grating3, L1);
 DECLARE_SECONDARY(grating3, L2);
 DECLARE_SECONDARY(grating3, L3);
+DECLARE_SECONDARY(holes, wouter);
+DECLARE_SECONDARY(holes, winner);
+DECLARE_SECONDARY(holes, R);
 
 static const FitShapeParam grating_params[] = {
    { "L",             1, 0, FIT_SHAPE_PARAM_ABSVAL, },
@@ -432,8 +435,11 @@ static const FitShapeParam holes_params[] = {
    { "φ",              0, 0, FIT_SHAPE_PARAM_ANGLE,  },
 };
 
-/* TBD: hole dimensions, distances from p; radius from r */
-#define holes_secondary NULL
+static const FitShapeSecondary holes_secondary[] = {
+   { "w<sub>outer</sub>", 1, 0, 0, holes_calc_wouter, holes_calc_err_wouter, },
+   { "w<sub>inner</sub>", 1, 0, 0, holes_calc_winner, holes_calc_err_winner, },
+   { "R",                 1, 0, 0, holes_calc_R,      holes_calc_err_R,      },
+};
 
 static const FitShapeParam pring_params[] = {
    { "x<sub>0</sub>",  1, 0, 0,                      },
@@ -564,7 +570,7 @@ module_register(void)
                               N_("Fit geometrical shapes"));
     gwy_xyz_func_register("xyz_fit_shape",
                           (GwyXYZFunc)&fit_shape_xyz,
-                          N_("/_Fit Shape.."),
+                          N_("/_Fit Shape..."),
                           NULL,
                           FIT_SHAPE_RUN_MODES,
                           GWY_MENU_FLAG_XYZ,
@@ -2708,7 +2714,7 @@ estimate_projection_direction(const GwyXY *xy,
     guint iter, i, ni, res;
 
     circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    res = (guint)floor(2.0*sqrt(n) + 1.0);
+    res = (guint)floor(0.8*sqrt(n) + 1.0);
 
     mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
     gwy_data_line_set_offset(mean_line, -r);
@@ -2748,6 +2754,56 @@ estimate_projection_direction(const GwyXY *xy,
     return best_alpha;
 }
 
+/* Estimate projection direction, possibly on reduced data.  This is useful
+ * when the estimator does not need reduced data for anything else. */
+static gdouble
+estimate_projection_direction_red(const GwyXY *xy,
+                                  const gdouble *z,
+                                  guint n,
+                                  FitShapeEstimateCache *estimcache)
+{
+    FitShapeEstimateCache estimcachered;
+    guint nred = (guint)sqrt(n*(gdouble)NREDLIM);
+    GwyXY *xyred = NULL;
+    gdouble *zred = NULL;
+    gdouble phi;
+
+    if (nred >= n)
+        return estimate_projection_direction_red(xy, z, n, estimcache);
+
+    xyred = g_new(GwyXY, nred);
+    zred = g_new(gdouble, nred);
+    reduce_data_size(xy, z, n, xyred, zred, nred);
+
+    /* Make sure caching still works for the reduced data. */
+    gwy_clear(&estimcachered, 1);
+    phi = estimate_projection_direction(xyred, zred, nred, &estimcachered);
+
+    g_free(xyred);
+    g_free(zred);
+
+    return phi;
+}
+
+static void
+data_line_shorten(GwyDataLine *dline, const guint *counts, guint threshold)
+{
+    guint res = gwy_data_line_get_res(dline);
+    guint from = 0, to = res-1;
+    gdouble off;
+
+    while (to > from && counts[to] < threshold)
+        to--;
+    while (from < to && counts[from] < threshold)
+        from++;
+
+    off = (from*gwy_data_line_get_real(dline)/res
+           + gwy_data_line_get_offset(dline));
+
+    gwy_data_line_resize(dline, from, to+1);
+    gwy_data_line_set_offset(dline, off);
+}
+
 /* Estimate the period of a periodic structure, knowing already the rotation.
  * The returned phase is such that if you subtract it from the rotated abscissa
  * value then the projection will have a positive peak (some kind of maximum)
@@ -2759,14 +2815,16 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
                           FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *mean_line, *tmp_line;
-    gdouble xc, yc, r, T, t, real, off, a_s, a_c, phi0;
+    gdouble xc, yc, r, T, t, real, off, a_s, a_c, phi0, av, bv;
     const gdouble *mean, *tmp;
     guint *counts;
     guint res, i, ibest;
     gboolean found;
 
     circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    res = (guint)floor(3.0*sqrt(n) + 1.0);
+    /* Using more sqrt(n) than can make the sampling too sparse, causing noise
+     * and oscillations. */
+    res = (guint)floor(0.8*sqrt(n) + 1.0);
 
     *pT = r/4.0;
     *poff = 0.0;
@@ -2777,14 +2835,19 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
     counts = g_new(guint, res);
 
     projection_to_line(xy, z, n, phi, xc, yc, mean_line, NULL, counts);
-    gwy_data_line_add(mean_line, -gwy_data_line_get_avg(mean_line));
+    data_line_shorten(mean_line, counts, 4);
+    g_free(counts);
+
+    res = gwy_data_line_get_res(mean_line);
+    gwy_data_line_get_line_coeffs(mean_line, &av, &bv);
+    gwy_data_line_line_level(mean_line, av, bv);
     gwy_data_line_psdf(mean_line, tmp_line,
                        GWY_WINDOWING_HANN, GWY_INTERPOLATION_LINEAR);
     tmp = gwy_data_line_get_data_const(tmp_line);
 
     found = FALSE;
     ibest = G_MAXUINT;
-    for (i = 4; i < MIN(res/3, res-3); i++) {
+    for (i = 3; i < MIN(res/3, res-3); i++) {
         if (tmp[i] > tmp[i-2] && tmp[i] > tmp[i-1]
             && tmp[i] > tmp[i+1] && tmp[i] > tmp[i+2]) {
             if (ibest == G_MAXUINT || tmp[i] > tmp[ibest]) {
@@ -2816,7 +2879,6 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
 fail:
     g_object_unref(mean_line);
     g_object_unref(tmp_line);
-    g_free(counts);
 
     return found;
 }
@@ -2977,6 +3039,32 @@ dotprod_with_correl(const gdouble *diff,
     }
 
     return sqrt(fmax(s, 0.0));
+}
+
+static gdouble
+data_line_pearson_coeff(GwyDataLine *dline1, GwyDataLine *dline2)
+{
+    gdouble avg1 = gwy_data_line_get_avg(dline1);
+    gdouble avg2 = gwy_data_line_get_avg(dline2);
+    gdouble rms1 = gwy_data_line_get_rms(dline1);
+    gdouble rms2 = gwy_data_line_get_rms(dline2);
+    const gdouble *d1, *d2;
+    gdouble c = 0.0;
+    guint res, i;
+
+    if (!rms1 || !rms2)
+        return 0.0;
+
+    res = gwy_data_line_get_res(dline1);
+    g_return_val_if_fail(gwy_data_line_get_res(dline2) == res, 0.0);
+    d1 = gwy_data_line_get_data_const(dline1);
+    d2 = gwy_data_line_get_data_const(dline2);
+    for (i = 0; i < res; i++)
+        c += (d1[i] - avg1)*(d2[i] - avg2);
+
+    c /= res*rms1*rms2;
+    gwy_debug("%g", c);
+    return c;
 }
 
 /**************************************************************************
@@ -3201,40 +3289,18 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 {
     GwyDataLine *mean_line;
     gdouble xc, yc, r, zmin, zmax, t, phi;
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
     guint *counts = NULL;
-    guint i, mpos, res, nred = 0;
+    guint i, mpos, res;
     gint d2sign;
     const gdouble *d;
 
     /* First we estimate the orientation (phi). */
-    if (n > NREDLIM) {
-        nred = sqrt(n*(gdouble)NREDLIM);
-        xyred = g_new(GwyXY, nred);
-        zred = g_new(gdouble, nred);
-        reduce_data_size(xy, z, n, xyred, zred, nred);
-    }
-
-    if (nred) {
-        /* Make sure caching still works for the reduced data. */
-        FitShapeEstimateCache estimcachered;
-        gwy_clear(&estimcachered, 1);
-        phi = estimate_projection_direction(xyred, zred, nred,
-                                              &estimcachered);
-    }
-    else
-        phi = estimate_projection_direction(xy, z, n, estimcache);
-
-    if (nred) {
-        g_free(xyred);
-        g_free(zred);
-    }
+    phi = estimate_projection_direction_red(xy, z, n, estimcache);
 
     circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
     range_z(z, n, &zmin, &zmax, estimcache);
 
-    res = (guint)floor(3.0*sqrt(n) + 1.0);
+    res = (guint)floor(0.8*sqrt(n) + 1.0);
     mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
     counts = g_new(guint, res);
     gwy_data_line_set_offset(mean_line, -r);
@@ -3370,9 +3436,6 @@ static gboolean
 grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                  FitShapeEstimateCache *estimcache)
 {
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
-    guint nred = 0;
     gdouble t;
 
     /* Just initialise the percentage and shape with some sane defaults. */
@@ -3386,27 +3449,7 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[3] += 0.05*t;
 
     /* First we estimate the orientation (phi). */
-    if (n > NREDLIM) {
-        nred = sqrt(n*(gdouble)NREDLIM);
-        xyred = g_new(GwyXY, nred);
-        zred = g_new(gdouble, nred);
-        reduce_data_size(xy, z, n, xyred, zred, nred);
-    }
-
-    if (nred) {
-        /* Make sure caching still works for the reduced data. */
-        FitShapeEstimateCache estimcachered;
-        gwy_clear(&estimcachered, 1);
-        param[5] = estimate_projection_direction(xyred, zred, nred,
-                                                 &estimcachered);
-    }
-    else
-        param[5] = estimate_projection_direction(xy, z, n, estimcache);
-
-    if (nred) {
-        g_free(xyred);
-        g_free(zred);
-    }
+    param[5] = estimate_projection_direction_red(xy, z, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
@@ -3517,9 +3560,6 @@ static gboolean
 grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
-    guint nred = 0;
     gdouble zmin, zmax;
 
     /* Just initialise the percentage and shape with some sane defaults. */
@@ -3536,27 +3576,7 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[8] = zmin;
 
     /* First we estimate the orientation (phi). */
-    if (n > NREDLIM) {
-        nred = sqrt(n*(gdouble)NREDLIM);
-        xyred = g_new(GwyXY, nred);
-        zred = g_new(gdouble, nred);
-        reduce_data_size(xy, z, n, xyred, zred, nred);
-    }
-
-    if (nred) {
-        /* Make sure caching still works for the reduced data. */
-        FitShapeEstimateCache estimcachered;
-        gwy_clear(&estimcachered, 1);
-        param[10] = estimate_projection_direction(xyred, zred, nred,
-                                                  &estimcachered);
-    }
-    else
-        param[10] = estimate_projection_direction(xy, z, n, estimcache);
-
-    if (nred) {
-        g_free(xyred);
-        g_free(zred);
-    }
+    param[10] = estimate_projection_direction_red(xy, z, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
     return estimate_period_and_phase(xy, z, n, param[10], param + 0, param + 9,
@@ -3771,9 +3791,10 @@ holes_func(gdouble abscissa, gint n_param, const gdouble *param,
     x -= L*floor(x/L) + 0.5*L;
     y -= L*floor(y/L) + 0.5*L;
 
-    p = CLAMP(fabs(p), 0.0, 1.0);
-    s = CLAMP(fabs(s), 0.0, 1.0);
-    r = CLAMP(fabs(r), 0.0, 1.0);
+    p = 1.0/(1.0 + fabs(p));
+    /* Map zero values to no roundness and no slope. */
+    s = fabs(s)/(1.0 + fabs(s));
+    r = fabs(r)/(1.0 + fabs(s));
 
     return z0 + h*hole_shape(fabs(x), fabs(y), (1.0 - s)*0.5*L*p, s*0.5*L*p, r);
 }
@@ -3787,14 +3808,14 @@ holes_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
     range_z(z, n, &zmin, &zmax, estimcache);
 
-    param[0] = xc;
-    param[1] = yc;
+    param[0] = 0;
+    param[1] = 0;
     param[2] = zmin;
     param[3] = r/4.0;
-    param[4] = 0.5;
+    param[4] = 1.0;
     param[5] = zmax - zmin;
-    param[6] = 0.05;
-    param[7] = 0.05;
+    param[6] = 0.1;
+    param[7] = 0.1;
     param[8] = 0.0;
 
     return TRUE;
@@ -3804,7 +3825,135 @@ static gboolean
 holes_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
                FitShapeEstimateCache *estimcache)
 {
-    return TRUE;
+    GwyDataLine *mean_line, *rms_line;
+    gdouble xc, yc, r, phi, L1, L2, zmin, zmax, u, v;
+    guint *counts;
+    guint res;
+    gboolean ok1, ok2;
+
+    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(z, n, &zmin, &zmax, estimcache);
+
+    param[4] = 1.0;
+    param[6] = 0.1;
+    param[7] = 0.1;
+
+    param[8] = phi = estimate_projection_direction_red(xy, z, n, estimcache);
+
+    ok1 = estimate_period_and_phase(xy, z, n, phi, &L1, &u, estimcache);
+    ok2 = estimate_period_and_phase(xy, z, n, phi - 0.5*G_PI, &L2, &v,
+                                    estimcache);
+    param[3] = 0.5*(L1 + L2);
+    param[0] = u*cos(phi) + v*sin(phi);
+    param[1] = u*sin(phi) + v*cos(phi);
+
+    /* Estimate h sign: do projection and if smaller values correlate with
+     * large rms then it is holes (h > 0); if larger values correlate with
+     * large rms then it is bumps (h < 0).  */
+    res = (guint)floor(0.8*sqrt(n) + 1.0);
+    mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
+    gwy_data_line_set_offset(mean_line, -r);
+    rms_line = gwy_data_line_new_alike(mean_line, FALSE);
+    counts = g_new(guint, res);
+    projection_to_line(xy, z, n, phi, xc, yc, mean_line, rms_line, counts);
+    data_line_shorten(mean_line, counts, 4);
+    data_line_shorten(rms_line, counts, 4);
+    g_free(counts);
+
+#if 0
+    {
+        FILE *fh = fopen("mean.dat", "w");
+        GwyDataLine *dl = mean_line;
+        guint i_;
+        for (i_ = 0; i_ < dl->res; i_++) {
+            gdouble t_ = dl->off + dl->real/dl->res*(i_ + 0.5);
+            fprintf(fh, "%g %g\n", t_, dl->data[i_]);
+        }
+        fclose(fh);
+    }
+#endif
+
+    if (data_line_pearson_coeff(mean_line, rms_line) <= 0.0) {
+        gwy_debug("holes");
+        param[2] = zmax;
+        param[5] = zmax - zmin;
+    }
+    else {
+        gwy_debug("bumps");
+        param[2] = zmin;
+        param[5] = zmin - zmax;
+        /* estimate_period_and_phase() finds maxima but we want minima here */
+        param[0] += 0.5*param[3];
+        param[1] += 0.5*param[3];
+    }
+
+    g_object_unref(rms_line);
+    g_object_unref(mean_line);
+
+    return ok1 && ok2;
+}
+
+static gdouble
+holes_calc_wouter(const gdouble *param)
+{
+    return param[3]/(1.0 + fabs(param[4]));
+}
+
+static gdouble
+holes_calc_err_wouter(const gdouble *param,
+                      const gdouble *param_err,
+                      const gdouble *correl)
+{
+    gdouble diff[G_N_ELEMENTS(holes_params)];
+    gdouble wouter = holes_calc_wouter(param);
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[3] = wouter/param[3];
+    diff[4] = -wouter/(1.0 + fabs(param[4]));
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+holes_calc_winner(const gdouble *param)
+{
+    return param[3]/(1.0 + fabs(param[4]))/(1.0 + fabs(param[6]));
+}
+
+static gdouble
+holes_calc_err_winner(const gdouble *param,
+                      const gdouble *param_err,
+                      const gdouble *correl)
+{
+    gdouble diff[G_N_ELEMENTS(holes_params)];
+    gdouble winner = holes_calc_winner(param);
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[3] = winner/param[3];
+    diff[4] = -winner/(1.0 + fabs(param[4]));
+    diff[6] = -winner/(1.0 + fabs(param[6]));
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
+}
+
+static gdouble
+holes_calc_R(const gdouble *param)
+{
+    return param[3]/(1.0 + fabs(param[4]))/fabs(param[7])/(1.0 + fabs(param[7]));
+}
+
+static gdouble
+holes_calc_err_R(const gdouble *param,
+                 const gdouble *param_err,
+                 const gdouble *correl)
+{
+    gdouble diff[G_N_ELEMENTS(holes_params)];
+    gdouble R = holes_calc_R(param);
+    gdouble t = 1.0 + fabs(param[7]);
+
+    gwy_clear(diff, G_N_ELEMENTS(diff));
+    diff[3] = R/param[3];
+    diff[4] = -R/(1.0 + fabs(param[4]));
+    diff[7] = -param[3]/(1.0 + fabs(param[4]))/(t*t);
+    return dotprod_with_correl(diff, param_err, correl, G_N_ELEMENTS(diff));
 }
 
 /**************************************************************************
@@ -3910,19 +4059,25 @@ pring_estimate_projection(const GwyXY *xy, const gdouble *z, guint n,
 {
     guint i, j, res;
     const gdouble *d;
-    gdouble c, width[2];
+    gdouble c, real, off, width[2];
 
     c = (vertical ? yc : xc);
+    gwy_data_line_set_real(proj, 2.0*r);
+    gwy_data_line_set_offset(proj, -r);
     projection_to_line(xy, z, n, vertical ? -0.5*G_PI : 0.0,
                        xc, yc, proj, NULL, counts);
+    data_line_shorten(proj, counts, 4);
+
     if (!upwards)
         gwy_data_line_multiply(proj, -1.0);
 
     res = gwy_data_line_get_res(proj);
+    real = gwy_data_line_get_real(proj);
+    off = gwy_data_line_get_offset(proj);
     d = gwy_data_line_get_data(proj);
     for (i = j = 0; i < res; i++) {
         if (counts[i] > 5) {
-            projdata[j].x = c + r*((2.0*i + 1.0)/res - 1.0);
+            projdata[j].x = c + off + (i + 0.5)*real/res;
             projdata[j].y = d[i];
             j++;
         }
@@ -3946,18 +4101,17 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gdouble xc, yc, r, zmin, zmax, zskew;
     gdouble xestim[3], yestim[3];
     guint *counts;
-    gboolean ok = TRUE;
+    gboolean ok1, ok2;
     guint res;
 
     circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
     range_z(z, n, &zmin, &zmax, estimcache);
     stat_z(z, n, NULL, NULL, &zskew, estimcache);
-    res = (guint)floor(2.0*sqrt(n) + 1.0);
+    res = (guint)floor(0.8*sqrt(n) + 1.0);
     if (zskew < 0.0)
         GWY_SWAP(gdouble, zmin, zmax);
 
     proj = gwy_data_line_new(res, 2.0*r, FALSE);
-    gwy_data_line_set_offset(proj, -r);
     counts = g_new(guint, res);
     projdata = g_new(GwyXY, res);
 
@@ -3965,16 +4119,19 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gwy_peaks_set_order(peaks, GWY_PEAK_ORDER_ABSCISSA);
     gwy_peaks_set_background(peaks, GWY_PEAK_BACKGROUND_MMSTEP);
 
-    ok = (pring_estimate_projection(xy, z, n, xc, yc, r, FALSE, zskew >= 0.0,
-                                    proj, projdata, counts, peaks, xestim)
-          && pring_estimate_projection(xy, z, n, xc, yc, r, TRUE, zskew >= 0.0,
-                                       proj, projdata, counts, peaks, yestim));
+    gwy_data_line_resample(proj, res, GWY_INTERPOLATION_NONE);
+    ok1 = pring_estimate_projection(xy, z, n, xc, yc, r, FALSE, zskew >= 0.0,
+                                    proj, projdata, counts, peaks, xestim);
+
+    gwy_data_line_resample(proj, res, GWY_INTERPOLATION_NONE);
+    ok2 = pring_estimate_projection(xy, z, n, xc, yc, r, TRUE, zskew >= 0.0,
+                                    proj, projdata, counts, peaks, yestim);
 
     g_free(counts);
     g_object_unref(proj);
     gwy_peaks_free(peaks);
 
-    if (!ok)
+    if (!ok1 || !ok2)
         return FALSE;
 
     param[0] = 0.5*(xestim[0] + xestim[1]);
