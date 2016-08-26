@@ -1886,25 +1886,38 @@ update_fields(FitShapeControls *controls)
 {
     GwyDataField *dfield, *resfield, *difffield, *mask = NULL;
     GwyMaskingType masking = controls->args->masking;
+    FitShapeContext *ctx = controls->ctx;
+    guint xres, yres, n, k;
+    const gdouble *m;
+    gdouble *d;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
     resfield = gwy_container_get_object_by_name(controls->mydata, "/1/data");
     difffield = gwy_container_get_object_by_name(controls->mydata, "/2/data");
-    /* FIXME: We do have the theoretical values in ctx->z.  We could *mostly*
-     * take them directly, except when masking is used and we want also the
-     * values in the excluded points – those are not in ctx->z. */
-    calculate_field(functions + controls->function_id,
-                    controls->param, resfield);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    n = xres*yres;
+    gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                     (GObject**)&mask);
+    if (controls->pageno == GWY_PAGE_CHANNELS
+        && (!mask || masking == GWY_MASK_IGNORE)) {
+        /* We know ctx->f contains all the theoretical values. */
+        g_assert(ctx->n == n);
+        memcpy(gwy_data_field_get_data(resfield), ctx->f, n*sizeof(gdouble));
+    }
+    else {
+        /* Either the input is XYZ or we are using masking.  Just recalculate
+         * everything, even values that are in ctx->f. */
+        calculate_field(functions + controls->function_id,
+                        controls->param, resfield);
+    }
+
     gwy_data_field_data_changed(resfield);
     gwy_data_field_subtract_fields(difffield, dfield, resfield);
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
-                                         (GObject**)&mask)) {
-        guint xres = gwy_data_field_get_xres(mask);
-        guint yres = gwy_data_field_get_yres(mask);
-        const gdouble *m = gwy_data_field_get_data_const(mask);
-        gdouble *d = gwy_data_field_get_data(difffield);
-        guint n = xres*yres, k;
-
+    if (!controls->args->diff_excluded && mask && masking != GWY_MASK_IGNORE) {
+        m = gwy_data_field_get_data_const(mask);
+        d = gwy_data_field_get_data(difffield);
         if (masking == GWY_MASK_INCLUDE) {
             for (k = 0; k < n; k++) {
                 if (m[k] <= 0.0)
