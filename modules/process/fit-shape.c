@@ -4529,7 +4529,7 @@ create_fit_report(FitShapeControls *controls)
     g_string_append_c(report, '\n');
 
     unitstr = gwy_si_unit_get_string(zunit, GWY_SI_UNIT_FORMAT_PLAIN);
-    g_string_append_printf(report, _("%s %g %s\n"),
+    g_string_append_printf(report, "%s %g %s\n",
                            _("Mean square difference:"),
                            controls->rss, unitstr);
     g_free(unitstr);
