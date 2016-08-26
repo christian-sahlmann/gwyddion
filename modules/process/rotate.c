@@ -307,7 +307,7 @@ rotate_dialog(RotateArgs *args,
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.show_grid
-        = gtk_check_button_new_with_mnemonic(_("Show grid"));
+        = gtk_check_button_new_with_mnemonic(_("Show _grid"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.show_grid),
                                  args->show_grid);
     gtk_table_attach(GTK_TABLE(table), controls.show_grid,
