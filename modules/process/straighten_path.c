@@ -32,6 +32,7 @@
 #include <libprocess/spline.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -137,7 +138,7 @@ module_register(void)
     gwy_process_func_register("straighten_path",
                               (GwyProcessFunc)&straighten_path,
                               N_("/_Distortion/Straighten _Path..."),
-                              NULL,
+                              GWY_STOCK_STRAIGHTEN_PATH,
                               STRAIGHTEN_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Straighten along a path"));

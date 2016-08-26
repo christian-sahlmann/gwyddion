@@ -100,7 +100,7 @@ module_register(void)
     gwy_volume_func_register("kmedians",
                              (GwyVolumeFunc)&volume_kmedians,
                              N_("/_K-medians clustering..."),
-                             NULL,
+                             GWY_STOCK_VOLUME_KMEDIANS,
                              KMEDIANS_RUN_MODES,
                              GWY_MENU_FLAG_VOLUME,
                              N_("Calculate K-medians clustering on volume data"));

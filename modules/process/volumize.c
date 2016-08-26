@@ -54,7 +54,7 @@ module_register(void)
     gwy_process_func_register("volumize",
                               (GwyProcessFunc)&volumize,
                               N_("/_Basic Operations/Volumize..."),
-                              GWY_STOCK_VOLUME,
+                              GWY_STOCK_VOLUMIZE,
                               VOLUMIZE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Convert datafield to 3D data"));

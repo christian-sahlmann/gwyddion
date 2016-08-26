@@ -30,6 +30,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwynullstore.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-volume.h>
 #include <app/gwyapp.h>
@@ -207,7 +208,7 @@ module_register(void)
     gwy_volume_func_register("volume_slice",
                              (GwyVolumeFunc)&slice,
                              N_("/Cut and _Slice..."),
-                             NULL,
+                             GWY_STOCK_VOLUME_SLICE,
                              SLICE_RUN_MODES,
                              GWY_MENU_FLAG_VOLUME,
                              N_("Extract image planes and line graphs"));

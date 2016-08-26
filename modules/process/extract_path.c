@@ -32,6 +32,7 @@
 #include <libprocess/spline.h>
 #include <libgwydgets/gwynullstore.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -98,7 +99,7 @@ module_register(void)
     gwy_process_func_register("extract_path",
                               (GwyProcessFunc)&extract_path,
                               N_("/_Distortion/Extract _Path Selection..."),
-                              NULL,
+                              GWY_STOCK_EXTRACT_PATH,
                               EXTR_PATH_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Extract path selection data"));

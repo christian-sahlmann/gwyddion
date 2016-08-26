@@ -30,6 +30,7 @@
 #include <libprocess/correct.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwystock.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 #include "preview.h"
@@ -145,7 +146,7 @@ module_register(void)
     gwy_process_func_register("polydistort",
                               (GwyProcessFunc)&polydistort,
                               N_("/_Distortion/Pol_ynomial..."),
-                              NULL,
+                              GWY_STOCK_POLY_DISTORT,
                               DISTORT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Applies polynomial distortion in the "

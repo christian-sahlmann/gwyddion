@@ -125,74 +125,73 @@ typedef struct {
     GwyContainer *mydata;
 } VolfitControls;
 
-static gboolean    module_register           (void);
-static void        volfit                       (GwyContainer *data, GwyRunType run);
-static void        volfit_dialog                (VolfitArgs *args);
-static void        volfit_controls_free         (VolfitControls *controls);
-static void        grow_width                (GObject *obj,
-                                              GtkRequisition *req);
-static void        volfit_fetch_entry           (VolfitControls *controls);
-static void        volfit_param_row_create      (VolfitControls *controls,
-                                              gint i,
-                                              GtkTable *table,
-                                              gint row);
-static void        volfit_param_row_destroy     (VolfitControls *controls,
-                                              gint i);
-static void        volfit_do                    (VolfitControls *controls);
-static void        volfit_single                    (VolfitControls *controls);
-static void        auto_estimate_changed     (GtkToggleButton *check,
-                                              VolfitControls *controls);
-static void        auto_plot_changed         (GtkToggleButton *check,
-                                              VolfitControls *controls);
-static void        function_changed          (GtkComboBox *combo,
-                                              VolfitControls *controls);
-static void        range_changed             (GtkWidget *entry,
-                                              VolfitControls *controls);
-static void        volfit_limit_selection       (VolfitControls *controls,
-                                              gboolean curve_switch);
-static void        volfit_get_full_x_range      (VolfitControls *controls,
-                                              gdouble *xmin,
-                                              gdouble *xmax);
-static void        param_initial_activate    (GtkWidget *entry,
-                                              gpointer user_data);
-static void        fix_changed               (GtkToggleButton *button,
-                                              VolfitControls *controls);
-static void        set_layer_channel         (GwyPixmapLayer *layer,
-                                              gint channel);
-static void        xpos_changed_cb           (GtkAdjustment *adj,
-                                              VolfitControls *controls);
-static void        ypos_changed_cb           (GtkAdjustment *adj,
-                                              VolfitControls *controls);
-static void        load_curve                (VolfitControls *controls);
-static void        copy_param                (GObject *button,
-                                              VolfitControls *controls);
-static void        volfit_plot_curve            (VolfitArgs *args);
-static void        volfit_set_state             (VolfitControls *controls,
-                                              gboolean is_volfitted,
-                                              gboolean is_estimated);
-static void        volfit_estimate              (VolfitControls *controls);
-static void        volfit_param_row_update_value(VolfitControls *controls,
-                                              gint i,
-                                              gboolean errorknown);
-static void        graph_selected            (GwySelection* selection,
-                                              gint i,
-                                              VolfitControls *controls);
-static gint        normalize_data            (VolfitArgs *args);
-static GtkWidget*  function_selector_new     (GCallback callback,
-                                              gpointer cbdata,
-                                              gint current);
-static void        load_args                 (GwyContainer *container,
-                                              VolfitArgs *args);
-static void        save_args                 (GwyContainer *container,
-                                              VolfitArgs *args);
-static void        graph_selection_finished_cb  (GwySelection *selection,
-                                                 VolfitControls *controls);
-
-static GString*    create_volfit_report         (VolfitArgs *args);
-static gint        pick_and_normalize_data      (VolfitArgs *args,
-                                                 gint xpos,
-                                                 gint ypos);
-
+static gboolean   module_register              (void);
+static void       volfit                       (GwyContainer *data,
+                                                GwyRunType run);
+static void       volfit_dialog                (VolfitArgs *args);
+static void       volfit_controls_free         (VolfitControls *controls);
+static void       grow_width                   (GObject *obj,
+                                                GtkRequisition *req);
+static void       volfit_fetch_entry           (VolfitControls *controls);
+static void       volfit_param_row_create      (VolfitControls *controls,
+                                                gint i,
+                                                GtkTable *table,
+                                                gint row);
+static void       volfit_param_row_destroy     (VolfitControls *controls,
+                                                gint i);
+static void       volfit_do                    (VolfitControls *controls);
+static void       volfit_single                (VolfitControls *controls);
+static void       auto_estimate_changed        (GtkToggleButton *check,
+                                                VolfitControls *controls);
+static void       auto_plot_changed            (GtkToggleButton *check,
+                                                VolfitControls *controls);
+static void       function_changed             (GtkComboBox *combo,
+                                                VolfitControls *controls);
+static void       range_changed                (GtkWidget *entry,
+                                                VolfitControls *controls);
+static void       volfit_limit_selection       (VolfitControls *controls,
+                                                gboolean curve_switch);
+static void       volfit_get_full_x_range      (VolfitControls *controls,
+                                                gdouble *xmin,
+                                                gdouble *xmax);
+static void       param_initial_activate       (GtkWidget *entry,
+                                                gpointer user_data);
+static void       fix_changed                  (GtkToggleButton *button,
+                                                VolfitControls *controls);
+static void       set_layer_channel            (GwyPixmapLayer *layer,
+                                                gint channel);
+static void       xpos_changed_cb              (GtkAdjustment *adj,
+                                                VolfitControls *controls);
+static void       ypos_changed_cb              (GtkAdjustment *adj,
+                                                VolfitControls *controls);
+static void       load_curve                   (VolfitControls *controls);
+static void       copy_param                   (GObject *button,
+                                                VolfitControls *controls);
+static void       volfit_plot_curve            (VolfitArgs *args);
+static void       volfit_set_state             (VolfitControls *controls,
+                                                gboolean is_volfitted,
+                                                gboolean is_estimated);
+static void       volfit_estimate              (VolfitControls *controls);
+static void       volfit_param_row_update_value(VolfitControls *controls,
+                                                gint i,
+                                                gboolean errorknown);
+static void       graph_selected               (GwySelection* selection,
+                                                gint i,
+                                                VolfitControls *controls);
+static gint       normalize_data               (VolfitArgs *args);
+static GtkWidget* function_selector_new        (GCallback callback,
+                                                gpointer cbdata,
+                                                gint current);
+static void       load_args                    (GwyContainer *container,
+                                                VolfitArgs *args);
+static void       save_args                    (GwyContainer *container,
+                                                VolfitArgs *args);
+static void       graph_selection_finished_cb  (GwySelection *selection,
+                                                VolfitControls *controls);
+static GString*   create_volfit_report         (VolfitArgs *args);
+static gint       pick_and_normalize_data      (VolfitArgs *args,
+                                                gint xpos,
+                                                gint ypos);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -212,7 +211,7 @@ module_register(void)
     gwy_volume_func_register("volume_fdfit",
                             (GwyVolumeFunc)&volfit,
                             N_("/_Evaluate FD data..."),
-                            GWY_STOCK_GRAPH_FUNCTION,
+                            GWY_STOCK_VOLUME_FD,
                             VOLFIT_RUN_MODES,
                             GWY_MENU_FLAG_VOLUME,
                             N_("Evaluate force-distance volume data"));

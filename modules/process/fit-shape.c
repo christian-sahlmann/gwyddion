@@ -22,6 +22,7 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
+ * - Do some surface-sync-data-items when creating new surfaces?
  * - Align parameter table properly (with UTF-8 string lengths).
  * - Correlation table colour-coding?
  */
@@ -886,7 +887,6 @@ create_output_xyz(FitShapeControls *controls, GwyContainer *data)
             xyz[i].z = ctx->f[i];
 
         newid = gwy_app_data_browser_add_surface(newsurface, data, TRUE);
-        /* XXX: Some surface-sync-data-items should go here. */
         gwy_app_xyz_log_add_xyz(data, id, newid);
         gwy_app_set_surface_title(data, newid, _("Fitted shape"));
         g_object_unref(newsurface);
@@ -900,7 +900,6 @@ create_output_xyz(FitShapeControls *controls, GwyContainer *data)
             xyz[i].z = sxyz[i].z - ctx->f[i];
 
         newid = gwy_app_data_browser_add_surface(newsurface, data, TRUE);
-        /* XXX: Some surface-sync-data-items should go here. */
         gwy_app_xyz_log_add_xyz(data, id, newid);
         gwy_app_set_surface_title(data, newid, _("Difference"));
         g_object_unref(newsurface);
