@@ -461,6 +461,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_EXTRACT_PATH:
+ *
+ * The "Extract-Path" stock icon.
+ * <inlinegraphic fileref="gwy_extract_path-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_FACET_LEVEL:
  *
  * The "Facet-Level" stock icon.
@@ -1220,6 +1229,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_POLY_DISTORT:
+ *
+ * The "Poly-Distort" stock icon.
+ * <inlinegraphic fileref="gwy_poly_distort-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_PROFILE:
  *
  * The "Profile" stock icon.
@@ -1351,6 +1369,15 @@ file_to_icon_source(const gchar *path,
  *
  * The "Stat-Quantities" stock icon.
  * <inlinegraphic fileref="gwy_stat_quantities-24.png" format="PNG"/>
+ **/
+
+/**
+ * GWY_STOCK_STRAIGHTEN_PATH:
+ *
+ * The "Straighten-Path" stock icon.
+ * <inlinegraphic fileref="gwy_straighten_path-24.png" format="PNG"/>
+ *
+ * Since: 2.46
  **/
 
 /**
@@ -1589,12 +1616,57 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_VOLUME_FD:
+ *
+ * The "Volume-FD" stock icon.
+ * <inlinegraphic fileref="gwy_volume_fd-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_VOLUME_INVERT:
  *
  * The "Volume-Invert" stock icon.
  * <inlinegraphic fileref="gwy_volume_invert-24.png" format="PNG"/>
  *
  * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_KMEANS:
+ *
+ * The "Volume-Kmeans" stock icon.
+ * <inlinegraphic fileref="gwy_volume_kmeans-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_KMEDIANS:
+ *
+ * The "Volume-Kmedians" stock icon.
+ * <inlinegraphic fileref="gwy_volume_kmedians-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GWY_STOCK_VOLUME_SLICE:
+ *
+ * The "Volume-Slice" stock icon.
+ * <inlinegraphic fileref="gwy_volume_slice-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GWY_STOCK_VOLUMIZE:
+ *
+ * The "Volumize" stock icon.
+ * <inlinegraphic fileref="gwy_volumize-24.png" format="PNG"/>
+ *
+ * Since: 2.46
  **/
 
 /**
