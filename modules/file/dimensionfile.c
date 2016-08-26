@@ -20,7 +20,7 @@
  */
 
 /* TODO: Add magic comments one the things is marginally working. */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -36,6 +36,16 @@
 
 #define MAGIC "\x5c\x26\x14\x00"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Veeco Dimension 3100D
+ * .001 002 etc.
+ * Read[1]
+ * [1] The import module is unfinished due to the lack of documentation,
+ * testing files and/or people willing to help with the testing.  If you can
+ * help please contact us.
+ **/
 
 enum {
     HEADER_SIZE = 0xa000,

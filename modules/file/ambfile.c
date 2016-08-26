@@ -41,7 +41,10 @@
  * [FILE-MAGIC-USERGUIDE]
  * Ambios AMB
  * .amb
- * Read
+ * Read[1]
+ * [1] The import module is unfinished due to the lack of documentation,
+ * testing files and/or people willing to help with the testing.  If you can
+ * help please contact us.
  **/
 
 #include "config.h"
