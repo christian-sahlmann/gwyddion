@@ -177,7 +177,7 @@ warn_broken_load_func(const gchar *name,
                       GwyContainer *data)
 {
     static const gchar *broken_file_funcs[] = {
-        "ambfile",
+        "ambfile", "dimensionfile",
         /*"at present no modules are broken and this is not a file type name",*/
     };
 
