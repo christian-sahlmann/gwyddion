@@ -2717,7 +2717,7 @@ estimate_projection_direction(const GwyXY *xy,
                               guint n,
                               FitShapeEstimateCache *estimcache)
 {
-    enum { NROUGH = 48, NFINE = 8 };
+    enum { NROUGH = 60, NFINE = 8 };
 
     GwyDataLine *mean_line, *rms_line;
     guint *counts;
@@ -2737,7 +2737,7 @@ estimate_projection_direction(const GwyXY *xy,
         if (iter == 0) {
             ni = NROUGH;
             alpha_step = G_PI/ni;
-            alpha0 = 0.5*alpha_step;
+            alpha0 = 0.0;
         }
         else {
             /* Choose the fine points so that we do not repeat calculation in
