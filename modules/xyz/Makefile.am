@@ -9,8 +9,8 @@ xyzdir = $(pkglibdir)/modules/xyz
 
 xyz_LTLIBRARIES = \
 	xyz_drift.la \
+	xyz_level.la \
 	xyz_raster.la
-
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -34,7 +34,8 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-xyz_drift_la_SOURCES = xyz_drift.c
+xyz_drift_la_SOURCES  = xyz_drift.c
+xyz_level_la_SOURCES  = xyz_level.c
 xyz_raster_la_SOURCES = xyz_raster.c
 
 clean-local:
