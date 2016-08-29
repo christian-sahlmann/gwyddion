@@ -1284,11 +1284,6 @@ gwy_app_data_proxy_raster_changed(GObject *raster,
 
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
-    /*
-    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
-                       MODEL_TIMESTAMP, gwy_get_timestamp(),
-                       -1);
-                       */
 }
 
 static void
@@ -1317,11 +1312,6 @@ gwy_app_data_proxy_connect_raster(GwyAppDataProxy *proxy,
         return;
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
-    /*
-    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
-                       MODEL_TIMESTAMP, gwy_get_timestamp(),
-                       -1);
-                       */
 }
 
 static void
@@ -1354,11 +1344,6 @@ gwy_app_data_proxy_disconnect_raster(GwyAppDataProxy *proxy,
         return;
     /* We do not want to recaulcate the thumbnail when just the preview image
      * changes.  The thumbnail would be the same. */
-    /*
-    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
-                       MODEL_TIMESTAMP, gwy_get_timestamp(),
-                       -1);
-                       */
 }
 
 static void
@@ -1812,8 +1797,6 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                 g_object_unref(data_view);
             }
         }
-        /* Prevent thumbnail update, it depends on the preview field */
-        pageno = GWY_PAGE_NOPAGE;
         break;
 
         case KEY_IS_TITLE:
@@ -4616,6 +4599,40 @@ gwy_app_data_browser_surface_render_npoints(G_GNUC_UNUSED GtkTreeViewColumn *col
 }
 
 static void
+replace_surface_preview(GwyContainer *container,
+                        GtkTreeModel *model, GtkTreeIter *iter)
+{
+    GtkWidget *widget;
+    GwySurface *surface;
+    GwyDataField *raster;
+    gint id;
+
+    g_return_if_fail(GTK_IS_LIST_STORE(model));
+    gtk_tree_model_get(model, iter,
+                       MODEL_WIDGET, &widget,
+                       MODEL_ID, &id,
+                       MODEL_OBJECT, &surface,
+                       -1);
+
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+    if (!widget) {
+        gwy_object_unref(surface);
+        return;
+    }
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(widget));
+    raster = _gwy_app_create_surface_preview_field(surface,
+                                                   widget->allocation.width,
+                                                   widget->allocation.height);
+    gwy_container_set_object(container,
+                             gwy_app_get_surface_preview_key_for_id(id),
+                             raster);
+    g_object_unref(raster);
+    g_object_unref(surface);
+    g_object_unref(widget);
+}
+
+static void
 gwy_app_data_browser_render_surface(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                     GtkCellRenderer *renderer,
                                     GtkTreeModel *model,
@@ -4647,6 +4664,13 @@ gwy_app_data_browser_render_surface(G_GNUC_UNUSED GtkTreeViewColumn *column,
             return;
         }
     }
+
+    /* XXX: We need to recalculate the raster preview itself somewhere upon
+     * getting "data-changed" for the surface.  This is not a very nice place
+     * to do that but it is a mechanism that is already in place and handles
+     * queuing and consolidation of multiple updates.  Also note that we need
+     * to to this before setting the timestamp to avoid an infinite loop. */
+    replace_surface_preview(container, model, iter);
 
     pixbuf = gwy_app_get_xyz_thumbnail(container, id, THUMB_SIZE, THUMB_SIZE);
     pbuf_timestamp = g_new(gdouble, 1);
