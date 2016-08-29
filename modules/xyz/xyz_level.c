@@ -322,36 +322,85 @@ xyzlevel_do(GwySurface *surface,
             gint id,
             const XYZLevelArgs *args)
 {
-    GQuark quark = gwy_app_get_surface_key_for_id(id);
+    GQuark otherquark, quark = gwy_app_get_surface_key_for_id(id);
+    GQuark *allquarks = NULL;
+    GwySurface *othersurface;
     GwyXYZ *xyz, c;
-    guint k, n;
+    const GwyXYZ *newxyz;
+    guint k, n, kq, nq = 0;
     gdouble a, bx, by;
+    gint *ids = NULL;
 
-    gwy_app_undo_qcheckpointv(data, 1, &quark);
-
-    if (args->method == XYZ_LEVEL_ROTATE) {
-        /* find_plane_coeffs() calculates the mean plane in ordinary
-         * least-squares sense.  But this is not self-consistent with rotation
-         * that should use total least squares.  Perform a few iterations.
-         * The procedure converges quadratically because when the mean plane is
-         * already close to z=0 rotation and subtraction differ only in the
-         * second order.  XXX: But it does not seem to do so? */
-        for (k = 0; k < 12; k++) {
-            find_plane_coeffs(surface, &a, &bx, &by, &c);
-            level_rotate_xyz(surface, bx, by, &c);
-            if (k > 0 && sqrt(bx*bx + by*by) < 1e-15)
-                break;
-        }
-    }
-    else {
+    if (args->method == XYZ_LEVEL_SUBTRACT) {
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
         find_plane_coeffs(surface, &a, &bx, &by, &c);
         xyz = gwy_surface_get_data(surface);
         n = gwy_surface_get_npoints(surface);
         for (k = 0; k < n; k++)
             xyz[k].z -= a + bx*xyz[k].x + by*xyz[k].y;
+        gwy_surface_data_changed(surface);
+
+        return;
+    }
+
+    if (args->update_all) {
+        ids = gwy_app_data_browser_get_xyz_ids(data);
+        for (kq = 0; ids[kq] > -1; kq++) {
+            if (ids[kq] == id) {
+                ids[nq++] = ids[kq];
+            }
+            else {
+                otherquark = gwy_app_get_surface_key_for_id(ids[kq]);
+                othersurface = gwy_container_get_object(data, otherquark);
+                if (gwy_surface_xy_is_compatible(surface, othersurface))
+                    ids[nq++] = ids[kq];
+            }
+        }
+        ids[nq] = -1;
+
+        g_assert(nq);
+        allquarks = g_new(GQuark, nq);
+        for (kq = 0; kq < nq; kq++)
+            allquarks[kq] = gwy_app_get_surface_key_for_id(ids[kq]);
+        gwy_app_undo_qcheckpointv(data, nq, allquarks);
+        g_free(allquarks);
+    }
+    else
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
+
+    /* find_plane_coeffs() calculates the mean plane in ordinary
+     * least-squares sense.  But this is not self-consistent with rotation
+     * that should use total least squares.  Perform a few iterations.
+     * The procedure converges quadratically because when the mean plane is
+     * already close to z=0 rotation and subtraction differ only in the
+     * second order.  XXX: But it does not seem to do so? */
+    for (k = 0; k < 12; k++) {
+        find_plane_coeffs(surface, &a, &bx, &by, &c);
+        level_rotate_xyz(surface, bx, by, &c);
+        if (k > 1 && sqrt(bx*bx + by*by) < 1e-15)
+            break;
     }
 
     gwy_surface_data_changed(surface);
+    if (!args->update_all)
+        return;
+
+    newxyz = gwy_surface_get_data_const(surface);
+    n = gwy_surface_get_npoints(surface);
+    for (kq = 0; kq < nq; kq++) {
+        if (ids[kq] == id)
+            continue;
+
+        otherquark = gwy_app_get_surface_key_for_id(ids[kq]);
+        othersurface = gwy_container_get_object(data, otherquark);
+        xyz = gwy_surface_get_data(othersurface);
+        for (k = 0; k < n; k++) {
+            xyz[k].x = newxyz[k].x;
+            xyz[k].y = newxyz[k].y;
+        }
+        gwy_surface_data_changed(surface);
+    }
+    g_free(ids);
 }
 
 static void
@@ -366,7 +415,6 @@ level_rotate_xyz(GwySurface *surface, gdouble bx, gdouble by, const GwyXYZ *c)
     u.x = -by/b;
     u.y = bx/b;
     u.z = 0.0;
-    /* XXX: The rotation sign may be wrong. */
     rotate_xyz(surface, &u, c, atan2(b, 1.0));
 }
 
