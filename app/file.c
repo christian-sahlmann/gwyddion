@@ -215,7 +215,7 @@ warn_broken_load_func(const gchar *name,
            "%s\n\n"
            "is incomplete due to the lack of documentation, "
            "testing files and/or people willing to help with the testing.\n\n"
-           "If you want to help to improve the import please contact the "
+           "If you can help to improve the import please contact the "
            "author of module %s-%s:\n\n"
            "%s"),
        _(description), ffdata.modname, ffdata.modinfo->version,
