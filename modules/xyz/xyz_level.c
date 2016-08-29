@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -60,10 +60,19 @@ static void     xyzlevel_do       (GwySurface *surface,
                                    GwyContainer *data,
                                    gint id,
                                    const XYZLevelArgs *args);
+static void     level_rotate_xyz  (GwySurface *surface,
+                                   gdouble bx,
+                                   gdouble by,
+                                   const GwyXYZ *c);
+static void     rotate_xyz        (GwySurface *surface,
+                                   const GwyXYZ *u,
+                                   const GwyXYZ *c,
+                                   gdouble phi);
 static void     find_plane_coeffs (GwySurface *surface,
                                    gdouble *a,
                                    gdouble *bx,
-                                   gdouble *by);
+                                   gdouble *by,
+                                   GwyXYZ *c);
 static void     xyzlevel_load_args(GwyContainer *container,
                                    XYZLevelArgs *args);
 static void     xyzlevel_save_args(GwyContainer *container,
@@ -237,21 +246,31 @@ xyzlevel_do(GwySurface *surface,
             gint id,
             const XYZLevelArgs *args)
 {
-    XYZLevelType method = args->method;
-    GwyXYZ *xyz;
+    GQuark quark = gwy_app_get_surface_key_for_id(id);
+    GwyXYZ *xyz, c;
     guint k, n;
     gdouble a, bx, by;
 
-    find_plane_coeffs(surface, &a, &bx, &by);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
 
-    xyz = gwy_surface_get_data(surface);
-    n = gwy_surface_get_npoints(surface);
-    for (k = 0; k < n; k++) {
-        xyz[k].z -= a + bx*xyz[k].x + by*xyz[k].y;
+    if (args->method == XYZ_LEVEL_ROTATE) {
+        /* find_plane_coeffs() calculates the mean plane in ordinary
+         * least-squares sense.  But this is not self-consistent with rotation
+         * that should use total least squares.  Perform a few iterations.
+         * The procedure converges quadratically because when the mean plane is
+         * already close to z=0 rotation and subtraction differ only in the
+         * second order.  XXX: But it does not seem to do so? */
+        for (k = 0; k < 5; k++) {
+            find_plane_coeffs(surface, &a, &bx, &by, &c);
+            level_rotate_xyz(surface, bx, by, &c);
+        }
     }
-
-    if (method == XYZ_LEVEL_ROTATE) {
-        g_warning("Implement me!");
+    else {
+        find_plane_coeffs(surface, &a, &bx, &by, &c);
+        xyz = gwy_surface_get_data(surface);
+        n = gwy_surface_get_npoints(surface);
+        for (k = 0; k < n; k++)
+            xyz[k].z -= a + bx*xyz[k].x + by*xyz[k].y;
     }
 
     /* XXX: This does not do what one would expect because preview updates are
@@ -261,19 +280,65 @@ xyzlevel_do(GwySurface *surface,
 }
 
 static void
-find_plane_coeffs(GwySurface *surface, gdouble *a, gdouble *bx, gdouble *by)
+level_rotate_xyz(GwySurface *surface, gdouble bx, gdouble by, const GwyXYZ *c)
+{
+    gdouble b = sqrt(bx*bx + by*by);
+    GwyXYZ u;
+
+    if (!b)
+        return;
+
+    u.x = -by/b;
+    u.y = bx/b;
+    u.z = 0.0;
+    /* XXX: The rotation sign may be wrong. */
+    rotate_xyz(surface, &u, c, atan2(b, 1.0));
+}
+
+static void
+rotate_xyz(GwySurface *surface, const GwyXYZ *u, const GwyXYZ *c, gdouble phi)
+{
+    GwyXYZ *xyz = gwy_surface_get_data(surface);
+    guint k, n = gwy_surface_get_npoints(surface);
+    gdouble cphi = cos(phi), sphi = sin(phi);
+    gdouble axx = cphi + u->x*u->x*(1.0 - cphi);
+    gdouble axy = u->x*u->y*(1.0 - cphi) - u->z*sphi;
+    gdouble axz = u->x*u->z*(1.0 - cphi) + u->y*sphi;
+    gdouble ayx = u->y*u->x*(1.0 - cphi) + u->z*sphi;
+    gdouble ayy = cphi + u->y*u->y*(1.0 - cphi);
+    gdouble ayz = u->y*u->z*(1.0 - cphi) - u->x*sphi;
+    gdouble azx = u->z*u->x*(1.0 - cphi) - u->y*sphi;
+    gdouble azy = u->z*u->y*(1.0 - cphi) + u->x*sphi;
+    gdouble azz = cphi + u->z*u->z*(1.0 - cphi);
+
+    for (k = 0; k < n; k++) {
+        gdouble x = xyz[k].x - c->x;
+        gdouble y = xyz[k].y - c->y;
+        gdouble z = xyz[k].z - c->z;
+
+        xyz[k].x = axx*x + axy*y + axz*z + c->x;
+        xyz[k].y = ayx*x + ayy*y + ayz*z + c->y;
+        xyz[k].z = azx*x + azy*y + azz*z + c->z;
+    }
+}
+
+static void
+find_plane_coeffs(GwySurface *surface, gdouble *a, gdouble *bx, gdouble *by,
+                  GwyXYZ *c)
 {
     const GwyXYZ *xyz = gwy_surface_get_data_const(surface);
     guint k, n = gwy_surface_get_npoints(surface);
-    gdouble sx, sy, sxx, sxy, syy, sz, sxz, syz, D;
+    gdouble sx, sy, sz, sxx, sxy, syy, sxz, syz, D;
 
     sx = sy = sz = 0.0;
     for (k = 0; k < n; k++) {
         sx += xyz[k].x;
         sy += xyz[k].y;
+        sz += xyz[k].z;
     }
     sx /= n;
     sy /= n;
+    sz /= n;
 
     sxx = sxy = syy = sxz = syz = 0.0;
     for (k = 0; k < n; k++) {
@@ -292,6 +357,10 @@ find_plane_coeffs(GwySurface *surface, gdouble *a, gdouble *bx, gdouble *by)
     *bx = (syy*sxz - sxy*syz)/D;
     *by = (sxx*syz - sxy*sxz)/D;
     *a = -(sx*(*bx) + sy*(*by));
+    c->x = sx;
+    c->y = sy;
+    c->z = sz;
+    gwy_debug("b %g %g", *bx, *by);
 }
 
 static const gchar method_key[]     = "/module/xyz_level/method";
