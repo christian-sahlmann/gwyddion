@@ -49,6 +49,10 @@ typedef struct {
 } XYZLevelControls;
 
 static gboolean module_register   (void);
+static void     xyzfixzero        (GwyContainer *data,
+                                   GwyRunType run);
+static void     xyzzeromean       (GwyContainer *data,
+                                   GwyRunType run);
 static void     xyzlevel          (GwyContainer *data,
                                    GwyRunType run);
 static gboolean xyzlevel_dialogue (XYZLevelArgs *arg);
@@ -97,7 +101,21 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_xyz_func_register("xyz_level",
+    gwy_xyz_func_register("xyz_fix_zero",
+                          (GwyXYZFunc)&xyzfixzero,
+                          N_("/Fix _Zero"),
+                          NULL,
+                          XYZLEVEL_RUN_MODES,
+                          GWY_MENU_FLAG_XYZ,
+                          N_("Shift minimum data value to zero"));
+    gwy_xyz_func_register("xyz_zero_mean",
+                          (GwyXYZFunc)&xyzzeromean,
+                          N_("/Zero _Mean Value"),
+                          NULL,
+                          XYZLEVEL_RUN_MODES,
+                          GWY_MENU_FLAG_XYZ,
+                          N_("Shift mean data value to zero"));
+    gwy_xyz_func_register("xyz_fixzero",
                           (GwyXYZFunc)&xyzlevel,
                           N_("/Plane _Level..."),
                           NULL,
@@ -106,6 +124,64 @@ module_register(void)
                           N_("Level data by mean plane correction"));
 
     return TRUE;
+}
+
+static void
+xyzfixzero(GwyContainer *data, G_GNUC_UNUSED GwyRunType run)
+{
+    GwySurface *surface = NULL;
+    GQuark quark;
+    gint id;
+    GwyXYZ *xyz;
+    guint k, n;
+    gdouble zmin, zmax;
+
+    gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &id,
+                                     0);
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+
+    quark = gwy_app_get_surface_key_for_id(id);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+
+    gwy_surface_get_min_max(surface, &zmin, &zmax);
+    xyz = gwy_surface_get_data(surface);
+    n = gwy_surface_get_npoints(surface);
+    for (k = 0; k < n; k++)
+        xyz[k].z -= zmin;
+
+    gwy_surface_data_changed(surface);
+}
+
+/* FIXME: We should use mean weighted by area.  But that must wait until we
+ * can do such thing... */
+static void
+xyzzeromean(GwyContainer *data, G_GNUC_UNUSED GwyRunType run)
+{
+    GwySurface *surface = NULL;
+    GQuark quark;
+    gint id;
+    GwyXYZ *xyz;
+    guint k, n;
+    gdouble zmean = 0.0;
+
+    gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
+                                     GWY_APP_SURFACE_ID, &id,
+                                     0);
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+
+    quark = gwy_app_get_surface_key_for_id(id);
+    gwy_app_undo_qcheckpointv(data, 1, &quark);
+
+    xyz = gwy_surface_get_data(surface);
+    n = gwy_surface_get_npoints(surface);
+    for (k = 0; k < n; k++)
+        zmean += xyz[k].z;
+    zmean /= n;
+    for (k = 0; k < n; k++)
+        xyz[k].z -= zmean;
+
+    gwy_surface_data_changed(surface);
 }
 
 static void
