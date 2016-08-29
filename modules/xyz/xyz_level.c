@@ -260,9 +260,11 @@ xyzlevel_do(GwySurface *surface,
          * The procedure converges quadratically because when the mean plane is
          * already close to z=0 rotation and subtraction differ only in the
          * second order.  XXX: But it does not seem to do so? */
-        for (k = 0; k < 5; k++) {
+        for (k = 0; k < 12; k++) {
             find_plane_coeffs(surface, &a, &bx, &by, &c);
             level_rotate_xyz(surface, bx, by, &c);
+            if (k > 0 && sqrt(bx*bx + by*by) < 1e-15)
+                break;
         }
     }
     else {
@@ -273,9 +275,6 @@ xyzlevel_do(GwySurface *surface,
             xyz[k].z -= a + bx*xyz[k].x + by*xyz[k].y;
     }
 
-    /* XXX: This does not do what one would expect because preview updates are
-     * manual.  The app should probably automatically re-render the preview
-     * when it receives "data-changed" on the Surface. */
     gwy_surface_data_changed(surface);
 }
 
