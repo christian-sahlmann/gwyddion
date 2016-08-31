@@ -55,7 +55,8 @@ static void     xyzzeromean       (GwyContainer *data,
                                    GwyRunType run);
 static void     xyzlevel          (GwyContainer *data,
                                    GwyRunType run);
-static gboolean xyzlevel_dialogue (XYZLevelArgs *arg);
+static gboolean xyzlevel_dialogue (XYZLevelArgs *arg,
+                                   GwySurface *surface);
 static void     method_changed    (GtkToggleButton *toggle,
                                    XYZLevelControls *controls);
 static void     update_all_changed(GtkToggleButton *toggle,
@@ -203,9 +204,12 @@ xyzlevel(GwyContainer *data, GwyRunType run)
 
     settings = gwy_app_settings_get();
     xyzlevel_load_args(settings, &args);
+    if (!gwy_si_unit_equal(gwy_surface_get_si_unit_xy(surface),
+                           gwy_surface_get_si_unit_z(surface)))
+        args.method = XYZ_LEVEL_SUBTRACT;
 
     if (run == GWY_RUN_INTERACTIVE)
-        ok = xyzlevel_dialogue(&args);
+        ok = xyzlevel_dialogue(&args, surface);
 
     xyzlevel_save_args(settings, &args);
 
@@ -214,7 +218,7 @@ xyzlevel(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-xyzlevel_dialogue(XYZLevelArgs *args)
+xyzlevel_dialogue(XYZLevelArgs *args, GwySurface *surface)
 {
     static const GwyEnum methods[] = {
         { N_("Plane subtraction"), XYZ_LEVEL_SUBTRACT, },
@@ -258,6 +262,12 @@ xyzlevel_dialogue(XYZLevelArgs *args)
                                                &controls,
                                                args->method);
     row = gwy_radio_buttons_attach_to_table(controls.method, table, 3, row);
+    if (!gwy_si_unit_equal(gwy_surface_get_si_unit_xy(surface),
+                           gwy_surface_get_si_unit_z(surface))) {
+        gtk_widget_set_sensitive(gwy_radio_buttons_find(controls.method,
+                                                        XYZ_LEVEL_ROTATE),
+                                 FALSE);
+    }
 
     check = gtk_check_button_new_with_mnemonic(_("Update X and Y of _all"
                                                  "compatible data"));
