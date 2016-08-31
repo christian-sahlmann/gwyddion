@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -316,6 +316,33 @@ update_all_changed(GtkToggleButton *toggle,
     controls->args->update_all = gtk_toggle_button_get_active(toggle);
 }
 
+static gboolean
+accelerate_convergence(const gdouble *seq, gdouble *x)
+{
+    gdouble q, qdiff;
+
+    /* If we are converged do not prevent convergence in other components. */
+    if (seq[2] == 0.0) {
+        *x = 0.0;
+        return TRUE;
+    }
+
+    if (seq[0]*seq[1] <= 0.0 || seq[1]*seq[2] <= 0.0)
+        return FALSE;
+
+    q = seq[2]/seq[1];
+    if (q > 0.5)
+        return FALSE;
+
+    qdiff = fabs(log(q*seq[0]/seq[1]));
+    gwy_debug("q %g (diff %g)", q, qdiff);
+    if (qdiff > 0.5*q)
+        return FALSE;
+
+    *x = seq[2]/(1.0 - q);
+    return TRUE;
+}
+
 static void
 xyzlevel_do(GwySurface *surface,
             GwyContainer *data,
@@ -327,13 +354,14 @@ xyzlevel_do(GwySurface *surface,
     GwySurface *othersurface;
     GwyXYZ *xyz, c;
     const GwyXYZ *newxyz;
-    guint k, n, kq, nq = 0;
-    gdouble a, bx, by;
+    guint k, n, kq, ns, nq = 0;
+    gdouble a, bx, by, bxseq[3], byseq[3], bx_acc, by_acc;
     gint *ids = NULL;
 
     if (args->method == XYZ_LEVEL_SUBTRACT) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
         find_plane_coeffs(surface, &a, &bx, &by, &c);
+        gwy_debug("b %g %g", bx, by);
         xyz = gwy_surface_get_data(surface);
         n = gwy_surface_get_npoints(surface);
         for (k = 0; k < n; k++)
@@ -370,20 +398,44 @@ xyzlevel_do(GwySurface *surface,
 
     /* find_plane_coeffs() calculates the mean plane in ordinary
      * least-squares sense.  But this is not self-consistent with rotation
-     * that should use total least squares.  Perform a few iterations.
-     * The procedure converges quadratically because when the mean plane is
-     * already close to z=0 rotation and subtraction differ only in the
-     * second order.  XXX: But it does not seem to do so? */
-    for (k = 0; k < 12; k++) {
+     * that should use total least squares.  Perform a few iterations. */
+    ns = 0;
+    for (k = 0; k < 20; k++) {
         find_plane_coeffs(surface, &a, &bx, &by, &c);
+        gwy_debug("[%u] b %g %g", k, bx, by);
+        if (ns < 3) {
+            bxseq[ns] = bx;
+            byseq[ns] = by;
+            ns++;
+        }
+        else {
+            bxseq[0] = bxseq[1];
+            bxseq[1] = bxseq[2];
+            bxseq[2] = bx;
+            byseq[0] = byseq[1];
+            byseq[1] = byseq[2];
+            byseq[2] = by;
+        }
+        if (ns == 3) {
+            if (accelerate_convergence(bxseq, &bx_acc)
+                && accelerate_convergence(byseq, &by_acc)) {
+                bx = bx_acc;
+                by = by_acc;
+                ns = 0;
+                gwy_debug("acceleratied b %g %g", bx, by);
+            }
+        }
+
         level_rotate_xyz(surface, bx, by, &c);
         if (k > 1 && sqrt(bx*bx + by*by) < 1e-15)
             break;
     }
 
     gwy_surface_data_changed(surface);
-    if (!args->update_all)
+    if (!args->update_all) {
+        g_free(ids);
         return;
+    }
 
     newxyz = gwy_surface_get_data_const(surface);
     n = gwy_surface_get_npoints(surface);
@@ -398,7 +450,7 @@ xyzlevel_do(GwySurface *surface,
             xyz[k].x = newxyz[k].x;
             xyz[k].y = newxyz[k].y;
         }
-        gwy_surface_data_changed(surface);
+        gwy_surface_data_changed(othersurface);
     }
     g_free(ids);
 }
@@ -483,7 +535,6 @@ find_plane_coeffs(GwySurface *surface, gdouble *a, gdouble *bx, gdouble *by,
     c->x = sx;
     c->y = sy;
     c->z = sz;
-    gwy_debug("b %g %g", *bx, *by);
 }
 
 static const gchar method_key[]     = "/module/xyz_level/method";
