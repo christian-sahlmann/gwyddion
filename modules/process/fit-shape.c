@@ -24,7 +24,6 @@
 /* TODO:
  * - Do some surface-sync-data-items when creating new surfaces?
  * - Align parameter table properly (with UTF-8 string lengths).
- * - Correlation table colour-coding?
  */
 
 #include "config.h"
@@ -1641,6 +1640,9 @@ update_param_table(FitShapeControls *controls,
 static void
 update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
 {
+    GdkColor gdkcolor_bad = { 0, 51118, 0, 0 };
+    GdkColor gdkcolor_warning = { 0, 45056, 20480, 0 };
+
     const FitShapeFunc *func = functions + controls->function_id;
     guint i, j, nparams = func->nparams;
     GPtrArray *values = controls->correl_values;
@@ -1654,9 +1656,20 @@ update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
 
             if (fitter) {
                 gchar buf[16];
-                g_snprintf(buf, sizeof(buf), "%.3f",
-                           SLi(controls->correl, i, j));
+                gdouble c = SLi(controls->correl, i, j);
+
+                g_snprintf(buf, sizeof(buf), "%.3f", c);
                 gtk_label_set_text(GTK_LABEL(label), buf);
+                if (i != j) {
+                    if (fabs(c) >= 0.99)
+                        gtk_widget_modify_fg(label, GTK_STATE_NORMAL,
+                                             &gdkcolor_bad);
+                    else if (fabs(c) >= 0.9)
+                        gtk_widget_modify_fg(label, GTK_STATE_NORMAL,
+                                             &gdkcolor_warning);
+                    else
+                        gtk_widget_modify_fg(label, GTK_STATE_NORMAL, NULL);
+                }
             }
             else
                 gtk_label_set_text(GTK_LABEL(label), "");
