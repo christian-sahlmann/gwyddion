@@ -376,7 +376,16 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                 /* Add diagonal elements */
                 gint diag = j*(j + 3)/2;
 
-                a[diag] = save_a[diag]*(1.0 + mlambda) + nlfit->mfi*mlambda;
+                /* This used to be there.  But it breaks the scaling because
+                 * mfi is just a number while a[] elements scale with the
+                 * param derivatives.
+                 * a[diag] = save_a[diag]*(1.0 + mlambda) + nlfit->mfi*mlambda;
+                 */
+                if (G_UNLIKELY(save_a[diag] == 0.0))
+                    a[diag] = nlfit->mfi*mlambda;
+                else
+                    a[diag] = save_a[diag]*(1.0 + mlambda);
+
                 xr[j] = -v[j];
             }
             /* Choleski decompoation J'J in A*/
