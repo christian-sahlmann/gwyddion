@@ -182,23 +182,6 @@ gauss_psdf_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-psdf_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
-           gdouble *param,
-           gdouble xscale,
-           gdouble yscale,
-           gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale*xscale);
-        param[1] *= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale*xscale);
-        param[1] /= xscale;
-    }
-}
-
 static GwySIUnit*
 psdf_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
                guint param,
@@ -264,17 +247,6 @@ gauss2_psdf_guess(gint n_dat,
     param[1] /= GWY_SQRT3;
 }
 
-static void
-psdf2_scale(GwyNLFitPreset *preset,
-           gdouble *param,
-           gdouble xscale,
-           gdouble yscale,
-           gint dir)
-{
-    psdf_scale(preset, param, xscale, yscale, dir);
-    psdf_scale(preset, param + 2, xscale, yscale, dir);
-}
-
 static GwySIUnit*
 psdf2_get_units(GwyNLFitPreset *preset,
                 guint param,
@@ -321,23 +293,6 @@ gauss_hhcf_guess(gint n_dat,
     param[1] = x[n_dat-1]/50;
 
     *fres = TRUE;
-}
-
-static void
-cf_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
-         gdouble *param,
-         gdouble xscale,
-         gdouble yscale,
-         gint dir)
-{
-    if (dir == 1) {
-        param[0] /= sqrt(yscale);
-        param[1] /= xscale;
-    }
-    else {
-        param[0] *= sqrt(yscale);
-        param[1] *= xscale;
-    }
 }
 
 static GwySIUnit*
@@ -1222,23 +1177,6 @@ power_guess(gint n_dat,
     *fres = TRUE;
 }
 
-static void
-power_scale(G_GNUC_UNUSED GwyNLFitPreset *preset,
-            gdouble *param,
-            gdouble xscale,
-            gdouble yscale,
-            gint dir)
-{
-    if (dir == 1) {
-        param[0] /= yscale;
-        param[1] /= yscale/pow(xscale, param[2]);
-    }
-    else {
-        param[0] *= yscale;
-        param[1] *= yscale/pow(xscale, param[2]);
-    }
-}
-
 static GwySIUnit*
 power_get_units(G_GNUC_UNUSED GwyNLFitPreset *preset,
                 guint param,
@@ -1389,29 +1327,6 @@ weights_linear_decrease(gint n_dat,
 
 /************************** generic scalers ****************************/
 
-static void
-builtin_scale(GwyNLFitPreset *preset,
-              gdouble *param,
-              gdouble xscale,
-              gdouble yscale,
-              gint dir)
-{
-    guint i;
-
-    g_return_if_fail(preset->builtin);
-
-    if (preset->builtin->scale_params) {
-        preset->builtin->scale_params(preset, param, xscale, yscale, dir);
-        return;
-    }
-
-    /* Generic parameter scaling when there are no peculiarities */
-    for (i = 0; i < preset->builtin->nparams; i++) {
-        const GwyNLFitParam *p = preset->builtin->param + i;
-        param[i] *= pow(xscale, -dir*p->power_x)*pow(yscale, -dir*p->power_y);
-    }
-}
-
 static GwySIUnit*
 builtin_get_unit(GwyNLFitPreset *preset,
                  guint param,
@@ -1535,7 +1450,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(gauss_params),
         gauss_params,
     },
@@ -1547,7 +1461,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_psdf_func,
         NULL,
         &gauss_psdf_guess,
-        &psdf_scale,
         &psdf_get_units,
         NULL,
         G_N_ELEMENTS(gauss_two_params),
@@ -1561,7 +1474,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_acf_func,
         NULL,
         &gauss_acf_guess,
-        &cf_scale,
         &cf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1575,7 +1487,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_hhcf_func,
         NULL,
         &gauss_hhcf_guess,
-        &cf_scale,
         &cf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1589,7 +1500,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss_rpsdf_func,
         NULL,
         &gauss_rpsdf_guess,
-        &psdf_scale,
         &psdf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1605,7 +1515,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &gauss2_psdf_func,
         NULL,
         &gauss2_psdf_guess,
-        &psdf2_scale,
         &psdf2_get_units,
         NULL,
         G_N_ELEMENTS(gauss2_four_params),
@@ -1620,7 +1529,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(exp_params),
         exp_params,
     },
@@ -1632,7 +1540,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
-        &psdf_scale,
         &psdf_get_units,
         NULL,
         G_N_ELEMENTS(gauss_two_params),
@@ -1645,7 +1552,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_acf_func,
         NULL,
         &exp_acf_guess,
-        &cf_scale,
         &cf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1659,7 +1565,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_hhcf_func,
         NULL,
         &exp_hhcf_guess,
-        &cf_scale,
         &cf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1674,7 +1579,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &exp_rpsdf_func,
         NULL,
         &exp_rpsdf_guess,
-        &psdf_scale,
         &psdf_get_units,
         &weights_linear_decrease,
         G_N_ELEMENTS(gauss_two_params),
@@ -1688,7 +1592,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_0_guess,
         NULL,
         NULL,
-        NULL,
         1,
         poly3_params,
     },
@@ -1698,7 +1601,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_1_func,
         NULL,
         &poly_1_guess,
-        NULL,
         NULL,
         NULL,
         2,
@@ -1713,7 +1615,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_2_guess,
         NULL,
         NULL,
-        NULL,
         3,
         poly3_params,
     },
@@ -1725,7 +1626,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &poly_3_func,
         NULL,
         &poly_3_guess,
-        NULL,
         NULL,
         NULL,
         4,
@@ -1744,7 +1644,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &square_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(square_params),
         square_params,
     },
@@ -1759,7 +1658,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &parstep_func,
         NULL,
         &parstep_guess,
-        NULL,
         NULL,
         NULL,
         G_N_ELEMENTS(parstep_params),
@@ -1779,7 +1677,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &smstep_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(smstep_params),
         smstep_params,
     },
@@ -1796,7 +1693,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &smstep_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(bentstep_params),
         bentstep_params,
     },
@@ -1807,7 +1703,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &power_func,
         NULL,
         &power_guess,
-        &power_scale,
         &power_get_units,
         NULL,
         G_N_ELEMENTS(power_params),
@@ -1824,7 +1719,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &lorentz_guess,
         NULL,
         NULL,
-        NULL,
         G_N_ELEMENTS(lorentz_params),
         lorentz_params,
     },
@@ -1835,7 +1729,6 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         &sinc_func,
         NULL,
         &sinc_guess,
-        NULL,
         NULL,
         NULL,
         G_N_ELEMENTS(sinc_params),
@@ -2069,9 +1962,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
                      gdouble *err,
                      const gboolean *fixed_param)
 {
-    gdouble xscale, yscale;
     gdouble *weight = NULL;
-    gdouble *xsc, *ysc;  /* rescaled x and y */
     gboolean ok;
     gint i;
 
@@ -2085,36 +1976,17 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
     else
         fitter = gwy_math_nlfit_new(preset->builtin->function,
                                     preset->builtin->derive
-                                        ? preset->builtin->derive
-                                        : gwy_math_nlfit_derive);
-
-    /* recompute data to be reasonably scaled */
-    xscale = 0;
-    yscale = 0;
-    for (i = 0; i < n_dat; i++) {
-        xscale += fabs(x[i]);
-        yscale += fabs(y[i]);
-    }
-    xscale /= n_dat;
-    yscale /= n_dat;
-    xsc = g_new(gdouble, n_dat);
-    ysc = g_new(gdouble, n_dat);
-    for (i = 0; i < n_dat; i++) {
-        xsc[i] = x[i]/xscale;
-        ysc[i] = y[i]/yscale;
-
-    }
-    /* FIXME: builtin */
-    builtin_scale(preset, param, xscale, yscale, 1);
+                                    ? preset->builtin->derive
+                                    : gwy_math_nlfit_derive);
 
     /*load default weights for given function type*/
     if (preset->builtin->set_default_weights) {
         weight = g_new(gdouble, n_dat);
-        preset->builtin->set_default_weights(n_dat, xsc, ysc, weight);
+        preset->builtin->set_default_weights(n_dat, x, y, weight);
     }
 
     /* FIXME: builtin */
-    ok = gwy_math_nlfit_fit_full(fitter, n_dat, xsc, ysc, weight,
+    ok = gwy_math_nlfit_fit_full(fitter, n_dat, x, y, weight,
                                  preset->builtin->nparams, param,
                                  fixed_param, NULL, preset) >= 0.0;
 
@@ -2123,14 +1995,7 @@ gwy_nlfit_preset_fit(GwyNLFitPreset *preset,
         for (i = 0; i < preset->builtin->nparams; i++)
             err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
-    /*recompute parameters to be scaled as original data*/
-    /* FIXME: builtin */
-    builtin_scale(preset, param, xscale, yscale, -1);
-    if (ok && err)
-        builtin_scale(preset, err, xscale, yscale, -1);
 
-    g_free(ysc);
-    g_free(xsc);
     g_free(weight);
 
     return fitter;

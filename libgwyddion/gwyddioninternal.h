@@ -32,12 +32,6 @@ typedef void (*GwyNLFitGuessFunc)(gint n_dat,
                                   gdouble *param,
                                   gboolean *fres);
 
-typedef void (*GwyNLFitParamScaleFunc)(GwyNLFitPreset *preset,
-                                       gdouble *param,
-                                       gdouble xscale,
-                                       gdouble yscale,
-                                       gint dir);
-
 typedef GwySIUnit* (*GwyNLFitGetUnitFunc)(GwyNLFitPreset *preset,
                                           guint param,
                                           GwySIUnit *siunit_x,
@@ -60,7 +54,6 @@ struct _GwyNLFitPresetBuiltin {
     GwyNLFitFunc function;
     GwyNLFitDerFunc derive;
     GwyNLFitGuessFunc guess;
-    GwyNLFitParamScaleFunc scale_params;
     GwyNLFitGetUnitFunc get_unit;
     GwyNLFitWeightFunc set_default_weights;
     guint nparams;
