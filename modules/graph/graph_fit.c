@@ -1006,6 +1006,11 @@ fit_set_state(FitControls *controls,
         }
         gtk_label_set_markup(GTK_LABEL(controls->chisq), NULL);
     }
+
+    /* For some reason this does not happen automatically? */
+    gtk_widget_queue_resize(controls->param_table);
+    gtk_widget_queue_resize(controls->dialog);
+
     args->is_fitted = is_fitted;
     args->is_estimated = is_estimated;
 
