@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -508,7 +508,7 @@ read_xyz_points(gchar *p)
 
         if (!comma_fix_char) {
             comma_fix_char = figure_out_comma_fix_char(line);
-            if (comma_fix_char)
+            if (!comma_fix_char)
                 continue;
         }
 
