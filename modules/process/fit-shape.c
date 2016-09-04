@@ -22,7 +22,8 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Do some surface-sync-data-items when creating new surfaces?
+ * - Do some surface-sync-data-items when creating new surfaces?  Also when
+ *   creating preview for surfaces (at least the palette).
  * - Gradient adaptation only works for full-range mapping.  Simply enforce
  *   full-range mapping with adapted gradients?
  * - Align parameter table properly (with UTF-8 string lengths).
@@ -1932,11 +1933,13 @@ update_fields(FitShapeControls *controls)
         && (!mask || masking == GWY_MASK_IGNORE)) {
         /* We know ctx->f contains all the theoretical values. */
         g_assert(ctx->n == n);
+        gwy_debug("directly copying f[] to result field");
         memcpy(gwy_data_field_get_data(resfield), ctx->f, n*sizeof(gdouble));
     }
     else {
         /* Either the input is XYZ or we are using masking.  Just recalculate
          * everything, even values that are in ctx->f. */
+        gwy_debug("recalculating result field the hard way");
         calculate_field(functions + controls->function_id,
                         controls->param, resfield);
     }
