@@ -1612,7 +1612,18 @@ update_param_table(FitShapeControls *controls,
                                        zunit, fitparam->power_z,
                                        unit);
         }
-        vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+        /* If the user enters exact zero, do not update the magnitude because
+         * that means an unexpected reset to base units. */
+        if (G_UNLIKELY(v == 0.0)) {
+            gint power10 = GWY_ROUND(log10(cntrl->magnitude));
+            vf = gwy_si_unit_get_format_for_power10(unit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    power10, vf);
+        }
+        else {
+            vf = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                        v, vf);
+        }
         g_snprintf(buf, sizeof(buf), "%.*f", vf->precision+3, v/vf->magnitude);
         gtk_entry_set_text(GTK_ENTRY(cntrl->value), buf);
         gtk_label_set_markup(GTK_LABEL(cntrl->value_unit), vf->units);
