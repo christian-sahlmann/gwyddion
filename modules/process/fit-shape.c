@@ -23,6 +23,8 @@
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
  * - Do some surface-sync-data-items when creating new surfaces?
+ * - Gradient adaptation only works for full-range mapping.  Simply enforce
+ *   full-range mapping with adapted gradients?
  * - Align parameter table properly (with UTF-8 string lengths).
  */
 
@@ -1459,7 +1461,7 @@ diff_colourmap_changed(GtkToggleButton *toggle,
 
 static void
 diff_excluded_changed(GtkToggleButton *toggle,
-                       FitShapeControls *controls)
+                      FitShapeControls *controls)
 {
     controls->args->diff_excluded = gtk_toggle_button_get_active(toggle);
     if (controls->args->masking != GWY_MASK_IGNORE)
@@ -1482,6 +1484,8 @@ masking_changed(GtkToggleButton *toggle, FitShapeControls *controls)
     update_context_data(controls);
     controls->state = FIT_SHAPE_INITIALISED;
     update_fit_results(controls, NULL);
+    if (!controls->args->diff_excluded)
+        update_fields(controls);
     update_fit_state(controls);
 }
 
