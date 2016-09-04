@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti).
+ *  Copyright (C) 2007-2016 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,9 @@ gwy_math_fallback_pow10(double x)
 static inline double
 gwy_math_fallback_cbrt(double x)
 {
-    return /**/ pow(x, 1.0/3.0);
+    return /**/ (x == 0.0
+                 ? 0.0
+                 : ((x < 0.0) ? -pow(-x, 1.0/3.0) : pow(x, 1.0/3.0)));
 }
 
 static inline double
