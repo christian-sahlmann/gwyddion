@@ -32,6 +32,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwygraphwindow.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 #include "gwyappinternal.h"
 
 enum {
@@ -1900,14 +1901,13 @@ gwy_app_surface_window_configured(GwyDataWindow *window)
 static void
 update_surface_preview(GwyDataWindow *data_window)
 {
+    GwyPreviewSurfaceFlags flags = GWY_PREVIEW_SURFACE_FILL;
     GwyDataView *data_view = gwy_data_window_get_data_view(data_window);
     GwyContainer *data;
     GwySurface *surface;
-    GwyDataField *raster, *densitymap = NULL;
+    GwyDataField *raster;
     gint xres, yres, id;
-    gdouble h, xmin, xmax, ymin, ymax;
-    gboolean want_densitymap;
-    gchar key[32];
+    GQuark quark;
 
     gwy_app_data_browser_get_current(GWY_APP_SURFACE, &surface,
                                      GWY_APP_SURFACE_ID, &id,
@@ -1916,64 +1916,17 @@ update_surface_preview(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_SURFACE(surface));
     g_return_if_fail(id >= 0);
 
-    g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
-    raster = gwy_container_get_object_by_name(data, key);
+    quark = gwy_app_get_surface_preview_key_for_id(id);
+    raster = gwy_container_get_object(data, quark);
     g_return_if_fail(raster);
 
-    want_densitymap = !!g_object_get_data(G_OBJECT(data_view),
-                                          "gwy-app-surface-density-map");
+    if (g_object_get_data(G_OBJECT(data_view), "gwy-app-surface-density-map"))
+        flags |= GWY_PREVIEW_SURFACE_DENSITY;
 
-    /* XXX: This can only be used when surface dimensions do not change!
-     * Otherwise the calculated resolutions can be completely bogus numbers. */
-    h = gwy_data_view_get_xmeasure(data_view);
-    gwy_surface_get_xrange(surface, &xmin, &xmax);
-    xres = GWY_ROUND((xmax - xmin)/h);
-    xres = MAX(xres, 2);
-    xmin -= 0.5*h;
-    xmax += 0.5*h;
-    xres = GWY_ROUND((xmax - xmin)/h);
-    xres = MAX(xres, 2);
-
-    h = gwy_data_view_get_ymeasure(data_view);
-    gwy_surface_get_yrange(surface, &ymin, &ymax);
-    yres = GWY_ROUND((ymax - ymin)/h);
-    yres = MAX(yres, 2);
-    ymin -= 0.5*h;
-    ymax += 0.5*h;
-    yres = GWY_ROUND((ymax - ymin)/h);
-    yres = MAX(yres, 2);
-
-    if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
-        gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
-        xmin -= 0.5*excess;
-        xmax += 0.5*excess;
-    }
-    else {
-        gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
-        ymin -= 0.5*excess;
-        ymax += 0.5*excess;
-    }
-
-    gwy_data_field_resample(raster, xres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_set_xreal(raster, xmax - xmin);
-    gwy_data_field_set_yreal(raster, ymax - ymin);
-    gwy_data_field_set_xoffset(raster, xmin);
-    gwy_data_field_set_yoffset(raster, ymin);
-    if (want_densitymap)
-        densitymap = gwy_data_field_new_alike(raster, FALSE);
-
-    gwy_data_field_average_xyz(raster, densitymap, surface->data, surface->n);
-
+    xres = GTK_WIDGET(data_view)->allocation.width;
+    yres = GTK_WIDGET(data_view)->allocation.height;
+    gwy_preview_surface_to_datafield(surface, raster, xres, yres, flags);
     gwy_data_view_set_zoom(data_view, 1.0);
-    if (want_densitymap) {
-        gwy_data_field_copy(densitymap, raster, FALSE);
-        g_object_unref(densitymap);
-        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(raster), NULL);
-    }
-    else {
-        gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
-                               G_OBJECT(gwy_data_field_get_si_unit_z(raster)));
-    }
     gwy_data_field_data_changed(raster);
 }
 

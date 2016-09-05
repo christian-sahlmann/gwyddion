@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007-2015 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,11 +23,17 @@
 #define __GWY_MODULE_UTILS_H__
 
 #include <gtk/gtkwindow.h>
+#include <libprocess/surface.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <app/datachooser.h>
 
 G_BEGIN_DECLS
+
+typedef enum {
+    GWY_PREVIEW_SURFACE_DENSITY = 1 << 0,
+    GWY_PREVIEW_SURFACE_FILL    = 1 << 1,
+} GwyPreviewSurfaceFlags;
 
 typedef gchar* (*GwySaveAuxiliaryCreate)(gpointer user_data,
                                          gssize *data_len);
@@ -58,9 +64,17 @@ gwy_app_add_graph_or_curves(GwyGraphModel *gmodel,
                             const GwyAppDataId *target_graph,
                             gint colorstep);
 
+void
+gwy_preview_surface_to_datafield(GwySurface *surface,
+                                 GwyDataField *dfield,
+                                 gint max_xres,
+                                 gint max_yres,
+                                 GwyPreviewSurfaceFlags flags);
+
 gboolean gwy_app_data_id_verify_channel(GwyAppDataId *id);
 gboolean gwy_app_data_id_verify_graph  (GwyAppDataId *id);
 gboolean gwy_app_data_id_verify_volume (GwyAppDataId *id);
+gboolean gwy_app_data_id_verify_xyz    (GwyAppDataId *id);
 gboolean gwy_app_data_id_verify_spectra(GwyAppDataId *id);
 
 G_END_DECLS

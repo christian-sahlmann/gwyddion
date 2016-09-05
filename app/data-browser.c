@@ -38,6 +38,7 @@
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 #include "app/gwyappinternal.h"
 
 /* Data browser window manager role */
@@ -147,6 +148,9 @@ static void gwy_app_update_brick_window_title  (GwyDataView *data_view,
                                                 gint id);
 static void gwy_app_update_surface_window_title(GwyDataView *data_view,
                                                 gint id);
+static void replace_surface_preview            (GwyContainer *container,
+                                                GtkTreeModel *model,
+                                                GtkTreeIter *iter);
 static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                                                        GtkTreeIter *iter,
                                                        gboolean visible);
@@ -1805,6 +1809,8 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
              * non-GUI */
             if (data_view) {
                 _gwy_app_update_surface_info(data, id, data_view);
+                replace_surface_preview(data, GTK_TREE_MODEL(list->store),
+                                        &iter);
                 g_object_unref(data_view);
             }
         }
@@ -4613,9 +4619,11 @@ static void
 replace_surface_preview(GwyContainer *container,
                         GtkTreeModel *model, GtkTreeIter *iter)
 {
+    GwyPreviewSurfaceFlags flags = GWY_PREVIEW_SURFACE_FILL;
     GtkWidget *widget;
     GwySurface *surface;
     GwyDataField *raster;
+    GQuark quark;
     gint id;
 
     g_return_if_fail(GTK_IS_LIST_STORE(model));
@@ -4632,19 +4640,18 @@ replace_surface_preview(GwyContainer *container,
     }
 
     g_return_if_fail(GWY_IS_DATA_VIEW(widget));
-    /* FIXME FIXME FIXME: We must still honour density_map setting and we
-     * should not unzoom windows if possible.  This means when called from
-     * here _gwy_app_create_surface_preview_field() must attempt to fit the
-     * surface into max_xres, max_yres instead of just using it as upper
-     * limits!  Possibly merge update_surface_preview() in app.c with
-     * _gwy_app_create_surface_preview_field().  */
-    raster = _gwy_app_create_surface_preview_field(surface,
-                                                   widget->allocation.width,
-                                                   widget->allocation.height);
-    gwy_container_set_object(container,
-                             gwy_app_get_surface_preview_key_for_id(id),
-                             raster);
-    g_object_unref(raster);
+    if (g_object_get_data(G_OBJECT(widget), "gwy-app-surface-density-map"))
+        flags |= GWY_PREVIEW_SURFACE_DENSITY;
+
+    quark = gwy_app_get_surface_preview_key_for_id(id);
+    raster = gwy_container_get_object(container, quark);
+    g_return_if_fail(GWY_IS_DATA_FIELD(raster));
+    gwy_preview_surface_to_datafield(surface, raster,
+                                     widget->allocation.width,
+                                     widget->allocation.height,
+                                     flags);
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(widget), 1.0);
+    gwy_data_field_data_changed(raster);
     g_object_unref(surface);
     g_object_unref(widget);
 }
@@ -4783,7 +4790,7 @@ gwy_app_data_browser_create_xyz(GwyAppDataBrowser *browser,
 {
     GtkWidget *data_view, *data_window;
     GObject *surface = NULL;
-    GwyDataField *preview = NULL;
+    GwyDataField *raster = NULL;
     GwyPixmapLayer *layer;
     GwyLayerBasic *layer_basic;
     gchar key[48];
@@ -4793,15 +4800,17 @@ gwy_app_data_browser_create_xyz(GwyAppDataBrowser *browser,
     g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
 
     g_snprintf(key, sizeof(key), "/surface/%d/preview", id);
-    if (gwy_container_gis_object_by_name(proxy->container, key, &preview)) {
-        g_return_val_if_fail(GWY_IS_DATA_FIELD(preview), NULL);
+    if (gwy_container_gis_object_by_name(proxy->container, key, &raster)) {
+        g_return_val_if_fail(GWY_IS_DATA_FIELD(raster), NULL);
     }
     else {
-        preview = _gwy_app_create_surface_preview_field(GWY_SURFACE(surface),
-                                                        SURFACE_PREVIEW_SIZE,
-                                                        SURFACE_PREVIEW_SIZE);
-        gwy_container_set_object_by_name(proxy->container, key, preview);
-        g_object_unref(preview);
+        raster = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+        gwy_preview_surface_to_datafield(GWY_SURFACE(surface), raster,
+                                         SURFACE_PREVIEW_SIZE,
+                                         SURFACE_PREVIEW_SIZE,
+                                         0);
+        gwy_container_set_object_by_name(proxy->container, key, raster);
+        g_object_unref(raster);
     }
 
     layer = gwy_layer_basic_new();
@@ -7016,9 +7025,10 @@ gwy_app_data_browser_add_surface(GwySurface *surface,
      * Among other things, it will update proxy->lists[GWY_PAGE_XYZS].last. */
     gwy_container_set_object_by_name(proxy->container, key, surface);
 
-    raster = _gwy_app_create_surface_preview_field(surface,
-                                                   SURFACE_PREVIEW_SIZE,
-                                                   SURFACE_PREVIEW_SIZE);
+    raster = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+    gwy_preview_surface_to_datafield(surface, raster,
+                                     SURFACE_PREVIEW_SIZE, SURFACE_PREVIEW_SIZE,
+                                     0);
     g_snprintf(key, sizeof(key), "/surface/%d/preview", list->last);
     gwy_container_set_object_by_name(proxy->container, key, raster);
     g_object_unref(raster);

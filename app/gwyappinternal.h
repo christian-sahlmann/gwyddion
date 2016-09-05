@@ -197,10 +197,6 @@ gint* _gwy_app_find_ids_unmanaged(GwyContainer *data,
 G_GNUC_INTERNAL
 GwyDataField* _gwy_app_create_brick_preview_field  (GwyBrick *brick);
 G_GNUC_INTERNAL
-GwyDataField* _gwy_app_create_surface_preview_field(GwySurface *surface,
-                                                    gint max_xres,
-                                                    gint max_yres);
-G_GNUC_INTERNAL
 void _gwy_app_update_data_range_type(GwyDataView *data_view,
                                      gint id);
 G_GNUC_INTERNAL

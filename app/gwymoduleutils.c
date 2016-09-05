@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007-2015 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,6 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
-#include <libprocess/datafield.h>
 #include <app/file.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils.h>
@@ -282,7 +281,7 @@ clear_data_id(GwyAppDataId *id)
  * If either the data contained referenced in @id or the channel does not exist
  * the structure is cleared to %GWY_APP_DATA_ID_NONE and the function returns
  * %FALSE.  If it represents an existing channel it is kept intact and the
- * function return %TRUE.
+ * function returns %TRUE.
  *
  * Returns: Whether @id refers to an existing channel now.
  *
@@ -304,8 +303,10 @@ gwy_app_data_id_verify_channel(GwyAppDataId *id)
     quark = gwy_app_get_data_key_for_id(id->id);
     if (!gwy_container_gis_object(container, quark, &object))
         return clear_data_id(id);
+    if (!GWY_IS_DATA_FIELD(object))
+        return clear_data_id(id);
 
-    return GWY_IS_DATA_FIELD(object);
+    return TRUE;
 }
 
 /**
@@ -317,7 +318,7 @@ gwy_app_data_id_verify_channel(GwyAppDataId *id)
  * If either the data contained referenced in @id or the graph model does not
  * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
  * returns %FALSE.  If it represents an existing graph it is kept intact and
- * the function return %TRUE.
+ * the function returns %TRUE.
  *
  * Returns: Whether @id refers to an existing graph now.
  *
@@ -339,8 +340,10 @@ gwy_app_data_id_verify_graph(GwyAppDataId *id)
     quark = gwy_app_get_graph_key_for_id(id->id);
     if (!gwy_container_gis_object(container, quark, &object))
         return clear_data_id(id);
+    if (!GWY_IS_GRAPH_MODEL(object))
+        return clear_data_id(id);
 
-    return GWY_IS_GRAPH_MODEL(object);
+    return TRUE;
 }
 
 /**
@@ -354,7 +357,7 @@ gwy_app_data_id_verify_graph(GwyAppDataId *id)
  * If either the data contained referenced in @id or the volume data does not
  * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
  * returns %FALSE.  If it represents existing volume data it is kept intact
- * and the function return %TRUE.
+ * and the function returns %TRUE.
  *
  * Returns: Whether @id refers to existing volume data now.
  *
@@ -376,8 +379,48 @@ gwy_app_data_id_verify_volume(GwyAppDataId *id)
     quark = gwy_app_get_brick_key_for_id(id->id);
     if (!gwy_container_gis_object(container, quark, &object))
         return clear_data_id(id);
+    if (!GWY_IS_BRICK(object))
+        return clear_data_id(id);
 
-    return GWY_IS_BRICK(object);
+    return TRUE;
+}
+
+/**
+ * gwy_app_data_id_verify_xyz:
+ * @id: Numerical identifiers of XYZ data in data managed by the data
+ *      browser.
+ *
+ * Checks if numerical XYZ data identifiers correspond to existing XYZ data.
+ *
+ * If either the data contained referenced in @id or the XYZ data does not
+ * exist the structure is cleared to %GWY_APP_DATA_ID_NONE and the function
+ * returns %FALSE.  If it represents existing XYZ data it is kept intact
+ * and the function returns %TRUE.
+ *
+ * Returns: Whether @id refers to existing XYZ data now.
+ *
+ * Since: 2.46
+ **/
+gboolean
+gwy_app_data_id_verify_xyz(GwyAppDataId *id)
+{
+    GwyContainer *container;
+    GObject *object;
+    GQuark quark;
+
+    g_return_val_if_fail(id, FALSE);
+
+    container = gwy_app_data_browser_get(id->datano);
+    if (!container)
+        return clear_data_id(id);
+
+    quark = gwy_app_get_surface_key_for_id(id->id);
+    if (!gwy_container_gis_object(container, quark, &object))
+        return clear_data_id(id);
+    if (!GWY_IS_SURFACE(object))
+        return clear_data_id(id);
+
+    return TRUE;
 }
 
 /**
@@ -411,8 +454,10 @@ gwy_app_data_id_verify_spectra(GwyAppDataId *id)
     quark = gwy_app_get_spectra_key_for_id(id->id);
     if (!gwy_container_gis_object(container, quark, &object))
         return clear_data_id(id);
+    if (!GWY_IS_SPECTRA(object))
+        return clear_data_id(id);
 
-    return GWY_IS_SPECTRA(object);
+    return TRUE;
 }
 
 /**
@@ -466,6 +511,145 @@ gwy_app_add_graph_or_curves(GwyGraphModel *gmodel,
     return gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
 }
 
+/**
+ * gwy_preview_surface_to_datafield:
+ * @surface: A surface representing a XYZ data.
+ * @dfield: A data field to fill with @surface preview.
+ * @max_xres: Maximum width of the preview, it must be at least 2.
+ * @max_yres: Maximum height of the preview, it must be at least 2.
+ * @flags: Flags modifying the behaviour.
+ *
+ * Renders a preview of a XYZ data surface to a data field.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_preview_surface_to_datafield(GwySurface *surface,
+                                 GwyDataField *dfield,
+                                 gint max_xres, gint max_yres,
+                                 GwyPreviewSurfaceFlags flags)
+{
+    gdouble q, h, xmin, xmax, ymin, ymax;
+    guint n = gwy_surface_get_npoints(surface);
+    gboolean do_fill = (flags & GWY_PREVIEW_SURFACE_FILL);
+    gboolean want_densitymap = (flags & GWY_PREVIEW_SURFACE_DENSITY);
+    gboolean xrange_normal, yrange_normal;
+    GwyDataField *densitymap = NULL;
+    guint xres, yres;
+
+    gwy_surface_get_xrange(surface, &xmin, &xmax);
+    xrange_normal = (xmin < xmax);
+
+    gwy_surface_get_yrange(surface, &ymin, &ymax);
+    yrange_normal = (ymin < ymax);
+
+    if (!xrange_normal) {
+        if (yrange_normal) {
+            xmin = xmax - (ymax - ymin)/n;
+            xmax = xmax + (ymax - ymin)/n;
+        }
+        else if (xmax) {
+            xmin = 1.5*xmax;
+            xmax = 0.5*xmax;
+        }
+        else {
+            xmin = -1.0;
+            xmax = 1.0;
+        }
+    }
+
+    if (!yrange_normal) {
+        if (xrange_normal) {
+            ymin = ymax - (xmax - xmin)/n;
+            ymax = ymax + (xmax - xmin)/n;
+        }
+        else if (ymax) {
+            ymin = 0.5*ymax;
+            ymax = 1.5*ymax;
+        }
+        else {
+            ymin = -1.0;
+            ymax = 1.0;
+        }
+    }
+
+    if (do_fill) {
+        h = fmax((xmax - xmin)/(max_xres - 1.0),
+                 (ymax - ymin)/(max_yres - 1.0));
+        xmin -= 0.5*h;
+        ymin -= 0.5*h;
+        xmax += 0.5*h;
+        ymax += 0.5*h;
+        xres = GWY_ROUND((xmax - xmin)/h);
+        xres = CLAMP(xres, 2, max_xres);
+        yres = GWY_ROUND((ymax - ymin)/h);
+        yres = CLAMP(yres, 2, max_yres);
+    }
+    else {
+        q = (ymax - ymin)/(xmax - xmin);
+        if (q <= 1.0) {
+            yres = GWY_ROUND(sqrt(3.0*q*n));
+            yres = MAX(yres, 2);
+            h = (ymax - ymin)/yres;
+            xres = GWY_ROUND((xmax - xmin)/h);
+            if (CLAMP(xres, 2, max_xres) != xres) {
+                xres = CLAMP(xres, 2, max_xres);
+                h = (xmax - xmin)/xres;
+                yres = (gint)ceil((ymax - ymin)/h);
+            }
+        }
+        else {
+            xres = GWY_ROUND(sqrt(3.0/q*n));
+            xres = MAX(xres, 2);
+            h = (xmax - xmin)/xres;
+            yres = GWY_ROUND((ymax - ymin)/h);
+            if (CLAMP(yres, 2, max_yres) != yres) {
+                yres = CLAMP(yres, 2, max_yres);
+                h = (ymax - ymin)/yres;
+                xres = (gint)ceil((xmax - xmin)/h);
+            }
+        }
+
+        xmin -= 0.5*h;
+        ymin -= 0.5*h;
+        xmax += 0.5*h;
+        ymax += 0.5*h;
+        if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
+            gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
+            xmin -= 0.5*excess;
+            xmax += 0.5*excess;
+        }
+        else {
+            gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
+            ymin -= 0.5*excess;
+            ymax += 0.5*excess;
+        }
+    }
+
+    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_set_xreal(dfield, xmax - xmin);
+    gwy_data_field_set_yreal(dfield, ymax - ymin);
+    gwy_data_field_set_xoffset(dfield, xmin);
+    gwy_data_field_set_yoffset(dfield, ymin);
+    if (want_densitymap)
+        densitymap = gwy_data_field_new_alike(dfield, FALSE);
+
+    gwy_data_field_average_xyz(dfield, densitymap,
+                               gwy_surface_get_data_const(surface), n);
+    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)));
+
+    if (want_densitymap) {
+        gwy_data_field_copy(densitymap, dfield, FALSE);
+        gwy_object_unref(densitymap);
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), NULL);
+    }
+    else {
+        gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
+                               G_OBJECT(gwy_data_field_get_si_unit_z(dfield)));
+    }
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -500,6 +684,21 @@ gwy_app_add_graph_or_curves(GwyGraphModel *gmodel,
  * The type of auxiliary saved data destruction function.
  *
  * Since: 2.3
+ **/
+
+/**
+ * GwyPreviewSurfaceFlags:
+ * @GWY_PREVIEW_SURFACE_DENSITY: Render a point density map instead of the
+ *                               data.
+ * @GWY_PREVIEW_SURFACE_FILL: Make the data field as large as the specified
+ *                            resolutions at least in one dimension (it can
+ *                            be prevented in the other by different aspect
+ *                            ratio).
+ *
+ * Type of behaviour modifying flags that can be passed to
+ * gwy_preview_surface_to_datafield().
+ *
+ * Since: 2.46
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
