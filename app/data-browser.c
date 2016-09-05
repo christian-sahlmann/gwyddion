@@ -196,12 +196,13 @@ static void       gwy_app_data_browser_notify_watch(GList *watchers,
 
 static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
 
-static GQuark container_quark    = 0;
-static GQuark own_key_quark      = 0;
-static GQuark page_id_quark      = 0;  /* NB: data is pageno+1, not pageno */
-static GQuark filename_quark     = 0;
-static GQuark column_id_quark    = 0;
-static GQuark graph_window_quark = 0;
+static GQuark container_quark      = 0;
+static GQuark own_key_quark        = 0;
+static GQuark page_id_quark        = 0;  /* NB: data is pageno+1, not pageno */
+static GQuark filename_quark       = 0;
+static GQuark column_id_quark      = 0;
+static GQuark graph_window_quark   = 0;
+static GQuark surface_update_quark = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
@@ -958,7 +959,7 @@ gwy_app_data_proxy_brick_changed(GwyDataField *brick,
  * gwy_app_data_proxy_connect_brick:
  * @proxy: Data proxy.
  * @id: Channel id.
- * @object: The data field to add (passed as #GObject).
+ * @object: The brick to add (passed as #GObject).
  *
  * Adds a data field as brick of specified id, setting qdata and connecting
  * signals.
@@ -986,8 +987,8 @@ gwy_app_data_proxy_connect_brick(GwyAppDataProxy *proxy,
  * @proxy: Data proxy.
  * @iter: Tree iterator pointing to the brick in @proxy's list store.
  *
- * Disconnects signals from a brick data field, removes qdata and finally
- * removes it from the data proxy list store.
+ * Disconnects signals from a brick, removes qdata and finally removes it from
+ * the data proxy list store.
  **/
 static void
 gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
@@ -1012,10 +1013,10 @@ gwy_app_data_proxy_disconnect_brick(GwyAppDataProxy *proxy,
  * gwy_app_data_proxy_reconnect_brick:
  * @proxy: Data proxy.
  * @iter: Tree iterator pointing to the brick in @proxy's list store.
- * @object: The data field representing the brick (passed as #GObject).
+ * @object: The brick representing the volume data (passed as #GObject).
  *
- * Updates data proxy's list store when the data field representing a brick
- * is switched for another data field.
+ * Updates data proxy's list store when the data brick representing volume data
+ * is switched for another brick.
  **/
 static void
 gwy_app_data_proxy_reconnect_brick(GwyAppDataProxy *proxy,
@@ -1150,41 +1151,49 @@ gwy_app_data_proxy_reconnect_preview(GwyAppDataProxy *proxy,
 
 /**
  * gwy_app_data_proxy_surface_changed:
- * @surface: The data field representing a surface.
+ * @surface: The surface representing a XYZ data.
  * @proxy: Data proxy.
  *
  * Updates surface display in the data browser when surface data change.
+ * It also requests re-rendering of the preview.
  **/
 static void
 gwy_app_data_proxy_surface_changed(GwyDataField *surface,
                                    GwyAppDataProxy *proxy)
 {
     GwyAppKeyType type;
+    GtkWidget *widget;
     GtkTreeIter iter;
     GQuark quark;
+    GtkListStore *store;
     gint id;
 
     gwy_debug("proxy=%p surface=%p", proxy, surface);
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(surface),
                                                 own_key_quark));
     g_return_if_fail(quark);
+    store = proxy->lists[GWY_PAGE_XYZS].store;
     id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(id >= 0);
-    if (!gwy_app_data_proxy_find_object(proxy->lists[GWY_PAGE_XYZS].store, id,
-                                        &iter))
+    if (!gwy_app_data_proxy_find_object(store, id, &iter))
         return;
-    gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, &iter,
-                       MODEL_TIMESTAMP, gwy_get_timestamp(),
-                       -1);
+
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODEL_WIDGET, &widget, -1);
+    if (widget) {
+        g_object_set_qdata(G_OBJECT(surface), surface_update_quark,
+                           GUINT_TO_POINTER(TRUE));
+        g_object_unref(widget);
+    }
+    gtk_list_store_set(store, &iter, MODEL_TIMESTAMP, gwy_get_timestamp(), -1);
 }
 
 /**
  * gwy_app_data_proxy_connect_surface:
  * @proxy: Data proxy.
  * @id: Channel id.
- * @object: The data field to add (passed as #GObject).
+ * @object: The surface to add (passed as #GObject).
  *
- * Adds a data field as surface of specified id, setting qdata and connecting
+ * Adds a surface as XYZ data of specified id, setting qdata and connecting
  * signals.
  **/
 static void
@@ -1210,8 +1219,8 @@ gwy_app_data_proxy_connect_surface(GwyAppDataProxy *proxy,
  * @proxy: Data proxy.
  * @iter: Tree iterator pointing to the surface in @proxy's list store.
  *
- * Disconnects signals from a surface data field, removes qdata and finally
- * removes it from the data proxy list store.
+ * Disconnects signals from a surface, removes qdata and finally removes it
+ * from the data proxy list store.
  **/
 static void
 gwy_app_data_proxy_disconnect_surface(GwyAppDataProxy *proxy,
@@ -1225,6 +1234,7 @@ gwy_app_data_proxy_disconnect_surface(GwyAppDataProxy *proxy,
     gwy_debug("%p: from %p", object, proxy->container);
     g_object_set_qdata(object, container_quark, NULL);
     g_object_set_qdata(object, own_key_quark, NULL);
+    g_object_set_qdata(object, surface_update_quark, NULL);
     g_signal_handlers_disconnect_by_func(object,
                                          gwy_app_data_proxy_surface_changed,
                                          proxy);
@@ -1236,10 +1246,10 @@ gwy_app_data_proxy_disconnect_surface(GwyAppDataProxy *proxy,
  * gwy_app_data_proxy_reconnect_surface:
  * @proxy: Data proxy.
  * @iter: Tree iterator pointing to the surface in @proxy's list store.
- * @object: The data field representing the surface (passed as #GObject).
+ * @object: The surface representing the XYZ data (passed as #GObject).
  *
- * Updates data proxy's list store when the data field representing a surface
- * is switched for another data field.
+ * Updates data proxy's list store when the surfacd representing XYZ data
+ * is switched for another surface.
  **/
 static void
 gwy_app_data_proxy_reconnect_surface(GwyAppDataProxy *proxy,
@@ -1254,6 +1264,7 @@ gwy_app_data_proxy_reconnect_surface(GwyAppDataProxy *proxy,
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_surface_changed,
                                          proxy);
+    g_object_set_qdata(old, surface_update_quark, NULL);
     gwy_app_data_proxy_switch_object_data(proxy, old, object);
     gtk_list_store_set(proxy->lists[GWY_PAGE_XYZS].store, iter,
                        MODEL_OBJECT, object,
@@ -4621,6 +4632,12 @@ replace_surface_preview(GwyContainer *container,
     }
 
     g_return_if_fail(GWY_IS_DATA_VIEW(widget));
+    /* FIXME FIXME FIXME: We must still honour density_map setting and we
+     * should not unzoom windows if possible.  This means when called from
+     * here _gwy_app_create_surface_preview_field() must attempt to fit the
+     * surface into max_xres, max_yres instead of just using it as upper
+     * limits!  Possibly merge update_surface_preview() in app.c with
+     * _gwy_app_create_surface_preview_field().  */
     raster = _gwy_app_create_surface_preview_field(surface,
                                                    widget->allocation.width,
                                                    widget->allocation.height);
@@ -4643,6 +4660,7 @@ gwy_app_data_browser_render_surface(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GObject *object;
     GdkPixbuf *pixbuf;
     gdouble timestamp, *pbuf_timestamp = NULL;
+    gboolean do_update;
     gint id;
 
     gtk_tree_model_get(model, iter,
@@ -4669,8 +4687,12 @@ gwy_app_data_browser_render_surface(G_GNUC_UNUSED GtkTreeViewColumn *column,
      * getting "data-changed" for the surface.  This is not a very nice place
      * to do that but it is a mechanism that is already in place and handles
      * queuing and consolidation of multiple updates.  Also note that we need
-     * to to this before setting the timestamp to avoid an infinite loop. */
-    replace_surface_preview(container, model, iter);
+     * to do this before setting the timestamp to avoid an infinite loop. */
+    do_update = !!g_object_get_qdata(object, surface_update_quark);
+    if (do_update) {
+        g_object_set_qdata(object, surface_update_quark, NULL);
+        replace_surface_preview(container, model, iter);
+    }
 
     pixbuf = gwy_app_get_xyz_thumbnail(container, id, THUMB_SIZE, THUMB_SIZE);
     pbuf_timestamp = g_new(gdouble, 1);
@@ -5662,6 +5684,8 @@ gwy_app_get_data_browser(void)
         = g_quark_from_static_string("/filename");
     graph_window_quark
         = g_quark_from_static_string("gwy-app-data-browser-window-model");
+    surface_update_quark
+        = g_quark_from_static_string("gwy-data-browser-must-update-preview");
 
     browser = g_new0(GwyAppDataBrowser, 1);
     gwy_app_data_browser = browser;

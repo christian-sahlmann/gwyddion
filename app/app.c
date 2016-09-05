@@ -1924,7 +1924,7 @@ update_surface_preview(GwyDataWindow *data_window)
                                           "gwy-app-surface-density-map");
 
     /* XXX: This can only be used when surface dimensions do not change!
-     * Otherwise the calculates resolutions can be completely bogus numbers. */
+     * Otherwise the calculated resolutions can be completely bogus numbers. */
     h = gwy_data_view_get_xmeasure(data_view);
     gwy_surface_get_xrange(surface, &xmin, &xmax);
     xres = GWY_ROUND((xmax - xmin)/h);
