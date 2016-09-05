@@ -323,9 +323,6 @@ static void          reduce_data_size            (const GwyXY *xy,
                                                   GwyXY *xyred,
                                                   gdouble *zred,
                                                   guint nred);
-static GwyDataField* create_surface_preview_field(GwySurface *surface,
-                                                  gint max_xres,
-                                                  gint max_yres);
 static GString*      create_fit_report           (FitShapeControls *controls);
 static void          fit_shape_load_args         (GwyContainer *container,
                                                   FitShapeArgs *args);
@@ -651,8 +648,10 @@ fit_shape_dialogue(FitShapeArgs *args,
     if (surface) {
         controls.pageno = GWY_PAGE_XYZS;
         controls.title = gwy_app_get_surface_title(data, id);
-        mydfield = create_surface_preview_field(surface,
-                                                PREVIEW_SIZE, PREVIEW_SIZE);
+        mydfield = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+        gwy_preview_surface_to_datafield(surface, mydfield,
+                                         PREVIEW_SIZE, PREVIEW_SIZE,
+                                         GWY_PREVIEW_SURFACE_FILL);
         dfield = mydfield;
     }
     else if (dfield) {
@@ -2336,91 +2335,6 @@ reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
 
     g_free(redindex);
     gwy_rand_gen_set_free(rngset);
-}
-
-/* XXX: This is a copy of _gwy_app_create_surface_preview_field(). */
-static GwyDataField*
-create_surface_preview_field(GwySurface *surface,
-                             gint max_xres, gint max_yres)
-{
-    GwyDataField *raster;
-    gint n = surface->n;
-    gint xres, yres;
-    gdouble xmin, xmax, ymin, ymax, q, h;
-
-    g_return_val_if_fail(max_xres >= 2, NULL);
-    g_return_val_if_fail(max_yres >= 2, NULL);
-
-    gwy_surface_get_xrange(surface, &xmin, &xmax);
-    if (xmin == xmax) {
-        if (xmax) {
-            xmin = 0.5*xmax;
-            xmax = 1.5*xmax;
-        }
-        else
-            xmax = 1.0;
-    }
-
-    gwy_surface_get_yrange(surface, &ymin, &ymax);
-    if (ymin == ymax) {
-        if (ymax) {
-            ymin = 0.5*ymax;
-            ymax = 1.5*ymax;
-        }
-        else
-            ymax = 1.0;
-    }
-
-    q = (ymax - ymin)/(xmax - xmin);
-    if (q <= 1.0) {
-        yres = GWY_ROUND(sqrt(4.0*q*n));
-        yres = MAX(yres, 2);
-        h = (ymax - ymin)/yres;
-        xres = GWY_ROUND((xmax - xmin)/h);
-        if (CLAMP(xres, 4, max_xres) != xres) {
-            xres = CLAMP(xres, 4, max_xres);
-            h = (xmax - xmin)/xres;
-            yres = (gint)ceil((ymax - ymin)/h);
-        }
-    }
-    else {
-        xres = GWY_ROUND(sqrt(4.0/q*n));
-        xres = MAX(xres, 2);
-        h = (xmax - xmin)/xres;
-        yres = GWY_ROUND((ymax - ymin)/h);
-        if (CLAMP(yres, 4, max_yres) != yres) {
-            yres = CLAMP(yres, 4, max_yres);
-            h = (ymax - ymin)/yres;
-            xres = (gint)ceil((xmax - xmin)/h);
-        }
-    }
-
-    xmin -= 0.5*h;
-    ymin -= 0.5*h;
-    xmax += 0.5*h;
-    ymax += 0.5*h;
-    if ((xmax - xmin)/xres < (ymax - ymin)/yres) {
-        gdouble excess = (ymax - ymin)/yres*xres - (xmax - xmin);
-        xmin -= 0.5*excess;
-        xmax += 0.5*excess;
-    }
-    else {
-        gdouble excess = (xmax - xmin)/xres*yres - (ymax - ymin);
-        ymin -= 0.5*excess;
-        ymax += 0.5*excess;
-    }
-
-    raster = gwy_data_field_new(xres, yres, xmax - xmin, ymax - ymin, FALSE);
-    gwy_data_field_set_xoffset(raster, xmin);
-    gwy_data_field_set_yoffset(raster, ymin);
-    gwy_data_field_average_xyz(raster, NULL, surface->data, n);
-
-    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_xy(surface)),
-                           G_OBJECT(gwy_data_field_get_si_unit_xy(raster)));
-    gwy_serializable_clone(G_OBJECT(gwy_surface_get_si_unit_z(surface)),
-                           G_OBJECT(gwy_data_field_get_si_unit_z(raster)));
-
-    return raster;
 }
 
 /**************************************************************************
