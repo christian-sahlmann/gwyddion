@@ -22,8 +22,6 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - Do some surface-sync-data-items when creating new surfaces?  Also when
- *   creating preview for surfaces (at least the palette).
  * - Gradient adaptation only works for full-range mapping.  Simply enforce
  *   full-range mapping with adapted gradients?
  * - Align parameter table properly (with UTF-8 string lengths).
@@ -706,14 +704,25 @@ fit_shape_dialogue(FitShapeArgs *args,
     dfield = gwy_data_field_duplicate(dfield);
     gwy_container_set_object_by_name(controls.mydata, "/2/data", dfield);
     g_object_unref(dfield);
-    gwy_container_set_const_string_by_name(controls.mydata, "/2/data/palette",
+    gwy_container_set_const_string_by_name(controls.mydata, "/2/base/palette",
                                            FIT_GRADIENT_NAME);
-    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_RANGE_TYPE,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            0);
+    if (surface) {
+        GQuark quark = gwy_app_get_surface_palette_key_for_id(id);
+        const guchar *gradient;
+        if (gwy_container_gis_string(data, quark, &gradient)) {
+            gwy_container_set_const_string_by_name(controls.mydata,
+                                                   "/0/base/palette",
+                                                   gradient);
+        }
+    }
+    else {
+        gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                                GWY_DATA_ITEM_PALETTE,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE_TYPE,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                0);
+    }
     controls.view = create_preview(controls.mydata, 0, PREVIEW_SIZE, FALSE);
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
@@ -871,10 +880,13 @@ create_output_xyz(FitShapeControls *controls, GwyContainer *data)
     FitShapeContext *ctx = controls->ctx;
     GwySurface *surface, *newsurface;
     gint id = controls->id, newid;
+    GQuark quark = gwy_app_get_surface_palette_key_for_id(id);
+    const guchar *gradient = NULL;
     const GwyXYZ *sxyz;
     GwyXYZ *xyz;
     guint n, i;
 
+    gwy_container_gis_string(data, quark, &gradient);
     surface = gwy_container_get_object_by_name(controls->mydata, "/surface/0");
     g_return_if_fail(gwy_surface_get_npoints(surface) == ctx->n);
     sxyz = gwy_surface_get_data_const(surface);
@@ -891,6 +903,10 @@ create_output_xyz(FitShapeControls *controls, GwyContainer *data)
         gwy_app_xyz_log_add_xyz(data, id, newid);
         gwy_app_set_surface_title(data, newid, _("Fitted shape"));
         g_object_unref(newsurface);
+        if (gradient) {
+            quark = gwy_app_get_surface_palette_key_for_id(newid);
+            gwy_container_set_const_string(data, quark, gradient);
+        }
     }
 
     if (args->output == FIT_SHAPE_OUTPUT_DIFF
@@ -904,6 +920,10 @@ create_output_xyz(FitShapeControls *controls, GwyContainer *data)
         gwy_app_xyz_log_add_xyz(data, id, newid);
         gwy_app_set_surface_title(data, newid, _("Difference"));
         g_object_unref(newsurface);
+        if (gradient) {
+            quark = gwy_app_get_surface_palette_key_for_id(newid);
+            gwy_container_set_const_string(data, quark, gradient);
+        }
     }
 }
 
@@ -1498,11 +1518,11 @@ update_colourmap_key(FitShapeControls *controls)
     if (controls->args->diff_colourmap
         && controls->args->display == FIT_SHAPE_DISPLAY_DIFF) {
         gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(player),
-                                         "/2/data/palette");
+                                         "/2/base/palette");
     }
     else {
         gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(player),
-                                         "/0/data/palette");
+                                         "/0/base/palette");
     }
 }
 
@@ -1907,16 +1927,16 @@ calculate_secondary_params(FitShapeControls *controls)
     }
 }
 
-/* XXX: We could properly re-render all the fields from XYZ data if the input
- * is a Surface.  But would it ever make a visible difference? */
 static void
 update_fields(FitShapeControls *controls)
 {
     GwyDataField *dfield, *resfield, *difffield, *mask = NULL;
+    GwySurface *surface;
     GwyMaskingType masking = controls->args->masking;
     FitShapeContext *ctx = controls->ctx;
     guint xres, yres, n, k;
     const gdouble *m;
+    GwyXYZ *xyz;
     gdouble *d;
 
     dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
@@ -1934,6 +1954,20 @@ update_fields(FitShapeControls *controls)
         g_assert(ctx->n == n);
         gwy_debug("directly copying f[] to result field");
         memcpy(gwy_data_field_get_data(resfield), ctx->f, n*sizeof(gdouble));
+    }
+    else if (controls->pageno == GWY_PAGE_XYZS) {
+        surface = gwy_container_get_object_by_name(controls->mydata,
+                                                   "/surface/0");
+        surface = gwy_surface_duplicate(surface);
+        n = gwy_surface_get_npoints(surface);
+        g_assert(ctx->n == n);
+        xyz = gwy_surface_get_data(surface);
+        for (k = 0; k < n; k++)
+            xyz[k].z = ctx->f[k];
+        gwy_preview_surface_to_datafield(surface, resfield,
+                                         PREVIEW_SIZE, PREVIEW_SIZE,
+                                         GWY_PREVIEW_SURFACE_FILL);
+        g_object_unref(surface);
     }
     else {
         /* Either the input is XYZ or we are using masking.  Just recalculate
