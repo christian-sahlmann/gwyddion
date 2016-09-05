@@ -2812,7 +2812,7 @@ estimate_projection_direction_red(const GwyXY *xy,
     gdouble phi;
 
     if (nred >= n)
-        return estimate_projection_direction_red(xy, z, n, estimcache);
+        return estimate_projection_direction(xy, z, n, estimcache);
 
     xyred = g_new(GwyXY, nred);
     zred = g_new(gdouble, nred);
