@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,24 +27,33 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 #include "preview.h"
 
 #define ROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+typedef enum {
+    ROTATE_EXTERIOR_SAME_SIZE = 0,
+    ROTATE_EXTERIOR_EXPAND    = 1,
+    ROTATE_EXTERIOR_CUT       = 2,
+} RotateExteriorType;
+
 typedef struct {
     gdouble angle;
     GwyInterpolationType interp;
-    gboolean expand;
+    RotateExteriorType exterior;
+    gboolean create_mask;
     gboolean show_grid;
 } RotateArgs;
 
 typedef struct {
     GtkObject *angle;
     GtkWidget *interp;
-    GtkWidget *expand;
+    GSList *exterior;
     GtkWidget *show_grid;
+    GtkWidget *create_mask;
     GtkWidget *data_view;
     GwyContainer *data;
     GwySelection *selection;
@@ -60,9 +69,11 @@ static void     interp_changed      (GtkWidget *combo,
                                      RotateControls *controls);
 static void     angle_changed       (GtkObject *angle,
                                      RotateControls *controls);
-static void     expand_changed      (GtkWidget *toggle,
+static void     exterior_changed    (GtkToggleButton *toggle,
                                      RotateControls *controls);
-static void     show_grid_changed   (GtkWidget *toggle,
+static void     create_mask_changed (GtkToggleButton *toggle,
+                                     RotateControls *controls);
+static void     show_grid_changed   (GtkToggleButton *toggle,
                                      RotateControls *controls);
 static void     rotate_preview_draw (RotateControls *controls,
                                      RotateArgs *args);
@@ -77,6 +88,7 @@ static void     rotate_save_args    (GwyContainer *container,
 static const RotateArgs rotate_defaults = {
     0.0,
     GWY_INTERPOLATION_LINEAR,
+    ROTATE_EXTERIOR_SAME_SIZE,
     FALSE,
     TRUE,
 };
@@ -114,7 +126,7 @@ rotate_datafield(GwyDataField *dfield,
     gdouble xreal, yreal, phi, min;
     GwyDataField *df;
 
-    if (!args->expand) {
+    if (args->exterior == ROTATE_EXTERIOR_SAME_SIZE) {
         gwy_data_field_rotate(dfield, args->angle, args->interp);
         return;
     }
@@ -283,7 +295,7 @@ static gboolean
 rotate_dialog(RotateArgs *args,
               GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *hbox;
+    GtkWidget *dialog, *table, *hbox, *label;
     RotateControls controls;
     gint response, row;
 
@@ -302,7 +314,7 @@ rotate_dialog(RotateArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    table = gtk_table_new(3, 4, FALSE);
+    table = gtk_table_new(8, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -326,18 +338,6 @@ rotate_dialog(RotateArgs *args,
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     row++;
 
-    controls.expand
-        = gtk_check_button_new_with_mnemonic(_("E_xpand result to fit "
-                                               "complete data"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.expand),
-                                 args->expand);
-    gtk_table_attach(GTK_TABLE(table), controls.expand,
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    g_signal_connect(controls.expand, "toggled",
-                     G_CALLBACK(expand_changed), &controls);
-    row++;
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     controls.show_grid
         = gtk_check_button_new_with_mnemonic(_("Show _grid"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.show_grid),
@@ -348,6 +348,36 @@ rotate_dialog(RotateArgs *args,
                      G_CALLBACK(show_grid_changed), &controls);
     row++;
 
+    controls.create_mask
+        = gtk_check_button_new_with_mnemonic(_("Create _mask over exterior"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.create_mask),
+                                 args->create_mask);
+    gtk_table_attach(GTK_TABLE(table), controls.create_mask,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.create_mask, "toggled",
+                     G_CALLBACK(create_mask_changed), &controls);
+    row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new(_("Result size:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.exterior
+        = gwy_radio_buttons_createl(G_CALLBACK(exterior_changed), &controls,
+                                    args->exterior,
+                                    _("_Same as original"),
+                                    ROTATE_EXTERIOR_SAME_SIZE,
+                                    _("_Expanded to complete data"),
+                                    ROTATE_EXTERIOR_EXPAND,
+                                    _("C_ut to valid data"),
+                                    ROTATE_EXTERIOR_CUT,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.exterior,
+                                            GTK_TABLE(table), 4, row);
+
     controls.data = create_preview_data(data);
     controls.data_view = create_preview(controls.data, 0, PREVIEW_SIZE, FALSE);
     g_object_unref(controls.data);
@@ -357,7 +387,7 @@ rotate_dialog(RotateArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     rotate_dialog_update(&controls, args);
-    show_grid_changed(controls.show_grid, &controls);
+    show_grid_changed(GTK_TOGGLE_BUTTON(controls.show_grid), &controls);
     rotate_preview_draw(&controls, args);
 
     gtk_widget_show_all(dialog);
@@ -407,23 +437,30 @@ angle_changed(GtkObject *adj, RotateControls *controls)
 }
 
 static void
-expand_changed(GtkWidget *toggle, RotateControls *controls)
+exterior_changed(GtkToggleButton *toggle, RotateControls *controls)
 {
-    RotateArgs *args = controls->args;
+    if (!gtk_toggle_button_get_active(toggle))
+        return;
 
-    args->expand = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
-    rotate_preview_draw(controls, args);
+    controls->args->exterior
+        = gwy_radio_buttons_get_current(controls->exterior);
 }
 
 static void
-show_grid_changed(GtkWidget *toggle, RotateControls *controls)
+create_mask_changed(GtkToggleButton *toggle, RotateControls *controls)
+{
+    controls->args->create_mask = gtk_toggle_button_get_active(toggle);
+}
+
+static void
+show_grid_changed(GtkToggleButton *toggle, RotateControls *controls)
 {
     RotateArgs *args = controls->args;
     GwySelection *selection = controls->selection;
     GwyDataField *dfield;
     gdouble xy[4];
 
-    args->show_grid = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
+    args->show_grid = gtk_toggle_button_get_active(toggle);
     if (!args->show_grid) {
         gwy_selection_clear(selection);
         return;
@@ -436,46 +473,6 @@ show_grid_changed(GtkWidget *toggle, RotateControls *controls)
     gwy_selection_set_data(selection, 1, xy);
 }
 
-static const gchar angle_key[]     = "/module/rotate/angle";
-static const gchar expand_key[]    = "/module/rotate/expand";
-static const gchar interp_key[]    = "/module/rotate/interp";
-static const gchar show_grid_key[] = "/module/rotate/show_grid";
-
-static void
-rotate_sanitize_args(RotateArgs *args)
-{
-    args->angle = fmod(args->angle, 2*G_PI);
-    args->interp = gwy_enum_sanitize_value(args->interp,
-                                           GWY_TYPE_INTERPOLATION_TYPE);
-    args->expand = !!args->expand;
-    args->show_grid = !!args->show_grid;
-}
-
-static void
-rotate_load_args(GwyContainer *container,
-                 RotateArgs *args)
-{
-    *args = rotate_defaults;
-
-    gwy_container_gis_double_by_name(container, angle_key, &args->angle);
-    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
-    gwy_container_gis_boolean_by_name(container, expand_key, &args->expand);
-    gwy_container_gis_boolean_by_name(container, show_grid_key,
-                                      &args->show_grid);
-    rotate_sanitize_args(args);
-}
-
-static void
-rotate_save_args(GwyContainer *container,
-                 RotateArgs *args)
-{
-    gwy_container_set_double_by_name(container, angle_key, args->angle);
-    gwy_container_set_enum_by_name(container, interp_key, args->interp);
-    gwy_container_set_boolean_by_name(container, expand_key, args->expand);
-    gwy_container_set_boolean_by_name(container, show_grid_key,
-                                      args->show_grid);
-}
-
 static void
 rotate_dialog_update(RotateControls *controls,
                      RotateArgs *args)
@@ -484,10 +481,11 @@ rotate_dialog_update(RotateControls *controls,
                              args->angle*180.0/G_PI);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->expand),
-                                 args->expand);
+    gwy_radio_buttons_set_current(controls->exterior, args->exterior);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->show_grid),
                                  args->show_grid);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->create_mask),
+                                 args->create_mask);
 }
 
 static void
@@ -503,6 +501,53 @@ rotate_preview_draw(RotateControls *controls,
     gwy_data_field_copy(dfield, rfield, FALSE);
     gwy_data_field_rotate(rfield, args->angle, args->interp);
     gwy_data_field_data_changed(rfield);
+}
+
+static const gchar angle_key[]       = "/module/rotate/angle";
+static const gchar create_mask_key[] = "/module/rotate/create_mask";
+static const gchar exterior_key[]    = "/module/rotate/exterior";
+static const gchar interp_key[]      = "/module/rotate/interp";
+static const gchar show_grid_key[]   = "/module/rotate/show_grid";
+
+static void
+rotate_sanitize_args(RotateArgs *args)
+{
+    args->angle = fmod(args->angle, 2*G_PI);
+    args->interp = gwy_enum_sanitize_value(args->interp,
+                                           GWY_TYPE_INTERPOLATION_TYPE);
+    args->exterior = CLAMP(args->exterior,
+                           ROTATE_EXTERIOR_SAME_SIZE, ROTATE_EXTERIOR_CUT);
+    args->create_mask = !!args->create_mask;
+    args->show_grid = !!args->show_grid;
+}
+
+static void
+rotate_load_args(GwyContainer *container,
+                 RotateArgs *args)
+{
+    *args = rotate_defaults;
+
+    gwy_container_gis_double_by_name(container, angle_key, &args->angle);
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, exterior_key, &args->exterior);
+    gwy_container_gis_boolean_by_name(container, show_grid_key,
+                                      &args->show_grid);
+    gwy_container_gis_boolean_by_name(container, create_mask_key,
+                                      &args->create_mask);
+    rotate_sanitize_args(args);
+}
+
+static void
+rotate_save_args(GwyContainer *container,
+                 RotateArgs *args)
+{
+    gwy_container_set_double_by_name(container, angle_key, args->angle);
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, exterior_key, args->exterior);
+    gwy_container_set_boolean_by_name(container, show_grid_key,
+                                      args->show_grid);
+    gwy_container_set_boolean_by_name(container, create_mask_key,
+                                      args->create_mask);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
