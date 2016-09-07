@@ -119,6 +119,24 @@ rotate_datafield(GwyDataField *dfield,
         return;
     }
 
+    /*
+     * To cut the data to maximum container rectangle.
+     * We have rectangle width 2a, height 2b, centered at origin, rotated by
+     * angle 0 ≤ φ ≤ π/2.
+     * If b ≤ a*sin(2φ) then the rectangle is `flat' and we have corner
+     * coordinates of the cut x = b/2sin(φ), y = b/2cos(φ).
+     * If a ≤ b*sin(2φ) then the rectangle is `tall' and we have corner
+     * coordinates of the cut x = a/2cos(φ), y = a/2sin(φ).
+     * Otherwise the maximum rectangle is attained when its corners touch
+     * both edges of the rotated rectangle, resulting in coordinates of the cut
+     * x = (a*cos(φ) - b*sin(φ))/cos(2*φ),
+     * y = (b*cos(φ) - a*sin(φ))/cos(2*φ).
+     */
+
+    /* To expand the rectangle we just calculate x and y of the corners of
+     * the rotated rectangle.  But we have to transform them to expanded
+     * widths. */
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     xreal = gwy_data_field_get_xreal(dfield);
@@ -129,20 +147,34 @@ rotate_datafield(GwyDataField *dfield,
     xborder -= xres/2;
     yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
     yborder -= yres/2;
-    df = gwy_data_field_new(xres + fabs(2*xborder), yres + fabs(2*yborder), 1.0, 1.0,
+    df = gwy_data_field_new(xres + fabs(2*xborder), yres + fabs(2*yborder),
+                            1.0, 1.0,
                             FALSE);
     gwy_data_field_fill(df, min);
-    gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres, fabs(xborder), fabs(yborder));
+    gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres,
+                             fabs(xborder), fabs(yborder));
     gwy_data_field_rotate(df, args->angle, args->interp);
     gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
                             GWY_INTERPOLATION_NONE);
-    if (xborder <= 0)
-        gwy_data_field_area_copy(df, dfield, fabs(2*xborder), 0, xres + 2*xborder, yres + 2*yborder, 0, 0);
+    if (xborder <= 0) {
+        gwy_data_field_area_copy(df, dfield,
+                                 fabs(2*xborder), 0,
+                                 xres + 2*xborder, yres + 2*yborder,
+                                 0, 0);
+    }
     else {
-          if (yborder <= 0)
-              gwy_data_field_area_copy(df, dfield, 0, fabs(2*yborder), xres + 2*xborder, yres + 2*yborder, 0, 0);
-          else
-            gwy_data_field_area_copy(df, dfield, 0, 0, xres + 2*xborder, yres + 2*yborder, 0, 0);
+          if (yborder <= 0) {
+              gwy_data_field_area_copy(df, dfield,
+                                       0, fabs(2*yborder),
+                                       xres + 2*xborder, yres + 2*yborder,
+                                       0, 0);
+          }
+          else {
+            gwy_data_field_area_copy(df, dfield,
+                                     0, 0,
+                                     xres + 2*xborder, yres + 2*yborder,
+                                     0, 0);
+          }
     }
     gwy_data_field_set_xreal(dfield, xreal*(xres + 2.0*xborder)/xres);
     gwy_data_field_set_yreal(dfield, yreal*(yres + 2.0*yborder)/yres);
@@ -278,7 +310,7 @@ rotate_dialog(RotateArgs *args,
     row = 0;
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
-                                        -360, 360, 0.1, 30, 0);
+                                        -360, 360, 0.01, 5, 0);
     gwy_table_attach_hscale(table, row, _("Rotate by _angle:"), _("deg"),
                             controls.angle, 0);
     g_signal_connect(controls.angle, "value-changed",
