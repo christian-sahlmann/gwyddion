@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2000-2003 Martin Siler.
- *  Copyright (C) 2004,2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,19 +29,32 @@
 G_BEGIN_DECLS
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
-                                 gint n_param,
+                                 gint nparam,
                                  const gdouble *param,
                                  gpointer user_data,
-                                 gboolean *fres);
+                                 gboolean *success);
 
 typedef  void (*GwyNLFitDerFunc)(gdouble x,
-                                 gint n_param,
+                                 gint nparam,
                                  const gdouble *param,
                                  const gboolean *fixed_param,
-                                 GwyNLFitFunc fmarq,
+                                 GwyNLFitFunc func,
                                  gpointer user_data,
-                                 gdouble *deriv,
-                                 gboolean *dres);
+                                 gdouble *der,
+                                 gboolean *success);
+
+typedef  gdouble (*GwyNLFitIdxFunc)(guint i,
+                                    const gdouble *param,
+                                    gpointer user_data,
+                                    gboolean *success);
+
+typedef  void (*GwyNLFitIdxDiffFunc)(guint i,
+                                     const gdouble *param,
+                                     const gboolean *fixed_param,
+                                     GwyNLFitIdxFunc func,
+                                     gpointer user_data,
+                                     gdouble *der,
+                                     gboolean *success);
 
 typedef struct _GwyNLFitter GwyNLFitter;
 
@@ -53,28 +66,42 @@ struct _GwyNLFitter {
     gdouble *covar; /* covariance matrix  */
     gdouble dispersion; /* dispersion */
     gdouble mfi;    /* fitting parameters --
-                       fi, snizeni, zvyseni lambda, minimalni lambda */
+                       fi, decrease, increase of lambda, minimum lambda */
     gdouble mdec;
     gdouble minc;
     gdouble mtol;
 };
 
-GwyNLFitter*    gwy_math_nlfit_new               (GwyNLFitFunc ff,
-                                                  GwyNLFitDerFunc df);
+GwyNLFitter*    gwy_math_nlfit_new               (GwyNLFitFunc func,
+                                                  GwyNLFitDerFunc diff);
+GwyNLFitter*    gwy_math_nlfit_new_idx           (GwyNLFitIdxFunc func,
+                                                  GwyNLFitIdxDiffFunc diff);
 void            gwy_math_nlfit_free              (GwyNLFitter *nlfit);
 gdouble         gwy_math_nlfit_fit               (GwyNLFitter *nlfit,
-                                                  gint n_dat,
+                                                  gint ndata,
                                                   const gdouble *x,
                                                   const gdouble *y,
-                                                  gint n_param,
+                                                  gint nparam,
                                                   gdouble *param,
                                                   gpointer user_data);
 gdouble         gwy_math_nlfit_fit_full          (GwyNLFitter *nlfit,
-                                                  gint n_dat,
+                                                  gint ndata,
                                                   const gdouble *x,
                                                   const gdouble *y,
                                                   const gdouble *weight,
-                                                  gint n_param,
+                                                  gint nparam,
+                                                  gdouble *param,
+                                                  const gboolean *fixed_param,
+                                                  const gint *link_map,
+                                                  gpointer user_data);
+gdouble         gwy_math_nlfit_fit_idx           (GwyNLFitter *nlfit,
+                                                  guint ndata,
+                                                  guint nparam,
+                                                  gdouble *param,
+                                                  gpointer user_data);
+gdouble         gwy_math_nlfit_fit_idx_full      (GwyNLFitter *nlfit,
+                                                  guint ndata,
+                                                  guint nparam,
                                                   gdouble *param,
                                                   const gboolean *fixed_param,
                                                   const gint *link_map,
@@ -93,14 +120,30 @@ void            gwy_math_nlfit_set_callbacks     (GwyNLFitter *nlfit,
                                                   GwySetFractionFunc set_fraction,
                                                   GwySetMessageFunc set_message);
 
-void            gwy_math_nlfit_derive            (gdouble x,
-                                                  gint n_param,
+void            gwy_math_nlfit_diff              (gdouble x,
+                                                  gint nparam,
                                                   const gdouble *param,
                                                   const gboolean *fixed_param,
-                                                  GwyNLFitFunc ff,
+                                                  GwyNLFitFunc func,
                                                   gpointer user_data,
-                                                  gdouble *deriv,
-                                                  gboolean *dres);
+                                                  gdouble *der,
+                                                  gboolean *success);
+void            gwy_math_nlfit_derive            (gdouble x,
+                                                  gint nparam,
+                                                  const gdouble *param,
+                                                  const gboolean *fixed_param,
+                                                  GwyNLFitFunc func,
+                                                  gpointer user_data,
+                                                  gdouble *der,
+                                                  gboolean *success);
+void            gwy_math_nlfit_diff_idx          (guint i,
+                                                  gint nparam,
+                                                  const gdouble *param,
+                                                  const gboolean *fixed_param,
+                                                  GwyNLFitIdxFunc func,
+                                                  gpointer user_data,
+                                                  gdouble *der,
+                                                  gboolean *success);
 
 G_END_DECLS
 

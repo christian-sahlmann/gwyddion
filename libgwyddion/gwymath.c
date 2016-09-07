@@ -601,6 +601,53 @@ gwy_math_choleski_decompose(gint dim, gdouble *a)
 }
 
 /**
+ * gwy_math_choleski_invert:
+ * @n: Matrix size.
+ * @matrix: Lower triangular part of a symmetric matrix, stored by rows, i.e.,
+ *          matrix = [a_00 a_10 a_11 a_20 a_21 a_22 a_30 ...].
+ *
+ * Inverts a symmetric positive definite matrix in place.
+ *
+ * Returns: Whether the matrix was really positive definite.  If %FALSE,
+ *          the inversion failed and @matrix does not contain any meaningful
+ *          values.
+ *
+ * Since: 2.46
+ **/
+gboolean
+gwy_math_choleski_invert(gint n, gdouble *a)
+{
+
+    gint q = 0, m;
+    gdouble s, t;
+    gdouble *x;
+    gint k, i, j;
+
+    x = g_newa(gdouble, n);
+    for (k = n-1; k >= 0; k--) {
+        s = a[0];
+        if (s <= 0)
+            return FALSE;
+        m = 0;
+        for (i = 0; i < n-1; i++) {
+            q = m+1;
+            m += i+2;
+            t = a[q];
+            x[i] = -t/s;      /* note use temporary x */
+            if (i >= k)
+                x[i] = -x[i];
+            for (j = q; j < m; j++)
+                a[j - (i+1)] = a[j+1] + t * x[j - q];
+        }
+        a[m] = 1.0/s;
+        for (i = 0; i < n-1; i++)
+            a[q + i] = x[i];
+    }
+
+    return TRUE;
+}
+
+/**
  * gwy_math_choleski_solve:
  * @n: The dimension of @a.
  * @decomp: Lower triangular part of Choleski decomposition as computed

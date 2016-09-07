@@ -108,6 +108,8 @@ gboolean gwy_math_choleski_decompose   (gint n,
 void     gwy_math_choleski_solve       (gint n,
                                         const gdouble *decomp,
                                         gdouble *rhs);
+gboolean gwy_math_choleski_invert      (gint n,
+                                        gdouble *matrix);
 guint    gwy_math_curvature            (const gdouble *coeffs,
                                         gdouble *kappa1,
                                         gdouble *kappa2,
