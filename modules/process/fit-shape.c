@@ -22,6 +22,10 @@
 /* NB: Write all estimation and fitting functions for point clouds.  This
  * means we can easily update this module to handle XYZ data later. */
 /* TODO:
+ * - The fitted data are a bunch of GwyXYZ.  Either they come from a surface
+ *   whose data we could directly use, or we would just create such surface
+ *   even from field data.  In the first case it would save memory replication.
+ *   In the second case we replicate the data anyway now.
  * - Gradient adaptation only works for full-range mapping.  Simply enforce
  *   full-range mapping with adapted gradients?
  * - Align parameter table properly (with UTF-8 string lengths).
@@ -116,8 +120,10 @@ typedef struct {
     gdouble zskew;
 } FitShapeEstimateCache;
 
-typedef gboolean (*FitShapeEstimate)(const GwyXY *xy,
-                                     const gdouble *z,
+typedef gdouble (*FitShapeXYFunc)(gdouble x, gdouble y,
+                                  const gdouble *param);
+
+typedef gboolean (*FitShapeEstimate)(const GwyXYZ *xyz,
                                      guint n,
                                      gdouble *param,
                                      FitShapeEstimateCache *estimcache);
@@ -146,7 +152,8 @@ typedef struct {
 typedef struct {
     const gchar *name;
     gboolean needs_same_units;
-    GwyNLFitFunc function;
+    FitShapeXYFunc function;
+    GwyNLFitIdxFunc fit_function;
     FitShapeEstimate estimate;
     FitShapeEstimate initialise;
     guint nparams;
@@ -160,9 +167,7 @@ typedef struct {
     gboolean *param_fixed;
 
     guint n;
-    gdouble *abscissa;
-    GwyXY *xy;
-    gdouble *z;              /* Data */
+    GwyXYZ *xyz;             /* Data */
     gdouble *f;              /* Function values. */
 } FitShapeContext;
 
@@ -315,11 +320,9 @@ static void          calculate_function          (const FitShapeFunc *func,
                                                   const FitShapeContext *ctx,
                                                   const gdouble *param,
                                                   gdouble *z);
-static void          reduce_data_size            (const GwyXY *xy,
-                                                  const gdouble *z,
+static void          reduce_data_size            (const GwyXYZ *xyz,
                                                   guint n,
-                                                  GwyXY *xyred,
-                                                  gdouble *zred,
+                                                  GwyXYZ *xyzred,
                                                   guint nred);
 static GString*      create_fit_report           (FitShapeControls *controls);
 static void          fit_shape_load_args         (GwyContainer *container,
@@ -334,18 +337,23 @@ static void          fit_shape_save_args         (GwyContainer *container,
                                               const gdouble *correl);
 
 #define DECLARE_SHAPE_FUNC(name) \
-    static gdouble name##_func(gdouble abscissa, \
-                               gint n_param, \
-                               const gdouble *param, \
-                               gpointer user_data, \
-                               gboolean *fres); \
-    static gboolean name##_estimate(const GwyXY *xy, \
-                                    const gdouble *z, \
+    static gdouble name##_func(gdouble x, \
+                               gdouble y, \
+                               const gdouble *param); \
+    static gdouble name##_fitfunc(guint i, \
+                                  const gdouble *param, \
+                                  gpointer user_data, \
+                                  gboolean *fres) \
+    { \
+        const GwyXYZ *xyz = ((const FitShapeContext*)user_data)->xyz; \
+        *fres = TRUE; \
+        return name##_func(xyz[i].x, xyz[i].y, param) - xyz[i].z; \
+    } \
+    static gboolean name##_estimate(const GwyXYZ *xyz, \
                                     guint n, \
                                     gdouble *param, \
                                     FitShapeEstimateCache *estimcache); \
-    static gboolean name##_init(const GwyXY *xy, \
-                                const gdouble *z, \
+    static gboolean name##_init(const GwyXYZ *xyz, \
                                 guint n, \
                                 gdouble *param, \
                                 FitShapeEstimateCache *estimcache);
@@ -356,7 +364,7 @@ static void          fit_shape_save_args         (GwyContainer *container,
  * FitShapeSecondary is a struct that contains at least two pointers plus other
  * stuff, but it is dirty anyway. */
 #define SHAPE_FUNC_ITEM(name) \
-    &name##_func, &name##_estimate, &name##_init, \
+    &name##_func, &name##_fitfunc, &name##_estimate, &name##_init, \
     G_N_ELEMENTS(name##_params), \
     sizeof(name##_secondary)/sizeof(FitShapeSecondary), \
     name##_params, \
@@ -1442,7 +1450,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
     fit_correl_table_resize(controls);
     fit_secondary_table_resize(controls);
     fit_context_resize_params(ctx, nparams);
-    func->initialise(ctx->xy, ctx->z, ctx->n, controls->param,
+    func->initialise(ctx->xyz, ctx->n, controls->param,
                      controls->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
     fit_copy_correl_matrix(controls, NULL);
@@ -1788,7 +1796,7 @@ fit_shape_estimate(FitShapeControls *controls)
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start estimate");
     memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
-    if (func->estimate(ctx->xy, ctx->z, ctx->n, controls->param,
+    if (func->estimate(ctx->xyz, ctx->n, controls->param,
                        controls->estimcache))
         controls->state = FIT_SHAPE_ESTIMATED;
     else
@@ -2083,26 +2091,17 @@ update_fit_results(FitShapeControls *controls, GwyNLFitter *fitter)
     GwySIValueFormat *vf;
     gboolean is_fitted = (controls->state == FIT_SHAPE_FITTED
                           || controls->state == FIT_SHAPE_QUICK_FITTED);
+    const GwyXYZ *xyz = ctx->xyz;
     guchar buf[48];
 
     if (is_fitted)
         g_return_if_fail(fitter);
 
     for (k = 0; k < n; k++) {
-        gboolean fres;
-        gdouble z;
-
-        z = func->function((gdouble)k, nparams, controls->param,
-                           (gpointer)ctx, &fres);
+        gdouble z = func->function(xyz[k].x, xyz[k].y, controls->param);
         ctx->f[k] = z;
-
-        if (!fres) {
-            g_warning("Cannot evaluate function for pixel.");
-        }
-        else {
-            z -= ctx->z[k];
-            rss += z*z;
-        }
+        z -= xyz[k].z;
+        rss += z*z;
     }
     controls->rss = sqrt(rss/n);
 
@@ -2164,8 +2163,7 @@ fit_context_resize_params(FitShapeContext *ctx,
     }
 }
 
-/* Construct separate xy[] and z[] arrays from data field pixels under the
- * mask. */
+/* Construct a xyz[] and z[] array from data field pixels under the mask. */
 static void
 fit_context_fill_data(FitShapeContext *ctx,
                       GwyDataField *dfield,
@@ -2211,9 +2209,7 @@ fit_context_fill_data(FitShapeContext *ctx,
     }
 
     ctx->n = n;
-    ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
-    ctx->xy = g_renew(GwyXY, ctx->xy, n);
-    ctx->z = g_renew(gdouble, ctx->z, n);
+    ctx->xyz = g_renew(GwyXYZ, ctx->xyz, n);
     ctx->f = g_renew(gdouble, ctx->f, n);
     d = gwy_data_field_get_data_const(dfield);
 
@@ -2227,10 +2223,9 @@ fit_context_fill_data(FitShapeContext *ctx,
                 || (masking == GWY_MASK_EXCLUDE && m[k] <= 0.0)) {
                 gdouble x = (j + 0.5)*dx + xoff;
 
-                ctx->abscissa[n] = n;
-                ctx->xy[n].x = x;
-                ctx->xy[n].y = y;
-                ctx->z[n] = d[k];
+                ctx->xyz[n].x = x;
+                ctx->xyz[n].y = y;
+                ctx->xyz[n].z = d[k];
                 n++;
             }
         }
@@ -2241,9 +2236,7 @@ static void
 fit_context_free(FitShapeContext *ctx)
 {
     g_free(ctx->param_fixed);
-    g_free(ctx->abscissa);
-    g_free(ctx->xy);
-    g_free(ctx->z);
+    g_free(ctx->xyz);
     g_free(ctx->f);
     gwy_clear(ctx, 1);
 }
@@ -2252,22 +2245,14 @@ fit_context_free(FitShapeContext *ctx)
 static void
 fit_context_fill_xyz(FitShapeContext *ctx, GwySurface *surface)
 {
-    guint i, n;
     const GwyXYZ *xyz;
+    guint n;
 
     ctx->n = n = gwy_surface_get_npoints(surface);
-    ctx->abscissa = g_renew(gdouble, ctx->abscissa, n);
-    ctx->xy = g_renew(GwyXY, ctx->xy, n);
-    ctx->z = g_renew(gdouble, ctx->z, n);
+    ctx->xyz = g_renew(GwyXYZ, ctx->xyz, n);
     ctx->f = g_renew(gdouble, ctx->f, n);
     xyz = gwy_surface_get_data_const(surface);
-
-    for (i = 0; i < n; i++) {
-        ctx->abscissa[i] = i;
-        ctx->xy[i].x = xyz[i].x;
-        ctx->xy[i].y = xyz[i].y;
-        ctx->z[i] = xyz[i].z;
-    }
+    memcpy(ctx->xyz, xyz, n*sizeof(GwyXYZ));
 }
 
 static GwyNLFitter*
@@ -2278,14 +2263,13 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
     GwyNLFitter *fitter;
     guint i;
 
-    fitter = gwy_math_nlfit_new(func->function, gwy_math_nlfit_derive);
+    fitter = gwy_math_nlfit_new_idx(func->fit_function, NULL);
     if (set_fraction || set_message)
         gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
 
-    *rss = gwy_math_nlfit_fit_full(fitter,
-                                   ctx->n, ctx->abscissa, ctx->z, NULL,
-                                   func->nparams, param, ctx->param_fixed, NULL,
-                                   (gpointer)ctx);
+    *rss = gwy_math_nlfit_fit_idx_full(fitter, ctx->n, func->nparams,
+                                       param, ctx->param_fixed, NULL,
+                                       (gpointer)ctx);
     gwy_debug("rss from nlfit %g", *rss);
 
     for (i = 0; i < func->nparams; i++) {
@@ -2311,12 +2295,10 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
 
     ctxred = *ctx;
     nred = ctxred.n = sqrt(ctx->n*(gdouble)NREDLIM);
-    ctxred.xy = g_new(GwyXY, nred);
-    ctxred.z = g_new(gdouble, nred);
-    reduce_data_size(ctx->xy, ctx->z, ctx->n, ctxred.xy, ctxred.z, nred);
+    ctxred.xyz = g_new(GwyXYZ, nred);
+    reduce_data_size(ctx->xyz, ctx->n, ctxred.xyz, nred);
     fitter = fit(func, &ctxred, param, rss, NULL, NULL);
-    g_free(ctxred.xy);
-    g_free(ctxred.z);
+    g_free(ctxred.xyz);
 
     return fitter;
 }
@@ -2341,31 +2323,22 @@ calculate_function(const FitShapeFunc *func,
                    const gdouble *param,
                    gdouble *z)
 {
-    guint k, n = ctx->n, nparams = func->nparams;
+    guint k, n = ctx->n;
+    const GwyXYZ *xyz = ctx->xyz;
 
-    for (k = 0; k < n; k++) {
-        gboolean fres;
-
-        z[k] = func->function((gdouble)k, nparams, param, (gpointer)ctx, &fres);
-        if (!fres) {
-            g_warning("Cannot evaluate function for pixel.");
-            z[k] = 0.0;
-        }
-    }
+    for (k = 0; k < n; k++)
+        z[k] = func->function(xyz[k].x, xyz[k].y, param);
 }
 
 static void
-reduce_data_size(const GwyXY *xy, const gdouble *z, guint n,
-                 GwyXY *xyred, gdouble *zred, guint nred)
+reduce_data_size(const GwyXYZ *xyz, guint n, GwyXYZ *xyzred, guint nred)
 {
     GwyRandGenSet *rngset = gwy_rand_gen_set_new(1);
     guint *redindex = gwy_rand_gen_set_choose_shuffle(rngset, 0, n, nred);
     guint i;
 
-    for (i = 0; i < nred; i++) {
-        xyred[i] = xy[redindex[i]];
-        zred[i] = z[redindex[i]];
-    }
+    for (i = 0; i < nred; i++)
+        xyzred[i] = xyz[redindex[i]];
 
     g_free(redindex);
     gwy_rand_gen_set_free(rngset);
@@ -2418,7 +2391,7 @@ gwy_coshm1(gdouble x)
 /* Mean value of xy point cloud (not necessarily centre, that depends on
  * the density). */
 static void
-mean_x_y(const GwyXY *xy, guint n, gdouble *pxm, gdouble *pym,
+mean_x_y(const GwyXYZ *xyz, guint n, gdouble *pxm, gdouble *pym,
          FitShapeEstimateCache *estimcache)
 {
     gdouble xm = 0.0, ym = 0.0;
@@ -2437,8 +2410,8 @@ mean_x_y(const GwyXY *xy, guint n, gdouble *pxm, gdouble *pym,
     }
 
     for (i = 0; i < n; i++) {
-        xm += xy[i].x;
-        ym += xy[i].y;
+        xm += xyz[i].x;
+        ym += xyz[i].y;
     }
 
     *pxm = xm/n;
@@ -2454,7 +2427,7 @@ mean_x_y(const GwyXY *xy, guint n, gdouble *pxm, gdouble *pym,
 
 /* Minimum and maximum of an array of values. */
 static void
-range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax,
+range_z(const GwyXYZ *xyz, guint n, gdouble *pmin, gdouble *pmax,
         FitShapeEstimateCache *estimcache)
 {
     gdouble min, max;
@@ -2472,12 +2445,12 @@ range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax,
         return;
     }
 
-    min = max = z[0];
+    min = max = xyz[0].z;
     for (i = 1; i < n; i++) {
-        if (z[i] < min)
-            min = z[i];
-        if (z[i] > max)
-            max = z[i];
+        if (xyz[i].z < min)
+            min = xyz[i].z;
+        if (xyz[i].z > max)
+            max = xyz[i].z;
     }
 
     *pmin = min;
@@ -2493,7 +2466,8 @@ range_z(const gdouble *z, guint n, gdouble *pmin, gdouble *pmax,
 
 /* Simple stats of an array of values. */
 static void
-stat_z(const gdouble *z, guint n, gdouble *zmean, gdouble *zrms, gdouble *zskew,
+stat_z(const GwyXYZ *xyz, guint n,
+       gdouble *zmean, gdouble *zrms, gdouble *zskew,
        FitShapeEstimateCache *estimcache)
 {
     gdouble s = 0.0, s2 = 0.0, s3 = 0.0;
@@ -2521,11 +2495,11 @@ stat_z(const gdouble *z, guint n, gdouble *zmean, gdouble *zrms, gdouble *zskew,
     }
 
     for (i = 0; i < n; i++)
-        s += z[i];
+        s += xyz[i].z;
     s /= n;
 
     for (i = 0; i < n; i++) {
-        gdouble d = z[i] - s;
+        gdouble d = xyz[i].z - s;
         s2 += d*d;
         s3 += d*d*d;
     }
@@ -2554,7 +2528,7 @@ stat_z(const gdouble *z, guint n, gdouble *zmean, gdouble *zrms, gdouble *zskew,
 /* Approximately cicrumscribe a set of points by finding a containing
  * octagon. */
 static void
-circumscribe_x_y(const GwyXY *xy, guint n,
+circumscribe_x_y(const GwyXYZ *xyz, guint n,
                  gdouble *pxc, gdouble *pyc, gdouble *pr,
                  FitShapeEstimateCache *estimcache)
 {
@@ -2581,7 +2555,7 @@ circumscribe_x_y(const GwyXY *xy, guint n,
     }
 
     for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x, y = xy[i].y;
+        gdouble x = xyz[i].x, y = xyz[i].y;
         gdouble t[4] = { x, x+y, y, y-x };
 
         for (j = 0; j < 4; j++) {
@@ -2626,8 +2600,7 @@ circumscribe_x_y(const GwyXY *xy, guint n,
 /* Project xyz point cloud to a line rotated by angle phi anti-clockwise
  * from the horizontal line (x axis). */
 static gdouble
-projection_to_line(const GwyXY *xy,
-                   const gdouble *z,
+projection_to_line(const GwyXYZ *xyz,
                    guint n,
                    gdouble phi,
                    gdouble xc, gdouble yc,
@@ -2648,11 +2621,11 @@ projection_to_line(const GwyXY *xy,
     gwy_clear(counts, res);
 
     for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
         x = x*c - y*s;
         j = (gint)floor((x - off)/dx);
         if (j >= 0 && j < res) {
-            mean[j] += z[i];
+            mean[j] += xyz[i].z;
             counts[j]++;
         }
     }
@@ -2669,11 +2642,11 @@ projection_to_line(const GwyXY *xy,
     gwy_data_line_clear(rms_line);
 
     for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
         x = x*c - y*s;
         j = (gint)floor((x - off)/dx);
         if (j >= 0 && j < res)
-            rms[j] += (z[i] - mean[j])*(z[i] - mean[j]);
+            rms[j] += (xyz[i].z - mean[j])*(xyz[i].z - mean[j]);
     }
 
     for (j = 0; j < res; j++) {
@@ -2691,9 +2664,7 @@ projection_to_line(const GwyXY *xy,
  * variance remains in the line-averaged data.  The returned angle is rotation
  * of the axis anti-clockwise with respect to the x-axis. */
 static gdouble
-estimate_projection_direction(const GwyXY *xy,
-                              const gdouble *z,
-                              guint n,
+estimate_projection_direction(const GwyXYZ *xyz, guint n,
                               FitShapeEstimateCache *estimcache)
 {
     enum { NROUGH = 60, NFINE = 8 };
@@ -2704,7 +2675,7 @@ estimate_projection_direction(const GwyXY *xy,
     gdouble best_rms = G_MAXDOUBLE, best_alpha = 0.0;
     guint iter, i, ni, res;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
     res = (guint)floor(0.8*sqrt(n) + 1.0);
 
     mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
@@ -2728,7 +2699,7 @@ estimate_projection_direction(const GwyXY *xy,
 
         for (i = 0; i < ni; i++) {
             phi = alpha0 + i*alpha_step;
-            rms = projection_to_line(xy, z, n, phi, xc, yc,
+            rms = projection_to_line(xyz, n, phi, xc, yc,
                                      mean_line, rms_line, counts);
             gwy_debug("[%u] %g %g", iter, phi, rms);
             if (rms < best_rms) {
@@ -2748,30 +2719,25 @@ estimate_projection_direction(const GwyXY *xy,
 /* Estimate projection direction, possibly on reduced data.  This is useful
  * when the estimator does not need reduced data for anything else. */
 static gdouble
-estimate_projection_direction_red(const GwyXY *xy,
-                                  const gdouble *z,
-                                  guint n,
+estimate_projection_direction_red(const GwyXYZ *xyz, guint n,
                                   FitShapeEstimateCache *estimcache)
 {
     FitShapeEstimateCache estimcachered;
     guint nred = (guint)sqrt(n*(gdouble)NREDLIM);
-    GwyXY *xyred = NULL;
-    gdouble *zred = NULL;
+    GwyXYZ *xyzred = NULL;
     gdouble phi;
 
     if (nred >= n)
-        return estimate_projection_direction(xy, z, n, estimcache);
+        return estimate_projection_direction(xyz, n, estimcache);
 
-    xyred = g_new(GwyXY, nred);
-    zred = g_new(gdouble, nred);
-    reduce_data_size(xy, z, n, xyred, zred, nred);
+    xyzred = g_new(GwyXYZ, nred);
+    reduce_data_size(xyz, n, xyzred, nred);
 
     /* Make sure caching still works for the reduced data. */
     gwy_clear(&estimcachered, 1);
-    phi = estimate_projection_direction(xyred, zred, nred, &estimcachered);
+    phi = estimate_projection_direction(xyzred, nred, &estimcachered);
 
-    g_free(xyred);
-    g_free(zred);
+    g_free(xyzred);
 
     return phi;
 }
@@ -2801,7 +2767,7 @@ data_line_shorten(GwyDataLine *dline, const guint *counts, guint threshold)
  * centered around zero, whatever that means for specific grating-like
  * structures.  */
 static gboolean
-estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
+estimate_period_and_phase(const GwyXYZ *xyz, guint n,
                           gdouble phi, gdouble *pT, gdouble *poff,
                           FitShapeEstimateCache *estimcache)
 {
@@ -2812,7 +2778,7 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
     guint res, i, ibest;
     gboolean found;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
     /* Using more sqrt(n) than can make the sampling too sparse, causing noise
      * and oscillations. */
     res = (guint)floor(0.8*sqrt(n) + 1.0);
@@ -2825,7 +2791,7 @@ estimate_period_and_phase(const GwyXY *xy, const gdouble *z, guint n,
     tmp_line = gwy_data_line_new_alike(mean_line, FALSE);
     counts = g_new(guint, res);
 
-    projection_to_line(xy, z, n, phi, xc, yc, mean_line, NULL, counts);
+    projection_to_line(xyz, n, phi, xc, yc, mean_line, NULL, counts);
     data_line_shorten(mean_line, counts, 4);
     g_free(counts);
 
@@ -2878,7 +2844,7 @@ fail:
  * on it, estimate the base plane (z0) and feature height (h).  The height
  * can be either positive or negative. */
 static gboolean
-estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
+estimate_feature_height(const GwyXYZ *xyz, guint n,
                         gdouble *pz0, gdouble *ph,
                         gdouble *px, gdouble *py,
                         FitShapeEstimateCache *estimcache)
@@ -2894,21 +2860,21 @@ estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
         return FALSE;
     }
 
-    range_z(z, n, &zmin, &zmax, estimcache);
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
     r2_large = 0.7*r*r;
     r2_small = 0.1*r*r;
 
     for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
         gdouble r2 = x*x + y*y;
 
         if (r2 <= r2_small) {
-            zmean_small += z[i];
+            zmean_small += xyz[i].z;
             n_small++;
         }
         else if (r2 >= r2_large) {
-            zmean_large += z[i];
+            zmean_large += xyz[i].z;
             n_large++;
         }
     }
@@ -2939,11 +2905,11 @@ estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
         if (positive) {
             zbest = -G_MAXDOUBLE;
             for (i = 0; i < n; i++) {
-                gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+                gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
                 gdouble r2 = x*x + y*y;
 
-                if (r2 <= r2_small && z[i] > zbest) {
-                    zbest = z[i];
+                if (r2 <= r2_small && xyz[i].z > zbest) {
+                    zbest = xyz[i].z;
                     xm = x;
                     ym = y;
                 }
@@ -2952,11 +2918,11 @@ estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
         else {
             zbest = G_MAXDOUBLE;
             for (i = 0; i < n; i++) {
-                gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+                gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
                 gdouble r2 = x*x + y*y;
 
-                if (r2 <= r2_small && z[i] < zbest) {
-                    zbest = z[i];
+                if (r2 <= r2_small && xyz[i].z < zbest) {
+                    zbest = xyz[i].z;
                     xm = x;
                     ym = y;
                 }
@@ -2970,7 +2936,7 @@ estimate_feature_height(const GwyXY *xy, const gdouble *z, guint n,
 }
 
 static gboolean
-common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
+common_bump_feature_init(const GwyXYZ *xyz, guint n,
                          gdouble *xc, gdouble *yc, gdouble *z0,
                          gdouble *height, gdouble *size,
                          gdouble *a, gdouble *phi,
@@ -2978,8 +2944,8 @@ common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
 {
     gdouble xm, ym, r, zmin, zmax;
 
-    circumscribe_x_y(xy, n, &xm, &ym, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xm, &ym, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     *xc = xm;
     *yc = ym;
@@ -2993,7 +2959,7 @@ common_bump_feature_init(const GwyXY *xy, const gdouble *z, guint n,
 }
 
 static gboolean
-common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
+common_bump_feature_estimate(const GwyXYZ *xyz, guint n,
                              gdouble *xc, gdouble *yc, gdouble *z0,
                              gdouble *height, gdouble *size,
                              gdouble *a, gdouble *phi,
@@ -3004,10 +2970,10 @@ common_bump_feature_estimate(const GwyXY *xy, const gdouble *z, guint n,
     /* Just initialise the shape parameters with some sane defaults. */
     *a = 1.0;
     *phi = 0.0;
-    circumscribe_x_y(xy, n, &xm, &ym, &r, estimcache);
+    circumscribe_x_y(xyz, n, &xm, &ym, &r, estimcache);
     *size = r/3.0;
 
-    return estimate_feature_height(xy, z, n, z0, height, xc, yc, estimcache);
+    return estimate_feature_height(xyz, n, z0, height, xc, yc, estimcache);
 }
 
 static gdouble
@@ -3065,25 +3031,16 @@ data_line_pearson_coeff(GwyDataLine *dline1, GwyDataLine *dline2)
  **************************************************************************/
 
 static gdouble
-sphere_func(gdouble abscissa,
-            G_GNUC_UNUSED gint n_param,
-            const gdouble *param,
-            gpointer user_data,
-            gboolean *fres)
+sphere_func(gdouble x, gdouble y, const gdouble *param)
 {
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
     gdouble kappa = param[3];
-    gdouble x, y, r2k, t, val;
-    guint i;
+    gdouble r2k, t, val;
 
-    g_assert(n_param == 4);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
+    x -= xc;
+    y -= yc;
     /* Rewrite R - sqrt(R² - r²) as κ*r²/(1 + sqrt(1 - κ²r²)) where
      * r² = x² + y² and κR = 1 to get nice behaviour in the close-to-denegerate
      * cases, including completely flat surface.  The expression 1.0/kappa
@@ -3096,19 +3053,18 @@ sphere_func(gdouble abscissa,
     else
         val = z0 + 2.0/kappa;
 
-    *fres = TRUE;
     return val;
 }
 
 static gboolean
-sphere_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+sphere_init(const GwyXYZ *xyz, guint n, gdouble *param,
             FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax, zmean;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
-    stat_z(z, n, &zmean, NULL, NULL, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
+    stat_z(xyz, n, &zmean, NULL, NULL, estimcache);
 
     param[0] = xc;
     param[1] = yc;
@@ -3127,7 +3083,7 @@ sphere_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 /* Fit the data with a rotationally symmetric parabola and use its parameters
  * for the spherical surface estimate. */
 static gboolean
-sphere_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+sphere_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                 FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc;
@@ -3139,17 +3095,17 @@ sphere_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
      * function, better? */
 
     /* Using centered coodinates improves the condition number. */
-    mean_x_y(xy, n, &xc, &yc, estimcache);
+    mean_x_y(xyz, n, &xc, &yc, estimcache);
     gwy_clear(a, 10);
     gwy_clear(b, 4);
     for (i = 0; i < n; i++) {
-        gdouble x = xy[i].x - xc, y = xy[i].y - yc;
+        gdouble x = xyz[i].x - xc, y = xyz[i].y - yc;
         gdouble r2 = x*x + y*y;
 
-        b[0] += z[i];
-        b[1] += x*z[i];
-        b[2] += y*z[i];
-        b[3] += r2*z[i];
+        b[0] += xyz[i].z;
+        b[1] += x*xyz[i].z;
+        b[2] += y*xyz[i].z;
+        b[3] += r2*xyz[i].z;
 
         a[2] += x*x;
         a[4] += x*y;
@@ -3209,30 +3165,16 @@ sphere_calc_err_R(const gdouble *param,
  * zero (or something odd) because of the sharp boundaries in the function that
  * either catch a data point inside some region or not. */
 static gdouble
-cylinder_func(gdouble abscissa,
-              G_GNUC_UNUSED gint n_param,
-              const gdouble *param,
-              gpointer user_data,
-              gboolean *fres)
+cylinder_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble x0 = param[0];
     gdouble z0 = param[1];
     gdouble kappa = param[2];
     gdouble phi = param[3];
     gdouble bparallel = param[4];
-    gdouble x, y, r2k, t, val, cphi, sphi;
-    guint i;
-
-    g_assert(n_param == 5);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x;
-    y = ctx->xy[i].y;
-
-    *fres = TRUE;
+    gdouble r2k, t, val, cphi, sphi;
 
     HANDLE_PHI_CACHE(phi);
     z0 += bparallel*(x*sphi + y*cphi);
@@ -3248,14 +3190,14 @@ cylinder_func(gdouble abscissa,
 }
 
 static gboolean
-cylinder_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+cylinder_init(const GwyXYZ *xyz, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax, zmean;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
-    stat_z(z, n, &zmean, NULL, NULL, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
+    stat_z(xyz, n, &zmean, NULL, NULL, estimcache);
 
     param[0] = xc;
     if (fabs(zmean - zmin) > fabs(zmean - zmax)) {
@@ -3275,7 +3217,7 @@ cylinder_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 /* Fit the data with a rotationally symmetric parabola and use its parameters
  * for the spherical surface estimate. */
 static gboolean
-cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+cylinder_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *mean_line;
@@ -3286,16 +3228,16 @@ cylinder_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     const gdouble *d;
 
     /* First we estimate the orientation (phi). */
-    phi = estimate_projection_direction_red(xy, z, n, estimcache);
+    phi = estimate_projection_direction_red(xyz, n, estimcache);
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     res = (guint)floor(0.8*sqrt(n) + 1.0);
     mean_line = gwy_data_line_new(res, 2.0*r, FALSE);
     counts = g_new(guint, res);
     gwy_data_line_set_offset(mean_line, -r);
-    projection_to_line(xy, z, n, phi, xc, yc, mean_line, NULL, counts);
+    projection_to_line(xyz, n, phi, xc, yc, mean_line, NULL, counts);
     d = gwy_data_line_get_data(mean_line);
 
     d2sign = 0;
@@ -3356,13 +3298,11 @@ cylinder_calc_err_R(const gdouble *param,
  **************************************************************************/
 
 static gdouble
-grating_func(gdouble abscissa, gint n_param, const gdouble *param,
-             gpointer user_data, gboolean *fres)
+grating_func(gdouble x, gdouble y, const gdouble *param)
 {
     static gdouble c_last = 0.0, coshm1_c_last = 1.0;
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble L = fabs(param[0]);
     gdouble h = param[1];
     gdouble p = fabs(param[2]);
@@ -3370,16 +3310,8 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble x0 = param[4];
     gdouble phi = param[5];
     gdouble c = param[6];
-    gdouble x, y, t, Lp2, val, coshm1_c, cphi, sphi;
-    guint i;
+    gdouble t, Lp2, val, coshm1_c, cphi, sphi;
 
-    g_assert(n_param == 7);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x;
-    y = ctx->xy[i].y;
-
-    *fres = TRUE;
     Lp2 = 0.5*L*p;
     if (G_UNLIKELY(!Lp2))
         return z0;
@@ -3404,13 +3336,13 @@ grating_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-grating_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+grating_init(const GwyXYZ *xyz, guint n, gdouble *param,
              FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     param[0] = r/4.0;
     param[1] = zmax - zmin;
@@ -3424,7 +3356,7 @@ grating_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+grating_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                  FitShapeEstimateCache *estimcache)
 {
     gdouble t;
@@ -3434,16 +3366,16 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[6] = 5.0;
 
     /* Simple height parameter estimate. */
-    range_z(z, n, param+3, param+1, estimcache);
+    range_z(xyz, n, param+3, param+1, estimcache);
     t = param[1] - param[3];
     param[1] = 0.9*t;
     param[3] += 0.05*t;
 
     /* First we estimate the orientation (phi). */
-    param[5] = estimate_projection_direction_red(xy, z, n, estimcache);
+    param[5] = estimate_projection_direction_red(xyz, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
-    return estimate_period_and_phase(xy, z, n, param[5], param + 0, param + 4,
+    return estimate_period_and_phase(xyz, n, param[5], param + 0, param + 4,
                                      estimcache);
 }
 
@@ -3454,12 +3386,10 @@ grating_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
  **************************************************************************/
 
 static gdouble
-grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
-              gpointer user_data, gboolean *fres)
+grating3_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble L = fabs(param[0]);
     gdouble h1 = fabs(param[1]);
     gdouble h2 = fabs(param[2]);
@@ -3471,16 +3401,8 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble z0 = param[8];
     gdouble x0 = param[9];
     gdouble phi = param[10];
-    gdouble x, y, t, Lp2, cphi, sphi, Ll, Lu;
-    guint i;
+    gdouble t, Lp2, cphi, sphi, Ll, Lu;
 
-    g_assert(n_param == 11);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x;
-    y = ctx->xy[i].y;
-
-    *fres = TRUE;
     Lp2 = 0.5*L*p;
     if (G_UNLIKELY(!Lp2))
         return z0;
@@ -3524,13 +3446,13 @@ grating3_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-grating3_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+grating3_init(const GwyXYZ *xyz, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     param[0] = r/4.0;
     param[1] = 0.1*(zmax - zmin);
@@ -3548,7 +3470,7 @@ grating3_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+grating3_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     gdouble zmin, zmax;
@@ -3560,17 +3482,17 @@ grating3_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     param[7] = 0.5;
 
     /* Simple height parameter estimate. */
-    range_z(z, n, &zmin, &zmax, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
     param[1] = 0.1*(zmax - zmin);
     param[2] = 0.8*(zmax - zmin);
     param[3] = 0.1*(zmax - zmin);
     param[8] = zmin;
 
     /* First we estimate the orientation (phi). */
-    param[10] = estimate_projection_direction_red(xy, z, n, estimcache);
+    param[10] = estimate_projection_direction_red(xyz, n, estimcache);
 
     /* Then we extract a representative profile with this orientation. */
-    return estimate_period_and_phase(xy, z, n, param[10], param + 0, param + 9,
+    return estimate_period_and_phase(xyz, n, param[10], param + 0, param + 9,
                                      estimcache);
 }
 
@@ -3745,12 +3667,10 @@ hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
 }
 
 static gdouble
-holes_func(gdouble abscissa, gint n_param, const gdouble *param,
-           gpointer user_data, gboolean *fres)
+holes_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
@@ -3760,16 +3680,10 @@ holes_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble s = param[6];
     gdouble r = param[7];
     gdouble phi = param[8];
-    gdouble x, y, t, cphi, sphi;
-    guint i;
+    gdouble t, cphi, sphi;
 
-    g_assert(n_param == 9);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
-
-    *fres = TRUE;
+    x -= xc;
+    y -= yc;
 
     if (G_UNLIKELY(L*p == 0.0))
         return z0;
@@ -3791,13 +3705,13 @@ holes_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-holes_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+holes_init(const GwyXYZ *xyz, guint n, gdouble *param,
            FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     param[0] = 0;
     param[1] = 0;
@@ -3813,7 +3727,7 @@ holes_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-holes_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+holes_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *mean_line, *rms_line;
@@ -3822,17 +3736,17 @@ holes_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     guint res;
     gboolean ok1, ok2;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     param[4] = 1.0;
     param[6] = 0.1;
     param[7] = 0.1;
 
-    param[8] = phi = estimate_projection_direction_red(xy, z, n, estimcache);
+    param[8] = phi = estimate_projection_direction_red(xyz, n, estimcache);
 
-    ok1 = estimate_period_and_phase(xy, z, n, phi, &L1, &u, estimcache);
-    ok2 = estimate_period_and_phase(xy, z, n, phi - 0.5*G_PI, &L2, &v,
+    ok1 = estimate_period_and_phase(xyz, n, phi, &L1, &u, estimcache);
+    ok2 = estimate_period_and_phase(xyz, n, phi - 0.5*G_PI, &L2, &v,
                                     estimcache);
     param[3] = 0.5*(L1 + L2);
     param[0] = u*cos(phi) + v*sin(phi);
@@ -3846,7 +3760,7 @@ holes_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gwy_data_line_set_offset(mean_line, -r);
     rms_line = gwy_data_line_new_alike(mean_line, FALSE);
     counts = g_new(guint, res);
-    projection_to_line(xy, z, n, phi, xc, yc, mean_line, rms_line, counts);
+    projection_to_line(xyz, n, phi, xc, yc, mean_line, rms_line, counts);
     data_line_shorten(mean_line, counts, 4);
     data_line_shorten(rms_line, counts, 4);
     g_free(counts);
@@ -3954,12 +3868,10 @@ holes_calc_err_R(const gdouble *param,
  **************************************************************************/
 
 static gdouble
-pring_func(gdouble abscissa, gint n_param, const gdouble *param,
-           gpointer user_data, gboolean *fres)
+pring_func(gdouble x, gdouble y, const gdouble *param)
 {
     static gdouble s_h_last = 0.0, rinner_last = 1.0, router_last = 1.0;
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
@@ -3969,18 +3881,12 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble s = param[6];
     gdouble bx = param[7];
     gdouble by = param[8];
-    gdouble x, y, r, r2, s_h, rinner, router;
-    guint i;
+    gdouble r, r2, s_h, rinner, router;
 
-    g_assert(n_param == 9);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
+    x -= xc;
+    y -= yc;
     z0 += bx*x + by*y;
     r2 = x*x + y*y;
-
-    *fres = TRUE;
 
     if (G_UNLIKELY(w == 0.0))
         return r2 <= R*R ? z0 - 0.5*s : z0 + 0.5*s;
@@ -4020,13 +3926,13 @@ pring_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-pring_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+pring_init(const GwyXYZ *xyz, guint n, gdouble *param,
            FitShapeEstimateCache *estimcache)
 {
     gdouble xc, yc, r, zmin, zmax;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
 
     param[0] = xc;
     param[1] = yc;
@@ -4042,7 +3948,7 @@ pring_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-pring_estimate_projection(const GwyXY *xy, const gdouble *z, guint n,
+pring_estimate_projection(const GwyXYZ *xyz, guint n,
                           gdouble xc, gdouble yc, gdouble r,
                           gboolean vertical, gboolean upwards,
                           GwyDataLine *proj, GwyXY *projdata, guint *counts,
@@ -4055,7 +3961,7 @@ pring_estimate_projection(const GwyXY *xy, const gdouble *z, guint n,
     c = (vertical ? yc : xc);
     gwy_data_line_set_real(proj, 2.0*r);
     gwy_data_line_set_offset(proj, -r);
-    projection_to_line(xy, z, n, vertical ? -0.5*G_PI : 0.0,
+    projection_to_line(xyz, n, vertical ? -0.5*G_PI : 0.0,
                        xc, yc, proj, NULL, counts);
     data_line_shorten(proj, counts, 4);
 
@@ -4083,7 +3989,7 @@ pring_estimate_projection(const GwyXY *xy, const gdouble *z, guint n,
 }
 
 static gboolean
-pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+pring_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                FitShapeEstimateCache *estimcache)
 {
     GwyDataLine *proj;
@@ -4095,9 +4001,9 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gboolean ok1, ok2;
     guint res;
 
-    circumscribe_x_y(xy, n, &xc, &yc, &r, estimcache);
-    range_z(z, n, &zmin, &zmax, estimcache);
-    stat_z(z, n, NULL, NULL, &zskew, estimcache);
+    circumscribe_x_y(xyz, n, &xc, &yc, &r, estimcache);
+    range_z(xyz, n, &zmin, &zmax, estimcache);
+    stat_z(xyz, n, NULL, NULL, &zskew, estimcache);
     res = (guint)floor(0.8*sqrt(n) + 1.0);
     if (zskew < 0.0)
         GWY_SWAP(gdouble, zmin, zmax);
@@ -4111,11 +4017,11 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
     gwy_peaks_set_background(peaks, GWY_PEAK_BACKGROUND_MMSTEP);
 
     gwy_data_line_resample(proj, res, GWY_INTERPOLATION_NONE);
-    ok1 = pring_estimate_projection(xy, z, n, xc, yc, r, FALSE, zskew >= 0.0,
+    ok1 = pring_estimate_projection(xyz, n, xc, yc, r, FALSE, zskew >= 0.0,
                                     proj, projdata, counts, peaks, xestim);
 
     gwy_data_line_resample(proj, res, GWY_INTERPOLATION_NONE);
-    ok2 = pring_estimate_projection(xy, z, n, xc, yc, r, TRUE, zskew >= 0.0,
+    ok2 = pring_estimate_projection(xyz, n, xc, yc, r, TRUE, zskew >= 0.0,
                                     proj, projdata, counts, peaks, yestim);
 
     g_free(counts);
@@ -4147,12 +4053,10 @@ pring_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
  **************************************************************************/
 
 static gdouble
-gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
-              gpointer user_data, gboolean *fres)
+gaussian_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
@@ -4162,17 +4066,12 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble phi = param[6];
     gdouble bx = param[7];
     gdouble by = param[8];
-    gdouble x, y, t, val, cphi, sphi, s2;
-    guint i;
+    gdouble t, val, cphi, sphi, s2;
 
-    g_assert(n_param == 9);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
+    x -= xc;
+    y -= yc;
     z0 += bx*x + by*y;
 
-    *fres = TRUE;
     s2 = sigma*sigma;
     if (G_UNLIKELY(!s2 || !a))
         return z0;
@@ -4189,12 +4088,12 @@ gaussian_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-gaussian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+gaussian_init(const GwyXYZ *xyz, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_init(xy, z, n,
+    return common_bump_feature_init(xyz, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
                                     param + 5, param + 6,
@@ -4202,12 +4101,12 @@ gaussian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-gaussian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+gaussian_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_estimate(xy, z, n,
+    return common_bump_feature_estimate(xyz, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
                                         param + 5, param + 6,
@@ -4261,12 +4160,10 @@ gaussian_calc_err_sigma2(const gdouble *param,
  **************************************************************************/
 
 static gdouble
-lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
-                gpointer user_data, gboolean *fres)
+lorentzian_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
@@ -4276,17 +4173,12 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble phi = param[6];
     gdouble bx = param[7];
     gdouble by = param[8];
-    gdouble x, y, t, val, cphi, sphi, b2;
-    guint i;
+    gdouble t, val, cphi, sphi, b2;
 
-    g_assert(n_param == 9);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
+    x -= xc;
+    y -= yc;
     z0 += bx*x + by*y;
 
-    *fres = TRUE;
     b2 = b*b;
     if (G_UNLIKELY(!b2 || !a))
         return z0;
@@ -4303,12 +4195,12 @@ lorentzian_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+lorentzian_init(const GwyXYZ *xyz, guint n, gdouble *param,
                 FitShapeEstimateCache *estimcache)
 {
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_init(xy, z, n,
+    return common_bump_feature_init(xyz, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
                                     param + 5, param + 6,
@@ -4316,12 +4208,12 @@ lorentzian_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-lorentzian_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+lorentzian_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                     FitShapeEstimateCache *estimcache)
 {
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_estimate(xy, z, n,
+    return common_bump_feature_estimate(xyz, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
                                         param + 5, param + 6,
@@ -4375,12 +4267,10 @@ lorentzian_calc_err_b2(const gdouble *param,
  **************************************************************************/
 
 static gdouble
-pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
-              gpointer user_data, gboolean *fres)
+pyramidx_func(gdouble x, gdouble y, const gdouble *param)
 {
     DEFINE_PHI_CACHE(phi);
 
-    const FitShapeContext *ctx = (const FitShapeContext*)user_data;
     gdouble xc = param[0];
     gdouble yc = param[1];
     gdouble z0 = param[2];
@@ -4390,17 +4280,12 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
     gdouble phi = param[6];
     gdouble bx = param[7];
     gdouble by = param[8];
-    gdouble x, y, t, val, cphi, sphi, q;
-    guint i;
+    gdouble t, val, cphi, sphi, q;
 
-    g_assert(n_param == 9);
-
-    i = (guint)abscissa;
-    x = ctx->xy[i].x - xc;
-    y = ctx->xy[i].y - yc;
+    x -= xc;
+    y -= yc;
     z0 += bx*x + by*y;
 
-    *fres = TRUE;
     if (G_UNLIKELY(!L || !a))
         return z0;
 
@@ -4422,12 +4307,12 @@ pyramidx_func(gdouble abscissa, gint n_param, const gdouble *param,
 }
 
 static gboolean
-pyramidx_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+pyramidx_init(const GwyXYZ *xyz, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_init(xy, z, n,
+    return common_bump_feature_init(xyz, n,
                                     param + 0, param + 1, param + 2,
                                     param + 3, param + 4,
                                     param + 5, param + 6,
@@ -4435,14 +4320,14 @@ pyramidx_init(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
 }
 
 static gboolean
-pyramidx_estimate(const GwyXY *xy, const gdouble *z, guint n, gdouble *param,
+pyramidx_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
     /* XXX: The pyramid has minimum projection when oriented along x and y
      * axes.  But not very deep.  Can we use it to estimate phi? */
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_estimate(xy, z, n,
+    return common_bump_feature_estimate(xyz, n,
                                         param + 0, param + 1, param + 2,
                                         param + 3, param + 4,
                                         param + 5, param + 6,
