@@ -19,6 +19,11 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+/*
+ * TODO: Essentially always we should rotate in physical space, not pixel
+ * space.  Meaning that gwy_data_field_rotate() does not do the right thing;
+ * in pixel coordinates the transform is general affine... */
+
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
