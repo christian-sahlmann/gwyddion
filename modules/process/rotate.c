@@ -98,7 +98,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.12",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -123,13 +123,19 @@ rotate_datafield(GwyDataField *dfield,
                  RotateArgs *args)
 {
     gint xres, yres, xborder, yborder;
-    gdouble xreal, yreal, phi, min;
+    gdouble xreal, yreal, phi, min, sphi, cphi;
     GwyDataField *df;
 
+    phi = args->angle;
     if (args->exterior == ROTATE_EXTERIOR_SAME_SIZE) {
-        gwy_data_field_rotate(dfield, args->angle, args->interp);
+        gwy_data_field_rotate(dfield, phi, args->interp);
         return;
     }
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
 
     /*
      * To cut the data to maximum container rectangle.
@@ -144,20 +150,57 @@ rotate_datafield(GwyDataField *dfield,
      * x = (a*cos(φ) - b*sin(φ))/cos(2*φ),
      * y = (b*cos(φ) - a*sin(φ))/cos(2*φ).
      */
+    if (args->exterior == ROTATE_EXTERIOR_CUT) {
+        gdouble xr, yr, s2phi, c2phi;
+        gint xfrom, xto, yfrom, yto;
+
+        gwy_data_field_rotate(dfield, phi, args->interp);
+        /* Make 0 ≤ φ ≤ π. */
+        phi = fmod(phi + 4.0*G_PI, G_PI);
+        /* Make 0 ≤ φ ≤ π/2. */
+        if (phi > 0.5*G_PI)
+            phi = G_PI - phi;
+
+        sphi = sin(phi);
+        cphi = cos(phi);
+        s2phi = sin(2.0*phi);
+        c2phi = cos(2.0*phi);
+
+        if (yres <= xres*s2phi) {
+            xr = 0.5*yres/sphi;
+            yr = 0.5*yres/cphi;
+        }
+        else if (xres <= yres*s2phi) {
+            xr = 0.5*xres/cphi;
+            yr = 0.5*xres/sphi;
+        }
+        else {
+            xr = (xres*cphi - yres*sphi)/c2phi;
+            yr = (yres*cphi - xres*sphi)/c2phi;
+        }
+
+        xfrom = (gint)ceil(0.5*(xres - xr));
+        yfrom = (gint)ceil(0.5*(yres - yr));
+        xto = (gint)floor(0.5*(xres + xr));
+        yto = (gint)floor(0.5*(yres + yr));
+        xfrom = CLAMP(xfrom, 0, xres/2 - 1);
+        yfrom = CLAMP(yfrom, 0, yres/2 - 1);
+        xto = CLAMP(xto, (xres + 1)/2 + 1, xres-1);
+        yto = CLAMP(yto, (yres + 1)/2 + 1, yres-1);
+        gwy_data_field_resize(dfield, xfrom, yfrom, xto+1, yto+1);
+        return;
+    }
 
     /* To expand the rectangle we just calculate x and y of the corners of
      * the rotated rectangle.  But we have to transform them to expanded
      * widths. */
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
+    sphi = sin(phi);
+    cphi = cos(phi);
     min = gwy_data_field_get_min(dfield);
-    phi = args->angle;
-    xborder = fabs(xres/2.0 * cos(phi)) + fabs(yres/2.0 * sin(phi));
+    xborder = fabs(xres/2.0 * cphi) + fabs(yres/2.0 * sphi);
     xborder -= xres/2;
-    yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
+    yborder = fabs(yres/2.0 * cphi) + fabs(xres/2.0 * sphi);
     yborder -= yres/2;
     df = gwy_data_field_new(xres + fabs(2*xborder), yres + fabs(2*yborder),
                             1.0, 1.0,
@@ -444,6 +487,7 @@ exterior_changed(GtkToggleButton *toggle, RotateControls *controls)
 
     controls->args->exterior
         = gwy_radio_buttons_get_current(controls->exterior);
+    rotate_preview_draw(controls, controls->args);
 }
 
 static void
@@ -498,8 +542,9 @@ rotate_preview_draw(RotateControls *controls,
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->data_view));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/1/data"));
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_copy(dfield, rfield, FALSE);
-    gwy_data_field_rotate(rfield, args->angle, args->interp);
+    gwy_serializable_clone(G_OBJECT(dfield), G_OBJECT(rfield));
+    rotate_datafield(rfield, args);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->data_view), PREVIEW_SIZE);
     gwy_data_field_data_changed(rfield);
 }
 
