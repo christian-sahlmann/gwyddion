@@ -1833,7 +1833,8 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
         }
     }
 
-    /* TODO: Offsets. */
+    result->xoff = dfield->yoff + 0.5*(yreal - newxreal);
+    result->yoff = dfield->xoff + 0.5*(xreal - newyreal);
     if (dfield->si_unit_xy)
         result->si_unit_xy = gwy_si_unit_duplicate(dfield->si_unit_xy);
     if (dfield->si_unit_z)
