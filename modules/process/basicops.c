@@ -46,9 +46,6 @@ static void     square_samples            (GwyContainer *data,
                                            GwyRunType run);
 static void     null_offsets              (GwyContainer *data,
                                            GwyRunType run);
-static void     flip_xy                   (GwyDataField *source,
-                                           GwyDataField *dest,
-                                           gboolean minor);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -56,7 +53,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -243,8 +240,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
     for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
         if (dfields[i]) {
-            newfield = gwy_data_field_new_alike(dfields[i], FALSE);
-            flip_xy(dfields[i], newfield, FALSE);
+            newfield = gwy_data_field_new_rotated_90(dfields[i], TRUE);
             gwy_container_set_object(data, quarks[i], newfield);
             g_object_unref(newfield);
         }
@@ -273,44 +269,13 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
     for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
         if (dfields[i]) {
-            newfield = gwy_data_field_new_alike(dfields[i], FALSE);
-            flip_xy(dfields[i], newfield, TRUE);
+            newfield = gwy_data_field_new_rotated_90(dfields[i], FALSE);
             gwy_container_set_object(data, quarks[i], newfield);
             g_object_unref(newfield);
         }
     }
     gwy_app_data_clear_selections(data, id);
     gwy_app_channel_log_add_proc(data, id, id);
-}
-
-static void
-flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
-{
-    gint xres, yres, i, j;
-    gdouble *dd;
-    const gdouble *sd;
-
-    xres = gwy_data_field_get_xres(source);
-    yres = gwy_data_field_get_yres(source);
-    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
-    sd = gwy_data_field_get_data_const(source);
-    dd = gwy_data_field_get_data(dest);
-    if (minor) {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
-            }
-        }
-    }
-    else {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
-            }
-        }
-    }
-    gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
-    gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
 }
 
 static void
