@@ -1517,6 +1517,55 @@ gwy_data_field_rotate(GwyDataField *a,
 }
 
 /**
+ * gwy_data_field_new_rotated_90:
+ * @data_field: A data field.
+ * @clockwise: %TRUE to rotate clocwise, %FALSE to rotate anti-clockwise.
+ *
+ * Creates a new data field by rotating a data field by 90 degrees.
+ *
+ * Returns: A newly created data field.
+ *
+ * Since: 2.46
+ **/
+GwyDataField*
+gwy_data_field_new_rotated_90(GwyDataField *data_field,
+                              gboolean clockwise)
+{
+    GwyDataField *result;
+    gint xres, yres, i, j;
+    gdouble *dd;
+    const gdouble *sd;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    result = gwy_data_field_new_alike(data_field, FALSE);
+    gwy_data_field_resample(result, yres, xres, GWY_INTERPOLATION_NONE);
+    result->xreal = data_field->yreal;
+    result->yreal = data_field->xreal;
+    result->xoff = data_field->yoff;
+    result->yoff = data_field->xoff;
+
+    sd = data_field->data;
+    dd = result->data;
+    if (!clockwise) {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
+            }
+        }
+    }
+    else {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * gwy_data_field_invert:
  * @data_field: A data field.
  * @x: %TRUE to reflect about X axis (i.e., vertically).

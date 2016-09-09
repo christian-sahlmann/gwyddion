@@ -183,6 +183,8 @@ gdouble      gwy_data_field_get_dval_real  (GwyDataField *data_field,
 void         gwy_data_field_rotate         (GwyDataField *data_field,
                                             gdouble angle,
                                             GwyInterpolationType interpolation);
+GwyDataField* gwy_data_field_new_rotated_90(GwyDataField *data_field,
+                                            gboolean clockwise);
 void         gwy_data_field_invert         (GwyDataField *data_field,
                                             gboolean x,
                                             gboolean y,
