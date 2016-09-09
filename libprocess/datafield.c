@@ -1423,9 +1423,15 @@ gwy_data_field_get_dval_real(GwyDataField *data_field, gdouble x, gdouble y,
  *
  * Rotates a data field by a given angle.
  *
+ * This function is mostly obsolete.  See gwy_data_field_new_rotated()
+ * and gwy_data_field_rotated_90().
+ *
  * Values that get outside of data field by the rotation are lost.
  * Undefined values from outside of data field that get inside are set to
  * data field minimum value.
+ *
+ * The rotation is performed in pixel space, i.e. it can be in fact a more
+ * general affine transform in the real coordinates when pixels are not square.
  **/
 void
 gwy_data_field_rotate(GwyDataField *a,
@@ -1472,7 +1478,7 @@ gwy_data_field_rotate(GwyDataField *a,
     icor = ((yres - 1.0)*(1.0 - cs) - (xres - 1.0)*sn)/2.0;
     jcor = ((xres - 1.0)*(1.0 - cs) + (yres - 1.0)*sn)/2.0;
 
-    coeff = g_newa(gdouble, suplen*suplen);
+    coeff = g_new(gdouble, suplen*suplen);
     sf = -((suplen - 1)/2);
     st = suplen/2;
 
@@ -1512,6 +1518,7 @@ gwy_data_field_rotate(GwyDataField *a,
         }
     }
 
+    g_free(coeff);
     g_object_unref(b);
     gwy_data_field_invalidate(a);
 }
@@ -1561,6 +1568,279 @@ gwy_data_field_new_rotated_90(GwyDataField *data_field,
             }
         }
     }
+
+    return result;
+}
+
+static GwyDataField*
+rotate_maybe_congruent(GwyDataField *dfield, gdouble angle)
+{
+    if (fabs(angle) < 1e-12)
+        return gwy_data_field_duplicate(dfield);
+
+    if (fabs(angle - G_PI) < 1e-12) {
+        dfield = gwy_data_field_duplicate(dfield);
+        gwy_data_field_invert(dfield, TRUE, TRUE, FALSE);
+        return dfield;
+    }
+
+    if (fabs(angle - G_PI/2) < 1e-12)
+        return gwy_data_field_new_rotated_90(dfield, FALSE);
+    if (fabs(angle - 3*G_PI/4) < 1e-12)
+        return gwy_data_field_new_rotated_90(dfield, TRUE);
+
+    return NULL;
+}
+
+static gboolean
+rotate_find_out_dimensions(GwyDataField *dfield,
+                           gdouble phi, GwyRotateResizeType resize,
+                           gdouble *newxreal, gdouble *newyreal)
+{
+    gdouble xreal, yreal, sphi, cphi;
+
+    xreal = dfield->xreal;
+    yreal = dfield->yreal;
+    if (resize == GWY_ROTATE_RESIZE_SAME_SIZE) {
+        gdouble q;
+
+        /* FIXME: This should be same area or something like that.  We really
+         * do not want to cut the ~π/2-rotated field to the original rectangle
+         * for non-square fields! */
+        sphi = fabs(sin(phi));
+        cphi = fabs(cos(phi));
+        q = sqrt(1.0 + (xreal/yreal + yreal/xreal)*cphi*sphi);
+        *newxreal = (xreal*cphi + yreal*sphi)/q;
+        *newyreal = (yreal*cphi + xreal*sphi)/q;
+    }
+    else if (resize == GWY_ROTATE_RESIZE_CUT) {
+        gdouble c2phi, s2phi;
+
+        /* Make 0 ≤ φ ≤ π. */
+        phi = fmod(phi, G_PI);
+        /* Make 0 ≤ φ ≤ π/2. */
+        if (phi > 0.5*G_PI)
+            phi = G_PI - phi;
+
+        sphi = sin(phi);
+        cphi = cos(phi);
+        s2phi = sin(2.0*phi);
+        c2phi = cos(2.0*phi);
+
+        if (yreal <= xreal*s2phi) {
+            *newxreal = 0.5*yreal/sphi;
+            *newyreal = 0.5*yreal/cphi;
+        }
+        else if (xreal <= yreal*s2phi) {
+            *newxreal = 0.5*xreal/cphi;
+            *newyreal = 0.5*xreal/sphi;
+        }
+        else {
+            *newxreal = (xreal*cphi - yreal*sphi)/c2phi;
+            *newyreal = (yreal*cphi - xreal*sphi)/c2phi;
+        }
+    }
+    else if (resize == GWY_ROTATE_RESIZE_EXPAND) {
+        gdouble xborder, yborder;
+
+        sphi = fabs(sin(phi));
+        cphi = fabs(cos(phi));
+        xborder = xreal*cphi + yreal*sphi;
+        yborder = yreal*cphi + xreal*sphi;
+        xborder -= xreal;
+        yborder -= yreal;
+        *newxreal = xreal + fabs(xborder);
+        *newyreal = yreal + fabs(yborder);
+    }
+    else
+        return FALSE;
+
+    return TRUE;
+}
+
+/**
+ * gwy_data_field_new_rotated:
+ * @dfield: A data field.
+ * @exterior_mask: Optional data field where pixels corresponding to exterior
+ *                 will be set to 1.  It will be resized to match the returned
+ *                 field.
+ * @angle: Rotation angle (in radians).
+ * @interp: Interpolation type to use.
+ * @resize: Controls how the result size is determined.
+ *
+ * Creates a new data field by rotating a data field by an atribtrary angle.
+ *
+ * The returned data field can have pixel corresponding to exterior in @dfield
+ * (unless @resize is %GWY_ROTATE_RESIZE_CUT).  They are filled with a neutral
+ * value; pass @exterior_mask and replace them as you wish if you need more
+ * control.
+ *
+ * The rotation is performed in real space, i.e. it is a more general affine
+ * transform in the pixel space for data field with non-square pixels.
+ * See gwy_data_field_rotate() which rotates in the pixel space.
+ *
+ * The returned data field has usually square pixels, the exception being when
+ * @angle is a multiple of %G_PI/2 when the function reduces to
+ * gwy_data_field_rotated_90() and original pixels are preserved.  This is of
+ * concern only when @dfield has non-square pixels.
+ *
+ * Returns: A newly created data field.
+ *
+ * Since: 2.46
+ **/
+GwyDataField*
+gwy_data_field_new_rotated(GwyDataField *dfield,
+                           GwyDataField *exterior_mask,
+                           gdouble angle,
+                           GwyInterpolationType interp,
+                           GwyRotateResizeType resize)
+{
+    GwyDataField *result, *coeffield;
+    gint xres, yres, newxres, newyres, sf, st, suplen;
+    gint oldi, oldj, newi, newj, i, j, ii, jj;
+    gdouble xreal, yreal, newxreal, newyreal, sphi, cphi;
+    gdouble dx, dy, h, q;
+    gdouble axx, axy, ayx, ayy, bx, by;
+    gboolean nonsquare;
+    gdouble *coeff, *dest;
+    const gdouble *src;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_return_val_if_fail(!exterior_mask || GWY_IS_DATA_FIELD(exterior_mask),
+                         NULL);
+
+    angle = fmod(angle, 2*G_PI);
+    if (angle < 0.0)
+        angle += 2*G_PI;
+
+    if ((result = rotate_maybe_congruent(dfield, angle))) {
+        if (exterior_mask) {
+            gwy_data_field_resample(exterior_mask,
+                                    result->xres, result->yres,
+                                    GWY_INTERPOLATION_NONE);
+            exterior_mask->xreal = result->xreal;
+            exterior_mask->yreal = result->yreal;
+            exterior_mask->xoff = result->xoff;
+            exterior_mask->yoff = result->yoff;
+            gwy_data_field_clear(exterior_mask);
+        }
+        return result;
+    }
+
+    if (!rotate_find_out_dimensions(dfield, angle, resize,
+                                    &newxreal, &newyreal)) {
+        g_return_val_if_reached(NULL);
+    }
+
+    suplen = gwy_interpolation_get_support_size(interp);
+    g_return_val_if_fail(suplen > 0, NULL);
+
+    xres = dfield->xres;
+    yres = dfield->yres;
+    if (gwy_interpolation_has_interpolating_basis(interp))
+        coeffield = g_object_ref(dfield);
+    else {
+        coeffield = gwy_data_field_duplicate(dfield);
+        gwy_interpolation_resolve_coeffs_2d(xres, yres, xres,
+                                            gwy_data_field_get_data(coeffield),
+                                            interp);
+    }
+    src = coeffield->data;
+
+    xreal = dfield->xreal;
+    yreal = dfield->yreal;
+    g_printerr("%g %g :: %g %g\n", xreal, yreal, newxreal, newyreal);
+    dx = xreal/xres;
+    dy = yreal/yres;
+    nonsquare = !(fabs(log(dx/dy)) < 1e-9);
+
+    if (nonsquare)
+        h = fmin(dx, dy);
+    else
+        h = sqrt(dx*dy);
+
+    newxres = GWY_ROUND(newxreal/h);
+    newyres = GWY_ROUND(newyreal/h);
+    newxres = CLAMP(newxres, 1, 32768);
+    newyres = CLAMP(newyres, 1, 32768);
+    q = (newxreal/newxres)/(newyreal/newyres);
+    if (resize == GWY_ROTATE_RESIZE_SAME_SIZE) {
+        newxreal /= sqrt(q);
+        newyreal *= sqrt(q);
+    }
+    else if (q > 1.0) {
+        /* X pixel size is larger.  So reduce xreal when cutting, enlarge yreal
+         * when expanding. */
+        if (resize == GWY_ROTATE_RESIZE_CUT)
+            xreal /= q;
+        else if (resize == GWY_ROTATE_RESIZE_EXPAND)
+            yreal *= q;
+    }
+    else if (q < 1.0) {
+        /* Y pixel size is larger.  So reduce yreal when cutting, enlarge xreal
+         * when expanding. */
+        if (resize == GWY_ROTATE_RESIZE_CUT)
+            yreal *= q;
+        else if (resize == GWY_ROTATE_RESIZE_EXPAND)
+            xreal /= q;
+    }
+    h = sqrt(newxreal/newxres * newyreal/newyres);
+
+    cphi = cos(angle);
+    sphi = sin(angle);
+    axx = h/dx*cphi;
+    axy = -h/dy*sphi;
+    ayx = h/dx*sphi;
+    ayy = h/dy*cphi;
+    bx = 0.5*(xres-1 - h/dx*(newxres-1)*cphi + h/dx*(newyres-1)*sphi);
+    by = 0.5*(yres-1 - h/dy*(newxres-1)*sphi - h/dy*(newyres-1)*cphi);
+
+    g_printerr("%d x %d\n", newxres, newyres);
+    result = gwy_data_field_new(newxres, newyres, newxreal, newyreal, FALSE);
+    dest = result->data;
+
+    coeff = g_new(gdouble, suplen*suplen);
+    sf = -((suplen - 1)/2);
+    st = suplen/2;
+
+    for (newi = 0; newi < newyres; newi++) {
+        for (newj = 0; newj < newxres; newj++) {
+            gdouble x = axx*newj + axy*newi + bx;
+            gdouble y = ayx*newj + ayy*newi + by;
+            gdouble v = 0.0;
+
+            /* FIXME: Exterior handling, mask */
+            if (x >= 0.0 && y >= 0.0 && x < xres && y < yres) {
+                oldi = (gint)floor(y);
+                y -= oldi;
+                oldj = (gint)floor(x);
+                x -= oldj;
+                for (i = sf; i <= st; i++) {
+                    ii = (oldi + i + 2*st*yres) % (2*yres);
+                    if (G_UNLIKELY(ii >= yres))
+                        ii = 2*yres-1 - ii;
+                    for (j = sf; j <= st; j++) {
+                        jj = (oldj + j + 2*st*xres) % (2*xres);
+                        if (G_UNLIKELY(jj >= xres))
+                            jj = 2*xres-1 - jj;
+                        coeff[(i - sf)*suplen + j - sf] = src[ii*xres + jj];
+                    }
+                }
+                v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
+                                                     interp);
+            }
+            dest[newxres*newi + newj] = v;
+        }
+    }
+
+    /* TODO: Offsets. */
+    if (dfield->si_unit_xy)
+        result->si_unit_xy = gwy_si_unit_duplicate(dfield->si_unit_xy);
+    if (dfield->si_unit_z)
+        result->si_unit_z = gwy_si_unit_duplicate(dfield->si_unit_z);
+
+    g_free(coeff);
+    g_object_unref(coeffield);
 
     return result;
 }

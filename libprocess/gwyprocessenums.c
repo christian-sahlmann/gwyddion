@@ -624,6 +624,19 @@ gwy_distance_transform_type_get_enum(void)
  **/
 
 /**
+ * GwyRotateResizeType:
+ * @GWY_ROTATE_RESIZE_SAME_SIZE: The result has the same area as the original.
+ * @GWY_ROTATE_RESIZE_EXPAND: The result is sufficiently large so that all
+ *                            original data are present (usually meaning that
+ *                            there will be also lot of exterior).
+ * @GWY_ROTATE_RESIZE_CUT: The result is optimally cut to interior data only.
+ *
+ * Type of rotated data field size determination method.
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GwyComputationStateType:
  * @GWY_COMPUTATION_STATE_INIT: Iterator was set up, the next step will
  *                              actually create temporary data structures

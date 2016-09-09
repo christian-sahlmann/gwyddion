@@ -264,6 +264,12 @@ typedef enum {
     GWY_MIN_MAX_FILTER_NORMALIZATION = 5,
 } GwyMinMaxFilterType;
 
+typedef enum {
+    GWY_ROTATE_RESIZE_SAME_SIZE = 0,
+    GWY_ROTATE_RESIZE_EXPAND    = 1,
+    GWY_ROTATE_RESIZE_CUT       = 2,
+} GwyRotateResizeType;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_masking_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
