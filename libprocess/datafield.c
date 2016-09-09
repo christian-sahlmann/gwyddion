@@ -1749,7 +1749,6 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
 
     xreal = dfield->xreal;
     yreal = dfield->yreal;
-    g_printerr("%g %g :: %g %g\n", xreal, yreal, newxreal, newyreal);
     dx = xreal/xres;
     dy = yreal/yres;
     nonsquare = !(fabs(log(dx/dy)) < 1e-9);
@@ -1795,7 +1794,6 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
     bx = 0.5*(xres-1 - h/dx*(newxres-1)*cphi + h/dx*(newyres-1)*sphi);
     by = 0.5*(yres-1 - h/dy*(newxres-1)*sphi - h/dy*(newyres-1)*cphi);
 
-    g_printerr("%d x %d\n", newxres, newyres);
     result = gwy_data_field_new(newxres, newyres, newxreal, newyreal, FALSE);
     dest = result->data;
 
