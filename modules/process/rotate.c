@@ -19,11 +19,6 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-/*
- * TODO: Essentially always we should rotate in physical space, not pixel
- * space.  Meaning that gwy_data_field_rotate() does not do the right thing;
- * in pixel coordinates the transform is general affine... */
-
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -39,16 +34,10 @@
 
 #define ROTATE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-typedef enum {
-    ROTATE_EXTERIOR_SAME_SIZE = 0,
-    ROTATE_EXTERIOR_EXPAND    = 1,
-    ROTATE_EXTERIOR_CUT       = 2,
-} RotateExteriorType;
-
 typedef struct {
     gdouble angle;
     GwyInterpolationType interp;
-    RotateExteriorType exterior;
+    GwyRotateResizeType resize;
     gboolean create_mask;
     gboolean show_grid;
 } RotateArgs;
@@ -56,7 +45,7 @@ typedef struct {
 typedef struct {
     GtkObject *angle;
     GtkWidget *interp;
-    GSList *exterior;
+    GSList *resize;
     GtkWidget *show_grid;
     GtkWidget *create_mask;
     GtkWidget *data_view;
@@ -74,7 +63,7 @@ static void     interp_changed      (GtkWidget *combo,
                                      RotateControls *controls);
 static void     angle_changed       (GtkObject *angle,
                                      RotateControls *controls);
-static void     exterior_changed    (GtkToggleButton *toggle,
+static void     resize_changed      (GtkToggleButton *toggle,
                                      RotateControls *controls);
 static void     create_mask_changed (GtkToggleButton *toggle,
                                      RotateControls *controls);
@@ -82,6 +71,7 @@ static void     show_grid_changed   (GtkToggleButton *toggle,
                                      RotateControls *controls);
 static void     rotate_preview_draw (RotateControls *controls,
                                      RotateArgs *args);
+static void     update_grid         (RotateControls *controls);
 static void     rotate_dialog_update(RotateControls *controls,
                                      RotateArgs *args);
 static void     rotate_sanitize_args(RotateArgs *args);
@@ -93,7 +83,7 @@ static void     rotate_save_args    (GwyContainer *container,
 static const RotateArgs rotate_defaults = {
     0.0,
     GWY_INTERPOLATION_LINEAR,
-    ROTATE_EXTERIOR_SAME_SIZE,
+    GWY_ROTATE_RESIZE_SAME_SIZE,
     FALSE,
     TRUE,
 };
@@ -124,124 +114,6 @@ module_register(void)
 }
 
 static void
-rotate_datafield(GwyDataField *dfield,
-                 RotateArgs *args)
-{
-    gint xres, yres, xborder, yborder;
-    gdouble xreal, yreal, phi, min, sphi, cphi;
-    GwyDataField *df;
-
-    phi = args->angle;
-    if (args->exterior == ROTATE_EXTERIOR_SAME_SIZE) {
-        gwy_data_field_rotate(dfield, phi, args->interp);
-        return;
-    }
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-
-    /*
-     * To cut the data to maximum container rectangle.
-     * We have rectangle width 2a, height 2b, centered at origin, rotated by
-     * angle 0 ≤ φ ≤ π/2.
-     * If b ≤ a*sin(2φ) then the rectangle is `flat' and we have corner
-     * coordinates of the cut x = b/2sin(φ), y = b/2cos(φ).
-     * If a ≤ b*sin(2φ) then the rectangle is `tall' and we have corner
-     * coordinates of the cut x = a/2cos(φ), y = a/2sin(φ).
-     * Otherwise the maximum rectangle is attained when its corners touch
-     * both edges of the rotated rectangle, resulting in coordinates of the cut
-     * x = (a*cos(φ) - b*sin(φ))/cos(2*φ),
-     * y = (b*cos(φ) - a*sin(φ))/cos(2*φ).
-     */
-    if (args->exterior == ROTATE_EXTERIOR_CUT) {
-        gdouble xr, yr, s2phi, c2phi;
-        gint xfrom, xto, yfrom, yto;
-
-        gwy_data_field_rotate(dfield, phi, args->interp);
-        /* Make 0 ≤ φ ≤ π. */
-        phi = fmod(phi + 4.0*G_PI, G_PI);
-        /* Make 0 ≤ φ ≤ π/2. */
-        if (phi > 0.5*G_PI)
-            phi = G_PI - phi;
-
-        sphi = sin(phi);
-        cphi = cos(phi);
-        s2phi = sin(2.0*phi);
-        c2phi = cos(2.0*phi);
-
-        if (yres <= xres*s2phi) {
-            xr = 0.5*yres/sphi;
-            yr = 0.5*yres/cphi;
-        }
-        else if (xres <= yres*s2phi) {
-            xr = 0.5*xres/cphi;
-            yr = 0.5*xres/sphi;
-        }
-        else {
-            xr = (xres*cphi - yres*sphi)/c2phi;
-            yr = (yres*cphi - xres*sphi)/c2phi;
-        }
-
-        xfrom = (gint)ceil(0.5*(xres - xr));
-        yfrom = (gint)ceil(0.5*(yres - yr));
-        xto = (gint)floor(0.5*(xres + xr));
-        yto = (gint)floor(0.5*(yres + yr));
-        xfrom = CLAMP(xfrom, 0, xres/2 - 1);
-        yfrom = CLAMP(yfrom, 0, yres/2 - 1);
-        xto = CLAMP(xto, (xres + 1)/2 + 1, xres-1);
-        yto = CLAMP(yto, (yres + 1)/2 + 1, yres-1);
-        gwy_data_field_resize(dfield, xfrom, yfrom, xto+1, yto+1);
-        return;
-    }
-
-    /* To expand the rectangle we just calculate x and y of the corners of
-     * the rotated rectangle.  But we have to transform them to expanded
-     * widths. */
-
-    sphi = sin(phi);
-    cphi = cos(phi);
-    min = gwy_data_field_get_min(dfield);
-    xborder = fabs(xres/2.0 * cphi) + fabs(yres/2.0 * sphi);
-    xborder -= xres/2;
-    yborder = fabs(yres/2.0 * cphi) + fabs(xres/2.0 * sphi);
-    yborder -= yres/2;
-    df = gwy_data_field_new(xres + fabs(2*xborder), yres + fabs(2*yborder),
-                            1.0, 1.0,
-                            FALSE);
-    gwy_data_field_fill(df, min);
-    gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres,
-                             fabs(xborder), fabs(yborder));
-    gwy_data_field_rotate(df, args->angle, args->interp);
-    gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
-                            GWY_INTERPOLATION_NONE);
-    if (xborder <= 0) {
-        gwy_data_field_area_copy(df, dfield,
-                                 fabs(2*xborder), 0,
-                                 xres + 2*xborder, yres + 2*yborder,
-                                 0, 0);
-    }
-    else {
-          if (yborder <= 0) {
-              gwy_data_field_area_copy(df, dfield,
-                                       0, fabs(2*yborder),
-                                       xres + 2*xborder, yres + 2*yborder,
-                                       0, 0);
-          }
-          else {
-            gwy_data_field_area_copy(df, dfield,
-                                     0, 0,
-                                     xres + 2*xborder, yres + 2*yborder,
-                                     0, 0);
-          }
-    }
-    gwy_data_field_set_xreal(dfield, xreal*(xres + 2.0*xborder)/xres);
-    gwy_data_field_set_yreal(dfield, yreal*(yres + 2.0*yborder)/yres);
-    g_object_unref(df);
-}
-
-static void
 rotate(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfields[3];
@@ -266,19 +138,16 @@ rotate(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    dfields[0] = gwy_data_field_duplicate(dfields[0]);
-    rotate_datafield(dfields[0], &args);
+    dfields[0] = gwy_data_field_new_rotated(dfields[0], NULL, args.angle,
+                                            args.interp, args.resize);
     if (dfields[1]) {
-        GwyInterpolationType interp = args.interp;
-
-        dfields[1] = gwy_data_field_duplicate(dfields[1]);
-        args.interp = GWY_INTERPOLATION_ROUND;
-        rotate_datafield(dfields[1], &args);
-        args.interp = interp;
+        dfields[1] = gwy_data_field_new_rotated(dfields[1], NULL, args.angle,
+                                                GWY_INTERPOLATION_ROUND,
+                                                args.resize);
     }
     if (dfields[2]) {
-        dfields[2] = gwy_data_field_duplicate(dfields[2]);
-        rotate_datafield(dfields[2], &args);
+        dfields[2] = gwy_data_field_new_rotated(dfields[2], NULL, args.angle,
+                                                args.interp, args.resize);
     }
 
     newid = gwy_app_data_browser_add_data_field(dfields[0], data, TRUE);
@@ -413,17 +282,17 @@ rotate_dialog(RotateArgs *args,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.exterior
-        = gwy_radio_buttons_createl(G_CALLBACK(exterior_changed), &controls,
-                                    args->exterior,
+    controls.resize
+        = gwy_radio_buttons_createl(G_CALLBACK(resize_changed), &controls,
+                                    args->resize,
                                     _("_Same as original"),
-                                    ROTATE_EXTERIOR_SAME_SIZE,
+                                    GWY_ROTATE_RESIZE_SAME_SIZE,
                                     _("_Expanded to complete data"),
-                                    ROTATE_EXTERIOR_EXPAND,
+                                    GWY_ROTATE_RESIZE_EXPAND,
                                     _("C_ut to valid data"),
-                                    ROTATE_EXTERIOR_CUT,
+                                    GWY_ROTATE_RESIZE_CUT,
                                     NULL);
-    row = gwy_radio_buttons_attach_to_table(controls.exterior,
+    row = gwy_radio_buttons_attach_to_table(controls.resize,
                                             GTK_TABLE(table), 4, row);
 
     controls.data = create_preview_data(data);
@@ -485,13 +354,13 @@ angle_changed(GtkObject *adj, RotateControls *controls)
 }
 
 static void
-exterior_changed(GtkToggleButton *toggle, RotateControls *controls)
+resize_changed(GtkToggleButton *toggle, RotateControls *controls)
 {
     if (!gtk_toggle_button_get_active(toggle))
         return;
 
-    controls->args->exterior
-        = gwy_radio_buttons_get_current(controls->exterior);
+    controls->args->resize
+        = gwy_radio_buttons_get_current(controls->resize);
     rotate_preview_draw(controls, controls->args);
 }
 
@@ -506,20 +375,13 @@ show_grid_changed(GtkToggleButton *toggle, RotateControls *controls)
 {
     RotateArgs *args = controls->args;
     GwySelection *selection = controls->selection;
-    GwyDataField *dfield;
-    gdouble xy[4];
 
     args->show_grid = gtk_toggle_button_get_active(toggle);
     if (!args->show_grid) {
         gwy_selection_clear(selection);
         return;
     }
-
-    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
-    xy[0] = gwy_data_field_get_xreal(dfield)/12.0;
-    xy[1] = xy[2] = 0.0;
-    xy[3] = gwy_data_field_get_yreal(dfield)/12.0;
-    gwy_selection_set_data(selection, 1, xy);
+    update_grid(controls);
 }
 
 static void
@@ -530,7 +392,7 @@ rotate_dialog_update(RotateControls *controls,
                              args->angle*180.0/G_PI);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
-    gwy_radio_buttons_set_current(controls->exterior, args->exterior);
+    gwy_radio_buttons_set_current(controls->resize, args->resize);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->show_grid),
                                  args->show_grid);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->create_mask),
@@ -546,17 +408,33 @@ rotate_preview_draw(RotateControls *controls,
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->data_view));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/1/data"));
-    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_serializable_clone(G_OBJECT(dfield), G_OBJECT(rfield));
-    rotate_datafield(rfield, args);
+    rfield = gwy_data_field_new_rotated(dfield, NULL, args->angle,
+                                        args->interp, args->resize);
+    gwy_container_set_object_by_name(data, "/0/data", rfield);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->data_view), PREVIEW_SIZE);
-    gwy_data_field_data_changed(rfield);
+    gtk_widget_set_size_request(controls->data_view, PREVIEW_SIZE, -1);
+    if (args->show_grid)
+        update_grid(controls);
+}
+
+static void
+update_grid(RotateControls *controls)
+{
+    GwySelection *selection = controls->selection;
+    GwyDataField *dfield;
+    gdouble xy[4];
+
+    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
+    xy[0] = gwy_data_field_get_xreal(dfield)/12.0;
+    xy[1] = xy[2] = 0.0;
+    xy[3] = gwy_data_field_get_yreal(dfield)/12.0;
+    gwy_selection_set_data(selection, 1, xy);
 }
 
 static const gchar angle_key[]       = "/module/rotate/angle";
 static const gchar create_mask_key[] = "/module/rotate/create_mask";
-static const gchar exterior_key[]    = "/module/rotate/exterior";
 static const gchar interp_key[]      = "/module/rotate/interp";
+static const gchar resize_key[]      = "/module/rotate/resize";
 static const gchar show_grid_key[]   = "/module/rotate/show_grid";
 
 static void
@@ -565,8 +443,8 @@ rotate_sanitize_args(RotateArgs *args)
     args->angle = fmod(args->angle, 2*G_PI);
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
-    args->exterior = CLAMP(args->exterior,
-                           ROTATE_EXTERIOR_SAME_SIZE, ROTATE_EXTERIOR_CUT);
+    args->resize = CLAMP(args->resize,
+                         GWY_ROTATE_RESIZE_SAME_SIZE, GWY_ROTATE_RESIZE_CUT);
     args->create_mask = !!args->create_mask;
     args->show_grid = !!args->show_grid;
 }
@@ -579,7 +457,7 @@ rotate_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
-    gwy_container_gis_enum_by_name(container, exterior_key, &args->exterior);
+    gwy_container_gis_enum_by_name(container, resize_key, &args->resize);
     gwy_container_gis_boolean_by_name(container, show_grid_key,
                                       &args->show_grid);
     gwy_container_gis_boolean_by_name(container, create_mask_key,
@@ -593,7 +471,7 @@ rotate_save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
-    gwy_container_set_enum_by_name(container, exterior_key, args->exterior);
+    gwy_container_set_enum_by_name(container, resize_key, args->resize);
     gwy_container_set_boolean_by_name(container, show_grid_key,
                                       args->show_grid);
     gwy_container_set_boolean_by_name(container, create_mask_key,
