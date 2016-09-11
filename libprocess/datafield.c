@@ -1697,12 +1697,12 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
 {
     GwyDataField *result, *coeffield;
     gint xres, yres, newxres, newyres, sf, st, suplen;
-    gint oldi, oldj, newi, newj, i, j, ii, jj;
+    gint oldi, oldj, newi, newj, i, j, ii, jj, n;
     gdouble xreal, yreal, newxreal, newyreal, sphi, cphi;
     gdouble dx, dy, h, q;
-    gdouble axx, axy, ayx, ayy, bx, by;
+    gdouble axx, axy, ayx, ayy, bx, by, avg;
     gboolean nonsquare;
-    gdouble *coeff, *dest;
+    gdouble *coeff, *dest, *m = NULL;
     const gdouble *src;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
@@ -1795,19 +1795,36 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
     by = 0.5*(yres-1 - h/dy*(newxres-1)*sphi - h/dy*(newyres-1)*cphi);
 
     result = gwy_data_field_new(newxres, newyres, newxreal, newyreal, FALSE);
+    result->xoff = dfield->yoff + 0.5*(yreal - newxreal);
+    result->yoff = dfield->xoff + 0.5*(xreal - newyreal);
+    if (dfield->si_unit_xy)
+        result->si_unit_xy = gwy_si_unit_duplicate(dfield->si_unit_xy);
+    if (dfield->si_unit_z)
+        result->si_unit_z = gwy_si_unit_duplicate(dfield->si_unit_z);
+
+    if (exterior_mask) {
+        gwy_serializable_clone(G_OBJECT(result), G_OBJECT(exterior_mask));
+        gwy_data_field_clear(exterior_mask);
+        g_object_ref(exterior_mask);
+    }
+    else
+        exterior_mask = gwy_data_field_new_alike(result, TRUE);
+
     dest = result->data;
+    m = exterior_mask->data;
 
     coeff = g_new(gdouble, suplen*suplen);
     sf = -((suplen - 1)/2);
     st = suplen/2;
 
+    avg = 0.0;
+    n = 0;
     for (newi = 0; newi < newyres; newi++) {
         for (newj = 0; newj < newxres; newj++) {
             gdouble x = axx*newj + axy*newi + bx;
             gdouble y = ayx*newj + ayy*newi + by;
             gdouble v = 0.0;
 
-            /* FIXME: Exterior handling, mask */
             if (x >= 0.0 && y >= 0.0 && x < xres && y < yres) {
                 oldi = (gint)floor(y);
                 y -= oldi;
@@ -1826,20 +1843,27 @@ gwy_data_field_new_rotated(GwyDataField *dfield,
                 }
                 v = gwy_interpolation_interpolate_2d(x, y, suplen, coeff,
                                                      interp);
+                avg += v;
+                n++;
             }
+            else
+                m[newxres*newi + newj] = 1.0;
             dest[newxres*newi + newj] = v;
         }
     }
 
-    result->xoff = dfield->yoff + 0.5*(yreal - newxreal);
-    result->yoff = dfield->xoff + 0.5*(xreal - newyreal);
-    if (dfield->si_unit_xy)
-        result->si_unit_xy = gwy_si_unit_duplicate(dfield->si_unit_xy);
-    if (dfield->si_unit_z)
-        result->si_unit_z = gwy_si_unit_duplicate(dfield->si_unit_z);
+    if (n != newxres*newyres) {
+        avg /= n;
+        for (n = 0; n < newxres*newyres; n++) {
+            if (m[n])
+                dest[n] = avg;
+        }
+    }
 
     g_free(coeff);
     g_object_unref(coeffield);
+    gwy_data_field_invalidate(exterior_mask);
+    g_object_unref(exterior_mask);
 
     return result;
 }
