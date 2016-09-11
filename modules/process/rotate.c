@@ -71,9 +71,11 @@ static void     show_grid_changed   (GtkToggleButton *toggle,
                                      RotateControls *controls);
 static void     rotate_preview_draw (RotateControls *controls,
                                      RotateArgs *args);
-static void     update_grid         (RotateControls *controls);
 static void     rotate_dialog_update(RotateControls *controls,
                                      RotateArgs *args);
+static void     update_grid         (RotateControls *controls);
+static void     fix_mask_exterior   (GwyDataField *mask,
+                                     GwyDataField *exterior_mask);
 static void     rotate_sanitize_args(RotateArgs *args);
 static void     rotate_load_args    (GwyContainer *container,
                                      RotateArgs *args);
@@ -116,7 +118,7 @@ module_register(void)
 static void
 rotate(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfields[3];
+    GwyDataField *dfields[3], *exterior_mask;
     GQuark quark;
     gint oldid, newid;
     RotateArgs args;
@@ -138,13 +140,31 @@ rotate(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    dfields[0] = gwy_data_field_new_rotated(dfields[0], NULL, args.angle,
-                                            args.interp, args.resize);
-    if (dfields[1]) {
-        dfields[1] = gwy_data_field_new_rotated(dfields[1], NULL, args.angle,
-                                                GWY_INTERPOLATION_ROUND,
-                                                args.resize);
+    exterior_mask = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+    if (args.create_mask) {
+        if (!dfields[1])
+            dfields[1] = exterior_mask;
+
+        g_object_ref(dfields[1]);
+        dfields[0] = gwy_data_field_new_rotated(dfields[0], exterior_mask,
+                                                args.angle,
+                                                args.interp, args.resize);
     }
+    else {
+        dfields[0] = gwy_data_field_new_rotated(dfields[0], NULL, args.angle,
+                                                args.interp, args.resize);
+        if (dfields[1]) {
+            dfields[1] = gwy_data_field_new_rotated(dfields[1], exterior_mask,
+                                                    args.angle,
+                                                    GWY_INTERPOLATION_ROUND,
+                                                    args.resize);
+            /* The rotation fill exterior with average value of inside; which
+             * is kind of random and anyway unwanted for masks.  Clear the
+             * exterior. */
+            fix_mask_exterior(dfields[1], exterior_mask);
+        }
+    }
+
     if (dfields[2]) {
         dfields[2] = gwy_data_field_new_rotated(dfields[2], NULL, args.angle,
                                                 args.interp, args.resize);
@@ -167,6 +187,7 @@ rotate(GwyContainer *data, GwyRunType run)
         gwy_container_set_object(data, quark, dfields[2]);
         g_object_unref(dfields[2]);
     }
+    g_object_unref(exterior_mask);
 
     gwy_app_set_data_field_title(data, newid, _("Rotated Data"));
     gwy_app_channel_log_add_proc(data, oldid, newid);
@@ -429,6 +450,20 @@ update_grid(RotateControls *controls)
     xy[1] = xy[2] = 0.0;
     xy[3] = gwy_data_field_get_yreal(dfield)/12.0;
     gwy_selection_set_data(selection, 1, xy);
+}
+
+static void
+fix_mask_exterior(GwyDataField *mask, GwyDataField *exterior_mask)
+{
+    const gdouble *exm = gwy_data_field_get_data_const(exterior_mask);
+    gdouble *m = gwy_data_field_get_data(mask);
+    gint n, k;
+
+    n = gwy_data_field_get_xres(mask) * gwy_data_field_get_yres(mask);
+    for (k = 0; k < n; k++) {
+        if (exm[k])
+            m[k] = 0.0;
+    }
 }
 
 static const gchar angle_key[]       = "/module/rotate/angle";
