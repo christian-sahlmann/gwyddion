@@ -37,7 +37,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.37: correct_affine extend mark_with synthetic_columnar synthetic_domains synthetic_lattice synthetic_line_noise synthetic_noise synthetic_objects synthetic_particles synthetic_pattern synthetic_waves
 # Since 2.38: synthetic_diffusion
 # Since 2.45: convolution distribution_angle distribution_slope entropy graph_fd fft_filter_2d fft_2d find_peaks grain_correlation grain_exscribed_circle grain_inscribed_circle grains_edge graph_align graph_cut graph_dos graph_export_ascii graph_export_png graph_export_vector graph_filter level_flatten_base level_median load_debug load_info load_warning mask_distribute mask_extract mask_morph mask_thin measure_lattice neural_apply neural_train psdf_log_phi psdf_section synthetic_ballistic_deposition synthetic_brownian_motion synthetic_spectral tilt tip_dilation tip_erosion tip_estimation tip_map tip_model tip_pid volume volume_calibrate volume_dimensions volume_invert volumize_layers zero_mean
-# Since 2.46: extract_path poly_distort straighten_path volume_fd volume_kmeans volume_kmedians volume_slice volumize
+# Since 2.46: distance_transform extract_path force_distribution grains_edge_remove mutual_crop poly_distort straighten_path tip_indent_analyze tip_lateral_force volume_fd volume_kmeans volume_kmedians volume_slice volumize
 #
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -64,6 +64,7 @@ pixmapdata_DATA = \
 	gwy_cwt-24.png \
 	gwy_data_measure-24.png \
 	gwy_distance-24.png \
+	gwy_distance_transform-24.png \
 	gwy_distribution_angle-24.png \
 	gwy_distribution_slope-24.png \
 	gwy_drift-24.png \
@@ -74,7 +75,6 @@ pixmapdata_DATA = \
 	gwy_extract_path-24.png \
 	gwy_facet_level-24.png \
 	gwy_favourite-24.png \
-	gwy_graph_fd-24.png \
 	gwy_fft_filter_2d-24.png \
 	gwy_fft-24.png \
 	gwy_fft_2d-24.png \
@@ -83,6 +83,7 @@ pixmapdata_DATA = \
 	gwy_fix_zero-24.png \
 	gwy_flip_horizontally-24.png \
 	gwy_flip_vertically-24.png \
+	gwy_force_distribution-24.png \
 	gwy_fractal-24.png \
 	gwy_gl_material-16.png \
 	gwy_gradient_horizontal-24.png \
@@ -91,6 +92,7 @@ pixmapdata_DATA = \
 	gwy_grain_exscribed_circle-24.png \
 	gwy_grain_inscribed_circle-24.png \
 	gwy_grains_edge-24.png \
+	gwy_grains_edge_remove-24.png \
 	gwy_grains_graph-24.png \
 	gwy_grains_measure-24.png \
 	gwy_grains_remove-24.png \
@@ -102,6 +104,7 @@ pixmapdata_DATA = \
 	gwy_graph_export_ascii-24.png \
 	gwy_graph_export_png-24.png \
 	gwy_graph_export_vector-24.png \
+	gwy_graph_fd-24.png \
 	gwy_graph_filter-24.png \
 	gwy_graph_function-24.png \
 	gwy_graph_halfgauss-24.png \
@@ -164,6 +167,7 @@ pixmapdata_DATA = \
 	gwy_measure_lattice-24.png \
 	gwy_merge-24.png \
 	gwy_more-24.png \
+	gwy_mutual_crop-24.png \
 	gwy_neural_apply-24.png \
 	gwy_neural_train-24.png \
 	gwy_palettes-16.png \
@@ -211,6 +215,8 @@ pixmapdata_DATA = \
 	gwy_tip_dilation-24.png \
 	gwy_tip_erosion-24.png \
 	gwy_tip_estimation-24.png \
+	gwy_tip_indent_analyze-24.png \
+	gwy_tip_lateral_force-24.png \
 	gwy_tip_map-24.png \
 	gwy_tip_model-24.png \
 	gwy_tip_pid-24.png \
