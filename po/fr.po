@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-08-30 02:14+0200\n"
-"PO-Revision-Date: 2016-09-07 20:56+0100\n"
+"POT-Creation-Date: 2016-09-08 02:14+0200\n"
+"PO-Revision-Date: 2016-09-11 16:01+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@gwyddion.net>\n"
 "Language: fr_FR\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #: libgwyddion/gwyexpr.c:765
 msgid "Invalid token"
-msgstr "Symbole invalide"
+msgstr "Invalid token"
 
 #: libgwyddion/gwyexpr.c:774
 msgid "Empty expression"
@@ -88,146 +88,146 @@ msgstr "Identifiants non résolus"
 msgid "vdW: semisphere"
 msgstr "vdW : hémisphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:802
+#: libgwyddion/gwyfdcurvepreset.c:801
 msgid "vdW: pyramide"
 msgstr "vdW : pyramide"
 
-#: libgwyddion/gwyfdcurvepreset.c:815
+#: libgwyddion/gwyfdcurvepreset.c:813
 msgid "vdW: truncated pyramid"
 msgstr "vdW : pyramide tronquée"
 
-#: libgwyddion/gwyfdcurvepreset.c:828
+#: libgwyddion/gwyfdcurvepreset.c:825
 msgid "vdW: sphere"
 msgstr "vdW : sphère"
 
-#: libgwyddion/gwyfdcurvepreset.c:841
+#: libgwyddion/gwyfdcurvepreset.c:837
 msgid "vdW: offset sphere"
 msgstr "vdW : sphère décalée"
 
-#: libgwyddion/gwyfdcurvepreset.c:854
+#: libgwyddion/gwyfdcurvepreset.c:849
 msgid "vdW: two spheres"
 msgstr "vdW : deux sphères"
 
-#: libgwyddion/gwyfdcurvepreset.c:867
+#: libgwyddion/gwyfdcurvepreset.c:861
 msgid "vdW: cone"
 msgstr "vdW : cône"
 
-#: libgwyddion/gwyfdcurvepreset.c:880
+#: libgwyddion/gwyfdcurvepreset.c:873
 msgid "vdW: cylinder"
 msgstr "vdW : cylindre"
 
-#: libgwyddion/gwyfdcurvepreset.c:893
+#: libgwyddion/gwyfdcurvepreset.c:885
 msgid "vdW: paraboloid"
 msgstr "vdW : parabole"
 
-#: libgwyddion/gwyfdcurvepreset.c:906
+#: libgwyddion/gwyfdcurvepreset.c:897
 msgid "contact: Hertz (paraboloid)"
 msgstr "contact : Hertz (paraboloïde)"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:730
-#: app/data-browser-aux.c:1335 app/data-browser-aux.c:1415
-#: app/data-browser-aux.c:1479 app/data-browser.c:2263 app/data-browser.c:2870
-#: app/data-browser.c:3690 app/data-browser.c:3840 app/data-browser.c:4122
-#: app/data-browser.c:4487 app/data-browser.c:4573 app/data-browser.c:4985
+#: app/data-browser-aux.c:1336 app/data-browser-aux.c:1416
+#: app/data-browser-aux.c:1480 app/data-browser.c:2280 app/data-browser.c:2887
+#: app/data-browser.c:3707 app/data-browser.c:3857 app/data-browser.c:4139
+#: app/data-browser.c:4504 app/data-browser.c:4590 app/data-browser.c:5016
 #: app/resource-editor.c:366 modules/process/convolution_filter.c:691
 msgid "Untitled"
 msgstr "Sans titre"
 
-#: libgwyddion/gwynlfit.c:216
+#: libgwyddion/gwynlfit.c:374
 msgid "Initial residua evaluation..."
 msgstr "Évaluation initiale des résidus..."
 
-#: libgwyddion/gwynlfit.c:265 modules/process/fit-shape.c:1803
+#: libgwyddion/gwynlfit.c:423 modules/process/fit-shape.c:1859
 msgid "Fitting..."
 msgstr "Ajustement..."
 
-#: libgwyddion/gwynlfitpreset.c:1527 libprocess/gwyprocessenums.c:101
-#: modules/process/fit-shape.c:537
+#: libgwyddion/gwynlfitpreset.c:1442 libprocess/gwyprocessenums.c:101
+#: modules/process/fit-shape.c:542
 msgid "Gaussian"
 msgstr "Gaussienne"
 
-#: libgwyddion/gwynlfitpreset.c:1543
+#: libgwyddion/gwynlfitpreset.c:1457
 msgid "Gaussian (PSDF)"
 msgstr "Gaussienne (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1557
+#: libgwyddion/gwynlfitpreset.c:1470
 msgid "Gaussian (ACF)"
 msgstr "Gaussienne (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1571
+#: libgwyddion/gwynlfitpreset.c:1483
 msgid "Gaussian (HHCF)"
 msgstr "Gaussienne (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1585
+#: libgwyddion/gwynlfitpreset.c:1496
 msgid "Gaussian (RPSDF)"
 msgstr "Gaussienne (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1599
+#: libgwyddion/gwynlfitpreset.c:1509
 msgid "Two Gaussians (PSDF)"
 msgstr "Gaussienne double (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1615 modules/xyz/xyz_drift.c:841
+#: libgwyddion/gwynlfitpreset.c:1524 modules/xyz/xyz_drift.c:841
 #: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "Exponentielle"
 
-#: libgwyddion/gwynlfitpreset.c:1628
+#: libgwyddion/gwynlfitpreset.c:1536
 msgid "Exponential (PSDF)"
 msgstr "Exponentielle (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1642
+#: libgwyddion/gwynlfitpreset.c:1549
 msgid "Exponential (ACF)"
 msgstr "Exponentielle (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1655
+#: libgwyddion/gwynlfitpreset.c:1561
 msgid "Exponential (HHCF)"
 msgstr "Exponentielle (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1669
+#: libgwyddion/gwynlfitpreset.c:1574
 msgid "Exponential (RPSDF)"
 msgstr "Exponentielle (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1684
+#: libgwyddion/gwynlfitpreset.c:1588
 msgid "Polynomial (order 0)"
 msgstr "Polynôme (ordre 0)"
 
-#: libgwyddion/gwynlfitpreset.c:1696 modules/xyz/xyz_drift.c:1805
+#: libgwyddion/gwynlfitpreset.c:1599 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "Polynôme (ordre 1)"
 
-#: libgwyddion/gwynlfitpreset.c:1708
+#: libgwyddion/gwynlfitpreset.c:1610
 msgid "Polynomial (order 2)"
 msgstr "Polynôme (ordre 2)"
 
-#: libgwyddion/gwynlfitpreset.c:1721
+#: libgwyddion/gwynlfitpreset.c:1622
 msgid "Polynomial (order 3)"
 msgstr "Polynôme (ordre 3)"
 
-#: libgwyddion/gwynlfitpreset.c:1735
+#: libgwyddion/gwynlfitpreset.c:1635
 msgid "Square wave"
 msgstr "Onde carrée"
 
-#: libgwyddion/gwynlfitpreset.c:1752
+#: libgwyddion/gwynlfitpreset.c:1651
 msgid "Parabolic step"
 msgstr "Porte parabolique"
 
-#: libgwyddion/gwynlfitpreset.c:1769
+#: libgwyddion/gwynlfitpreset.c:1667
 msgid "Smooth slanted step"
 msgstr "Marche inclinée"
 
-#: libgwyddion/gwynlfitpreset.c:1787
+#: libgwyddion/gwynlfitpreset.c:1684
 msgid "Smooth bent step"
 msgstr "Marche déformée"
 
-#: libgwyddion/gwynlfitpreset.c:1804
+#: libgwyddion/gwynlfitpreset.c:1700
 msgid "Power"
 msgstr "Puissance"
 
-#: libgwyddion/gwynlfitpreset.c:1817 modules/process/fit-shape.c:538
+#: libgwyddion/gwynlfitpreset.c:1712 modules/process/fit-shape.c:543
 msgid "Lorentzian"
 msgstr "Lorentzienne"
 
-#: libgwyddion/gwynlfitpreset.c:1832
+#: libgwyddion/gwynlfitpreset.c:1726
 msgid "Sinc"
 msgstr "Sinus cardinal"
 
@@ -468,7 +468,7 @@ msgstr "Valeur"
 msgid "Area"
 msgstr "Surface"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5593 app/toolbox.c:118
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:118
 msgid "Volume"
 msgstr "Volume"
 
@@ -810,7 +810,7 @@ msgid "Hide full controls"
 msgstr "Masquer tous les contrôles"
 
 #: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4754
-#: modules/process/fit-shape.c:729
+#: modules/process/fit-shape.c:747
 msgid "adjective|Basic"
 msgstr "Basique"
 
@@ -831,7 +831,7 @@ msgstr "φ :"
 #: libgwydgets/gwy3dwindow.c:828 libgwydgets/gwy3dwindow.c:834
 #: libgwydgets/gwy3dwindow.c:1032 libgwydgets/gwy3dwindow.c:1040
 #: modules/process/facet_analysis.c:375 modules/process/indent_analyze.c:460
-#: modules/process/rotate.c:282 modules/process/shade.c:237
+#: modules/process/rotate.c:326 modules/process/shade.c:237
 #: modules/process/shade.c:245 modules/process/tilt.c:211
 #: modules/process/tilt.c:223 modules/process/tip_model.c:231
 #: modules/process/tip_model.c:237 modules/process/unrotate.c:334
@@ -938,7 +938,7 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/pat_synth.c:385 modules/process/pid.c:199
 #: modules/process/polydistort.c:210 modules/process/polylevel.c:373
 #: modules/process/psdf_logphi.c:249 modules/process/rank.c:158
-#: modules/process/rotate.c:261 modules/process/scale.c:196
+#: modules/process/rotate.c:305 modules/process/scale.c:196
 #: modules/process/scars.c:448 modules/process/semsim.c:211
 #: modules/process/shade.c:208 modules/process/slope_dist.c:276
 #: modules/process/sphere-revolve.c:218 modules/process/straighten_path.c:249
@@ -1228,7 +1228,7 @@ msgid "Graph"
 msgstr "Graphe"
 
 #: libgwydgets/gwygraphwindow.c:170 modules/file/hdrimage.cc:472
-#: modules/process/fit-shape.c:914
+#: modules/process/fit-shape.c:943
 msgid "Data"
 msgstr "Données"
 
@@ -1288,7 +1288,7 @@ msgstr "Courbe :"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
 #: modules/process/linematch.c:828 modules/process/semsim.c:249
-#: modules/xyz/xyz_level.c:250
+#: modules/xyz/xyz_level.c:254
 msgid "Method:"
 msgstr "Méthode :"
 
@@ -1507,7 +1507,7 @@ msgstr "Contrôle à distance"
 msgid "Python Scripting Interface"
 msgstr "Interface de script Python"
 
-#: app/app.c:300
+#: app/app.c:301
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1518,190 +1518,190 @@ msgstr ""
 "%s\n"
 "Souhaitez-vous vraiment quitter ?"
 
-#: app/app.c:439
+#: app/app.c:440
 msgid "Mask _Color..."
 msgstr "_Couleur du masque..."
 
-#: app/app.c:455 app/app.c:1724
+#: app/app.c:456 app/app.c:1725
 msgid "Zoom _1:1"
 msgstr "Zoom _1:1"
 
-#: app/app.c:459 app/app.c:1728 app/app.c:2004
+#: app/app.c:460 app/app.c:1729 app/app.c:1957
 msgid "Metadata _Browser..."
 msgstr "Navigateur de méta-données..."
 
-#: app/app.c:464 app/app.c:1733 app/app.c:2009
+#: app/app.c:465 app/app.c:1734 app/app.c:1962
 msgid "View _Log..."
 msgstr "Voir le journa_l..."
 
-#: app/app.c:648
+#: app/app.c:649
 msgid "Pi_xelwise Square"
 msgstr "Pi_xels carrés"
 
-#: app/app.c:658
+#: app/app.c:659
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
-#: app/app.c:835
+#: app/app.c:836
 msgid "verb|Save"
 msgstr "Enregistrer"
 
-#: app/app.c:838 app/app.c:842
+#: app/app.c:839 app/app.c:843
 msgid "Save 3D view to an image"
 msgstr "Exporter la vue 3D en image"
 
-#: app/app.c:848
+#: app/app.c:849
 msgid "Set as Default"
 msgstr "Enregistrer comme défaut"
 
-#: app/app.c:850
+#: app/app.c:851
 msgid "Set the current view setup as the default"
 msgstr "Enregistre la configuration comme défaut"
 
-#: app/app.c:939
+#: app/app.c:940
 msgid "_Show mask"
 msgstr "Afficher le ma_sque"
 
-#: app/app.c:1105
+#: app/app.c:1106
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "L'enregistrement de la vue 3D `%s' a échoué"
 
-#: app/app.c:1149
+#: app/app.c:1150
 msgid "Export 3D View"
 msgstr "Exporter la vue 3D"
 
-#: app/app.c:1456
+#: app/app.c:1457
 msgid "_Change Preview"
 msgstr "Modifier l'aperçu"
 
-#: app/app.c:1582
+#: app/app.c:1583
 msgid "Change Volume Data Preview"
 msgstr "Modifier l'aperçu des données volumiques"
 
-#: app/app.c:1592
+#: app/app.c:1593
 msgid "Preview quantity:"
 msgstr "Quantité prévisualisée :"
 
-#: app/app.c:1602 modules/process/extend.c:267 modules/tools/linestats.c:166
+#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:166
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Moyenne"
 
-#: app/app.c:1603 modules/process/polydistort.c:255 modules/tools/filter.c:240
+#: app/app.c:1604 modules/process/polydistort.c:255 modules/tools/filter.c:240
 #: modules/tools/icolorange.c:424 modules/tools/linestats.c:168
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Minimum"
 
-#: app/app.c:1604 modules/process/col_synth.c:167 modules/tools/filter.c:241
+#: app/app.c:1605 modules/process/col_synth.c:167 modules/tools/filter.c:241
 #: modules/tools/icolorange.c:435 modules/tools/linestats.c:169
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Maximum"
 
-#: app/app.c:1605
+#: app/app.c:1606
 msgid "Min. position"
 msgstr "Position min"
 
-#: app/app.c:1606
+#: app/app.c:1607
 msgid "Max. position"
 msgstr "Position max"
 
-#: app/app.c:1607 modules/process/bdep_synth.c:134
+#: app/app.c:1608 modules/process/bdep_synth.c:134
 #: modules/process/col_synth.c:168 modules/process/scars.c:496
 #: modules/process/scars.c:503 modules/process/threshold.c:341
 msgid "RMS"
 msgstr "RMS"
 
-#: app/app.c:1608 modules/file/asciiexport.c:187 modules/file/gxyzffile.c:393
+#: app/app.c:1609 modules/file/asciiexport.c:187 modules/file/gxyzffile.c:393
 #: modules/file/xyzexport.c:233 modules/file/xyzexport.c:302
 msgid "Channel:"
 msgstr "Canal :"
 
-#: app/app.c:1609
+#: app/app.c:1610
 msgid "Section:"
 msgstr "Section :"
 
-#: app/app.c:1860
+#: app/app.c:1861
 msgid "_Update Preview"
 msgstr "Rafraîchir l'aperç_u"
 
-#: app/app.c:1866
+#: app/app.c:1867
 msgid "_Density Map"
 msgstr "Carte de _densité"
 
-#: app/data-browser-aux.c:1372
+#: app/data-browser-aux.c:1373
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
 
-#: app/data-browser-aux.c:1455
+#: app/data-browser-aux.c:1456
 #, c-format
 msgid "Unknown volume %d"
 msgstr "Volume %d inconnu"
 
-#: app/data-browser-aux.c:1519
+#: app/data-browser-aux.c:1520
 #, c-format
 msgid "Unknown XYZ %d"
 msgstr "Donnée XYZ %d inconnue"
 
-#: app/data-browser-aux.c:2878
+#: app/data-browser-aux.c:2795
 #, c-format
 msgid "Z levels: %d, Z unit: %s"
 msgstr "Niveaux Z : %d, unités Z : %s"
 
-#: app/data-browser-aux.c:2904
+#: app/data-browser-aux.c:2821
 #, c-format
 msgid "Points: %d"
 msgstr "Points : %d"
 
-#: app/data-browser.c:5428
+#: app/data-browser.c:5459
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:5435
+#: app/data-browser.c:5466
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:5442
+#: app/data-browser.c:5473
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:5501
+#: app/data-browser.c:5532
 msgid "Data Browser"
 msgstr "Navigateur de données"
 
-#: app/data-browser.c:5526
+#: app/data-browser.c:5557
 msgid "Show file messages"
 msgstr "Afficher les messages de chargement de fichier"
 
-#: app/data-browser.c:5538
+#: app/data-browser.c:5569
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:5551
+#: app/data-browser.c:5582
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:5565 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5596 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:5579
+#: app/data-browser.c:5610
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5607
+#: app/data-browser.c:5638
 msgid "XYZ"
 msgstr "XYZ"
 
-#: app/data-browser.c:6579
+#: app/data-browser.c:6612
 #, c-format
 msgid "Messages for %s"
 msgstr "Messages pour %s"
 
-#: app/data-browser.c:6583
+#: app/data-browser.c:6616
 msgid "Messages for Untitled"
 msgstr "Messages pour Sans titre"
 
@@ -1763,7 +1763,7 @@ msgstr "Fusionner un fichier"
 msgid "Open File"
 msgstr "Ouvrir un fichier"
 
-#: app/file.c:521 app/gwymoduleutils.c:193
+#: app/file.c:521 app/gwymoduleutils.c:192
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "L'enregistrement de `%s' a échoué"
@@ -2008,7 +2008,7 @@ msgstr ""
 "L'en-tête se termine subitement à la ligne %u ; le marqueur de fin d'en-tête "
 "est manquant."
 
-#: app/gwymoduleutils.c:198 app/settings.c:131 app/settings.c:142
+#: app/gwymoduleutils.c:197 app/settings.c:131 app/settings.c:142
 #: modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
@@ -2104,7 +2104,7 @@ msgstr "Type"
 msgid "Function"
 msgstr "Fonction"
 
-#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/fit-shape.c:733
+#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/fit-shape.c:751
 #: modules/process/neural.c:610 modules/tools/stats.c:426
 msgid "Parameters"
 msgstr "Paramètres"
@@ -4323,7 +4323,7 @@ msgstr "Image"
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:294 modules/process/fft_profile.c:292
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
-#: modules/process/polydistort.c:247 modules/process/rotate.c:292
+#: modules/process/polydistort.c:247 modules/process/rotate.c:336
 #: modules/process/scale.c:253 modules/process/straighten_path.c:271
 #: modules/process/unrotate.c:277 modules/tools/linestats.c:401
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
@@ -6598,7 +6598,7 @@ msgstr "Exporter au format XYZ"
 
 #: modules/file/xyzexport.c:340 modules/process/curvature.c:704
 #: modules/process/entropy.c:214 modules/process/facet-level.c:207
-#: modules/process/fit-shape.c:989 modules/process/level.c:259
+#: modules/process/fit-shape.c:1018 modules/process/level.c:259
 #: modules/process/linematch.c:906 modules/process/neural.c:593
 #: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
 #: modules/tools/filter.c:300 modules/tools/linestats.c:437
@@ -6666,7 +6666,7 @@ msgid "Fit Graph"
 msgstr "Ajuster le graphe"
 
 #: modules/graph/graph_cd.c:212 modules/graph/graph_fdfit.c:251
-#: modules/graph/graph_fit.c:270 modules/process/fit-shape.c:672
+#: modules/graph/graph_fit.c:270 modules/process/fit-shape.c:679
 #: modules/volume/volume_fdfit.c:299
 msgid "verb|_Fit"
 msgstr "Ajuster"
@@ -6684,12 +6684,12 @@ msgstr "Fonction :"
 
 #: modules/graph/graph_cd.c:305 modules/graph/graph_fdfit.c:361
 #: modules/graph/graph_fit.c:375 modules/process/curvature.c:745
-#: modules/process/fit-shape.c:1038 modules/volume/volume_fdfit.c:446
+#: modules/process/fit-shape.c:1067 modules/volume/volume_fdfit.c:446
 msgid "Parameter"
 msgstr "Paramètre"
 
 #: modules/graph/graph_cd.c:307 modules/graph/graph_fdfit.c:363
-#: modules/graph/graph_fit.c:377 modules/process/fit-shape.c:1040
+#: modules/graph/graph_fit.c:377 modules/process/fit-shape.c:1069
 #: modules/volume/volume_fdfit.c:448
 msgid "Error"
 msgstr "Erreur"
@@ -6711,7 +6711,7 @@ msgid "_Draw whole circle"
 msgstr "_Dessiner un cercle entier"
 
 #: modules/graph/graph_cd.c:382 modules/graph/graph_fdfit.c:491
-#: modules/graph/graph_fit.c:531 modules/process/fit-shape.c:790
+#: modules/graph/graph_fit.c:531 modules/process/fit-shape.c:808
 #: modules/volume/volume_fdfit.c:573
 msgid "Save Fit Report"
 msgstr "Sauver le rapport d'ajustement"
@@ -6740,41 +6740,41 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 msgid "N.A."
 msgstr "N. A."
 
-#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1358
-#: modules/graph/graph_fit.c:1495 modules/process/fit-shape.c:4507
+#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1363
+#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4371
 #: modules/volume/volume_fdfit.c:1720
 msgid "===== Fit Results ====="
 msgstr "===== Résultats de l'ajustement ====="
 
-#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1362
-#: modules/graph/graph_fit.c:1499 modules/process/fit-shape.c:4509
+#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1367
+#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4373
 #: modules/volume/volume_fdfit.c:1724
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Données :             %s\n"
 
-#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1365
-#: modules/graph/graph_fit.c:1502 modules/process/fit-shape.c:4511
+#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1370
+#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4375
 #: modules/volume/volume_fdfit.c:1727
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Nombre de points : %d sur %d\n"
 
-#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1369
-#: modules/graph/graph_fit.c:1506 modules/volume/volume_fdfit.c:1731
+#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1374
+#: modules/graph/graph_fit.c:1511 modules/volume/volume_fdfit.c:1731
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1375
-#: modules/graph/graph_fit.c:1512 modules/process/fit-shape.c:4513
+#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1380
+#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4377
 #: modules/volume/volume_fdfit.c:1737
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fonction ajustée :  %s\n"
 
-#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1378
-#: modules/graph/graph_fit.c:1515 modules/process/fit-shape.c:4515
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1383
+#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4379
 #: modules/volume/volume_fdfit.c:1740
 msgid "Results\n"
 msgstr "Résultats\n"
@@ -6926,7 +6926,7 @@ msgid "Fit FD Curve"
 msgstr "Ajuster la courbe FD"
 
 #: modules/graph/graph_fdfit.c:255 modules/graph/graph_fit.c:274
-#: modules/process/fit-shape.c:676 modules/process/measure_lattice.c:257
+#: modules/process/fit-shape.c:683 modules/process/measure_lattice.c:257
 #: modules/volume/volume_fdfit.c:303
 msgid "verb|_Estimate"
 msgstr "_Estimer"
@@ -6937,7 +6937,7 @@ msgid "_Plot Inits"
 msgstr "Initialiser"
 
 #: modules/graph/graph_fdfit.c:359 modules/graph/graph_fit.c:373
-#: modules/process/fit-shape.c:1036 modules/volume/volume_fdfit.c:444
+#: modules/process/fit-shape.c:1065 modules/volume/volume_fdfit.c:444
 msgid "Fix"
 msgstr "Fixe"
 
@@ -6952,7 +6952,7 @@ msgid "χ<sup>2</sup> result:"
 msgstr "Résultat χ<sup>2</sup> :"
 
 #: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
-#: modules/process/fit-shape.c:737 modules/process/fit-shape.c:4551
+#: modules/process/fit-shape.c:755 modules/process/fit-shape.c:4415
 #: modules/volume/volume_fdfit.c:477
 msgid "Correlation Matrix"
 msgstr "Matrice de corrélation"
@@ -6976,13 +6976,13 @@ msgstr "graphe"
 msgid "Estimate"
 msgstr "Estimation"
 
-#: modules/graph/graph_fdfit.c:1405 modules/graph/graph_fit.c:1542
+#: modules/graph/graph_fdfit.c:1410 modules/graph/graph_fit.c:1547
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somme résiduelle :   %g\n"
 
-#: modules/graph/graph_fdfit.c:1408 modules/graph/graph_fit.c:1545
+#: modules/graph/graph_fdfit.c:1413 modules/graph/graph_fit.c:1550
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
@@ -8353,7 +8353,7 @@ msgid "Score"
 msgstr "Score"
 
 #: modules/process/crosscor.c:357 modules/process/fft.c:395
-#: modules/process/fit-shape.c:946 modules/process/maskcor.c:176
+#: modules/process/fit-shape.c:975 modules/process/maskcor.c:176
 msgid "Output _type:"
 msgstr "_Type de sortie :"
 
@@ -8791,7 +8791,7 @@ msgstr "_Exclure l'asymétrie linéaire"
 msgid "Plot drift _graph"
 msgstr "Afficher le graphe de dérive"
 
-#: modules/process/drift.c:356 modules/process/fit-shape.c:951
+#: modules/process/drift.c:356 modules/process/fit-shape.c:980
 #: modules/process/neural.c:548 modules/process/polydistort.c:275
 msgid "Preview:"
 msgstr "Aperçu :"
@@ -9481,9 +9481,9 @@ msgstr "Filtrage FFT bi-dimensionnelle"
 msgid "Filtered Data"
 msgstr "Données filtrées"
 
-#: modules/process/fft_filter_2d.c:305 modules/process/fit-shape.c:862
-#: modules/process/fit-shape.c:904 modules/process/fit-shape.c:916
-#: modules/process/fit-shape.c:920 modules/process/neural.c:560
+#: modules/process/fft_filter_2d.c:305 modules/process/fit-shape.c:880
+#: modules/process/fit-shape.c:929 modules/process/fit-shape.c:945
+#: modules/process/fit-shape.c:949 modules/process/neural.c:560
 msgid "Difference"
 msgstr "Différence"
 
@@ -9665,105 +9665,105 @@ msgstr "Activer le multiplicateur _lorentzien"
 msgid "Enable _power multiplier"
 msgstr "Activer le multiplicateur _puissance"
 
-#: modules/process/fit-shape.c:531
+#: modules/process/fit-shape.c:536
 msgid "Grating (simple)"
 msgstr "Réseau (simple)"
 
-#: modules/process/fit-shape.c:532
+#: modules/process/fit-shape.c:537
 msgid "Grating (3-level)"
 msgstr "Réseau (3 niveaux)"
 
-#: modules/process/fit-shape.c:533 modules/process/pat_synth.c:215
+#: modules/process/fit-shape.c:538 modules/process/pat_synth.c:215
 msgid "Holes"
 msgstr "Trous"
 
-#: modules/process/fit-shape.c:534
+#: modules/process/fit-shape.c:539
 msgid "Ring"
 msgstr "Anneau"
 
-#: modules/process/fit-shape.c:535
+#: modules/process/fit-shape.c:540
 msgid "Sphere"
 msgstr "Sphère"
 
-#: modules/process/fit-shape.c:536
+#: modules/process/fit-shape.c:541
 msgid "Cylinder (lying)"
 msgstr "Cylindre (couché)"
 
-#: modules/process/fit-shape.c:539
+#: modules/process/fit-shape.c:544
 msgid "Pyramid (diamond)"
 msgstr "Pyramide (diamant)"
 
-#: modules/process/fit-shape.c:553
+#: modules/process/fit-shape.c:558
 msgid "Fits predefined geometrical shapes to data."
 msgstr "Ajuste des formes géométriques prédéfinies aux données."
 
-#: modules/process/fit-shape.c:567
+#: modules/process/fit-shape.c:572
 msgid "/_Level/_Fit Shape..."
 msgstr "/Niveau/Ajuster une _forme..."
 
-#: modules/process/fit-shape.c:571 modules/process/fit-shape.c:578
+#: modules/process/fit-shape.c:576 modules/process/fit-shape.c:583
 msgid "Fit geometrical shapes"
 msgstr "Ajuste des formes géométriques"
 
-#: modules/process/fit-shape.c:574
+#: modules/process/fit-shape.c:579
 msgid "/_Fit Shape..."
 msgstr "/Ajuster une _forme..."
 
-#: modules/process/fit-shape.c:669
+#: modules/process/fit-shape.c:676
 msgid "Fit Shape"
 msgstr "Forme ajustée"
 
-#: modules/process/fit-shape.c:674
+#: modules/process/fit-shape.c:681
 msgid "verb|_Quick Fit"
 msgstr "Ajuster rapidement"
 
-#: modules/process/fit-shape.c:741 modules/process/fit-shape.c:4568
+#: modules/process/fit-shape.c:759 modules/process/fit-shape.c:4432
 msgid "Derived Quantities"
 msgstr "Quantités dérivées"
 
-#: modules/process/fit-shape.c:746 modules/process/fit-shape.c:4546
+#: modules/process/fit-shape.c:764 modules/process/fit-shape.c:4410
 msgid "Mean square difference:"
 msgstr "Différence quadratique moyenne"
 
-#: modules/process/fit-shape.c:848 modules/process/fit-shape.c:891
-#: modules/process/fit-shape.c:915 modules/process/fit-shape.c:919
+#: modules/process/fit-shape.c:866 modules/process/fit-shape.c:912
+#: modules/process/fit-shape.c:944 modules/process/fit-shape.c:948
 msgid "Fitted shape"
 msgstr "Forme ajustée"
 
-#: modules/process/fit-shape.c:921 modules/process/mark_disconn.c:189
+#: modules/process/fit-shape.c:950 modules/process/mark_disconn.c:189
 #: modules/process/scars.c:431
 msgid "Both"
 msgstr "Les deux"
 
-#: modules/process/fit-shape.c:938
+#: modules/process/fit-shape.c:967
 msgid "_Function type:"
 msgstr "Type de _fonction :"
 
-#: modules/process/fit-shape.c:966
+#: modules/process/fit-shape.c:995
 msgid "Show differences with _adapted color map"
-msgstr "Affiche l'écart avec une échelle de couleur _adaptée"
+msgstr "Afficher l'écart avec une échelle de couleur _adaptée"
 
-#: modules/process/fit-shape.c:1003
+#: modules/process/fit-shape.c:1032
 msgid "Calculate differences for e_xcluded pixels"
 msgstr "Calculer la différence pour les pixels exclus"
 
-#: modules/process/fit-shape.c:1050
+#: modules/process/fit-shape.c:1079
 msgid "_Recalculate Image"
 msgstr "_Recalculer l'image"
 
-#: modules/process/fit-shape.c:1057
+#: modules/process/fit-shape.c:1086
 msgid "Revert to _Previous Values"
 msgstr "Retourner aux valeurs précédentes"
 
-#: modules/process/fit-shape.c:1995
+#: modules/process/fit-shape.c:2067
 msgid "Parameter estimation failed"
 msgstr "Échec de l'estimation des paramètres"
 
-#: modules/process/fit-shape.c:1998
+#: modules/process/fit-shape.c:2070
 msgid "Fit failed"
 msgstr "Échec de l'ajustement"
 
-#: modules/process/fit-shape.c:2000
+#: modules/process/fit-shape.c:2072
 msgid "Fit was interruped"
 msgstr "Ajustement interrompu"
 
@@ -10784,7 +10784,7 @@ msgstr "Remet à niveau les données en effectuant une rotation du plan"
 msgid "/_Level/Fix _Zero"
 msgstr "/Niveau/Fixer le _zéro"
 
-#: modules/process/level.c:106 modules/xyz/xyz_level.c:110
+#: modules/process/level.c:106 modules/xyz/xyz_level.c:111
 msgid "Shift minimum data value to zero"
 msgstr "Fixe la valeur minimale des donnée à zéro"
 
@@ -10792,7 +10792,7 @@ msgstr "Fixe la valeur minimale des donnée à zéro"
 msgid "/_Level/Zero _Mean Value"
 msgstr "/Niveau/Valeur _moyenne à zéro"
 
-#: modules/process/level.c:113 modules/xyz/xyz_level.c:117
+#: modules/process/level.c:113 modules/xyz/xyz_level.c:118
 msgid "Shift mean data value to zero"
 msgstr "Fixe la valeur moyenne des données à zéro"
 
@@ -12206,37 +12206,53 @@ msgstr "Type de filtre :"
 msgid "Rank transform..."
 msgstr "Transformée de rang..."
 
-#: modules/process/rotate.c:87
+#: modules/process/rotate.c:99
 msgid "Rotates data by arbitrary angle."
 msgstr "Pivote les données par un angle quelconque."
 
-#: modules/process/rotate.c:101
+#: modules/process/rotate.c:113
 msgid "/_Basic Operations/Rotate by _Angle..."
 msgstr "/Opérations _basiques/Rotation..."
 
-#: modules/process/rotate.c:105
+#: modules/process/rotate.c:117
 msgid "Rotate by arbitrary angle"
 msgstr "Rotation par un angle quelconque"
 
-#: modules/process/rotate.c:210
+#: modules/process/rotate.c:254
 msgid "Rotated Data"
 msgstr "Données pivotées"
 
-#: modules/process/rotate.c:260
+#: modules/process/rotate.c:304
 msgid "Rotate"
 msgstr "Pivoter"
 
-#: modules/process/rotate.c:282
+#: modules/process/rotate.c:326
 msgid "Rotate by _angle:"
 msgstr "Pivoter de l'angle :"
 
-#: modules/process/rotate.c:298
-msgid "E_xpand result to fit complete data"
-msgstr "Étendre le résultat pour ajuster toutes les données"
-
-#: modules/process/rotate.c:310
+#: modules/process/rotate.c:342
 msgid "Show _grid"
 msgstr "Afficher la _grille"
+
+#: modules/process/rotate.c:352
+msgid "Create _mask over exterior"
+msgstr "Créer un _masque sur la partie extérieure."
+
+#: modules/process/rotate.c:362
+msgid "Result size:"
+msgstr "Taille résultante : "
+
+#: modules/process/rotate.c:371
+msgid "_Same as original"
+msgstr "Identique à l'original"
+
+#: modules/process/rotate.c:373
+msgid "_Expanded to complete data"
+msgstr "Étendr_e aux données complètes"
+
+#: modules/process/rotate.c:375
+msgid "C_ut to valid data"
+msgstr "Co_uper aux données valides"
 
 #: modules/process/scale.c:93
 msgid "Scales data by arbitrary factor."
@@ -14749,39 +14765,39 @@ msgstr "Ajustement en cours"
 msgid "Physical dimensions are invalid."
 msgstr "Les dimensions physiques sont invalides."
 
-#: modules/xyz/xyz_level.c:92
+#: modules/xyz/xyz_level.c:93
 msgid "Simple XYZ data leveling."
 msgstr "Mise à niveau basique de données XYZ."
 
-#: modules/xyz/xyz_level.c:106
+#: modules/xyz/xyz_level.c:107
 msgid "/Fix _Zero"
 msgstr "/Fixer le _zéro"
 
-#: modules/xyz/xyz_level.c:113
+#: modules/xyz/xyz_level.c:114
 msgid "/Zero _Mean Value"
 msgstr "/Valeur _moyenne nulle"
 
-#: modules/xyz/xyz_level.c:120
+#: modules/xyz/xyz_level.c:121
 msgid "/Plane _Level..."
 msgstr "/Niveau p_lan..."
 
-#: modules/xyz/xyz_level.c:124
+#: modules/xyz/xyz_level.c:125
 msgid "Level data by mean plane correction"
 msgstr "Remet à niveau les données en soustrayant le plan moyen"
 
-#: modules/xyz/xyz_level.c:220
+#: modules/xyz/xyz_level.c:224
 msgid "Plane subtraction"
 msgstr "Soustraction de plan"
 
-#: modules/xyz/xyz_level.c:221
+#: modules/xyz/xyz_level.c:225
 msgid "Rotation"
 msgstr "Rotation"
 
-#: modules/xyz/xyz_level.c:232
+#: modules/xyz/xyz_level.c:236
 msgid "Level XYZ Data"
 msgstr "Mettre à niveau les données _XYZ"
 
-#: modules/xyz/xyz_level.c:262
+#: modules/xyz/xyz_level.c:272
 msgid "Update X and Y of _allcompatible data"
 msgstr "Mettre à jour les valeurs X et Y de toutes les données comp_atibles"
 
