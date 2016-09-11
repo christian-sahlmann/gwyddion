@@ -1,15 +1,20 @@
 2.46 (0000-00-00)
 Application:
-- Translations updated: Russian.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwyddion: GwySIUnit can parse prefixed spelled out unit names such as
   "Millimetre" or "nanoampere".
 - libgwyddion: Gaussian fitting function estimator was improved.
 - libgwyddion: GwyRandGenSet function for random shuffled subsets was added.
-- libgwyddion: GwyNLFitter can report progress and scales much better.
+- libgwyddion: GwyNLFitter can report progress and scales much better.  It
+  has new interface for fitting of fully opaque indexed data.
+- libgwyddion: Function for inversion of symmetric positive definite matrix
+  was added.
 - libgwyprocess: GwyPeaks, graph curve peak finder with functionality similar
   to the Graph Peaks module, was added.
+- libgwyprocess: Functions for field rotation by multiples of 90 and rotation
+  in real space with several sizing options were added.
 - libgwyprocess: An obscure case of GwyTriangulation failure now fails
   gracefully instead of on a failed assertion.
 - libgwyprocess: gwy_data_line_get_psdf() should finally actually work.
@@ -26,6 +31,7 @@ Libraries:
 - libgwyapp: Data visibility restoration for files containing volume and XYZ
   data was fixed.
 - libgwyapp: XYZ data preview is automatically updated when the data change.
+- libgwyapp: Helper for previewing GwySurface into a GwyDataField was added.
 
 Modules:
 - Dektak XML (new): Imports Dektak XML profilometry data.
@@ -53,8 +59,11 @@ Modules:
   export them to a file.
 - Find graph peaks: A peak filtering bug resulting in sometimes the module
   not finding any useful peaks was fixed.
-- Rotate: Cartesian grid can be optionally displayed over the data.
+- Rotate: Cartesian grid can be optionally displayed over the data.  There
+  are more result sizing options.  Rotation is performed in real space, not
+  pixel space.
 - Grain statistics: The values are displayed with more significant digits.
+- Raw XYZ import: No longer loses the first data point in the file.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
