@@ -465,46 +465,70 @@ gwy_surface_new_part(GwySurface *surface,
 
 static void
 copy_field_to_surface(GwyDataField *field,
-                      GwySurface *surface)
+                      GwySurface *surface,
+                      GwyDataField *mask,
+                      GwyMaskingType masking)
 {
     gdouble dx = gwy_data_field_get_xmeasure(field),
             dy = gwy_data_field_get_ymeasure(field);
     gdouble xoff = 0.5*dx + field->xoff, yoff = 0.5*dy + field->yoff;
     Surface *priv = surface->priv;
-    guint i, j, k = 0;
+    guint xres, yres, i, j, n, k;
+    const gdouble *m = NULL, *d;
 
-    for (i = 0; i < field->yres; i++) {
-        for (j = 0; j < field->xres; j++) {
-            surface->data[k].x = dx*j + xoff;
-            surface->data[k].y = dy*i + yoff;
-            surface->data[k].z = field->data[k];
-            k++;
+    xres = field->xres;
+    yres = field->yres;
+    n = xres*yres;
+    d = field->data;
+    if (mask && masking == GWY_MASK_INCLUDE) {
+        m = mask->data;
+        j = 0;
+        for (k = 0; k < n; k++) {
+            if (m[k] > 0.0)
+                j++;
+        }
+        n = j;
+    }
+    else if (mask && masking == GWY_MASK_EXCLUDE) {
+        m = mask->data;
+        j = 0;
+        for (k = 0; k < n; k++) {
+            if (m[k] <= 0.0)
+                j++;
+        }
+        n = j;
+    }
+
+    if (surface->n != n) {
+        free_data(surface);
+        surface->n = n;
+        alloc_data(surface);
+    }
+
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if (!mask || masking == GWY_MASK_IGNORE
+                || (masking == GWY_MASK_INCLUDE && m[i*xres + j] > 0.0)
+                || (masking == GWY_MASK_EXCLUDE && m[i*xres + j] <= 0.0)) {
+                surface->data[k].x = dx*j + xoff;
+                surface->data[k].y = dy*i + yoff;
+                surface->data[k].z = d[i*xres + j];
+                k++;
+            }
         }
     }
 
-    /* SI Units can be NULL */
-    if (field->si_unit_xy && priv->si_unit_xy)
-        gwy_serializable_clone(G_OBJECT(field->si_unit_xy),
-                               G_OBJECT(priv->si_unit_xy));
-    else if (field->si_unit_xy && !priv->si_unit_xy)
-        priv->si_unit_xy = gwy_si_unit_duplicate(field->si_unit_xy);
-    else if (!field->si_unit_xy && priv->si_unit_xy)
-        gwy_object_unref(priv->si_unit_xy);
-
-    if (field->si_unit_z && priv->si_unit_z)
-        gwy_serializable_clone(G_OBJECT(field->si_unit_z),
-                               G_OBJECT(priv->si_unit_z));
-    else if (field->si_unit_z && !priv->si_unit_z)
-        priv->si_unit_z = gwy_si_unit_duplicate(field->si_unit_z);
-    else if (!field->si_unit_z && priv->si_unit_z)
-        gwy_object_unref(priv->si_unit_z);
+    gwy_data_field_copy_units_to_surface(field, surface);
 
     gwy_surface_invalidate(surface);
-    priv->cached_ranges = TRUE;
-    priv->min.x = xoff;
-    priv->min.y = yoff;
-    priv->max.x = dx*(field->xres - 1) + xoff;
-    priv->max.y = dy*(field->yres - 1) + yoff;
+    if (n == xres*yres) {
+        priv->cached_ranges = TRUE;
+        priv->min.x = xoff;
+        priv->min.y = yoff;
+        priv->max.x = dx*(xres - 1) + xoff;
+        priv->max.y = dy*(yres - 1) + yoff;
+    }
     gwy_data_field_get_min_max(field, &priv->min.z, &priv->max.z);
 }
 
@@ -644,7 +668,7 @@ gwy_surface_invalidate(GwySurface *surface)
  * @surface: A surface.
  * @data_field: A two-dimensional data field.
  *
- * Sets the data and units of a surface from a field.
+ * Fills the data of a surface from a data field.
  *
  * The number of points in the new surface will be equal to the number of
  * points in the field.  Lateral coordinates will be equal to the corresponding
@@ -662,13 +686,30 @@ gwy_surface_set_from_data_field(GwySurface *surface,
 {
     g_return_if_fail(GWY_IS_SURFACE(surface));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    copy_field_to_surface(dfield, surface, NULL, GWY_MASK_IGNORE);
+}
 
-    if (surface->n != dfield->xres * dfield->yres) {
-        free_data(surface);
-        surface->n = dfield->xres * dfield->yres;
-        alloc_data(surface);
-    }
-    copy_field_to_surface(dfield, surface);
+/**
+ * gwy_surface_set_from_data_field_mask:
+ * @surface: A surface.
+ * @data_field: A two-dimensional data field.
+ * @mask: Mask of pixels to include from/exclude, or %NULL
+ * @masking: Masking mode to use.
+ *
+ * Fills the data of a surface from a data field, possibly using masking.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_surface_set_from_data_field_mask(GwySurface *surface,
+                                     GwyDataField *dfield,
+                                     GwyDataField *mask,
+                                     GwyMaskingType masking)
+{
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(!mask || GWY_IS_DATA_FIELD(mask));
+    copy_field_to_surface(dfield, surface, mask, masking);
 }
 
 /**
@@ -851,6 +892,78 @@ gwy_surface_get_value_format_z(GwySurface *surface,
 
     return gwy_si_unit_get_format_with_digits(siunit, style, max - min, 3,
                                               format);
+}
+
+/**
+ * gwy_data_field_copy_units_to_surface:
+ * @data_field: A two-dimensional data field.
+ * @surface: A surface.
+ *
+ * Sets lateral and value units of a surface to match a data field.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_data_field_copy_units_to_surface(GwyDataField *data_field,
+                                     GwySurface *surface)
+{
+    Surface *priv;
+
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    priv = surface->priv;
+    if (data_field->si_unit_xy && priv->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(data_field->si_unit_xy),
+                               G_OBJECT(priv->si_unit_xy));
+    else if (data_field->si_unit_xy && !priv->si_unit_xy)
+        priv->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
+    else if (!data_field->si_unit_xy && priv->si_unit_xy)
+        gwy_object_unref(priv->si_unit_xy);
+
+    if (data_field->si_unit_z && priv->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(data_field->si_unit_z),
+                               G_OBJECT(priv->si_unit_z));
+    else if (data_field->si_unit_z && !priv->si_unit_z)
+        priv->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
+    else if (!data_field->si_unit_z && priv->si_unit_z)
+        gwy_object_unref(priv->si_unit_z);
+}
+
+/**
+ * gwy_surface_copy_units_to_data_field:
+ * @surface: A surface.
+ * @data_field: A two-dimensional data field.
+ *
+ * Sets lateral and value units of a data field to match a surface.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_surface_copy_units_to_data_field(GwySurface *surface,
+                                     GwyDataField *data_field)
+{
+    Surface *priv;
+
+    g_return_if_fail(GWY_IS_SURFACE(surface));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    priv = surface->priv;
+    if (priv->si_unit_xy && data_field->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(priv->si_unit_xy),
+                               G_OBJECT(data_field->si_unit_xy));
+    else if (priv->si_unit_xy && !data_field->si_unit_xy)
+        data_field->si_unit_xy = gwy_si_unit_duplicate(priv->si_unit_xy);
+    else if (!priv->si_unit_xy && data_field->si_unit_xy)
+        gwy_object_unref(data_field->si_unit_xy);
+
+    if (priv->si_unit_z && data_field->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(priv->si_unit_z),
+                               G_OBJECT(data_field->si_unit_z));
+    else if (priv->si_unit_z && !data_field->si_unit_z)
+        data_field->si_unit_z = gwy_si_unit_duplicate(priv->si_unit_z);
+    else if (!priv->si_unit_z && data_field->si_unit_z)
+        gwy_object_unref(data_field->si_unit_z);
 }
 
 /**

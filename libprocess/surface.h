@@ -24,6 +24,7 @@
 
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/gwyprocessenums.h>
 #include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
@@ -85,6 +86,10 @@ void              gwy_surface_copy               (GwySurface *src,
 void              gwy_surface_invalidate         (GwySurface *surface);
 void              gwy_surface_set_from_data_field(GwySurface *surface,
                                                   GwyDataField *data_field);
+void              gwy_surface_set_from_data_field_mask(GwySurface *surface,
+                                                       GwyDataField *data_field,
+                                                       GwyDataField *mask,
+                                                       GwyMaskingType masking);
 GwySIUnit*        gwy_surface_get_si_unit_xy     (GwySurface *surface);
 GwySIUnit*        gwy_surface_get_si_unit_z      (GwySurface *surface);
 void              gwy_surface_set_si_unit_xy     (GwySurface *surface,
@@ -97,6 +102,10 @@ GwySIValueFormat* gwy_surface_get_value_format_xy(GwySurface *surface,
 GwySIValueFormat* gwy_surface_get_value_format_z (GwySurface *surface,
                                                   GwySIUnitFormatStyle style,
                                                   GwySIValueFormat *format);
+void          gwy_data_field_copy_units_to_surface(GwyDataField *data_field,
+                                                   GwySurface *surface);
+void          gwy_surface_copy_units_to_data_field(GwySurface *surface,
+                                                   GwyDataField *data_field);
 GwyXYZ            gwy_surface_get                (GwySurface *surface,
                                                   guint pos);
 void              gwy_surface_set                (GwySurface *surface,

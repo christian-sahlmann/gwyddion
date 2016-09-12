@@ -2698,14 +2698,24 @@ void
 gwy_data_field_copy_units_to_data_line(GwyDataField *data_field,
                                        GwyDataLine *data_line)
 {
-    GwySIUnit *fieldunit, *lineunit;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
-    lineunit = gwy_data_line_get_si_unit_x(data_line);
-    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
-    fieldunit = gwy_data_field_get_si_unit_z(data_field);
-    lineunit = gwy_data_line_get_si_unit_y(data_line);
-    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    if (data_field->si_unit_xy && data_line->si_unit_x)
+        gwy_serializable_clone(G_OBJECT(data_field->si_unit_xy),
+                               G_OBJECT(data_line->si_unit_x));
+    else if (data_field->si_unit_xy && !data_line->si_unit_x)
+        data_line->si_unit_x = gwy_si_unit_duplicate(data_field->si_unit_xy);
+    else if (!data_field->si_unit_xy && data_line->si_unit_x)
+        gwy_object_unref(data_line->si_unit_x);
+
+    if (data_field->si_unit_z && data_line->si_unit_y)
+        gwy_serializable_clone(G_OBJECT(data_field->si_unit_z),
+                               G_OBJECT(data_line->si_unit_y));
+    else if (data_field->si_unit_z && !data_line->si_unit_y)
+        data_line->si_unit_y = gwy_si_unit_duplicate(data_field->si_unit_z);
+    else if (!data_field->si_unit_z && data_line->si_unit_y)
+        gwy_object_unref(data_line->si_unit_y);
 }
 
 /**
@@ -2719,14 +2729,24 @@ void
 gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
                                        GwyDataField *data_field)
 {
-    GwySIUnit *fieldunit, *lineunit;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
-    lineunit = gwy_data_line_get_si_unit_x(data_line);
-    gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
-    fieldunit = gwy_data_field_get_si_unit_z(data_field);
-    lineunit = gwy_data_line_get_si_unit_y(data_line);
-    gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
+    if (data_line->si_unit_x && data_field->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(data_line->si_unit_x),
+                               G_OBJECT(data_field->si_unit_xy));
+    else if (data_line->si_unit_x && !data_field->si_unit_xy)
+        data_field->si_unit_xy = gwy_si_unit_duplicate(data_line->si_unit_x);
+    else if (!data_line->si_unit_x && data_field->si_unit_xy)
+        gwy_object_unref(data_field->si_unit_xy);
+
+    if (data_line->si_unit_y && data_field->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(data_line->si_unit_y),
+                               G_OBJECT(data_field->si_unit_z));
+    else if (data_line->si_unit_y && !data_field->si_unit_z)
+        data_field->si_unit_z = gwy_si_unit_duplicate(data_line->si_unit_y);
+    else if (!data_line->si_unit_y && data_field->si_unit_z)
+        gwy_object_unref(data_field->si_unit_z);
 }
 
 #undef gwy_data_field_invalidate
