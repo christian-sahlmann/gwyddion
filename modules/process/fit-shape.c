@@ -166,8 +166,9 @@ typedef struct {
     guint nparam;
     gboolean *param_fixed;
 
+    GwySurface *surface;     /* Either ref(surface), or created from image. */
     guint n;
-    GwyXYZ *xyz;             /* Data */
+    const GwyXYZ *xyz;       /* Data */
     gdouble *f;              /* Function values. */
 } FitShapeContext;
 
@@ -296,12 +297,6 @@ static void          update_fit_results          (FitShapeControls *controls,
 static void          update_context_data         (FitShapeControls *controls);
 static void          fit_context_resize_params   (FitShapeContext *ctx,
                                                   guint n_param);
-static void          fit_context_fill_data       (FitShapeContext *ctx,
-                                                  GwyDataField *dfield,
-                                                  GwyDataField *mask,
-                                                  GwyMaskingType masking);
-static void          fit_context_fill_xyz        (FitShapeContext *ctx,
-                                                  GwySurface *surface);
 static void          fit_context_free            (FitShapeContext *ctx);
 static GwyNLFitter*  fit                         (const FitShapeFunc *func,
                                                   const FitShapeContext *ctx,
@@ -320,10 +315,9 @@ static void          calculate_function          (const FitShapeFunc *func,
                                                   const FitShapeContext *ctx,
                                                   const gdouble *param,
                                                   gdouble *z);
-static void          reduce_data_size            (const GwyXYZ *xyz,
-                                                  guint n,
-                                                  GwyXYZ *xyzred,
-                                                  guint nred);
+static void          reduce_data_size            (const GwyXYZ *xyzsrc,
+                                                  guint nsrc,
+                                                  GwySurface *dest);
 static GString*      create_fit_report           (FitShapeControls *controls);
 static void          fit_shape_load_args         (GwyContainer *container,
                                                   FitShapeArgs *args);
@@ -2134,19 +2128,30 @@ update_context_data(FitShapeControls *controls)
 {
     GwyDataField *dfield = NULL, *mfield = NULL;
     GwySurface *surface = NULL;
+    FitShapeContext *ctx = controls->ctx;
 
     if (controls->pageno == GWY_PAGE_XYZS) {
         surface = gwy_container_get_object_by_name(controls->mydata,
                                                    "/surface/0");
-        fit_context_fill_xyz(controls->ctx, surface);
+        if (!ctx->surface) {
+            ctx->surface = surface;
+            g_object_unref(ctx->surface);
+        }
     }
     else {
         dfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
         gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
                                          (GObject**)&mfield);
-        fit_context_fill_data(controls->ctx, dfield, mfield,
-                              controls->args->masking);
+        if (!ctx->surface)
+            ctx->surface = gwy_surface_new();
+        gwy_surface_set_from_data_field_mask(ctx->surface, dfield,
+                                             mfield, controls->args->masking);
     }
+
+    ctx->n = gwy_surface_get_npoints(ctx->surface);
+    ctx->f = g_renew(gdouble, ctx->f, ctx->n);
+    ctx->xyz = gwy_surface_get_data_const(ctx->surface);
+
     gwy_clear(controls->estimcache, 1);
 }
 
@@ -2163,96 +2168,13 @@ fit_context_resize_params(FitShapeContext *ctx,
     }
 }
 
-/* Construct a xyz[] and z[] array from data field pixels under the mask. */
-static void
-fit_context_fill_data(FitShapeContext *ctx,
-                      GwyDataField *dfield,
-                      GwyDataField *mask,
-                      GwyMaskingType masking)
-{
-    guint n, k, i, j, nn, xres, yres;
-    const gdouble *d, *m;
-    gdouble dx, dy, xoff, yoff;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    dx = gwy_data_field_get_xmeasure(dfield);
-    dy = gwy_data_field_get_ymeasure(dfield);
-    xoff = gwy_data_field_get_xoffset(dfield);
-    yoff = gwy_data_field_get_yoffset(dfield);
-
-    if (masking == GWY_MASK_IGNORE)
-        mask = NULL;
-    else if (!mask)
-        masking = GWY_MASK_IGNORE;
-
-    nn = xres*yres;
-    if (mask) {
-        m = gwy_data_field_get_data_const(mask);
-        n = 0;
-        if (masking == GWY_MASK_INCLUDE) {
-            for (k = 0; k < nn; k++) {
-                if (m[k] > 0.0)
-                    n++;
-            }
-        }
-        else {
-            for (k = 0; k < nn; k++) {
-                if (m[k] <= 0.0)
-                    n++;
-            }
-        }
-    }
-    else {
-        m = NULL;
-        n = nn;
-    }
-
-    ctx->n = n;
-    ctx->xyz = g_renew(GwyXYZ, ctx->xyz, n);
-    ctx->f = g_renew(gdouble, ctx->f, n);
-    d = gwy_data_field_get_data_const(dfield);
-
-    n = k = 0;
-    for (i = 0; i < yres; i++) {
-        gdouble y = (i + 0.5)*dy + yoff;
-
-        for (j = 0; j < xres; j++, k++) {
-            if (!m
-                || (masking == GWY_MASK_INCLUDE && m[k] > 0.0)
-                || (masking == GWY_MASK_EXCLUDE && m[k] <= 0.0)) {
-                gdouble x = (j + 0.5)*dx + xoff;
-
-                ctx->xyz[n].x = x;
-                ctx->xyz[n].y = y;
-                ctx->xyz[n].z = d[k];
-                n++;
-            }
-        }
-    }
-}
-
 static void
 fit_context_free(FitShapeContext *ctx)
 {
+    gwy_object_unref(ctx->surface);
     g_free(ctx->param_fixed);
-    g_free(ctx->xyz);
     g_free(ctx->f);
     gwy_clear(ctx, 1);
-}
-
-/* Construct separate xy[] and z[] arrays from XYZ surface data. */
-static void
-fit_context_fill_xyz(FitShapeContext *ctx, GwySurface *surface)
-{
-    const GwyXYZ *xyz;
-    guint n;
-
-    ctx->n = n = gwy_surface_get_npoints(surface);
-    ctx->xyz = g_renew(GwyXYZ, ctx->xyz, n);
-    ctx->f = g_renew(gdouble, ctx->f, n);
-    xyz = gwy_surface_get_data_const(surface);
-    memcpy(ctx->xyz, xyz, n*sizeof(GwyXYZ));
 }
 
 static GwyNLFitter*
@@ -2288,17 +2210,19 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
 {
     GwyNLFitter *fitter;
     FitShapeContext ctxred;
-    guint nred;
+    guint nred = (guint)sqrt(ctx->n*(gdouble)NREDLIM);
 
-    if (ctx->n <= NREDLIM)
+    if (nred >= ctx->n)
         return fit(func, ctx, param, rss, NULL, NULL);
 
     ctxred = *ctx;
-    nred = ctxred.n = sqrt(ctx->n*(gdouble)NREDLIM);
-    ctxred.xyz = g_new(GwyXYZ, nred);
-    reduce_data_size(ctx->xyz, ctx->n, ctxred.xyz, nred);
+    ctxred.n = nred;
+    ctxred.surface = gwy_surface_new_sized(nred);
+    ctxred.xyz = gwy_surface_get_data_const(ctxred.surface);
+    reduce_data_size(gwy_surface_get_data_const(ctx->surface), ctx->n,
+                     ctxred.surface);
     fitter = fit(func, &ctxred, param, rss, NULL, NULL);
-    g_free(ctxred.xyz);
+    g_object_unref(ctxred.surface);
 
     return fitter;
 }
@@ -2312,7 +2236,12 @@ calculate_field(const FitShapeFunc *func,
 
     gwy_clear(&ctx, 1);
     fit_context_resize_params(&ctx, func->nparams);
-    fit_context_fill_data(&ctx, dfield, NULL, GWY_MASK_IGNORE);
+    ctx.surface = gwy_surface_new();
+    gwy_surface_set_from_data_field_mask(ctx.surface, dfield,
+                                         NULL, GWY_MASK_IGNORE);
+    ctx.n = gwy_surface_get_npoints(ctx.surface);
+    ctx.f = g_renew(gdouble, ctx.f, ctx.n);
+    ctx.xyz = gwy_surface_get_data_const(ctx.surface);
     calculate_function(func, &ctx, param, gwy_data_field_get_data(dfield));
     fit_context_free(&ctx);
 }
@@ -2331,14 +2260,16 @@ calculate_function(const FitShapeFunc *func,
 }
 
 static void
-reduce_data_size(const GwyXYZ *xyz, guint n, GwyXYZ *xyzred, guint nred)
+reduce_data_size(const GwyXYZ *xyzsrc, guint nsrc, GwySurface *dest)
 {
     GwyRandGenSet *rngset = gwy_rand_gen_set_new(1);
-    guint *redindex = gwy_rand_gen_set_choose_shuffle(rngset, 0, n, nred);
+    guint ndest = gwy_surface_get_npoints(dest);
+    guint *redindex = gwy_rand_gen_set_choose_shuffle(rngset, 0, nsrc, ndest);
+    GwyXYZ *xyzdest = gwy_surface_get_data(dest);
     guint i;
 
-    for (i = 0; i < nred; i++)
-        xyzred[i] = xyz[redindex[i]];
+    for (i = 0; i < ndest; i++)
+        xyzdest[i] = xyzsrc[redindex[i]];
 
     g_free(redindex);
     gwy_rand_gen_set_free(rngset);
@@ -2724,20 +2655,21 @@ estimate_projection_direction_red(const GwyXYZ *xyz, guint n,
 {
     FitShapeEstimateCache estimcachered;
     guint nred = (guint)sqrt(n*(gdouble)NREDLIM);
-    GwyXYZ *xyzred = NULL;
+    GwySurface *surface;
     gdouble phi;
 
     if (nred >= n)
         return estimate_projection_direction(xyz, n, estimcache);
 
-    xyzred = g_new(GwyXYZ, nred);
-    reduce_data_size(xyz, n, xyzred, nred);
+    surface = gwy_surface_new_sized(nred);
+    reduce_data_size(xyz, n, surface);
 
     /* Make sure caching still works for the reduced data. */
     gwy_clear(&estimcachered, 1);
-    phi = estimate_projection_direction(xyzred, nred, &estimcachered);
+    phi = estimate_projection_direction(gwy_surface_get_data_const(surface),
+                                        nred, &estimcachered);
 
-    g_free(xyzred);
+    g_object_unref(surface);
 
     return phi;
 }
