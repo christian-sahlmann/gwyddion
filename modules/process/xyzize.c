@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Converts data fields to XYZ data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -66,42 +66,12 @@ xyzize(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield = NULL;
     GwySurface *surface;
-    const gdouble *d;
-    GwyXYZ *xyz;
-    guint xres, yres, i, j, k;
-    gdouble xreal, yreal, xoff, yoff;
     gint newid;
 
     g_return_if_fail(run & XYZIZE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    xoff = gwy_data_field_get_xoffset(dfield);
-    yoff = gwy_data_field_get_yoffset(dfield);
-    d = gwy_data_field_get_data_const(dfield);
-    surface = gwy_surface_new_sized(xres*yres);
-    xyz = gwy_surface_get_data(surface);
-
-    k = 0;
-    for (i = 0; i < yres; i++) {
-        gdouble y = (i + 0.5)/yres*yreal + yoff;
-        for (j = 0; j < xres; j++, k++) {
-            gdouble x = (j + 0.5)/xres*xreal + xoff;
-
-            xyz[k].x = x;
-            xyz[k].y = y;
-            xyz[k].z = d[k];
-        }
-    }
-
-    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(dfield)),
-                           G_OBJECT(gwy_surface_get_si_unit_xy(surface)));
-    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(dfield)),
-                           G_OBJECT(gwy_surface_get_si_unit_z(surface)));
-
+    surface = gwy_surface_new();
+    gwy_surface_set_from_data_field(surface, dfield);
     newid = gwy_app_data_browser_add_surface(surface, data, TRUE);
     g_object_unref(surface);
     gwy_app_xyz_log_add(data, -1, newid, "proc::xyzize", NULL);
