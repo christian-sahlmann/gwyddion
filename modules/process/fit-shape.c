@@ -1683,6 +1683,7 @@ update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
     const FitShapeFunc *func = functions + controls->function_id;
     guint i, j, nparams = func->nparams;
     GPtrArray *values = controls->correl_values;
+    const gboolean *param_fixed = controls->ctx->param_fixed;
 
     g_assert(values->len == (nparams + 1)*nparams/2);
     gwy_debug("fitter %p", fitter);
@@ -1694,6 +1695,17 @@ update_correl_table(FitShapeControls *controls, GwyNLFitter *fitter)
             if (fitter) {
                 gchar buf[16];
                 gdouble c = SLi(controls->correl, i, j);
+
+                if (param_fixed[i] || param_fixed[j]) {
+                    if (i == j) {
+                        g_snprintf(buf, sizeof(buf), "%.3f", 1.0);
+                        gtk_label_set_text(GTK_LABEL(label), buf);
+                    }
+                    else
+                        gtk_label_set_text(GTK_LABEL(label), "—");
+                    gtk_widget_modify_fg(label, GTK_STATE_NORMAL, NULL);
+                    continue;
+                }
 
                 g_snprintf(buf, sizeof(buf), "%.3f", c);
                 gtk_label_set_text(GTK_LABEL(label), buf);
@@ -2643,6 +2655,9 @@ estimate_projection_direction(const GwyXYZ *xyz, guint n,
     g_object_unref(mean_line);
     g_object_unref(rms_line);
     g_free(counts);
+
+    if (best_alpha > 0.5*G_PI)
+        best_alpha += G_PI;
 
     return best_alpha;
 }
@@ -4282,6 +4297,7 @@ create_fit_report(FitShapeControls *controls)
     gchar *s, *unitstr;
     GString *report;
     guint n, i, j, nparams, nsecondary;
+    const gboolean *param_fixed = controls->ctx->param_fixed;
 
     if (controls->pageno == GWY_PAGE_XYZS) {
         surface = gwy_container_get_object_by_name(controls->mydata,
@@ -4330,8 +4346,17 @@ create_fit_report(FitShapeControls *controls)
                                        unit);
             unitstr = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
         }
-        g_string_append_printf(report, "%6s = %g ± %g%s%s\n",
-                               s, param, err, *unitstr ? " " : "", unitstr);
+
+        if (param_fixed[i]) {
+            g_string_append_printf(report, "%6s = %g %s%s %s\n",
+                                   s, param, *unitstr ? " " : "", unitstr,
+                                   _("(fixed)"));
+        }
+        else {
+            g_string_append_printf(report, "%6s = %g ± %g%s%s\n",
+                                   s, param, err, *unitstr ? " " : "", unitstr);
+        }
+
         g_free(unitstr);
         g_free(s);
     }
@@ -4350,8 +4375,16 @@ create_fit_report(FitShapeControls *controls)
     for (i = 0; i < nparams; i++) {
         g_string_append(report, "  ");
         for (j = 0; j <= i; j++) {
-            g_string_append_printf(report, "% .03f",
-                                   SLi(controls->correl, i, j));
+            if (param_fixed[i] || param_fixed[j]) {
+                if (i == j)
+                    g_string_append_printf(report, "% .03f", 1.0);
+                else
+                    g_string_append(report, "   ---");
+            }
+            else {
+                g_string_append_printf(report, "% .03f",
+                                       SLi(controls->correl, i, j));
+            }
             if (j != i)
                 g_string_append_c(report, ' ');
         }
