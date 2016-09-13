@@ -20,10 +20,15 @@ Libraries:
 - libgwyprocess: gwy_data_line_get_psdf() should finally actually work.
 - libgwyprocess: GwyDataField line-stats function with proper masking support
   was added.
+- libgwyprocess: Convenience functions for copying units between GwySurface
+  and GwyDataField were added.
+- libgwyprocess: Construction of GwySurface from a GwyDataField with masking
+  support was added.
 - libdraw: Memory handling bugs in GwyGradient updates were fixed.
 - libgwydgets: Graph ASCII export can create multi-column files with a single
   merged abscissa.  Exported values are always in base units (not power of 10
   multiplies).
+- libgwydgets: A large number of new stock icons were added.
 - libgwyapp: Critical _gwy_app_log_start_message_capture() error when opening
   files from standalone Python scripts was fixed.
 - libgwyapp: gwy_app_wait_set_fraction() automatically limits how often the
@@ -64,6 +69,7 @@ Modules:
   pixel space.
 - Grain statistics: The values are displayed with more significant digits.
 - Raw XYZ import: No longer loses the first data point in the file.
+- Graph cut: The ‘cut all’ setting is remembered, some GUI improvements.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
