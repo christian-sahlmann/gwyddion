@@ -19,13 +19,7 @@
  *  Boston, MA 02110-1301, USA.
  */
 
-/* NB: Write all estimation and fitting functions for point clouds.  This
- * means we can easily update this module to handle XYZ data later. */
 /* TODO:
- * - The fitted data are a bunch of GwyXYZ.  Either they come from a surface
- *   whose data we could directly use, or we would just create such surface
- *   even from field data.  In the first case it would save memory replication.
- *   In the second case we replicate the data anyway now.
  * - Gradient adaptation only works for full-range mapping.  Simply enforce
  *   full-range mapping with adapted gradients?
  * - Align parameter table properly (with UTF-8 string lengths).
