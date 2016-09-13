@@ -35,8 +35,6 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
-
-
 typedef struct {
     gint curve;
     gdouble from;
@@ -44,7 +42,7 @@ typedef struct {
     GwyGraph *parent_graph;
     GwyGraphModel *graph_model;
     GwySIValueFormat *abscissa_vf;
-    gboolean is_all;
+    gboolean all;
 } CutArgs;
 
 typedef struct {
@@ -54,36 +52,42 @@ typedef struct {
     GtkWidget *from;
     GtkWidget *to;
     GtkWidget *curve;
+    GtkWidget *curve_label;
     GtkWidget *all;
 } CutControls;
 
-static gboolean    module_register           (void);
-static void        cut                       (GwyGraph *graph);
-static void        cut_dialog                (CutArgs *args);
-static void        cut_fetch_entry           (CutControls *controls);
-static void        curve_changed             (GtkComboBox *combo,
-                                              CutControls *controls);
-static void        range_changed             (GtkWidget *entry,
-                                              CutControls *controls);
-static void        cut_limit_selection       (CutControls *controls,
-                                              gboolean curve_switch);
-static void        cut_get_full_x_range      (CutControls *controls,
-                                              gdouble *xmin,
-                                              gdouble *xmax);
-static void        do_cut                    (CutArgs *args);
-static void        graph_selected            (GwySelection* selection,
-                                              gint i,
-                                              CutControls *controls);
-static void        all_changed               (GtkToggleButton *check,
-                                              CutControls *controls);
-
+static gboolean module_register     (void);
+static void     cut                 (GwyGraph *graph);
+static void     cut_dialog          (CutArgs *args);
+static void     cut_fetch_entry     (CutControls *controls);
+static void     curve_changed       (GtkComboBox *combo,
+                                     CutControls *controls);
+static void     range_changed       (GtkWidget *entry,
+                                     CutControls *controls);
+static void     cut_limit_selection (CutControls *controls,
+                                     gboolean curve_switch);
+static void     cut_get_full_x_range(CutControls *controls,
+                                     gdouble *xmin,
+                                     gdouble *xmax);
+static void     do_cut              (CutArgs *args);
+static void     graph_selected      (GwySelection* selection,
+                                     gint i,
+                                     CutControls *controls);
+static void     all_changed         (GtkToggleButton *check,
+                                     CutControls *controls);
+static void     pick_curves         (CutControls *controls);
+static void     update_sensitivity  (CutControls *controls);
+static void     load_args           (GwyContainer *container,
+                                     CutArgs *args);
+static void     save_args           (GwyContainer *container,
+                                     CutArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Cut graph"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -108,9 +112,11 @@ cut(GwyGraph *graph)
 {
     CutArgs args;
 
-    memset(&args, 0, sizeof(CutArgs));
+    gwy_clear(&args, 1);
+    load_args(gwy_app_settings_get(), &args);
     args.parent_graph = graph;
     cut_dialog(&args);
+    save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -157,31 +163,31 @@ cut_dialog(CutArgs *args)
     row = 0;
 
     /* Curve to cut */
-    label = gtk_label_new_with_mnemonic(_("_Graph curve:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
+    controls.curve_label = gtk_label_new_with_mnemonic(_("_Graph curve:"));
+    gtk_misc_set_alignment(GTK_MISC(controls.curve_label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.curve_label,
                      0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     controls.curve
         = gwy_combo_box_graph_curve_new(G_CALLBACK(curve_changed), &controls,
                                         gmodel, args->curve);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.curve);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(controls.curve_label),
+                                  controls.curve);
     gtk_table_attach(GTK_TABLE(table), controls.curve,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.all = gtk_check_button_new_with_mnemonic(_("Cut _all curves"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.all),
-                                                   args->is_all);
+                                                   args->all);
     gtk_table_attach(GTK_TABLE(table), controls.all,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(controls.all, "toggled",
-                           G_CALLBACK(all_changed), &controls);
-
+                     G_CALLBACK(all_changed), &controls);
     row++;
 
-
     /* Cut area */
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(GTK_TABLE(table), hbox2,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
@@ -234,6 +240,8 @@ cut_dialog(CutArgs *args)
     graph_selected(selection, -1, &controls);
 
     gtk_widget_show_all(dialog);
+    pick_curves(&controls);
+    update_sensitivity(&controls);
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -270,7 +278,7 @@ do_cut(CutArgs *args)
     gmodel = gwy_graph_get_model(args->parent_graph);
     ngmodel = gwy_graph_model_new_alike(gmodel);
 
-    if (args->is_all) {
+    if (args->all) {
         cstart = 0;
         cend = gwy_graph_model_get_n_curves(gmodel);
     }
@@ -335,34 +343,34 @@ cut_fetch_entry(CutControls *controls)
         gtk_widget_activate(entry);
 }
 
-
 static void
 pick_curves(CutControls *controls)
 {
     GwyGraphModel *parent_gmodel, *graph_model;
-    gint i;
+    GwyGraphCurveModel *gcmodel;
+    gint i, n;
 
     graph_model = controls->args->graph_model;
     parent_gmodel = gwy_graph_get_model(controls->args->parent_graph);
     gwy_graph_model_remove_all_curves(graph_model);
 
-    if (!controls->args->is_all) {
-        gwy_graph_model_add_curve(graph_model,
-                                  gwy_graph_model_get_curve(parent_gmodel,
-                                                            controls->args->curve));
+    if (!controls->args->all) {
+        gcmodel = gwy_graph_model_get_curve(parent_gmodel,
+                                            controls->args->curve);
+        gwy_graph_model_add_curve(graph_model, gcmodel);
     }
     else {
-        for (i = 0; i < gwy_graph_model_get_n_curves(parent_gmodel); i++)
-            gwy_graph_model_add_curve(graph_model,
-                                      gwy_graph_model_get_curve(parent_gmodel,
-                                                                i));
+        n = gwy_graph_model_get_n_curves(parent_gmodel);
+        for (i = 0; i < n; i++) {
+            gcmodel = gwy_graph_model_get_curve(parent_gmodel, i);
+            gwy_graph_model_add_curve(graph_model, gcmodel);
+        }
     }
     cut_limit_selection(controls, TRUE);
 }
 
 static void
-curve_changed(GtkComboBox *combo,
-              CutControls *controls)
+curve_changed(GtkComboBox *combo, CutControls *controls)
 {
     controls->args->curve = gwy_enum_combo_box_get_active(combo);
     pick_curves(controls);
@@ -473,8 +481,41 @@ static void
 all_changed(GtkToggleButton *check,
             CutControls *controls)
 {
-    controls->args->is_all = gtk_toggle_button_get_active(check);
+    controls->args->all = gtk_toggle_button_get_active(check);
     pick_curves(controls);
+    update_sensitivity(controls);
+}
+
+static void
+update_sensitivity(CutControls *controls)
+{
+    gboolean csens = !controls->args->all;
+
+    gtk_widget_set_sensitive(controls->curve, csens);
+    gtk_widget_set_sensitive(controls->curve_label, csens);
+}
+
+static const gchar all_key[] = "/module/graph_cut/all";
+
+static void
+sanitize_args(CutArgs *args)
+{
+    args->all = !!args->all;
+}
+
+static void
+load_args(GwyContainer *container, CutArgs *args)
+{
+    args->all = FALSE;
+
+    gwy_container_gis_boolean_by_name(container, all_key, &args->all);
+    sanitize_args(args);
+}
+
+static void
+save_args(GwyContainer *container, CutArgs *args)
+{
+    gwy_container_set_boolean_by_name(container, all_key, args->all);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
