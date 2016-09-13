@@ -294,6 +294,7 @@ static void          fit_context_resize_params   (FitShapeContext *ctx,
 static void          fit_context_free            (FitShapeContext *ctx);
 static GwyNLFitter*  fit                         (const FitShapeFunc *func,
                                                   const FitShapeContext *ctx,
+                                                  guint maxiter,
                                                   gdouble *param,
                                                   gdouble *rss,
                                                   GwySetFractionFunc set_fraction,
@@ -1860,7 +1861,7 @@ fit_shape_full_fit(FitShapeControls *controls)
     gwy_debug("start fit");
     update_all_param_values(controls);
     memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
-    fitter = fit(func, ctx, controls->param, &rss,
+    fitter = fit(func, ctx, G_MAXUINT, controls->param, &rss,
                  gwy_app_wait_set_fraction, gwy_app_wait_set_message);
 
     if (rss >= 0.0)
@@ -2185,7 +2186,7 @@ fit_context_free(FitShapeContext *ctx)
 
 static GwyNLFitter*
 fit(const FitShapeFunc *func, const FitShapeContext *ctx,
-    gdouble *param, gdouble *rss,
+    guint maxiter, gdouble *param, gdouble *rss,
     GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     GwyNLFitter *fitter;
@@ -2194,6 +2195,8 @@ fit(const FitShapeFunc *func, const FitShapeContext *ctx,
     fitter = gwy_math_nlfit_new_idx(func->fit_function, NULL);
     if (set_fraction || set_message)
         gwy_math_nlfit_set_callbacks(fitter, set_fraction, set_message);
+    if (maxiter != G_MAXUINT)
+        gwy_math_nlfit_set_max_iterations(fitter, maxiter);
 
     *rss = gwy_math_nlfit_fit_idx_full(fitter, ctx->n, func->nparams,
                                        param, ctx->param_fixed, NULL,
@@ -2219,7 +2222,7 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
     guint nred = (guint)sqrt(ctx->n*(gdouble)NREDLIM);
 
     if (nred >= ctx->n)
-        return fit(func, ctx, param, rss, NULL, NULL);
+        return fit(func, ctx, 30, param, rss, NULL, NULL);
 
     ctxred = *ctx;
     ctxred.n = nred;
@@ -2227,7 +2230,7 @@ fit_reduced(const FitShapeFunc *func, const FitShapeContext *ctx,
     ctxred.xyz = gwy_surface_get_data_const(ctxred.surface);
     reduce_data_size(gwy_surface_get_data_const(ctx->surface), ctx->n,
                      ctxred.surface);
-    fitter = fit(func, &ctxred, param, rss, NULL, NULL);
+    fitter = fit(func, &ctxred, 30, param, rss, NULL, NULL);
     g_object_unref(ctxred.surface);
 
     return fitter;
