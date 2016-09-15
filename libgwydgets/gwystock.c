@@ -402,6 +402,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_DISTANCE_TRANSFORM:
+ *
+ * The "Distance-Transform" stock icon.
+ * <inlinegraphic fileref="gwy_distance_transform-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_DISTRIBUTION_ANGLE:
  *
  * The "Distribution-Angle" stock icon.
@@ -546,6 +555,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_FORCE_DISTRIBUTION:
+ *
+ * The "Force-Distribution" stock icon.
+ * <inlinegraphic fileref="gwy_force_distribution-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_FRACTAL:
  *
  * The "Fractal" stock icon.
@@ -589,6 +607,15 @@ file_to_icon_source(const gchar *path,
  * <inlinegraphic fileref="gwy_grains_edge-24.png" format="PNG"/>
  *
  * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_GRAINS_EDGE_REMOVE:
+ *
+ * The "Grains-Edge-Remove" stock icon.
+ * <inlinegraphic fileref="gwy_grains_edge_remove-24.png" format="PNG"/>
+ *
+ * Since: 2.46
  **/
 
 /**
@@ -1172,6 +1199,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_MUTUAL_CROP:
+ *
+ * The "Mutual-Crop" stock icon.
+ * <inlinegraphic fileref="gwy_mutual_crop-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_NEURAL_APPLY:
  *
  * The "Neural-Apply" stock icon.
@@ -1545,6 +1581,24 @@ file_to_icon_source(const gchar *path,
  * <inlinegraphic fileref="gwy_tip_estimation-24.png" format="PNG"/>
  *
  * Since: 2.45
+ **/
+
+/**
+ * GWY_STOCK_TIP_INDENT_ANALYZE:
+ *
+ * The "Tip-Indent-Analyze" stock icon.
+ * <inlinegraphic fileref="gwy_tip_indent_analyze-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GWY_STOCK_TIP_LATERAL_FORCE:
+ *
+ * The "Tip-Lateral-Force" stock icon.
+ * <inlinegraphic fileref="gwy_tip_lateral_force-24.png" format="PNG"/>
+ *
+ * Since: 2.46
  **/
 
 /**
