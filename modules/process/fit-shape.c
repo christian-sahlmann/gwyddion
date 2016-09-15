@@ -2033,6 +2033,15 @@ update_diff_gradient(FitShapeControls *controls)
         gwy_gradient_set_point_color(gradient, 0, &rgba_negative);
         gwy_gradient_set_point_color(gradient, 1, &rgba_neutral);
     }
+    else if (!(max > min)) {
+        GwyGradientPoint zero_pt = { 0.5, rgba_neutral };
+        gint pos;
+
+        gwy_gradient_set_point_color(gradient, 0, &rgba_negative);
+        gwy_gradient_set_point_color(gradient, 1, &rgba_positive);
+        pos = gwy_gradient_insert_point_sorted(gradient, &zero_pt);
+        g_assert(pos == 1);
+    }
     else {
         /* Otherwise make zero neutral and map the two colours to both side,
          * with the same scale. */
