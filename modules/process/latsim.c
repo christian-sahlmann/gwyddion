@@ -88,10 +88,11 @@ module_register(void)
     gwy_process_func_register("latsim",
                               (GwyProcessFunc)&latsim,
                               N_("/_Tip and Indentation/_Lateral force..."),
-                              NULL,
+                              GWY_STOCK_TIP_LATERAL_FORCE,
                               LATSIM_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Simulate topography artifacts in lateral force channels"));
+                              N_("Simulate topography artifacts "
+                                 "in lateral force channels"));
 
     return TRUE;
 }

@@ -107,7 +107,7 @@ module_register(void)
     gwy_process_func_register("mask_edt",
                               (GwyProcessFunc)&mask_edt,
                               N_("/_Mask/Distanc_e Transform..."),
-                              NULL,
+                              GWY_STOCK_DISTANCE_TRANSFORM,
                               MASKEDT_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,
                               N_("Distance transform of mask"));

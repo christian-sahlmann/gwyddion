@@ -79,7 +79,7 @@ module_register(void)
     gwy_process_func_register("grain_rem_touching",
                               (GwyProcessFunc)&remove_touching,
                               N_("/_Grains/_Remove Edge-Touching"),
-                              NULL,
+                              GWY_STOCK_GRAINS_EDGE_REMOVE,
                               MASKOPS_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Remove grains touching image edges"));

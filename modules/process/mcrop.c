@@ -72,7 +72,7 @@ module_register(void)
     gwy_process_func_register("mcrop",
                               (GwyProcessFunc)&mcrop,
                               N_("/M_ultidata/Mutual C_rop..."),
-                              GWY_STOCK_CROP,
+                              GWY_STOCK_MUTUAL_CROP,
                               MCROP_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Crop non-intersecting regions of two images"));

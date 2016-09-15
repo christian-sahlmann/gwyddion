@@ -318,7 +318,7 @@ module_register(void)
     gwy_process_func_register("indent_analyze",
                               (GwyProcessFunc)&indent_analyze,
                               N_("/_Tip and Indentation/_Analyze Imprint..."),
-                              NULL,
+                              GWY_STOCK_TIP_INDENT_ANALYZE,
                               INDENT_ANALYZE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               /* XXX: Make it translatable once there's some
