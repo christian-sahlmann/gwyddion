@@ -452,6 +452,15 @@ file_to_icon_source(const gchar *path,
  **/
 
 /**
+ * GWY_STOCK_ENFORCE_DISTRIBUTION:
+ *
+ * The "Enforce-Distribution" stock icon.
+ * <inlinegraphic fileref="gwy_enforce_distribution-24.png" format="PNG"/>
+ *
+ * Since: 2.46
+ **/
+
+/**
  * GWY_STOCK_ENTROPY:
  *
  * The "Entropy" stock icon.
@@ -552,15 +561,6 @@ file_to_icon_source(const gchar *path,
  *
  * The "Flip-Vertically" stock icon.
  * <inlinegraphic fileref="gwy_flip_vertically-24.png" format="PNG"/>
- **/
-
-/**
- * GWY_STOCK_FORCE_DISTRIBUTION:
- *
- * The "Force-Distribution" stock icon.
- * <inlinegraphic fileref="gwy_force_distribution-24.png" format="PNG"/>
- *
- * Since: 2.46
  **/
 
 /**
