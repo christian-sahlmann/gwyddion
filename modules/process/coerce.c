@@ -171,7 +171,7 @@ module_register(void)
     gwy_process_func_register("coerce",
                               (GwyProcessFunc)&coerce,
                               N_("/S_ynthetic/Co_erce..."),
-                              NULL,
+                              GWY_STOCK_ENFORCE_DISTRIBUTION,
                               COERCE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               _("Enforce prescribed statistical properties"));
