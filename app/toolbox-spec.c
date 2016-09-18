@@ -29,6 +29,8 @@
 #include "gwyddion.h"
 #include "toolbox.h"
 
+#define TOOLBOX_UI_FILE_NAME "toolbox.xml"
+
 static const GwyEnum mode_types_array[] = {
     { "default",         0,                   },
     { "interactive",     GWY_RUN_INTERACTIVE, },
@@ -299,6 +301,38 @@ gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
 
     gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
     g_array_remove_index(gspec->item, j);
+}
+
+GwyToolboxSpec*
+gwy_parse_toolbox_ui(void)
+{
+    GwyToolboxSpec *spec;
+    GError *error = NULL;
+    gchar *p, *q, *ui;
+    gsize ui_len;
+
+    p = g_build_filename(gwy_get_user_dir(), "ui", TOOLBOX_UI_FILE_NAME, NULL);
+    if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
+        g_free(p);
+        q = gwy_find_self_dir("data");
+        p = g_build_filename(q, "ui", TOOLBOX_UI_FILE_NAME, NULL);
+        g_free(q);
+        if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
+            g_critical("Cannot find toolbox user interface %s", p);
+            return NULL;
+        }
+    }
+    g_free(p);
+
+    spec = gwy_app_toolbox_parse(ui, ui_len, &error);
+    g_free(ui);
+
+    if (!spec) {
+        g_critical("Cannot parse %s: %s", TOOLBOX_UI_FILE_NAME, error->message);
+        return NULL;
+    }
+
+    return spec;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -73,6 +73,7 @@ typedef struct {
 extern const GwyEnum *gwy_toolbox_action_types;
 extern const GwyEnum *gwy_toolbox_mode_types;
 
+GwyToolboxSpec* gwy_parse_toolbox_ui            (void);
 GwyToolboxSpec* gwy_app_toolbox_parse           (const gchar *ui,
                                                  gsize ui_len,
                                                  GError **error);

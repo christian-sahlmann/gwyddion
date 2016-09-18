@@ -66,7 +66,6 @@ typedef struct {
 static GtkWidget* gwy_app_menu_create_info_menu    (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu    (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu    (GtkAccelGroup *accel_group);
-static GwyToolboxSpec* parse_toolbox_ui            (void);
 static void       gwy_app_toolbox_showhide         (GtkWidget *expander);
 static void       show_user_guide                  (void);
 static void       show_message_log                 (void);
@@ -493,38 +492,6 @@ gather_tools(const gchar *name,
 
 /* XXX: Move to toolbox-spec probably.  It can keep the file name for
  * itself... */
-static GwyToolboxSpec*
-parse_toolbox_ui(void)
-{
-    GwyToolboxSpec *spec;
-    GError *error = NULL;
-    gchar *p, *q, *ui;
-    gsize ui_len;
-
-    p = g_build_filename(gwy_get_user_dir(), "ui", "toolbox.xml", NULL);
-    if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
-        g_free(p);
-        q = gwy_find_self_dir("data");
-        p = g_build_filename(q, "ui", "toolbox.xml", NULL);
-        g_free(q);
-        if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
-            g_critical("Cannot find toolbox user interface %s", p);
-            return NULL;
-        }
-    }
-    g_free(p);
-
-    spec = gwy_app_toolbox_parse(ui, ui_len, &error);
-    g_free(ui);
-
-    if (!spec) {
-        g_critical("Cannot parse toolbox.xml: %s", error->message);
-        return NULL;
-    }
-
-    return spec;
-}
-
 static void
 remove_seen_unseen_tools(GwyAppToolboxBuilder *builder,
                          const GwyToolboxSpec *spec)
@@ -648,7 +615,7 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
 
-    spec = parse_toolbox_ui();
+    spec = gwy_parse_toolbox_ui();
     if (spec) {
         gwy_app_toolbox_build(spec, vbox, gwy_app_get_tooltips(), accel_group);
         g_object_set_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec", spec);
