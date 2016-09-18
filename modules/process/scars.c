@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
+#include <libprocess/correct.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -111,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artifacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -137,157 +138,6 @@ module_register(void)
                               N_("Correct horizontal scars (strokes)"));
 
     return TRUE;
-}
-
-/**
- * gwy_data_field_mark_scars:
- * @data_field: A data field to find scars in.
- * @scar_field: A data field to store the result to (it is resized to match
- *              @data_field).
- * @threshold_high: Miminum relative step for scar marking, must be positive.
- * @threshold_low: Definite relative step for scar marking, must be at least
- *                 equal to @threshold_high.
- * @min_scar_len: Minimum length of a scar, shorter ones are discarded
- *                (must be at least one).
- * @max_scar_width: Maximum width of a scar, must be at least one.
- * @negative: %TRUE to detect negative scars, %FALSE to positive.
- *
- * Find and marks scars in a data field.
- *
- * Scars are linear horizontal defects, consisting of shifted values.
- * Zero or negative values in @scar_field siginify normal data, positive
- * values siginify samples that are part of a scar.
- **/
-static void
-gwy_data_field_mark_scars(GwyDataField *data_field,
-                          GwyDataField *scar_field,
-                          gdouble threshold_high,
-                          gdouble threshold_low,
-                          gdouble min_scar_len,
-                          gdouble max_scar_width,
-                          gboolean negative)
-{
-    gint xres, yres, i, j, k;
-    gdouble rms;
-    const gdouble *d;
-    gdouble *m;
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(GWY_IS_DATA_FIELD(scar_field));
-    g_return_if_fail(max_scar_width >= 1 && max_scar_width <= 16);
-    g_return_if_fail(min_scar_len >= 1);
-    g_return_if_fail(threshold_low >= 0.0);
-    g_return_if_fail(threshold_high >= threshold_low);
-    xres = gwy_data_field_get_xres(data_field);
-    yres = gwy_data_field_get_yres(data_field);
-    d = gwy_data_field_get_data_const(data_field);
-    gwy_data_field_resample(scar_field, xres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_clear(scar_field);
-    m = gwy_data_field_get_data(scar_field);
-
-    if (min_scar_len > xres)
-        return;
-    max_scar_width = MIN(max_scar_width, yres - 2);
-
-    /* compute `vertical rms' */
-    rms = 0.0;
-    for (i = 0; i < yres-1; i++) {
-        const gdouble *row = d + i*xres;
-
-        for (j = 0; j < xres; j++) {
-            gdouble z = row[j] - row[j + xres];
-
-            rms += z*z;
-        }
-    }
-    rms = sqrt(rms/(xres*yres));
-    if (rms == 0.0)
-        return;
-
-    /* initial scar search */
-    for (i = 0; i < yres - (max_scar_width + 1); i++) {
-        for (j = 0; j < xres; j++) {
-            gdouble top, bottom;
-            const gdouble *row = d + i*xres + j;
-
-            if (negative) {
-                top = row[0];
-                bottom = row[xres];
-                for (k = 1; k <= max_scar_width; k++) {
-                    top = MIN(row[0], row[xres*(k + 1)]);
-                    bottom = MAX(bottom, row[xres*k]);
-                    if (top - bottom >= threshold_low*rms)
-                        break;
-                }
-                if (k <= max_scar_width) {
-                    gdouble *mrow = m + i*xres + j;
-
-                    while (k) {
-                        mrow[k*xres] = (top - row[k*xres])/rms;
-                        k--;
-                    }
-                }
-            }
-            else {
-                bottom = row[0];
-                top = row[xres];
-                for (k = 1; k <= max_scar_width; k++) {
-                    bottom = MAX(row[0], row[xres*(k + 1)]);
-                    top = MIN(top, row[xres*k]);
-                    if (top - bottom >= threshold_low*rms)
-                        break;
-                }
-                if (k <= max_scar_width) {
-                    gdouble *mrow = m + i*xres + j;
-
-                    while (k) {
-                        mrow[k*xres] = (row[k*xres] - bottom)/rms;
-                        k--;
-                    }
-                }
-            }
-        }
-    }
-    /* expand high threshold to neighbouring low threshold */
-    for (i = 0; i < yres; i++) {
-        gdouble *mrow = m + i*xres;
-
-        for (j = 1; j < xres; j++) {
-            if (mrow[j] >= threshold_low && mrow[j-1] >= threshold_high)
-                mrow[j] = threshold_high;
-        }
-        for (j = xres-1; j > 0; j--) {
-            if (mrow[j-1] >= threshold_low && mrow[j] >= threshold_high)
-                mrow[j-1] = threshold_high;
-        }
-    }
-    /* kill too short segments, clamping scar_field along the way */
-    for (i = 0; i < yres; i++) {
-        gdouble *mrow = m + i*xres;
-
-        k = 0;
-        for (j = 0; j < xres; j++) {
-            if (mrow[j] >= threshold_high) {
-                mrow[j] = 1.0;
-                k++;
-                continue;
-            }
-            if (k && k < min_scar_len) {
-                while (k) {
-                    mrow[j-k] = 0.0;
-                    k--;
-                }
-            }
-            mrow[j] = 0.0;
-            k = 0;
-        }
-        if (k && k < min_scar_len) {
-            while (k) {
-                mrow[j-k] = 0.0;
-                k--;
-            }
-        }
-    }
 }
 
 static void
