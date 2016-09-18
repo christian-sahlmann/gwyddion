@@ -26,6 +26,7 @@
 
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
 

@@ -50,7 +50,8 @@ noinst_HEADERS = \
 	authors.h \
 	gwyappfilechooser.h \
 	gwyappinternal.h \
-	gwyddion.h
+	gwyddion.h \
+	toolbox.h
 
 uidata_DATA = toolbox.xml
 
@@ -154,7 +155,8 @@ gwyddion_SOURCES = \
 	remote-x11.c \
 	splash.c \
 	tips.c \
-	toolbox.c
+	toolbox.c \
+	toolbox-spec.c
 
 
 gwyddion_LDADD = @COMMON_LDFLAGS@ @GTK_MAC_LIBS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @GIO_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
