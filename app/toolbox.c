@@ -726,7 +726,6 @@ gwy_app_toolbox_create(void)
 {
     GtkWidget *toolbox, *menu, *container;
     GtkBox *vbox;
-    GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -744,8 +743,6 @@ gwy_app_toolbox_create(void)
     vbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
     container = GTK_WIDGET(vbox);
     gtk_container_add(GTK_CONTAINER(toolbox), container);
-
-    tooltips = gwy_app_get_tooltips();
 
     toolbox_add_menubar(container,
                         gwy_app_menu_create_file_menu(accel_group), _("_File"));
@@ -770,7 +767,7 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
 
-    gwy_app_toolbox_build(vbox, tooltips, accel_group);
+    gwy_app_toolbox_build(vbox, gwy_app_get_tooltips(), accel_group);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
@@ -794,6 +791,31 @@ gwy_app_toolbox_create(void)
 
     return toolbox;
 }
+
+#if 0
+static void
+reconstruct_toolbox(void)
+{
+    GtkWidget* toolbox;
+    GtkAccelGroup *accel_group;
+    GtkBox *vbox;
+    GList *children, *l;
+
+    toolbox = gwy_app_main_window_get();
+    vbox = GTK_BOX(gtk_bin_get_child(GTK_BIN(toolbox)));
+    children = gtk_container_get_children(GTK_CONTAINER(vbox));
+
+    for (l = children; l; l = g_list_next(l)) {
+        if (g_object_get_data(G_OBJECT(l->data), "gwy-toolbox-ui-constructed"))
+            gtk_widget_destroy(GTK_WIDGET(l->data));
+    }
+    g_list_free(l);
+
+    accel_group = g_object_get_data(G_OBJECT(toolbox), "accel_group");
+    gwy_app_toolbox_build(vbox, gwy_app_get_tooltips(), accel_group);
+    gtk_widget_show_all(GTK_WIDGET(vbox));
+}
+#endif
 
 /*************************************************************************/
 static GtkWidget*
@@ -1107,13 +1129,13 @@ gwy_app_toolbox_create_group(GtkBox *box,
     g_free(key);
     gwy_container_gis_boolean(settings, quark, &visible);
 
-    gtk_box_pack_start(box, gtk_hseparator_new(), FALSE, FALSE, 0);
-
     s = g_strconcat("<small>", text, "</small>", NULL);
     expander = gtk_expander_new(s);
     gtk_expander_set_use_markup(GTK_EXPANDER(expander), TRUE);
     g_free(s);
     g_object_set_data(G_OBJECT(expander), "key", GUINT_TO_POINTER(quark));
+    g_object_set_data(G_OBJECT(expander),
+                      "gwy-toolbox-ui-constructed", GUINT_TO_POINTER(TRUE));
     gtk_container_add(GTK_CONTAINER(expander), toolbox);
     gtk_expander_set_expanded(GTK_EXPANDER(expander), visible);
     gtk_box_pack_start(box, expander, FALSE, FALSE, 0);
