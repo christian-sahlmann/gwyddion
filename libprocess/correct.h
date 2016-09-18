@@ -33,43 +33,50 @@ typedef void (*GwyCoordTransform2DFunc)(gdouble x,
                                         gdouble *py,
                                         gpointer user_data);
 
-void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
-                                              GwyDataField *mask_field,
-                                              GwyDataField *buffer_field,
-                                              gdouble corrfactor,
-                                              gdouble *error);
-void gwy_data_field_correct_average          (GwyDataField *data_field,
-                                              GwyDataField *mask_field);
-void gwy_data_field_correct_average_unmasked (GwyDataField *data_field,
-                                              GwyDataField *mask_field);
-void gwy_data_field_mask_outliers            (GwyDataField *data_field,
-                                              GwyDataField *mask_field,
-                                              gdouble thresh);
-void gwy_data_field_mask_outliers2           (GwyDataField *data_field,
-                                              GwyDataField *mask_field,
-                                              gdouble thresh_low,
-                                              gdouble thresh_high);
-void gwy_data_field_distort                  (GwyDataField *source,
-                                              GwyDataField *dest,
-                                              GwyCoordTransform2DFunc invtrans,
-                                              gpointer user_data,
-                                              GwyInterpolationType interp,
-                                              GwyExteriorType exterior,
-                                              gdouble fill_value);
-void gwy_data_field_sample_distorted         (GwyDataField *source,
-                                              GwyDataField *dest,
-                                              const GwyXY *coords,
-                                              GwyInterpolationType interp,
-                                              GwyExteriorType exterior,
-                                              gdouble fill_value);
-void gwy_data_field_affine                   (GwyDataField *source,
-                                              GwyDataField *dest,
-                                              const gdouble *invtrans,
-                                              GwyInterpolationType interp,
-                                              GwyExteriorType exterior,
-                                              gdouble fill_value);
-gboolean gwy_data_line_correct_laplace       (GwyDataLine *data_line,
-                                              GwyDataLine *mask_line);
+void     gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
+                                                  GwyDataField *mask_field,
+                                                  GwyDataField *buffer_field,
+                                                  gdouble corrfactor,
+                                                  gdouble *error);
+void     gwy_data_field_correct_average          (GwyDataField *data_field,
+                                                  GwyDataField *mask_field);
+void     gwy_data_field_correct_average_unmasked (GwyDataField *data_field,
+                                                  GwyDataField *mask_field);
+void     gwy_data_field_mask_outliers            (GwyDataField *data_field,
+                                                  GwyDataField *mask_field,
+                                                  gdouble thresh);
+void     gwy_data_field_mask_outliers2           (GwyDataField *data_field,
+                                                  GwyDataField *mask_field,
+                                                  gdouble thresh_low,
+                                                  gdouble thresh_high);
+void     gwy_data_field_distort                  (GwyDataField *source,
+                                                  GwyDataField *dest,
+                                                  GwyCoordTransform2DFunc invtrans,
+                                                  gpointer user_data,
+                                                  GwyInterpolationType interp,
+                                                  GwyExteriorType exterior,
+                                                  gdouble fill_value);
+void     gwy_data_field_sample_distorted         (GwyDataField *source,
+                                                  GwyDataField *dest,
+                                                  const GwyXY *coords,
+                                                  GwyInterpolationType interp,
+                                                  GwyExteriorType exterior,
+                                                  gdouble fill_value);
+void     gwy_data_field_affine                   (GwyDataField *source,
+                                                  GwyDataField *dest,
+                                                  const gdouble *invtrans,
+                                                  GwyInterpolationType interp,
+                                                  GwyExteriorType exterior,
+                                                  gdouble fill_value);
+gboolean gwy_data_line_correct_laplace           (GwyDataLine *data_line,
+                                                  GwyDataLine *mask_line);
+void     gwy_data_field_mark_scars               (GwyDataField *data_field,
+                                                  GwyDataField *result,
+                                                  gdouble threshold_high,
+                                                  gdouble threshold_low,
+                                                  gdouble min_scar_len,
+                                                  gdouble max_scar_width,
+                                                  gboolean negative);
 
 GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
                                                           gdouble *correction);

@@ -881,6 +881,157 @@ interpolate_segment(GwyDataLine *data_line, gint from, gint to)
     }
 }
 
+/**
+ * gwy_data_field_mark_scars:
+ * @data_field: A data field to find scars in.
+ * @result: A data field to store the result to (it is resized to match
+ *              @data_field).
+ * @threshold_high: Miminum relative step for scar marking, must be positive.
+ * @threshold_low: Definite relative step for scar marking, must be at least
+ *                 equal to @threshold_high.
+ * @min_scar_len: Minimum length of a scar, shorter ones are discarded
+ *                (must be at least one).
+ * @max_scar_width: Maximum width of a scar, must be at least one.
+ * @negative: %TRUE to detect negative scars, %FALSE to positive.
+ *
+ * Find and marks scars in a data field.
+ *
+ * Scars are linear horizontal defects, consisting of shifted values.
+ * Zero or negative values in @result siginify normal data, positive
+ * values siginify samples that are part of a scar.
+ *
+ * Since: 2.46
+ **/
+void
+gwy_data_field_mark_scars(GwyDataField *data_field,
+                          GwyDataField *result,
+                          gdouble threshold_high,
+                          gdouble threshold_low,
+                          gdouble min_scar_len,
+                          gdouble max_scar_width,
+                          gboolean negative)
+{
+    gint xres, yres, i, j, k;
+    gdouble rms;
+    const gdouble *d;
+    gdouble *m;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(result));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    d = data_field->data;
+    gwy_data_field_resample(result, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_clear(result);
+    m = gwy_data_field_get_data(result);
+
+    min_scar_len = MAX(min_scar_len, 1);
+    max_scar_width = MIN(max_scar_width, yres - 2);
+    threshold_high = MAX(threshold_high, threshold_low);
+    if (min_scar_len > xres || max_scar_width < 1 || threshold_low <= 0.0)
+        return;
+
+    /* compute `vertical rms' */
+    rms = 0.0;
+    for (i = 0; i < yres-1; i++) {
+        const gdouble *row = d + i*xres;
+
+        for (j = 0; j < xres; j++) {
+            gdouble z = row[j] - row[j + xres];
+
+            rms += z*z;
+        }
+    }
+    rms = sqrt(rms/(xres*yres));
+    if (rms == 0.0)
+        return;
+
+    /* initial scar search */
+    for (i = 0; i < yres - (max_scar_width + 1); i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble top, bottom;
+            const gdouble *row = d + i*xres + j;
+
+            if (negative) {
+                top = row[0];
+                bottom = row[xres];
+                for (k = 1; k <= max_scar_width; k++) {
+                    top = MIN(row[0], row[xres*(k + 1)]);
+                    bottom = MAX(bottom, row[xres*k]);
+                    if (top - bottom >= threshold_low*rms)
+                        break;
+                }
+                if (k <= max_scar_width) {
+                    gdouble *mrow = m + i*xres + j;
+
+                    while (k) {
+                        mrow[k*xres] = (top - row[k*xres])/rms;
+                        k--;
+                    }
+                }
+            }
+            else {
+                bottom = row[0];
+                top = row[xres];
+                for (k = 1; k <= max_scar_width; k++) {
+                    bottom = MAX(row[0], row[xres*(k + 1)]);
+                    top = MIN(top, row[xres*k]);
+                    if (top - bottom >= threshold_low*rms)
+                        break;
+                }
+                if (k <= max_scar_width) {
+                    gdouble *mrow = m + i*xres + j;
+
+                    while (k) {
+                        mrow[k*xres] = (row[k*xres] - bottom)/rms;
+                        k--;
+                    }
+                }
+            }
+        }
+    }
+    /* expand high threshold to neighbouring low threshold */
+    for (i = 0; i < yres; i++) {
+        gdouble *mrow = m + i*xres;
+
+        for (j = 1; j < xres; j++) {
+            if (mrow[j] >= threshold_low && mrow[j-1] >= threshold_high)
+                mrow[j] = threshold_high;
+        }
+        for (j = xres-1; j > 0; j--) {
+            if (mrow[j-1] >= threshold_low && mrow[j] >= threshold_high)
+                mrow[j-1] = threshold_high;
+        }
+    }
+    /* kill too short segments, clamping result along the way */
+    for (i = 0; i < yres; i++) {
+        gdouble *mrow = m + i*xres;
+
+        k = 0;
+        for (j = 0; j < xres; j++) {
+            if (mrow[j] >= threshold_high) {
+                mrow[j] = 1.0;
+                k++;
+                continue;
+            }
+            if (k && k < min_scar_len) {
+                while (k) {
+                    mrow[j-k] = 0.0;
+                    k--;
+                }
+            }
+            mrow[j] = 0.0;
+            k = 0;
+        }
+        if (k && k < min_scar_len) {
+            while (k) {
+                mrow[j-k] = 0.0;
+                k--;
+            }
+        }
+    }
+}
+
 /************************** Documentation ****************************/
 
 /**
