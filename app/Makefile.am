@@ -156,6 +156,7 @@ gwyddion_SOURCES = \
 	splash.c \
 	tips.c \
 	toolbox.c \
+	toolbox-editor.c \
 	toolbox-spec.c
 
 

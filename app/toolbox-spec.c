@@ -29,13 +29,14 @@
 #include "gwyddion.h"
 #include "toolbox.h"
 
-static const GwyEnum modes[] = {
+static const GwyEnum mode_types_array[] = {
+    { "default",         0,                   },
     { "interactive",     GWY_RUN_INTERACTIVE, },
     { "non-interactive", GWY_RUN_IMMEDIATE,   },
     { NULL,              0,                   },
 };
 
-static const GwyEnum gwy_toolbox_action_types_array[] = {
+static const GwyEnum action_types_array[] = {
     { "empty",   GWY_APP_ACTION_TYPE_PLACEHOLDER, },
     { "builtin", GWY_APP_ACTION_TYPE_BUILTIN,     },
     { "proc",    GWY_APP_ACTION_TYPE_PROC,        },
@@ -46,7 +47,8 @@ static const GwyEnum gwy_toolbox_action_types_array[] = {
     { NULL,      0,                               },
 };
 
-const GwyEnum *gwy_toolbox_action_types = gwy_toolbox_action_types_array;
+const GwyEnum *gwy_toolbox_mode_types = mode_types_array;
+const GwyEnum *gwy_toolbox_action_types = action_types_array;
 
 static void
 toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
@@ -155,7 +157,9 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 != -1)
                 type = tmptype;
             else if (gwy_strequal(attname, "run")
-                     && (tmpmode = gwy_string_to_enum(attval, modes, -1))
+                     && (tmpmode = gwy_string_to_enum(attval,
+                                                      gwy_toolbox_mode_types,
+                                                      -1))
                 != -1)
                 mode = tmpmode;
             else if (gwy_strequal(attname, "function"))
@@ -185,10 +189,16 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                       function);
             return;
         }
+        if (type == GWY_APP_ACTION_TYPE_PLACEHOLDER
+            && (function || icon || mode)) {
+            g_warning("Placeholder <item> should not have any attributes.");
+            function = icon = NULL;
+            mode = 0;
+        }
 
         /* Icon and mode can be left unspecified. */
         ispec.type = type;
-        ispec.function = g_quark_from_string(function);
+        ispec.function = function ? g_quark_from_string(function) : 0;
         ispec.icon = icon ? g_quark_from_string(icon) : 0;
         ispec.mode = mode;
         g_array_append_val(gspec->item, ispec);

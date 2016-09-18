@@ -71,6 +71,7 @@ typedef struct {
 } GwyToolboxSpec;
 
 extern const GwyEnum *gwy_toolbox_action_types;
+extern const GwyEnum *gwy_toolbox_mode_types;
 
 GwyToolboxSpec* gwy_app_toolbox_parse           (const gchar *ui,
                                                  gsize ui_len,
@@ -79,6 +80,7 @@ void            gwy_app_toolbox_spec_free       (GwyToolboxSpec *spec);
 void            gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
                                                  guint i,
                                                  guint j);
+void            gwy_toolbox_editor              (void);
 
 G_END_DECLS
 

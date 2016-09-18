@@ -491,6 +491,8 @@ gather_tools(const gchar *name,
     g_ptr_array_add(tools, (gpointer)name);
 }
 
+/* XXX: Move to toolbox-spec probably.  It can keep the file name for
+ * itself... */
 static GwyToolboxSpec*
 parse_toolbox_ui(void)
 {
@@ -940,6 +942,14 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             0,
             "<StockItem>",
             GWY_STOCK_GL_MATERIAL
+        },
+        {
+            N_("/_Toolbox.."),
+            NULL,
+            gwy_toolbox_editor,
+            0,
+            NULL,
+            NULL
         },
         {
             N_("/_Keyboard Shortcuts"),
