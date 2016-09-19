@@ -2151,7 +2151,7 @@ update_context_data(FitShapeControls *controls)
                                                    "/surface/0");
         if (!ctx->surface) {
             ctx->surface = surface;
-            g_object_unref(ctx->surface);
+            g_object_ref(ctx->surface);
         }
     }
     else {
