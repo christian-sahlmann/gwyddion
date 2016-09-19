@@ -26,6 +26,12 @@
 #include "wrap_calls.h"
 #include "pygwy.h"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#include <winreg.h>
+#define gwyddion_key "Software\\Gwyddion\\2.0"
+#endif
+
 /* function to fill list of containers, for gwy_app_data_browser_get_containers
  */
 static void
@@ -38,8 +44,6 @@ pygwy_create_py_list_of_containers(GwyContainer *data, gpointer list)
 
 #include "pygwywrap.c"
 #include "pygwy-console.h"
-
-/********** from gwybatch.c **********/
 
 static void
 load_modules(void)
@@ -94,7 +98,7 @@ reload_libraries(void)
 
     for (i = 0; i < G_N_ELEMENTS(gwyddion_libs); i++) {
         gchar *filename = g_strconcat(gwyddion_libs[i],
-                                      ".", GWY_SHARED_LIBRARY_EXTENSION,
+                                      ".", GWY_SHARED_LIBRARY_EXTENSION, ".0",
                                       NULL);
         GModule *modhandle = g_module_open(filename, G_MODULE_BIND_LAZY);
         if (!modhandle) {
@@ -111,16 +115,64 @@ reload_libraries(void)
     return TRUE;
 }
 
+static void
+switch_between_gwyddion_bin_dir(G_GNUC_UNUSED gboolean back)
+{
+#ifdef G_OS_WIN32
+    static wchar_t orig_cwd[PATH_MAX];
+
+    gchar installdir[PATH_MAX];
+    guint len;
+    DWORD size = sizeof(installdir)-1;
+    HKEY reg_key;
+
+    if (back) {
+        _wchdir(orig_cwd);
+        return;
+    }
+
+    _wgetcwd(orig_cwd, PATH_MAX);
+    orig_cwd[PATH_MAX-1] = '\0';
+
+    gwy_clear(installdir, sizeof(installdir));
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(gwyddion_key),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, TEXT("InstallDir"), NULL, NULL,
+                            installdir, &size) == ERROR_SUCCESS) {
+            RegCloseKey(reg_key);
+            if (size + 5 <= PATH_MAX) {
+                memcpy(installdir + len, "\\bin", 5);
+                chdir(installdir);
+            }
+            return;
+        }
+        RegCloseKey(reg_key);
+    }
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT(gwyddion_key),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, TEXT("InstallDir"), NULL, NULL,
+                            installdir, &size) == ERROR_SUCCESS) {
+            if (size + 5 <= PATH_MAX) {
+                memcpy(installdir + len, "\\bin", 5);
+                chdir(installdir);
+            }
+        }
+        RegCloseKey(reg_key);
+    }
+#endif
+}
+
 PyMODINIT_FUNC
 initgwy(void)
 {
     gchar *settings_file;
     PyObject *mod, *dict;
 
+    switch_between_gwyddion_bin_dir(FALSE);
+
     if (!reload_libraries())
         return;
 
-    /* gwybatch.c */
     /* This requires a display.  */
     gtk_init(NULL, NULL);
     gwy_widgets_type_init();
@@ -143,6 +195,8 @@ initgwy(void)
     /* This does "import gtk" so display is required. */
     pygwy_register_classes(dict);
     pygwy_add_constants(mod, "GWY_");
+
+    switch_between_gwyddion_bin_dir(TRUE);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
