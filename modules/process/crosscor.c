@@ -443,7 +443,7 @@ crosscor_dialog(CrosscorArgs *args)
 
     gtk_table_attach(GTK_TABLE(table), spin, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    
+
 
     row++;
 
@@ -512,7 +512,7 @@ crosscor_data_changed(GwyDataChooser *chooser,
                                       object->datano);
 }
 
-static void     
+static void
 gaussian_width_changed_cb(GtkObject *adj,
                  CrosscorControls *controls)
 {
@@ -706,7 +706,7 @@ add_mask(GwyDataField *score, GwyContainer *data, gdouble threshold, gint id)
     g_object_unref(score);
 }
 
-static void     
+static void
 guess_offsets(CrosscorControls *controls)
 {
     GwyContainer *data;
@@ -733,7 +733,7 @@ guess_offsets(CrosscorControls *controls)
     border = CLAMP(xres/5, 10, 100); //should be more clever
 
     kernel = gwy_data_field_duplicate(dfield2);
-    gwy_data_field_resize(kernel, border, border, 
+    gwy_data_field_resize(kernel, border, border,
              gwy_data_field_get_xres(dfield2)-border, gwy_data_field_get_yres(dfield2)-border);
 
     score = gwy_data_field_new_alike(dfield1, FALSE);
@@ -768,8 +768,9 @@ static gboolean
 crosscor_do(CrosscorArgs * args)
 {
     GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL, *dfield4b = NULL,
-                 *dfield3 = NULL, *dfield4 = NULL, *score, *buffer, *mask, *dir = NULL,
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL,
+                 *dfield4b = NULL, *dfield3 = NULL, *dfield4 = NULL,
+                 *score, *buffer, *mask, *dir = NULL,
                  *abs = NULL, *corrected;
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
     GwyXY *coords;
@@ -854,9 +855,11 @@ crosscor_do(CrosscorArgs * args)
                                                args->window_x, args->window_y);
     gwy_data_field_crosscorrelate_set_weights(state, args->window);
 
-    if (args->multiple) gwy_app_wait_set_message(_("Correlating first set..."));
-    else gwy_app_wait_set_message(_("Correlating..."));
-    
+    if (args->multiple)
+        gwy_app_wait_set_message(_("Correlating first set..."));
+    else
+        gwy_app_wait_set_message(_("Correlating..."));
+
     do {
         gwy_data_field_crosscorrelate_iteration(state);
         if (!gwy_app_wait_set_fraction(state->fraction)) {
@@ -868,6 +871,7 @@ crosscor_do(CrosscorArgs * args)
             return FALSE;
         }
     } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+
     gwy_data_field_crosscorrelate_finalize(state);
     gwy_app_wait_finish();
 
@@ -896,6 +900,7 @@ crosscor_do(CrosscorArgs * args)
                 return FALSE;
             }
         } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+
         gwy_data_field_crosscorrelate_finalize(state);
         gwy_app_wait_finish();
 
@@ -908,14 +913,15 @@ crosscor_do(CrosscorArgs * args)
         gwy_data_field_multiply(score, 0.5);
     }
 
-    if (args->search_xoffset!=0 || args->search_yoffset!=0) {
-        gwy_data_field_add(dfieldx, gwy_data_field_itor(dfieldx, args->search_xoffset));
-        gwy_data_field_add(dfieldy, gwy_data_field_jtor(dfieldy, args->search_yoffset));
+    if (args->search_xoffset != 0 || args->search_yoffset != 0) {
+        gwy_data_field_add(dfieldx,
+                           gwy_data_field_itor(dfieldx, args->search_xoffset));
+        gwy_data_field_add(dfieldy,
+                           gwy_data_field_jtor(dfieldy, args->search_yoffset));
     }
 
 
     if (args->extend) {
-       
         buffer = gwy_data_field_new_alike(dfieldx, FALSE);
         mask = gwy_data_field_new_alike(dfieldx, TRUE);
 
@@ -923,17 +929,19 @@ crosscor_do(CrosscorArgs * args)
         if (args->search_xoffset<0) {
             leftadd = 0;
             rightadd = -args->search_xoffset;
-        } else {
+        }
+        else {
             leftadd = args->search_xoffset;
             rightadd = 0;
         }
         if (args->search_yoffset<0) {
             topadd = 0;
             bottomadd = -args->search_yoffset;
-        } else {
+        }
+        else {
             topadd = args->search_yoffset;
             bottomadd = 0;
-       }
+        }
 
         printf("adds %d %d %d %d\n", leftadd, rightadd, topadd, bottomadd);
 
@@ -948,29 +956,30 @@ crosscor_do(CrosscorArgs * args)
         gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
                            _("Borders extension..."));
 
-        for (i=0; i<10000; i++) {
+        for (i = 0; i < 10000; i++) {
             gwy_data_field_correct_laplace_iteration(dfieldx,
-                                mask,
-                                buffer,
-                                0.2,
-                                &error);
-            if ((i%1000)==0) if (!gwy_app_wait_set_fraction((gdouble)i/20000.0)) break;
-           
+                                                     mask,
+                                                     buffer,
+                                                     0.2,
+                                                     &error);
+            if (!gwy_app_wait_set_fraction((gdouble)i/20000.0))
+                break;
+
         }
-        for (i=0; i<10000; i++) {
+        for (i = 0; i < 10000; i++) {
             gwy_data_field_correct_laplace_iteration(dfieldy,
-                                mask,
-                                buffer,
-                                0.2,
-                                &error);
-            if ((i%1000)==0) if (!gwy_app_wait_set_fraction((10000.0 + (gdouble)i)/20000.0)) break;
-           
+                                                     mask,
+                                                     buffer,
+                                                     0.2,
+                                                     &error);
+            if (!gwy_app_wait_set_fraction((10000.0 + (gdouble)i)/20000.0))
+                break;
+
         }
-         gwy_app_wait_finish();
+        gwy_app_wait_finish();
 
         gwy_object_unref(buffer);
         gwy_object_unref(mask);
-       
     }
 
     if (args->gaussian) {
@@ -979,39 +988,38 @@ crosscor_do(CrosscorArgs * args)
     }
 
     if (args->correct) {
-
        corrected = gwy_data_field_new_alike(dfield2, FALSE);
        coords = g_new(GwyXY, xres*yres);
 
        xdata = gwy_data_field_get_data(dfieldx);
        ydata = gwy_data_field_get_data(dfieldy);
        i = 0;
-       for (row=0; row<yres; row++) 
-       {
-           for (col=0; col<xres; col++)
-           {
-               coords[i].x = col + gwy_data_field_rtoi(corrected, xdata[col + xres*row]) + 0.5 - args->search_xoffset;
-               coords[i].y = row + gwy_data_field_rtoj(corrected, ydata[col + xres*row]) + 0.5 - args->search_yoffset;
+       for (row = 0; row < yres; row++) {
+           for (col = 0; col < xres; col++) {
+               coords[i].x = col + gwy_data_field_rtoi(corrected,
+                                                       xdata[col + xres*row]) + 0.5 - args->search_xoffset;
+               coords[i].y = row + gwy_data_field_rtoj(corrected,
+                                                       ydata[col + xres*row]) + 0.5 - args->search_yoffset;
                i++;
            }
        }
 
        gwy_data_field_sample_distorted(dfield2,
-                                 corrected,
-                                 coords,
-                                 GWY_INTERPOLATION_BILINEAR,
-                                 GWY_EXTERIOR_BORDER_EXTEND,
-                                 0);
-       
-        newid = gwy_app_data_browser_add_data_field(corrected, data, TRUE);
-        gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
-                                GWY_DATA_ITEM_GRADIENT, 0);
-        gwy_app_channel_log_add_proc(data, args->op1.id, newid);
+                                       corrected,
+                                       coords,
+                                       GWY_INTERPOLATION_BILINEAR,
+                                       GWY_EXTERIOR_BORDER_EXTEND,
+                                       0);
 
-        gwy_app_set_data_field_title(data, newid, _("Corrected 2nd channel"));
+       newid = gwy_app_data_browser_add_data_field(corrected, data, TRUE);
+       gwy_app_sync_data_items(data, data, args->op1.id, newid, FALSE,
+                               GWY_DATA_ITEM_GRADIENT, 0);
+       gwy_app_channel_log_add_proc(data, args->op1.id, newid);
 
-        g_object_unref(corrected);
-        g_free(coords); 
+       gwy_app_set_data_field_title(data, newid, _("Corrected 2nd channel"));
+
+       g_object_unref(corrected);
+       g_free(coords);
     }
 
 
@@ -1092,8 +1100,8 @@ crosscor_do(CrosscorArgs * args)
     g_object_unref(score);
     g_object_unref(dfieldy);
     g_object_unref(dfieldx);
-    if (dfield2b) g_object_unref(dfield2b);
-    if (dfield4b) g_object_unref(dfield4b);
+    gwy_object_unref(dfield2b);
+    gwy_object_unref(dfield4b);
     gwy_object_unref(abs);
     gwy_object_unref(dir);
 
