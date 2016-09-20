@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek, Jozef Vesely.
+ *  Copyright (C) 2012-2016 David Necas (Yeti), Petr Klapetek, Jozef Vesely.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, vesely@gjh.sk.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,8 +18,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  */
-
-/********** from pygwy.c **********/
 
 #include <pygtk-2.0/pygobject.h>
 #include <app/gwyapp.h>
@@ -115,6 +113,10 @@ reload_libraries(void)
     return TRUE;
 }
 
+/* Special libraries modules are linked with are not found, for whatever
+ * reason.  It does not help that this module is linked with them either.
+ * They are not unresolved, they are just not found.  So we temporarily
+ * switch to the Gwyddion install path. */
 static void
 switch_between_gwyddion_bin_dir(G_GNUC_UNUSED gboolean back)
 {
@@ -122,7 +124,6 @@ switch_between_gwyddion_bin_dir(G_GNUC_UNUSED gboolean back)
     static wchar_t orig_cwd[PATH_MAX];
 
     gchar installdir[PATH_MAX];
-    guint len;
     DWORD size = sizeof(installdir)-1;
     HKEY reg_key;
 
@@ -141,7 +142,7 @@ switch_between_gwyddion_bin_dir(G_GNUC_UNUSED gboolean back)
                             installdir, &size) == ERROR_SUCCESS) {
             RegCloseKey(reg_key);
             if (size + 5 <= PATH_MAX) {
-                memcpy(installdir + len, "\\bin", 5);
+                memcpy(installdir + size-1, "\\bin", 5);
                 chdir(installdir);
             }
             return;
@@ -153,7 +154,7 @@ switch_between_gwyddion_bin_dir(G_GNUC_UNUSED gboolean back)
         if (RegQueryValueEx(reg_key, TEXT("InstallDir"), NULL, NULL,
                             installdir, &size) == ERROR_SUCCESS) {
             if (size + 5 <= PATH_MAX) {
-                memcpy(installdir + len, "\\bin", 5);
+                memcpy(installdir + size-1, "\\bin", 5);
                 chdir(installdir);
             }
         }
