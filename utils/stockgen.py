@@ -3,6 +3,7 @@
 import re, os, sys, popen2
 
 base = 'libgwydgets/gwystock'
+editorfile = 'app/toolbox-editor.c'
 makefile = 'pixmaps/Makefile.am'
 
 def read_images(f):
@@ -122,10 +123,20 @@ def update_documentation(images, sinces):
     docs = ''.join(docs)
     replace_file(cfile, docs)
 
+def update_editor(images):
+    """Update toolbox editor file with stock icon list."""
+
+    # Format #defines
+    names = ['    GWY_STOCK_%s,\n' % (x.upper()) for x in images.keys()]
+    names.sort()
+    names = ''.join(names)
+    replace_file(editorfile, names)
+
 imgs = read_images(makefile)
 sincs = read_since(makefile)
 update_macros(imgs)
 update_documentation(imgs, sincs)
+update_editor(imgs)
 # Check for unused since declarations, they are typos
 if sincs:
     print 'Unused since:', sincs
