@@ -191,7 +191,7 @@ main(int argc, char *argv[])
     }
 
     gwy_app_splash_set_message(_("Initializing GUI"));
-    toolbox = gwy_app_toolbox_create();
+    toolbox = gwy_app_toolbox_window_create();
     debug_time(timer, "create toolbox");
     gwy_app_data_browser_restore();
     debug_time(timer, "init data-browser");

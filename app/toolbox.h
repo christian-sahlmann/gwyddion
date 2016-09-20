@@ -44,6 +44,15 @@ typedef enum {
     GWY_APP_ACTION_TYPE_XYZ,
 } GwyAppActionType;
 
+typedef struct {
+    const gchar *name;
+    const gchar *stock_id;
+    GCallback callback;
+    const gchar *nice_name;  /* Menu path? */
+    const gchar *tooltip;
+    /* TODO: sens flags? */
+} GwyToolboxBuiltinSpec;
+
 /* Representation of the toolbox as given in toolbox.xml.
  * This is something we do not modify, except:
  * (a) in the editor
@@ -73,15 +82,17 @@ typedef struct {
 extern const GwyEnum *gwy_toolbox_action_types;
 extern const GwyEnum *gwy_toolbox_mode_types;
 
-GwyToolboxSpec* gwy_parse_toolbox_ui            (void);
-GwyToolboxSpec* gwy_app_toolbox_parse           (const gchar *ui,
-                                                 gsize ui_len,
-                                                 GError **error);
-void            gwy_app_toolbox_spec_free       (GwyToolboxSpec *spec);
-void            gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
-                                                 guint i,
-                                                 guint j);
-void            gwy_toolbox_editor              (void);
+GwyToolboxSpec*              gwy_parse_toolbox_ui            (void);
+GwyToolboxSpec*              gwy_app_toolbox_parse           (const gchar *ui,
+                                                              gsize ui_len,
+                                                              GError **error);
+void                         gwy_app_toolbox_spec_free       (GwyToolboxSpec *spec);
+void                         gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
+                                                              guint i,
+                                                              guint j);
+void                         gwy_toolbox_editor              (void);
+const GwyToolboxBuiltinSpec* gwy_toolbox_get_builtins        (guint *nspec);
+const GwyToolboxBuiltinSpec* gwy_toolbox_find_builtin_spec   (const gchar *name);
 
 G_END_DECLS
 

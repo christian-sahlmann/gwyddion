@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006,2013 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,11 +61,13 @@ typedef struct {
     GwyAppActionType type;
     GwyRunType mode;
     GwyMenuSensFlags sens;
+    const gchar *tooltip;
 } Action;
 
 static GtkWidget* gwy_app_menu_create_info_menu    (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu    (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu    (GtkAccelGroup *accel_group);
+static gboolean   gwy_toolbox_fill_builtin_action  (Action *action);
 static void       gwy_app_toolbox_showhide         (GtkWidget *expander);
 static void       show_user_guide                  (void);
 static void       show_message_log                 (void);
@@ -95,13 +97,7 @@ static void       enable_edit_accelerators         (gboolean enable);
 static void       gwy_app_tool_use                 (const gchar *toolname,
                                                     GtkToggleButton *button);
 static void       gwy_app_change_default_mask_color(void);
-static void       gwy_app_gl_view_maybe            (void);
-
-static GtkTargetEntry dnd_target_table[] = {
-    { "STRING",        0, DND_TARGET_STRING, },
-    { "text/plain",    0, DND_TARGET_STRING, },
-    { "text/uri-list", 0, DND_TARGET_STRING, },
-};
+static void       action_display_3d                (void);
 
 /* Translatability hack, intltool seems overkill at this point. */
 #define GWY_TOOLBOX_IGNORE(x) /* */
@@ -156,39 +152,6 @@ toolbox_add_menubar(GtkWidget *container,
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
 }
 
-static gboolean
-gwy_app_builtin_func_get_info(const gchar *name,
-                              Action *action,
-                              const gchar **tooltip)
-{
-    action->sens = GWY_MENU_FLAG_DATA;
-
-    if (gwy_strequal(name, "display_3d")) {
-        action->callback = gwy_app_gl_view_maybe;
-        action->stock_id = g_quark_from_static_string(GWY_STOCK_3D_BASE);
-        *tooltip = N_("Display a 3D view of data");
-    }
-    else if (gwy_strequal(name, "zoom_in")) {
-        action->callback = G_CALLBACK(action_zoom_in);
-        action->stock_id = g_quark_from_static_string(GWY_STOCK_ZOOM_IN);
-        *tooltip = N_("Zoom in");
-    }
-    else if (gwy_strequal(name, "zoom_1_1")) {
-        action->callback = G_CALLBACK(action_zoom_1_1);
-        action->stock_id = g_quark_from_static_string(GWY_STOCK_ZOOM_1_1);
-        *tooltip = N_("Zoom 1:1");
-    }
-    else if (gwy_strequal(name, "zoom_out")) {
-        action->callback = G_CALLBACK(action_zoom_out);
-        action->stock_id = g_quark_from_static_string(GWY_STOCK_ZOOM_OUT);
-        *tooltip = N_("Zoom out");
-    }
-    else
-        return FALSE;
-
-    return TRUE;
-}
-
 static void
 toolbox_start_group(GwyAppToolboxBuilder *builder,
                     const GwyToolboxGroupSpec *gspec)
@@ -229,7 +192,7 @@ toolbox_make_tool_button(GwyAppToolboxBuilder *builder,
                          Action *action)
 {
     GtkWidget *button;
-    const gchar *name, *stock_id, *tooltip;
+    const gchar *name, *stock_id;
     gchar *accel_path;
 
     stock_id = gwy_tool_class_get_stock_id(tool_class);
@@ -246,9 +209,7 @@ toolbox_make_tool_button(GwyAppToolboxBuilder *builder,
     gtk_widget_set_accel_path(button, accel_path, builder->accel_group);
     g_free(accel_path);
 
-    tooltip = gwy_tool_class_get_tooltip(tool_class);
-    if (tooltip)
-        gtk_tooltips_set_tip(builder->tips, button, _(tooltip), NULL);
+    action->tooltip = gwy_tool_class_get_tooltip(tool_class);
 
     return button;
 }
@@ -317,7 +278,7 @@ static gboolean
 toolbox_start_item(GwyAppToolboxBuilder *builder,
                    const GwyToolboxItemSpec *ispec)
 {
-    const gchar *func = NULL, *tooltip = NULL, *stock_id = NULL;
+    const gchar *func = NULL, *stock_id = NULL;
     GtkWidget *button = NULL;
     GwyToolClass *tool_class;
     GType gtype;
@@ -342,7 +303,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
         break;
 
         case GWY_APP_ACTION_TYPE_BUILTIN:
-        if (!gwy_app_builtin_func_get_info(func, &action, &tooltip)) {
+        if (!gwy_toolbox_fill_builtin_action(&action)) {
             g_warning("Function builtin::%s does not exist", func);
             return FALSE;
         }
@@ -356,7 +317,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
             return FALSE;
         }
         stock_id = gwy_process_func_get_stock_id(func);
-        tooltip = gwy_process_func_get_tooltip(func);
+        action.tooltip = gwy_process_func_get_tooltip(func);
         action.sens = gwy_process_func_get_sensitivity_mask(func);
         check_run_mode(action.type, func,
                        gwy_process_func_get_run_types(func), &action.mode);
@@ -368,7 +329,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
             return FALSE;
         }
         stock_id = gwy_graph_func_get_stock_id(func);
-        tooltip = gwy_graph_func_get_tooltip(func);
+        action.tooltip = gwy_graph_func_get_tooltip(func);
         action.sens = gwy_graph_func_get_sensitivity_mask(func);
         if (action.mode)
             g_warning("Function graph::%s does not have run modes", func);
@@ -380,7 +341,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
             return FALSE;
         }
         stock_id = gwy_volume_func_get_stock_id(func);
-        tooltip = gwy_volume_func_get_tooltip(func);
+        action.tooltip = gwy_volume_func_get_tooltip(func);
         action.sens = gwy_volume_func_get_sensitivity_mask(func);
         check_run_mode(action.type, func,
                        gwy_volume_func_get_run_types(func), &action.mode);
@@ -392,7 +353,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
             return FALSE;
         }
         stock_id = gwy_xyz_func_get_stock_id(func);
-        tooltip = gwy_xyz_func_get_tooltip(func);
+        action.tooltip = gwy_xyz_func_get_tooltip(func);
         action.sens = gwy_xyz_func_get_sensitivity_mask(func);
         check_run_mode(action.type, func,
                        gwy_xyz_func_get_run_types(func), &action.mode);
@@ -466,8 +427,8 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(stock_id,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
-    if (tooltip)
-        gtk_tooltips_set_tip(builder->tips, button, _(tooltip), NULL);
+    if (action.tooltip)
+        gtk_tooltips_set_tip(builder->tips, button, _(action.tooltip), NULL);
 
     a = g_slice_dup(Action, &action);
     g_signal_connect_swapped(button, "clicked",
@@ -569,8 +530,14 @@ gwy_app_toolbox_build(GwyToolboxSpec *spec,
 }
 
 GtkWidget*
-gwy_app_toolbox_create(void)
+gwy_app_toolbox_window_create(void)
 {
+    static GtkTargetEntry dnd_target_table[] = {
+        { "STRING",        0, DND_TARGET_STRING, },
+        { "text/plain",    0, DND_TARGET_STRING, },
+        { "text/uri-list", 0, DND_TARGET_STRING, },
+    };
+
     GtkWidget *toolbox, *menu, *container;
     GtkBox *vbox;
     GtkAccelGroup *accel_group;
@@ -668,6 +635,65 @@ reconstruct_toolbox(void)
     gtk_widget_show_all(GTK_WIDGET(vbox));
 }
 #endif
+
+const GwyToolboxBuiltinSpec*
+gwy_toolbox_get_builtins(guint *nspec)
+{
+    static const GwyToolboxBuiltinSpec spec[] = {
+        {
+            "display_3d", GWY_STOCK_3D_BASE, &action_display_3d,
+            N_("Display a 3D view of data"), N_("Display a 3D view of data"),
+        },
+        {
+            "zoom_in", GWY_STOCK_ZOOM_IN, &action_zoom_in,
+            N_("Zoom in"), N_("Zoom in"),
+        },
+        {
+            "zoom_out", GWY_STOCK_ZOOM_OUT, &action_zoom_out,
+            N_("Zoom out"), N_("Zoom out"),
+        },
+        {
+            "zoom_1_1", GWY_STOCK_ZOOM_1_1, &action_zoom_1_1,
+            N_("Zoom 1:1"), N_("Zoom 1:1"),
+        },
+    };
+
+    *nspec = G_N_ELEMENTS(spec);
+    return spec;
+}
+
+const GwyToolboxBuiltinSpec*
+gwy_toolbox_find_builtin_spec(const gchar *name)
+{
+    const GwyToolboxBuiltinSpec* spec;
+    guint i, n;
+
+    spec = gwy_toolbox_get_builtins(&n);
+    for (i = 0; i < n; i++) {
+        if (gwy_strequal(name, spec[i].name))
+            return spec + i;
+    }
+    return NULL;
+}
+
+static gboolean
+gwy_toolbox_fill_builtin_action(Action *action)
+{
+    const GwyToolboxBuiltinSpec *spec;
+    const gchar *name;
+
+    name = g_quark_to_string(action->func);
+    if (!(spec = gwy_toolbox_find_builtin_spec(name)))
+        return FALSE;
+
+    action->type = GWY_APP_ACTION_TYPE_BUILTIN;
+    action->sens = GWY_MENU_FLAG_DATA;
+    action->callback = spec->callback;
+    action->tooltip = spec->tooltip;
+    action->stock_id = g_quark_from_static_string(spec->stock_id);
+
+    return TRUE;
+}
 
 /*************************************************************************/
 static GtkWidget*
@@ -1278,7 +1304,7 @@ gwy_app_change_default_mask_color(void)
 }
 
 static void
-gwy_app_gl_view_maybe(void)
+action_display_3d(void)
 {
     static GtkWidget *dialog = NULL;
 

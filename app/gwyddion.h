@@ -58,7 +58,7 @@ gboolean   gwy_remote_open_files        (GwyRemote *remote,
                                          char **argv);
 void       gwy_remote_print             (GwyRemote *remote);
 
-GtkWidget* gwy_app_toolbox_create           (void);
+GtkWidget* gwy_app_toolbox_window_create    (void);
 GtkWidget* gwy_app_show_data_browser        (void);
 void       gwy_app_about                    (void);
 void       gwy_app_tip_of_the_day           (void);
