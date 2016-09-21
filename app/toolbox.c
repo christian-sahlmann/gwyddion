@@ -484,6 +484,11 @@ remove_seen_unseen_tools(GwyAppToolboxBuilder *builder,
     }
 }
 
+/* TODO: Do not simply switch to the first tool; when we use this in the
+ * toolbox editor it makes the tool dialogue to come up and other odd things.
+ * Ideally, keep the current tool and do not change its shown/hidden state.
+ * Only resort to switching to the first tool when (a) there is no current
+ * tool (initial construction) or (b) the current tool was removed. */
 static void
 gwy_app_toolbox_build(GwyToolboxSpec *spec,
                       GtkBox *vbox,
@@ -516,7 +521,7 @@ gwy_app_toolbox_build(GwyToolboxSpec *spec,
             /* When the construction fails remove the item also from the spec
              * so *if* we edit and save the spec it is corrected. */
             if (!toolbox_start_item(&builder, ispec))
-                gwy_app_toolbox_spec_remove_item(spec, i, j);
+                gwy_toolbox_spec_remove_item(spec, i, j);
         }
         builder.group = NULL;
     }
@@ -584,6 +589,7 @@ gwy_app_toolbox_window_create(void)
 
     spec = gwy_parse_toolbox_ui();
     if (spec) {
+        /* TODO: free the spec upon exit so that it does not show as a leak. */
         gwy_app_toolbox_build(spec, vbox, gwy_app_get_tooltips(), accel_group);
         g_object_set_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec", spec);
     }
@@ -611,16 +617,22 @@ gwy_app_toolbox_window_create(void)
     return toolbox;
 }
 
-#if 0
-static void
-reconstruct_toolbox(void)
+void
+gwy_toolbox_rebuild_to_spec(GwyToolboxSpec *spec)
 {
+    GwyToolboxSpec *oldspec;
     GtkWidget* toolbox;
     GtkAccelGroup *accel_group;
     GtkBox *vbox;
     GList *children, *l;
 
     toolbox = gwy_app_main_window_get();
+    oldspec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
+    if (oldspec != spec) {
+        gwy_toolbox_spec_free(oldspec);
+        g_object_set_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec", spec);
+    }
+
     vbox = GTK_BOX(gtk_bin_get_child(GTK_BIN(toolbox)));
     children = gtk_container_get_children(GTK_CONTAINER(vbox));
 
@@ -631,10 +643,10 @@ reconstruct_toolbox(void)
     g_list_free(l);
 
     accel_group = g_object_get_data(G_OBJECT(toolbox), "accel_group");
-    gwy_app_toolbox_build(vbox, gwy_app_get_tooltips(), accel_group);
+    gwy_app_toolbox_build(spec, vbox, gwy_app_get_tooltips(), accel_group);
     gtk_widget_show_all(GTK_WIDGET(vbox));
+
 }
-#endif
 
 const GwyToolboxBuiltinSpec*
 gwy_toolbox_get_builtins(guint *nspec)

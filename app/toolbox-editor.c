@@ -46,7 +46,6 @@ typedef struct {
 
 typedef struct {
     GwyToolboxSpec *spec;
-    GwyToolboxSpec *orig_spec;
     GtkWidget *dialogue;
     GtkTreeStore *toolbox_model;
     GtkTreeView *toolbox_view;
@@ -109,6 +108,7 @@ static void          remove_from_toolbox             (GwyToolboxEditor *editor);
 static void          move_up_in_toolbox              (GwyToolboxEditor *editor);
 static void          move_down_in_toolbox            (GwyToolboxEditor *editor);
 static void          width_changed                   (GwyToolboxEditor *editor);
+static void          apply_toolbox_spec              (GwyToolboxEditor *editor);
 static const gchar*  action_get_nice_name            (GwyAppActionType type,
                                                       const gchar *name);
 static const gchar*  find_default_stock_id           (GwyAppActionType type,
@@ -119,6 +119,7 @@ static GtkTreeModel* create_gwy_icon_list            (GtkWidget *widget);
 void
 gwy_toolbox_editor(void)
 {
+    GwyToolboxSpec *spec;
     GtkWindow *toolbox;
     GtkBox *vbox, *hbox, *hbox2;
     GtkWidget *scwin, *label, *spin;
@@ -129,18 +130,17 @@ gwy_toolbox_editor(void)
 
     gwy_clear(&editor, 1);
     toolbox = GTK_WINDOW(gwy_app_main_window_get());
-    editor.spec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
-    g_return_if_fail(editor.spec);
+    spec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
+    g_return_if_fail(spec);
+    editor.spec = gwy_toolbox_spec_duplicate(spec);
 
     editor.dialogue = gtk_dialog_new_with_buttons(_("Toolbox Editor"),
                                                   toolbox,
                                                   GTK_DIALOG_MODAL,
-                                                  GTK_STOCK_CLOSE,
-                                                  GTK_RESPONSE_CLOSE,
                                                   GTK_STOCK_APPLY,
                                                   GTK_RESPONSE_APPLY,
-                                                  GTK_STOCK_OK,
-                                                  GTK_RESPONSE_OK,
+                                                  GTK_STOCK_CLOSE,
+                                                  GTK_RESPONSE_CLOSE,
                                                   NULL);
     gtk_window_set_default_size(GTK_WINDOW(editor.dialogue), 480, 480);
 
@@ -220,8 +220,11 @@ gwy_toolbox_editor(void)
 
     do {
        response = gtk_dialog_run(GTK_DIALOG(editor.dialogue));
-    } while (response != GTK_RESPONSE_OK
-             && response != GTK_RESPONSE_CLOSE
+
+       if (response == GTK_RESPONSE_APPLY)
+           apply_toolbox_spec(&editor);
+
+    } while (response != GTK_RESPONSE_CLOSE
              && response != GTK_RESPONSE_DELETE_EVENT);
 
     gtk_widget_destroy(editor.dialogue);
@@ -230,6 +233,7 @@ gwy_toolbox_editor(void)
     gwy_object_unref(editor.function_model);
     gwy_object_unref(editor.icon_model_gwy);
     gwy_object_unref(editor.icon_model_gtk);
+    gwy_toolbox_spec_free(editor.spec);
 }
 
 #if 0
@@ -713,6 +717,34 @@ function_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_free(name);
 }
 
+static guint
+toolbox_model_iter_indices(GtkTreeModel *model, GtkTreeIter *iter,
+                           guint *i, guint *j)
+{
+    GtkTreePath *path;
+    gint depth;
+    gint *indices;
+
+    path = gtk_tree_model_get_path(model, iter);
+    depth = gtk_tree_path_get_depth(path);
+    indices = gtk_tree_path_get_indices(path);
+    if (depth == 1) {
+        *i = indices[0];
+        *j = G_MAXUINT;
+    }
+    else if (depth == 2) {
+        *i = indices[0];
+        *j = indices[1];
+    }
+    else {
+        g_return_val_if_reached(0);
+    }
+
+    gtk_tree_path_free(path);
+
+    return depth;
+}
+
 static gboolean
 tree_model_iter_is_first(GtkTreeModel *model, GtkTreeIter *iter)
 {
@@ -739,6 +771,7 @@ tree_model_iter_is_last(GtkTreeModel *model, GtkTreeIter *iter)
     return !gtk_tree_model_iter_next(model, &myiter);
 }
 
+/* TODO: Must update sensitivity also whenever we add/remove/move items! */
 static void
 toolbox_selection_changed(GtkTreeSelection *selection,
                           GwyToolboxEditor *editor)
@@ -783,24 +816,94 @@ edit_item_or_group(GwyToolboxEditor *editor)
 static void
 remove_from_toolbox(GwyToolboxEditor *editor)
 {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    guint i, j, depth;
 
+    selection = gtk_tree_view_get_selection(editor->toolbox_view);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    depth = toolbox_model_iter_indices(model, &iter, &i, &j);
+    if (depth == 1)
+        gwy_toolbox_spec_remove_group(editor->spec, i);
+    else if (depth == 2)
+        gwy_toolbox_spec_remove_item(editor->spec, i, j);
+    else
+        g_return_if_reached();
+
+    gtk_tree_store_remove(editor->toolbox_model, &iter);
 }
 
 static void
 move_up_in_toolbox(GwyToolboxEditor *editor)
 {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter, otheriter, parent;
+    guint i, j, depth;
 
+    selection = gtk_tree_view_get_selection(editor->toolbox_view);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    depth = toolbox_model_iter_indices(model, &iter, &i, &j);
+    if (depth == 1) {
+        gwy_toolbox_spec_move_group(editor->spec, i, TRUE);
+        gtk_tree_model_iter_nth_child(model, &otheriter, NULL, i-1);
+        gtk_tree_store_swap(editor->toolbox_model, &iter, &otheriter);
+    }
+    else if (depth == 2) {
+        gwy_toolbox_spec_move_item(editor->spec, i, j, TRUE);
+        gtk_tree_model_iter_parent(model, &parent, &iter);
+        gtk_tree_model_iter_nth_child(model, &otheriter, &parent, j-1);
+        gtk_tree_store_swap(editor->toolbox_model, &iter, &otheriter);
+    }
+    else
+        g_return_if_reached();
 }
 
 static void
 move_down_in_toolbox(GwyToolboxEditor *editor)
 {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter, otheriter;
+    guint i, j, depth;
+
+    selection = gtk_tree_view_get_selection(editor->toolbox_view);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    depth = toolbox_model_iter_indices(model, &iter, &i, &j);
+    if (depth == 1)
+        gwy_toolbox_spec_move_group(editor->spec, i, FALSE);
+    else if (depth == 2)
+        gwy_toolbox_spec_move_item(editor->spec, i, j, FALSE);
+    else
+        g_return_if_reached();
+
+    otheriter = iter;
+    gtk_tree_model_iter_next(model, &otheriter);
+    gtk_tree_store_swap(editor->toolbox_model, &iter, &otheriter);
 }
 
 static void
 width_changed(GwyToolboxEditor *editor)
 {
     editor->spec->width = gwy_adjustment_get_int(editor->width);
+}
+
+static void
+apply_toolbox_spec(GwyToolboxEditor *editor)
+{
+    GwyToolboxSpec *spec;
+
+    /* We work on a copy.  But invoking gwy_toolbox_rebuild_to_spec() also
+     * makes the passed spec the actual primary spec.  So pass a copy. */
+    spec = gwy_toolbox_spec_duplicate(editor->spec);
+    gwy_toolbox_rebuild_to_spec(spec);
 }
 
 /* Copied from menu.c */

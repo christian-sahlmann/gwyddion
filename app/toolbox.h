@@ -74,7 +74,7 @@ typedef struct {
 typedef struct {
     GArray *group;
     guint width;
-    /* Auxiliary data. */
+    /* Auxiliary data used only inside parsing. */
     GString *path;
     gboolean seen_tool_placeholder;
 } GwyToolboxSpec;
@@ -82,17 +82,28 @@ typedef struct {
 extern const GwyEnum *gwy_toolbox_action_types;
 extern const GwyEnum *gwy_toolbox_mode_types;
 
-GwyToolboxSpec*              gwy_parse_toolbox_ui            (void);
-GwyToolboxSpec*              gwy_app_toolbox_parse           (const gchar *ui,
-                                                              gsize ui_len,
-                                                              GError **error);
-void                         gwy_app_toolbox_spec_free       (GwyToolboxSpec *spec);
-void                         gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
-                                                              guint i,
-                                                              guint j);
-void                         gwy_toolbox_editor              (void);
-const GwyToolboxBuiltinSpec* gwy_toolbox_get_builtins        (guint *nspec);
-const GwyToolboxBuiltinSpec* gwy_toolbox_find_builtin_spec   (const gchar *name);
+void                         gwy_toolbox_rebuild_to_spec  (GwyToolboxSpec *spec);
+GwyToolboxSpec*              gwy_parse_toolbox_ui         (void);
+GwyToolboxSpec*              gwy_toolbox_parse            (const gchar *ui,
+                                                           gsize ui_len,
+                                                           GError **error);
+GwyToolboxSpec*              gwy_toolbox_spec_duplicate   (GwyToolboxSpec *spec);
+void                         gwy_toolbox_spec_free        (GwyToolboxSpec *spec);
+void                         gwy_toolbox_spec_remove_item (GwyToolboxSpec *spec,
+                                                           guint i,
+                                                           guint j);
+void                         gwy_toolbox_spec_remove_group(GwyToolboxSpec *spec,
+                                                           guint i);
+void                         gwy_toolbox_spec_move_item   (GwyToolboxSpec *spec,
+                                                           guint i,
+                                                           guint j,
+                                                           gboolean up);
+void                         gwy_toolbox_spec_move_group  (GwyToolboxSpec *spec,
+                                                           guint i,
+                                                           gboolean up);
+void                         gwy_toolbox_editor           (void);
+const GwyToolboxBuiltinSpec* gwy_toolbox_get_builtins     (guint *nspec);
+const GwyToolboxBuiltinSpec* gwy_toolbox_find_builtin_spec(const gchar *name);
 
 G_END_DECLS
 

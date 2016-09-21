@@ -178,11 +178,12 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
             g_warning("Ignoring <item> without function name.");
             return;
         }
-        if (!function
-            && type == GWY_APP_ACTION_TYPE_TOOL
-            && spec->seen_tool_placeholder) {
-            g_warning("Ignoring duplicate tool placeholder <item>.");
-            return;
+        if (!function && type == GWY_APP_ACTION_TYPE_TOOL) {
+            if (spec->seen_tool_placeholder) {
+                g_warning("Ignoring duplicate tool placeholder <item>.");
+                return;
+            }
+            spec->seen_tool_placeholder = TRUE;
         }
         if (type == GWY_APP_ACTION_TYPE_TOOL
             && function
@@ -241,7 +242,7 @@ toolbox_ui_text(G_GNUC_UNUSED GMarkupParseContext *context,
 }
 
 void
-gwy_app_toolbox_spec_free(GwyToolboxSpec *spec)
+gwy_toolbox_spec_free(GwyToolboxSpec *spec)
 {
     GArray *group = spec->group;
     guint i;
@@ -266,7 +267,7 @@ gwy_app_toolbox_spec_free(GwyToolboxSpec *spec)
 }
 
 GwyToolboxSpec*
-gwy_app_toolbox_parse(const gchar *ui, gsize ui_len, GError **error)
+gwy_toolbox_parse(const gchar *ui, gsize ui_len, GError **error)
 {
     static const GMarkupParser parser = {
         toolbox_ui_start_element,
@@ -285,7 +286,7 @@ gwy_app_toolbox_parse(const gchar *ui, gsize ui_len, GError **error)
 
     context = g_markup_parse_context_new(&parser, 0, spec, NULL);
     if (!g_markup_parse_context_parse(context, ui, ui_len, error)) {
-        gwy_app_toolbox_spec_free(spec);
+        gwy_toolbox_spec_free(spec);
         spec = NULL;
     }
     g_markup_parse_context_free(context);
@@ -294,13 +295,77 @@ gwy_app_toolbox_parse(const gchar *ui, gsize ui_len, GError **error)
 }
 
 void
-gwy_app_toolbox_spec_remove_item(GwyToolboxSpec *spec,
-                                 guint i, guint j)
+gwy_toolbox_spec_remove_item(GwyToolboxSpec *spec, guint i, guint j)
 {
     GwyToolboxGroupSpec *gspec;
 
+    g_return_if_fail(i < spec->group->len);
     gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
+    g_return_if_fail(j < gspec->item->len);
     g_array_remove_index(gspec->item, j);
+}
+
+void
+gwy_toolbox_spec_remove_group(GwyToolboxSpec *spec, guint i)
+{
+    GwyToolboxGroupSpec *gspec;
+
+    g_return_if_fail(i < spec->group->len);
+    gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
+    g_free(gspec->name);
+    if (gspec->item)
+        g_array_free(gspec->item, TRUE);
+    g_array_remove_index(spec->group, i);
+}
+
+void
+gwy_toolbox_spec_move_item(GwyToolboxSpec *spec,
+                           guint i,
+                           guint j,
+                           gboolean up)
+{
+    GwyToolboxGroupSpec *gspec;
+    GwyToolboxItemSpec ispec;
+
+    g_return_if_fail(i < spec->group->len);
+    gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
+    g_return_if_fail(j < gspec->item->len);
+    ispec = g_array_index(gspec->item, GwyToolboxItemSpec, j);
+    if (up) {
+        g_return_if_fail(j > 0);
+        g_array_index(gspec->item, GwyToolboxItemSpec, j)
+            = g_array_index(gspec->item, GwyToolboxItemSpec, j-1);
+        g_array_index(gspec->item, GwyToolboxItemSpec, j-1) = ispec;
+    }
+    else {
+        g_return_if_fail(j+1 < gspec->item->len);
+        g_array_index(gspec->item, GwyToolboxItemSpec, j)
+            = g_array_index(gspec->item, GwyToolboxItemSpec, j+1);
+        g_array_index(gspec->item, GwyToolboxItemSpec, j+1) = ispec;
+    }
+}
+
+void
+gwy_toolbox_spec_move_group(GwyToolboxSpec *spec,
+                            guint i,
+                            gboolean up)
+{
+    GwyToolboxGroupSpec gspec;
+
+    g_return_if_fail(i < spec->group->len);
+    gspec = g_array_index(spec->group, GwyToolboxGroupSpec, i);
+    if (up) {
+        g_return_if_fail(i > 0);
+        g_array_index(spec->group, GwyToolboxGroupSpec, i)
+            = g_array_index(spec->group, GwyToolboxGroupSpec, i-1);
+        g_array_index(spec->group, GwyToolboxGroupSpec, i-1) = gspec;
+    }
+    else {
+        g_return_if_fail(i+1 < spec->group->len);
+        g_array_index(spec->group, GwyToolboxGroupSpec, i)
+            = g_array_index(spec->group, GwyToolboxGroupSpec, i+1);
+        g_array_index(spec->group, GwyToolboxGroupSpec, i+1) = gspec;
+    }
 }
 
 GwyToolboxSpec*
@@ -324,7 +389,7 @@ gwy_parse_toolbox_ui(void)
     }
     g_free(p);
 
-    spec = gwy_app_toolbox_parse(ui, ui_len, &error);
+    spec = gwy_toolbox_parse(ui, ui_len, &error);
     g_free(ui);
 
     if (!spec) {
@@ -333,6 +398,42 @@ gwy_parse_toolbox_ui(void)
     }
 
     return spec;
+}
+
+GwyToolboxSpec*
+gwy_toolbox_spec_duplicate(GwyToolboxSpec *spec)
+{
+    GwyToolboxSpec *dup;
+    guint i, j;
+
+    dup = g_new0(GwyToolboxSpec, 1);
+    dup->width = spec->width;
+    dup->seen_tool_placeholder = spec->seen_tool_placeholder;
+    dup->group = g_array_new(FALSE, FALSE, sizeof(GwyToolboxGroupSpec));
+    for (i = 0; i < spec->group->len; i++) {
+        GwyToolboxGroupSpec *gspec = &g_array_index(spec->group,
+                                                    GwyToolboxGroupSpec, i);
+        GwyToolboxGroupSpec gdup;
+
+        gdup.item = g_array_new(FALSE, FALSE, sizeof(GwyToolboxItemSpec));
+        gdup.name = g_strdup(gspec->name);
+        gdup.id = gspec->id;
+        g_array_append_val(dup->group, gdup);
+
+        for (j = 0; j < gspec->item->len; j++) {
+            GwyToolboxItemSpec *ispec = &g_array_index(gspec->item,
+                                                       GwyToolboxItemSpec, j);
+            GwyToolboxItemSpec idup;
+
+            idup.type = ispec->type;
+            idup.function = ispec->function;
+            idup.icon = ispec->icon;
+            idup.mode = ispec->mode;
+            g_array_append_val(gdup.item, idup);
+        }
+    }
+
+    return dup;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
