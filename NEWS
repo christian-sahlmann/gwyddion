@@ -74,6 +74,8 @@ Modules:
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
   fixed.
+- Python: Standalone Python module gwy should no longer complain about
+  libraries modules are linked with not being found.
 
 
 2.45 (2016-04-26)
