@@ -45,11 +45,22 @@ typedef struct {
 } GwyToolboxEditorRow;
 
 typedef struct {
+    GwyToolboxSpec *spec;
+    GwyToolboxSpec *orig_spec;
     GtkWidget *dialogue;
     GtkTreeStore *toolbox_model;
     GtkTreeView *toolbox_view;
+    GtkWidget *add_item;
+    GtkWidget *add_group;
+    GtkWidget *remove;
+    GtkWidget *edit;
+    GtkWidget *move_up;
+    GtkWidget *move_down;
+    GtkAdjustment *width;
     GtkTreeStore *function_model;
     GtkTreeView *function_view;
+    GtkListStore *icon_model_gwy;
+    GtkListStore *icon_model_gtk;
     GtkIconView *icon_view;
 } GwyToolboxEditor;
 
@@ -89,6 +100,15 @@ static void          function_cell_renderer_name     (GtkTreeViewColumn *column,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *iter,
                                                       gpointer userdata);
+static void          toolbox_selection_changed       (GtkTreeSelection *selection,
+                                                      GwyToolboxEditor *editor);
+static void          add_toolbox_item                (GwyToolboxEditor *editor);
+static void          add_toolbox_group               (GwyToolboxEditor *editor);
+static void          edit_item_or_group              (GwyToolboxEditor *editor);
+static void          remove_from_toolbox             (GwyToolboxEditor *editor);
+static void          move_up_in_toolbox              (GwyToolboxEditor *editor);
+static void          move_down_in_toolbox            (GwyToolboxEditor *editor);
+static void          width_changed                   (GwyToolboxEditor *editor);
 static const gchar*  action_get_nice_name            (GwyAppActionType type,
                                                       const gchar *name);
 static const gchar*  find_default_stock_id           (GwyAppActionType type,
@@ -100,17 +120,17 @@ void
 gwy_toolbox_editor(void)
 {
     GtkWindow *toolbox;
-    GtkBox *vbox, *hbox;
-    GtkWidget *scwin;
+    GtkBox *vbox, *hbox, *hbox2;
+    GtkWidget *scwin, *label, *spin;
     GwyToolboxEditor editor;
-    GwyToolboxSpec *spec;
-    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
     gint response;
 
     gwy_clear(&editor, 1);
     toolbox = GTK_WINDOW(gwy_app_main_window_get());
-    spec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
-    g_return_if_fail(spec);
+    editor.spec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
+    g_return_if_fail(editor.spec);
 
     editor.dialogue = gtk_dialog_new_with_buttons(_("Toolbox Editor"),
                                                   toolbox,
@@ -122,16 +142,15 @@ gwy_toolbox_editor(void)
                                                   GTK_STOCK_OK,
                                                   GTK_RESPONSE_OK,
                                                   NULL);
-    gtk_window_set_default_size(GTK_WINDOW(editor.dialogue), 800, 480);
-    vbox = GTK_BOX(GTK_DIALOG(editor.dialogue)->vbox);
+    gtk_window_set_default_size(GTK_WINDOW(editor.dialogue), 480, 480);
 
-    hbox = GTK_BOX(gtk_hbox_new(FALSE, 12));
-    gtk_box_pack_start(vbox, GTK_WIDGET(hbox), TRUE, TRUE, 0);
+    hbox = GTK_BOX(gtk_hbox_new(FALSE, 6));
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(editor.dialogue)->vbox),
+                       GTK_WIDGET(hbox), TRUE, TRUE, 0);
 
     editor.toolbox_model = gtk_tree_store_new(1, G_TYPE_POINTER);
-    fill_toolbox_treestore(editor.toolbox_model, spec);
+    fill_toolbox_treestore(editor.toolbox_model, editor.spec);
     create_toolbox_tree_view(&editor);
-    g_object_unref(editor.toolbox_model);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -139,12 +158,85 @@ gwy_toolbox_editor(void)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(editor.toolbox_view));
     gtk_box_pack_start(hbox, scwin, TRUE, TRUE, 0);
 
+    selection = gtk_tree_view_get_selection(editor.toolbox_view);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(editor.toolbox_model),
+                                      &iter))
+        gtk_tree_selection_select_iter(selection, &iter);
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(toolbox_selection_changed), &editor);
 
+    vbox = GTK_BOX(gtk_vbox_new(FALSE, 2));
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+    gtk_box_pack_start(hbox, GTK_WIDGET(vbox), FALSE, FALSE, 0);
+
+    editor.add_item = gwy_stock_like_button_new(_("_New Item"), GTK_STOCK_NEW);
+    gtk_box_pack_start(vbox, editor.add_item, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.add_item, "clicked",
+                             G_CALLBACK(add_toolbox_item), &editor);
+
+    editor.add_group = gwy_stock_like_button_new(_("_New Group"),
+                                                 GTK_STOCK_NEW);
+    gtk_box_pack_start(vbox, editor.add_group, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.add_group, "clicked",
+                             G_CALLBACK(add_toolbox_group), &editor);
+
+    editor.edit = gwy_stock_like_button_new(_("_Edit"), GTK_STOCK_EDIT);
+    gtk_box_pack_start(vbox, editor.edit, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.edit, "clicked",
+                             G_CALLBACK(edit_item_or_group), &editor);
+
+    editor.remove = gwy_stock_like_button_new(_("_Remove"), GTK_STOCK_REMOVE);
+    gtk_box_pack_start(vbox, editor.remove, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.remove, "clicked",
+                             G_CALLBACK(remove_from_toolbox), &editor);
+
+    editor.move_up = gwy_stock_like_button_new(_("Move _Up"), GTK_STOCK_GO_UP);
+    gtk_box_pack_start(vbox, editor.move_up, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.move_up, "clicked",
+                             G_CALLBACK(move_up_in_toolbox), &editor);
+
+    editor.move_down = gwy_stock_like_button_new(_("Move _Down"),
+                                                 GTK_STOCK_GO_DOWN);
+    gtk_box_pack_start(vbox, editor.move_down, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor.move_down, "clicked",
+                             G_CALLBACK(move_down_in_toolbox), &editor);
+
+    hbox2 = GTK_BOX(gtk_hbox_new(FALSE, 6));
+    gtk_box_pack_start(vbox, GTK_WIDGET(hbox2), FALSE, FALSE, 8);
+
+    label = gtk_label_new_with_mnemonic(_("_Width:"));
+    gtk_box_pack_start(hbox2, label, FALSE, FALSE, 0);
+
+    editor.width = GTK_ADJUSTMENT(gtk_adjustment_new(editor.spec->width,
+                                                     1, 20, 1, 2, 0));
+    g_signal_connect_swapped(editor.width, "value-changed",
+                             G_CALLBACK(width_changed), &editor);
+    spin = gtk_spin_button_new(editor.width, 0, 0);
+    gtk_box_pack_start(hbox2, spin, FALSE, FALSE, 0);
+
+    gtk_widget_show_all(editor.dialogue);
+    toolbox_selection_changed(selection, &editor);
+
+    do {
+       response = gtk_dialog_run(GTK_DIALOG(editor.dialogue));
+    } while (response != GTK_RESPONSE_OK
+             && response != GTK_RESPONSE_CLOSE
+             && response != GTK_RESPONSE_DELETE_EVENT);
+
+    gtk_widget_destroy(editor.dialogue);
+
+    g_object_unref(editor.toolbox_model);
+    gwy_object_unref(editor.function_model);
+    gwy_object_unref(editor.icon_model_gwy);
+    gwy_object_unref(editor.icon_model_gtk);
+}
+
+#if 0
     /* XXX: This should go to item add/edit, not the main window. */
     editor.function_model = gtk_tree_store_new(2, G_TYPE_UINT, G_TYPE_STRING);
     fill_function_list_treestore(editor.function_model);
     create_function_tree_view(&editor);
-    g_object_unref(editor.function_model);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -166,17 +258,7 @@ gwy_toolbox_editor(void)
     gtk_box_pack_start(hbox, scwin, TRUE, TRUE, 0);
 
 
-
-    gtk_widget_show_all(editor.dialogue);
-
-    do {
-       response = gtk_dialog_run(GTK_DIALOG(editor.dialogue));
-    } while (response != GTK_RESPONSE_OK
-             && response != GTK_RESPONSE_CLOSE
-             && response != GTK_RESPONSE_DELETE_EVENT);
-
-    gtk_widget_destroy(editor.dialogue);
-}
+#endif
 
 /* XXX: Work on a copy of the toolbox spec? */
 static void
@@ -631,6 +713,96 @@ function_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_free(name);
 }
 
+static gboolean
+tree_model_iter_is_first(GtkTreeModel *model, GtkTreeIter *iter)
+{
+    GtkTreePath *path;
+    gint depth;
+    gint *indices;
+    gboolean is_first;
+
+    path = gtk_tree_model_get_path(model, iter);
+    depth = gtk_tree_path_get_depth(path);
+    g_return_val_if_fail(depth, TRUE);
+    indices = gtk_tree_path_get_indices(path);
+    is_first = (indices[depth-1] == 0);
+    gtk_tree_path_free(path);
+
+    return is_first;
+}
+
+static gboolean
+tree_model_iter_is_last(GtkTreeModel *model, GtkTreeIter *iter)
+{
+    GtkTreeIter myiter = *iter;
+
+    return !gtk_tree_model_iter_next(model, &myiter);
+}
+
+static void
+toolbox_selection_changed(GtkTreeSelection *selection,
+                          GwyToolboxEditor *editor)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_widget_set_sensitive(editor->remove, FALSE);
+        gtk_widget_set_sensitive(editor->edit, FALSE);
+        gtk_widget_set_sensitive(editor->move_up, FALSE);
+        gtk_widget_set_sensitive(editor->move_down, FALSE);
+        return;
+    }
+
+    gtk_widget_set_sensitive(editor->remove, TRUE);
+    gtk_widget_set_sensitive(editor->edit, TRUE);
+    gtk_widget_set_sensitive(editor->move_up,
+                             !tree_model_iter_is_first(model, &iter));
+    gtk_widget_set_sensitive(editor->move_down,
+                             !tree_model_iter_is_last(model, &iter));
+}
+
+static void
+add_toolbox_item(GwyToolboxEditor *editor)
+{
+
+}
+
+static void
+add_toolbox_group(GwyToolboxEditor *editor)
+{
+
+}
+
+static void
+edit_item_or_group(GwyToolboxEditor *editor)
+{
+
+}
+
+static void
+remove_from_toolbox(GwyToolboxEditor *editor)
+{
+
+}
+
+static void
+move_up_in_toolbox(GwyToolboxEditor *editor)
+{
+
+}
+
+static void
+move_down_in_toolbox(GwyToolboxEditor *editor)
+{
+}
+
+static void
+width_changed(GwyToolboxEditor *editor)
+{
+    editor->spec->width = gwy_adjustment_get_int(editor->width);
+}
+
 /* Copied from menu.c */
 static void
 gwy_app_menu_canonicalize_label(gchar *label)
@@ -659,6 +831,12 @@ action_get_nice_name(GwyAppActionType type, const gchar *name)
         GType gtype = g_type_from_name(name);
         GwyToolClass *tool_class = g_type_class_peek(gtype);
         return gwy_tool_class_get_title(tool_class);
+    }
+    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
+        const GwyToolboxBuiltinSpec* spec;
+
+        if ((spec = gwy_toolbox_find_builtin_spec(name)))
+            return spec->nice_name;
     }
 
     if (type == GWY_APP_ACTION_TYPE_PROC)
