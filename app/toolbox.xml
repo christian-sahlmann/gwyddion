@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <toolbox width='4'>
-  <group id='view' title='View'>
+  <group id='view' title='View' translatable='true'>
     <item type='builtin' function='zoom_in'/>
     <item type='builtin' function='zoom_1_1'/>
     <item type='builtin' function='zoom_out'/>
     <item type='builtin' function='display_3d'/>
   </group>
-  <group id='proc' title='Data Process'>
+  <group id='proc' title='Data Process' translatable='true'>
     <item type='proc' function='fix_zero'/>
     <item type='proc' function='scale'/>
     <item type='proc' function='calibrate'/>
@@ -23,11 +23,11 @@
     <item type='proc' function='polylevel'/>
     <item type='proc' function='laplace'/>
   </group>
-  <group id='graph' title='Graph'>
+  <group id='graph' title='Graph' translatable='true'>
     <item type='graph' function='graph_cd'/>
     <item type='graph' function='graph_fit'/>
   </group>
-  <group id='tool' title='Tools'>
+  <group id='tool' title='Tools' translatable='true'>
     <item type='tool' function='GwyToolReadValue'/>
     <item type='tool' function='GwyToolDistance'/>
     <item type='tool' function='GwyToolProfile'/>

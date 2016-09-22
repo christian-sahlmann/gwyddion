@@ -69,6 +69,7 @@ typedef struct {
     GArray *item;
     gchar *name;
     GQuark id;
+    gboolean translatable;
 } GwyToolboxGroupSpec;
 
 typedef struct {
@@ -101,6 +102,13 @@ void                         gwy_toolbox_spec_move_item   (GwyToolboxSpec *spec,
 void                         gwy_toolbox_spec_move_group  (GwyToolboxSpec *spec,
                                                            guint i,
                                                            gboolean up);
+void                         gwy_toolbox_spec_add_item    (GwyToolboxSpec *spec,
+                                                           GwyToolboxItemSpec *ispec,
+                                                           guint i,
+                                                           guint j);
+void                         gwy_toolbox_spec_add_group   (GwyToolboxSpec *spec,
+                                                           GwyToolboxGroupSpec *gspec,
+                                                           guint i);
 void                         gwy_toolbox_editor           (void);
 const GwyToolboxBuiltinSpec* gwy_toolbox_get_builtins     (guint *nspec);
 const GwyToolboxBuiltinSpec* gwy_toolbox_find_builtin_spec(const gchar *name);

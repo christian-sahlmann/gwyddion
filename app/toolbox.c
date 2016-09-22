@@ -160,6 +160,7 @@ toolbox_start_group(GwyAppToolboxBuilder *builder,
     GtkWidget *expander;
     gboolean visible = TRUE;
     gchar *s, *key;
+    const gchar *translated_name;
     GQuark quark;
 
     builder->group = gtk_table_new(1, builder->width, TRUE);
@@ -171,7 +172,8 @@ toolbox_start_group(GwyAppToolboxBuilder *builder,
     g_free(key);
     gwy_container_gis_boolean(settings, quark, &visible);
 
-    s = g_strconcat("<small>", gettext(gspec->name), "</small>", NULL);
+    translated_name = gspec->translatable ? gettext(gspec->name) : gspec->name;
+    s = g_strconcat("<small>", translated_name, "</small>", NULL);
     expander = gtk_expander_new(s);
     gtk_expander_set_use_markup(GTK_EXPANDER(expander), TRUE);
     g_free(s);

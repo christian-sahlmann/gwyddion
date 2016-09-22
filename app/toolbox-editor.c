@@ -63,8 +63,19 @@ typedef struct {
     GtkIconView *icon_view;
 } GwyToolboxEditor;
 
+typedef struct {
+    GwyToolboxSpec *spec;
+    guint i;
+    GwyToolboxGroupSpec gspec;
+    GtkWidget *dialogue;
+    GtkWidget *title;
+    GtkWidget *id;
+    GtkWidget *message;
+} GwyToolboxGroupEditor;
+
 static void          fill_toolbox_treestore          (GtkTreeStore *store,
                                                       GwyToolboxSpec *spec);
+static void          free_toolbox_treestore          (GtkTreeStore *store);
 static void          fill_function_list_treestore    (GtkTreeStore *store);
 static void          create_toolbox_tree_view        (GwyToolboxEditor *editor);
 static void          create_function_tree_view       (GwyToolboxEditor *editor);
@@ -99,6 +110,16 @@ static void          function_cell_renderer_name     (GtkTreeViewColumn *column,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *iter,
                                                       gpointer userdata);
+static gboolean      edit_group_dialogue             (GwyToolboxEditor *editor,
+                                                      GwyToolboxGroupSpec *gspec,
+                                                      guint i);
+static void          group_title_changed             (GwyToolboxGroupEditor *geditor,
+                                                      GtkEntry *entry);
+static void          group_id_changed                (GwyToolboxGroupEditor *geditor,
+                                                      GtkEntry *entry);
+static void          suggest_group_id                (GwyToolboxGroupEditor *geditor);
+static void          group_title_transl_changed      (GwyToolboxGroupEditor *geditor,
+                                                      GtkToggleButton *toggle);
 static void          toolbox_selection_changed       (GtkTreeSelection *selection,
                                                       GwyToolboxEditor *editor);
 static void          add_toolbox_item                (GwyToolboxEditor *editor);
@@ -213,6 +234,7 @@ gwy_toolbox_editor(void)
     g_signal_connect_swapped(editor.width, "value-changed",
                              G_CALLBACK(width_changed), &editor);
     spin = gtk_spin_button_new(editor.width, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_box_pack_start(hbox2, spin, FALSE, FALSE, 0);
 
     gtk_widget_show_all(editor.dialogue);
@@ -229,7 +251,7 @@ gwy_toolbox_editor(void)
 
     gtk_widget_destroy(editor.dialogue);
 
-    g_object_unref(editor.toolbox_model);
+    free_toolbox_treestore(editor.toolbox_model);
     gwy_object_unref(editor.function_model);
     gwy_object_unref(editor.icon_model_gwy);
     gwy_object_unref(editor.icon_model_gtk);
@@ -264,7 +286,25 @@ gwy_toolbox_editor(void)
 
 #endif
 
-/* XXX: Work on a copy of the toolbox spec? */
+static void
+fill_toolbox_row_for_group(GwyToolboxEditorRow *row,
+                           const GwyToolboxGroupSpec *gspec)
+{
+    row->type = GWY_APP_ACTION_TYPE_GROUP;
+    row->name = gspec->name;
+    row->gid = g_quark_to_string(gspec->id);
+}
+
+static void
+fill_toolbox_row_for_item(GwyToolboxEditorRow *row,
+                          const GwyToolboxItemSpec *ispec)
+{
+    row->type = ispec->type;
+    row->func = ispec->function ? g_quark_to_string(ispec->function) : NULL;
+    row->id = ispec->icon ? g_quark_to_string(ispec->icon) : NULL;
+    row->mode = ispec->mode;
+}
+
 static void
 fill_toolbox_treestore(GtkTreeStore *store, GwyToolboxSpec *spec)
 {
@@ -279,25 +319,37 @@ fill_toolbox_treestore(GtkTreeStore *store, GwyToolboxSpec *spec)
     for (i = 0; i < group->len; i++) {
         gspec = &g_array_index(group, GwyToolboxGroupSpec, i);
         row = g_slice_new0(GwyToolboxEditorRow);
-        row->type = GWY_APP_ACTION_TYPE_GROUP;
-        row->name = gspec->name;
-        row->gid = g_quark_to_string(gspec->id);
-        gtk_tree_store_insert_with_values(store, &giter, NULL, i,
-                                          0, row, -1);
+        fill_toolbox_row_for_group(row, gspec);
+        gtk_tree_store_insert_with_values(store, &giter, NULL, i, 0, row, -1);
         item = gspec->item;
         for (j = 0; j < item->len; j++) {
             ispec = &g_array_index(item, GwyToolboxItemSpec, j);
             row = g_slice_new0(GwyToolboxEditorRow);
-            row->type = ispec->type;
-            row->func = (ispec->function
-                         ? g_quark_to_string(ispec->function)
-                         : NULL);
-            row->id = ispec->icon ? g_quark_to_string(ispec->icon) : NULL;
-            row->mode = ispec->mode;
+            fill_toolbox_row_for_item(row, ispec);
             gtk_tree_store_insert_with_values(store, &iiter, &giter, j,
                                               0, row, -1);
         }
     }
+}
+
+static gboolean
+free_toolbox_treestore_row(GtkTreeModel *model,
+                           G_GNUC_UNUSED GtkTreePath *path,
+                           GtkTreeIter *iter,
+                           G_GNUC_UNUSED gpointer user_data)
+{
+    GwyToolboxEditorRow *row;
+    gtk_tree_model_get(model, iter, 0, &row, -1);
+    g_slice_free(GwyToolboxEditorRow, row);
+    return FALSE;
+}
+
+static void
+free_toolbox_treestore(GtkTreeStore *store)
+{
+    gtk_tree_model_foreach(GTK_TREE_MODEL(store),
+                           &free_toolbox_treestore_row, NULL);
+    g_object_unref(store);
 }
 
 static void
@@ -717,6 +769,208 @@ function_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_free(name);
 }
 
+static gboolean
+edit_group_dialogue(GwyToolboxEditor *editor,
+                    GwyToolboxGroupSpec *gspec, guint i)
+{
+    GwyToolboxGroupEditor geditor;
+    GtkWidget *label, *button;
+    GtkTable *table;
+    gint response, row;
+    const gchar *id;
+
+    geditor.spec = editor->spec;
+    geditor.i = i;
+    geditor.gspec = *gspec;
+    geditor.gspec.item = NULL;
+    geditor.gspec.name = g_strdup(gspec->name);
+    id = gspec->id ? g_quark_to_string(gspec->id) : "";
+
+    geditor.dialogue = gtk_dialog_new_with_buttons(_("Toolbox Editor"),
+                                                   GTK_WINDOW(editor->dialogue),
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_STOCK_CANCEL,
+                                                   GTK_RESPONSE_CANCEL,
+                                                   GTK_STOCK_OK,
+                                                   GTK_RESPONSE_OK,
+                                                   NULL);
+
+    table = GTK_TABLE(gtk_table_new(4, 3, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(geditor.dialogue)->vbox),
+                       GTK_WIDGET(table), TRUE, TRUE, 0);
+    row = 0;
+
+    label = gtk_label_new_with_mnemonic(_("_Title:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    geditor.title = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(geditor.title), 24);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), geditor.title);
+    gtk_entry_set_text(GTK_ENTRY(geditor.title), geditor.gspec.name);
+    gtk_table_attach(table, geditor.title, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(geditor.title, "changed",
+                             G_CALLBACK(group_title_changed), &geditor);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Id:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    geditor.id = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(geditor.id), 24);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), geditor.id);
+    gtk_entry_set_text(GTK_ENTRY(geditor.id), id);
+    gtk_table_attach(table, geditor.id, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(geditor.id, "changed",
+                             G_CALLBACK(group_id_changed), &geditor);
+
+    button = gtk_button_new_with_mnemonic(_("_Suggest"));
+    gtk_table_attach(table, button, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(suggest_group_id), &geditor);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Trans_latable title"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
+                                 geditor.gspec.translatable);
+    gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(button, "toggled",
+                             G_CALLBACK(group_title_transl_changed), &geditor);
+    row++;
+
+    gtk_table_set_row_spacing(table, row-1, 8);
+    geditor.message = gtk_label_new(NULL);
+    gtk_table_attach(table, geditor.message,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    group_id_changed(&geditor, GTK_ENTRY(geditor.id));
+    gtk_widget_show_all(geditor.dialogue);
+    response = gtk_dialog_run(GTK_DIALOG(geditor.dialogue));
+    if (response == GTK_RESPONSE_OK) {
+        /* XXX: The caller must ensure the corresponding GwyToolboxEditorRow
+         * is updated! */
+        GWY_SWAP(gchar*, gspec->name, geditor.gspec.name);
+        gspec->translatable = geditor.gspec.translatable;
+        id = gtk_entry_get_text(GTK_ENTRY(geditor.id));
+        gspec->id = g_quark_from_string(id);
+    }
+    g_free(geditor.gspec.name);
+
+    gtk_widget_destroy(geditor.dialogue);
+
+    return (response == GTK_RESPONSE_OK);
+}
+
+static void
+group_title_changed(GwyToolboxGroupEditor *geditor, GtkEntry *entry)
+{
+    g_free(geditor->gspec.name);
+    geditor->gspec.name = g_strdup(gtk_entry_get_text(entry));
+}
+
+static void
+group_id_changed(GwyToolboxGroupEditor *geditor, GtkEntry *entry)
+{
+    const GwyToolboxGroupSpec *gspec;
+    const gchar *newid;
+    GArray *group;
+    const gchar *errmessage = NULL;
+    guint i;
+
+    newid = gtk_entry_get_text(entry);
+    if (!gwy_strisident(newid, "_-", NULL))
+        errmessage = _("Group id is not a valid identifier");
+
+    if (!errmessage) {
+        group = geditor->spec->group;
+        for (i = 0; i < group->len; i++) {
+            gspec = &g_array_index(group, GwyToolboxGroupSpec, i);
+            if (i != geditor->i && gwy_strequal(g_quark_to_string(gspec->id),
+                                                newid)) {
+                errmessage = _("Duplicate group id");
+                break;
+            }
+        }
+    }
+
+    if (errmessage) {
+        GdkColor gdkcolor = { 0, 51118, 0, 0 };
+
+        gtk_label_set_text(GTK_LABEL(geditor->message), errmessage);
+        gtk_widget_modify_fg(geditor->message, GTK_STATE_NORMAL, &gdkcolor);
+    }
+    else {
+        gtk_label_set_text(GTK_LABEL(geditor->message), "");
+        gtk_widget_modify_fg(geditor->message, GTK_STATE_NORMAL, NULL);
+    }
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(geditor->dialogue),
+                                      GTK_RESPONSE_OK, !errmessage);
+}
+
+static void
+suggest_group_id(GwyToolboxGroupEditor *geditor)
+{
+    GString *suggestion;
+    gunichar *name_chars;
+    glong name_len, i;
+
+    name_chars = g_utf8_to_ucs4(geditor->gspec.name, -1, NULL, &name_len, NULL);
+    if (!name_chars)
+        return;
+
+    suggestion = g_string_new(NULL);
+#if GLIB_CHECK_VERSION(2, 30, 0)
+    {
+        guint decomp_len, j;
+        gunichar buf[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
+
+        for (i = 0; i < name_len; i++) {
+            decomp_len = g_unichar_fully_decompose(name_chars[i], TRUE,
+                                                   buf, G_N_ELEMENTS(buf));
+            for (j = 0; j < decomp_len; j++) {
+                if (buf[j] <= 0x20 || buf[j] >= 0x80)
+                    continue;
+
+                if (g_ascii_isalpha(buf[j])
+                    || (suggestion->len && (buf[j] == '_'
+                                            || buf[j] == '-'
+                                            || g_ascii_isdigit(buf[j]))))
+                    g_string_append_c(suggestion, g_ascii_tolower(buf[j]));
+            }
+        }
+    }
+#else
+    for (i = 0; i < name_len; i++) {
+        if (name_chars[i] <= 0x20 || name_chars[j] >= 0x80)
+            continue;
+
+        if (g_ascii_isalpha(name_chars[i])
+            || (suggestion->len && (name_chars[i] == '_'
+                                    || name_chars[i] == '-'
+                                    || g_ascii_isdigit(name_chars[i]))))
+            g_string_append_c(suggestion, g_ascii_tolower(name_chars[i]));
+    }
+#endif
+
+    gtk_entry_set_text(GTK_ENTRY(geditor->id), suggestion->str);
+    g_string_free(suggestion, TRUE);
+    g_free(name_chars);
+}
+
+static void
+group_title_transl_changed(GwyToolboxGroupEditor *geditor,
+                           GtkToggleButton *toggle)
+{
+    geditor->gspec.translatable = gtk_toggle_button_get_active(toggle);
+}
+
 static guint
 toolbox_model_iter_indices(GtkTreeModel *model, GtkTreeIter *iter,
                            guint *i, guint *j)
@@ -798,24 +1052,77 @@ toolbox_selection_changed(GtkTreeSelection *selection,
 static void
 add_toolbox_item(GwyToolboxEditor *editor)
 {
-
+    g_warning("Implement me!");
 }
 
 static void
 add_toolbox_group(GwyToolboxEditor *editor)
 {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    guint i, j;
+    GwyToolboxGroupSpec gspec;
+    GwyToolboxEditorRow *row;
 
+    selection = gtk_tree_view_get_selection(editor->toolbox_view);
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        toolbox_model_iter_indices(model, &iter, &i, &j);
+        i++;
+    }
+    else
+        i = 0;
+
+    gspec.name = g_strdup("");
+    gspec.id = 0;
+    gspec.translatable = FALSE;
+    if (!edit_group_dialogue(editor, &gspec, G_MAXUINT)) {
+        g_free(gspec.name);
+        return;
+    }
+
+    gwy_toolbox_spec_add_group(editor->spec, &gspec, i);
+    row = g_slice_new0(GwyToolboxEditorRow);
+    fill_toolbox_row_for_group(row, &gspec);
+    gtk_tree_store_insert_with_values(editor->toolbox_model,
+                                      &iter, NULL, i, 0, row, -1);
 }
 
 static void
 edit_item_or_group(GwyToolboxEditor *editor)
 {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    guint depth, i, j;
+    GwyToolboxGroupSpec *gspec;
+    GwyToolboxEditorRow *row;
 
+    selection = gtk_tree_view_get_selection(editor->toolbox_view);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
+
+    depth = toolbox_model_iter_indices(model, &iter, &i, &j);
+    gtk_tree_model_get(model, &iter, 0, &row, -1);
+    if (depth == 1) {
+        gspec = &g_array_index(editor->spec->group, GwyToolboxGroupSpec, i);
+        if (edit_group_dialogue(editor, gspec, i)) {
+            fill_toolbox_row_for_group(row, gspec);
+            path = gtk_tree_model_get_path(model, &iter);
+            gtk_tree_model_row_changed(model, path, &iter);
+            gtk_tree_path_free(path);
+        }
+    }
+    else if (depth == 2) {
+        g_warning("Implement me!");
+    }
 }
 
 static void
 remove_from_toolbox(GwyToolboxEditor *editor)
 {
+    GwyToolboxEditorRow *row;
     GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -833,7 +1140,9 @@ remove_from_toolbox(GwyToolboxEditor *editor)
     else
         g_return_if_reached();
 
+    gtk_tree_model_get(model, &iter, 0, &row, -1);
     gtk_tree_store_remove(editor->toolbox_model, &iter);
+    g_slice_free(GwyToolboxEditorRow, row);
 }
 
 static void

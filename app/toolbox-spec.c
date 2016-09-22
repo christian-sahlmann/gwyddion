@@ -93,6 +93,7 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     else if (gwy_strequal(name, "group")) {
         GArray *group = spec->group;
         const gchar *id = NULL, *title = NULL;
+        gboolean translatable = FALSE;
         GwyToolboxGroupSpec *othergspec;
         GwyToolboxGroupSpec gspec;
 
@@ -116,6 +117,16 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 else
                     g_warning("Ignoring invalid group title.");
             }
+            else if (gwy_strequal(attname, "translatable")) {
+                if (g_ascii_strcasecmp(attval, "true") == 0
+                    || g_ascii_strcasecmp(attval, "yes") == 0)
+                    translatable = TRUE;
+                else if (g_ascii_strcasecmp(attval, "false") == 0
+                    || g_ascii_strcasecmp(attval, "no") == 0)
+                    translatable = FALSE;
+                else
+                    g_warning("Ignoring invalid group translatable attribute.");
+            }
         }
 
         if (!id || !title) {
@@ -133,6 +144,7 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
         gspec.id = g_quark_from_string(id);
         gspec.name = g_strdup(title);
+        gspec.translatable = translatable;
         gspec.item = g_array_new(FALSE, FALSE, sizeof(GwyToolboxItemSpec));
         g_array_append_val(group, gspec);
     }
@@ -366,6 +378,39 @@ gwy_toolbox_spec_move_group(GwyToolboxSpec *spec,
             = g_array_index(spec->group, GwyToolboxGroupSpec, i+1);
         g_array_index(spec->group, GwyToolboxGroupSpec, i+1) = gspec;
     }
+}
+
+void
+gwy_toolbox_spec_add_item(GwyToolboxSpec *spec,
+                          GwyToolboxItemSpec *ispec,
+                          guint i,
+                          guint j)
+{
+    GwyToolboxGroupSpec *gspec;
+
+    g_return_if_fail(i < spec->group->len);
+    gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
+
+    if (j >= gspec->item->len)
+        g_array_append_vals(gspec->item, ispec, 1);
+    else
+        g_array_insert_vals(gspec->item, j, ispec, 1);
+}
+
+/* This consumes any dynamically allocated data in @gspec.  The caller must
+ * not free them! */
+void
+gwy_toolbox_spec_add_group(GwyToolboxSpec *spec,
+                           GwyToolboxGroupSpec *gspec,
+                           guint i)
+{
+    if (!gspec->item)
+        gspec->item = g_array_new(FALSE, FALSE, sizeof(GwyToolboxItemSpec));
+
+    if (i >= spec->group->len)
+        g_array_append_vals(spec->group, gspec, 1);
+    else
+        g_array_insert_vals(spec->group, i, gspec, 1);
 }
 
 GwyToolboxSpec*
