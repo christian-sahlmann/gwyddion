@@ -194,11 +194,11 @@ gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
     gdouble rms1, rms2, avg1, avg2, score;
     gdouble *data, *kdata, *wdata, weightsum;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -1.0);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -1.0);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(weight_field), -1.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -10.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(kernel_field), -11.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(weight_field), -12.0);
     g_return_val_if_fail(kernel_width == weight_field->xres && 
-                     kernel_height == weight_field->yres, -1.0);
+                     kernel_height == weight_field->yres, -13);
 
     xres = data_field->xres;
     yres = data_field->yres;
@@ -208,18 +208,22 @@ gwy_data_field_get_weighted_correlation_score(GwyDataField *data_field,
 
     /* correlation request outside kernel */
     if (kernel_col > kxres || kernel_row > kyres)
-        return -1;
+        return -2;
 
     /* correlation request outside data field */
     if (col < 0 || row < 0
         || col + kernel_width > xres
-        || row + kernel_height > yres)
-        return -1;
+        || row + kernel_height > yres) {
+     
+        printf("error: %d %d %d  %d %d %d\n", col, kernel_width, xres, row, kernel_height, yres);
+        return -3;
+    }
+
     if (kernel_col < 0
         || kernel_row < 0
         || kernel_col + kernel_width > kxres
         || kernel_row + kernel_height > kyres)
-        return -1;
+        return -4;
 
     data = data_field->data;
     kdata = kernel_field->data;
@@ -703,7 +707,7 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
     gwy_data_field_clear(score);
 
     /*iterate over all the points */
-    for (i = (search_width/2); i < (xres - search_height/2); i++) {
+    for (i = (search_width/2); i < (xres - search_width/2); i++) {
         for (j = (search_height/2); j < (yres - search_height/2); j++) {
             /*iterate over search area in the second datafield */
             imax = i;
@@ -921,41 +925,48 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
             gwy_data_field_clear(state->score);
         state->cs.state = GWY_COMPUTATION_STATE_ITERATE;
         state->cs.fraction = 0.0;
-        state->i = state->search_height/2;
-        state->j = state->search_width/2;
+        state->i = state->window_width/2 + 1;
+        state->j = state->window_height/2 + 1;
+
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_ITERATE) {
         //iterate over search area in the second datafield 
-        row = rowmax = state->i;
-        col = colmax = state->j;
-        cormax = -1.01;
-        for (m = row - state->search_height/2; m < (row + state->search_height/2 - state->window_height + 1); m++) {
-            for (n = col - state->search_width/2; n < (col + state->search_width/2 - state->window_width + 1); n++) {
+        col = colmax = state->i;
+        row = rowmax = state->j;
+        cormax = -G_MAXDOUBLE;
+        for (m = MAX(0, row - state->search_height/2 - state->window_height/2); m < MIN(yres-state->window_height, (row + state->search_height/2 - state->window_height/2)); m++) {
+            for (n = MAX(0, col - state->search_width/2 - state->window_width/2); n < MIN(xres-state->window_width, (col + state->search_width/2 - state->window_width/2)); n++) {
+
+
                 lscore = gwy_data_field_get_weighted_correlation_score
                                                 (state->data_field1,
                                                  state->data_field2,
                                                  state->weights,
-                                                 col - state->window_width/2,
-                                                 row - state->window_height/2,
-                                                 n, m,
+                                                 col-state->window_width/2,
+                                                 row-state->window_height/2,
+                                                 n, 
+                                                 m,
                                                  state->window_width,
                                                  state->window_height);
+ 
+
 
                 // add a little to score at exactly same point - to prevent problems on flat data 
-                if (m == row - state->search_height/2
-                    && n == col - state->search_width/2)
-                    lscore *= 1.0001;
+                if (m == 0 && n == 0) lscore *= 1.0001;
 
                 if (lscore > cormax) {
                     cormax = lscore;
                     colmax = n + state->window_width/2;
                     rowmax = m + state->window_height/2;
                 }
+      
 
             }
         }
+
         if (state->score)
             state->score->data[col + xres * row] = cormax;
+
         if (state->x_dist || state->x_dist) {
             k = 0;
             for (m=-1; m<=1; m++) {
@@ -991,21 +1002,19 @@ gwy_data_field_crosscorrelate_iteration(GwyComputationState *cstate)
 
             state->y_dist->data[col + xres * row]
                 = (jpos - row)*state->data_field1->yreal/state->data_field1->yres;
-    }
+        }
 
-        state->j++;
-        if (state->j == xres - (state->search_width
-                                - state->search_width/2)) {
-            state->j = state->search_width/2;
-            state->i++;
-            if (state->i == yres - (state->search_height
-                                    - state->search_height/2)) {
+        state->i++;
+        if (state->i == (xres - state->window_width/2 - 1)) {
+            state->i = state->window_width/2 + 1;
+            state->j++;
+            if (state->j == (yres - state->window_height/2 - 1)) {
                 state->cs.state = GWY_COMPUTATION_STATE_FINISHED;
             }
         }
         state->cs.fraction
-            += 1.0/(xres - state->search_width + 1)
-                  /(yres - state->search_height + 1);
+            += 1.0/(xres - state->window_width - 2)
+                  /(yres - state->window_height - 2);
         state->cs.fraction = MIN(state->cs.fraction, 1.0);
     }
     else if (state->cs.state == GWY_COMPUTATION_STATE_FINISHED)
