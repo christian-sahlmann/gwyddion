@@ -42,6 +42,7 @@ typedef enum {
     GWY_APP_ACTION_TYPE_TOOL,
     GWY_APP_ACTION_TYPE_VOLUME,
     GWY_APP_ACTION_TYPE_XYZ,
+    GWY_APP_ACTION_NTYPES,
 } GwyAppActionType;
 
 typedef struct {
