@@ -70,6 +70,8 @@ Modules:
 - Grain statistics: The values are displayed with more significant digits.
 - Raw XYZ import: No longer loses the first data point in the file.
 - Graph cut: The ‘cut all’ setting is remembered, some GUI improvements.
+- Cross correlate: Introduced weighting function, result smoothing and extension and 
+  back-correction according to the results.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
