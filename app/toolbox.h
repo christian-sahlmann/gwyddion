@@ -85,7 +85,7 @@ extern const GwyEnum *gwy_toolbox_action_types;
 extern const GwyEnum *gwy_toolbox_mode_types;
 
 void                         gwy_toolbox_rebuild_to_spec  (GwyToolboxSpec *spec);
-GwyToolboxSpec*              gwy_parse_toolbox_ui         (void);
+GwyToolboxSpec*              gwy_parse_toolbox_ui         (gboolean ignore_user);
 GwyToolboxSpec*              gwy_toolbox_parse            (const gchar *ui,
                                                            gsize ui_len,
                                                            GError **error);

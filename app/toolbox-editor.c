@@ -36,6 +36,10 @@
 #include "gwyddion.h"
 #include "toolbox.h"
 
+enum {
+    RESPONSE_RESET     = 1,
+};
+
 typedef enum {
     TOOLBOX_ICON_SOURCE_DEFAULT = 0,
     TOOLBOX_ICON_SOURCE_GWY = 1,
@@ -69,6 +73,7 @@ typedef struct {
     GtkListStore *icon_model_gwy;
     GtkListStore *icon_model_gtk;
     GtkListStore *icon_model_default;
+    GwyToolboxItemSpec last_item_spec;
 } GwyToolboxEditor;
 
 typedef struct {
@@ -89,6 +94,7 @@ typedef struct {
     GtkWidget *mode_label;
     GtkWidget *mode;
     GtkWidget *icon_source;
+    GtkWidget *icon_source_label;
     GtkWidget *detail;
     GtkTreeView *function_view;
     GtkIconView *icon_view;
@@ -140,6 +146,11 @@ static void          group_title_transl_changed      (GwyToolboxGroupEditor *ged
                                                       GtkToggleButton *toggle);
 static gboolean      edit_item_dialogue              (GwyToolboxEditor *editor,
                                                       GwyToolboxItemSpec *ispec);
+static void          create_item_editor_models       (GwyToolboxEditor *editor);
+static void          try_to_select_item_function     (GwyToolboxItemEditor *ieditor,
+                                                      GQuark qname);
+static void          try_to_select_item_icon         (GwyToolboxItemEditor *ieditor,
+                                                      GQuark qname);
 static void          function_type_changed           (GtkComboBox *combo,
                                                       GwyToolboxItemEditor *ieditor);
 static void          function_mode_changed           (GtkComboBox *combo,
@@ -162,6 +173,7 @@ static void          move_up_in_toolbox              (GwyToolboxEditor *editor);
 static void          move_down_in_toolbox            (GwyToolboxEditor *editor);
 static void          width_changed                   (GwyToolboxEditor *editor);
 static void          apply_toolbox_spec              (GwyToolboxEditor *editor);
+static void          reset_toolbox_to_default        (GwyToolboxEditor *editor);
 static GtkListStore* create_function_list            (ForeachFunc foreach_do);
 static GtkListStore* create_function_list_builtin    (void);
 static const gchar*  action_get_nice_name            (GwyAppActionType type,
@@ -193,9 +205,15 @@ gwy_toolbox_editor(void)
     g_return_if_fail(spec);
     editor.spec = gwy_toolbox_spec_duplicate(spec);
 
+    editor.last_item_spec.type = GWY_APP_ACTION_TYPE_PLACEHOLDER;
+    editor.last_item_spec.function = 0;
+    editor.last_item_spec.icon = 0;
+    editor.last_item_spec.mode = 0;
+
     editor.dialogue = gtk_dialog_new_with_buttons(_("Toolbox Editor"),
                                                   toolbox,
                                                   GTK_DIALOG_MODAL,
+                                                  _("_Reset"), RESPONSE_RESET,
                                                   GTK_STOCK_APPLY,
                                                   GTK_RESPONSE_APPLY,
                                                   GTK_STOCK_CLOSE,
@@ -288,6 +306,9 @@ gwy_toolbox_editor(void)
 
     do {
        response = gtk_dialog_run(GTK_DIALOG(editor.dialogue));
+
+       if (response == RESPONSE_RESET)
+           reset_toolbox_to_default(&editor);
 
        if (response == GTK_RESPONSE_APPLY)
            apply_toolbox_spec(&editor);
@@ -513,11 +534,13 @@ create_function_tree_view(GwyToolboxItemEditor *ieditor)
 static void
 create_icon_icon_view(GwyToolboxItemEditor *ieditor)
 {
+    GtkTreeModel *model;
     GtkCellRenderer *renderer;
     GtkCellLayout *layout;
     gint width, height;
 
-    ieditor->icon_view = GTK_ICON_VIEW(gtk_icon_view_new());
+    model = GTK_TREE_MODEL(ieditor->editor->icon_model_default);
+    ieditor->icon_view = GTK_ICON_VIEW(gtk_icon_view_new_with_model(model));
     g_object_set(ieditor->icon_view,
                  "column-spacing", 2,
                  "row-spacing", 2,
@@ -858,6 +881,17 @@ group_id_changed(GwyToolboxGroupEditor *geditor, GtkEntry *entry)
 }
 
 static void
+add_unichar_if_ident(GString *str, gunichar uc)
+{
+    if (uc <= 0x20 || uc >= 0x80)
+        return;
+
+    if (g_ascii_isalpha(uc)
+        || (str->len && (uc == '_' || uc == '-' || g_ascii_isdigit(uc))))
+        g_string_append_c(str, g_ascii_tolower(uc));
+}
+
+static void
 suggest_group_id(GwyToolboxGroupEditor *geditor)
 {
     GString *suggestion;
@@ -877,29 +911,13 @@ suggest_group_id(GwyToolboxGroupEditor *geditor)
         for (i = 0; i < name_len; i++) {
             decomp_len = g_unichar_fully_decompose(name_chars[i], TRUE,
                                                    buf, G_N_ELEMENTS(buf));
-            for (j = 0; j < decomp_len; j++) {
-                if (buf[j] <= 0x20 || buf[j] >= 0x80)
-                    continue;
-
-                if (g_ascii_isalpha(buf[j])
-                    || (suggestion->len && (buf[j] == '_'
-                                            || buf[j] == '-'
-                                            || g_ascii_isdigit(buf[j]))))
-                    g_string_append_c(suggestion, g_ascii_tolower(buf[j]));
-            }
+            for (j = 0; j < decomp_len; j++)
+                add_unichar_if_ident(suggestion, buf[j]);
         }
     }
 #else
-    for (i = 0; i < name_len; i++) {
-        if (name_chars[i] <= 0x20 || name_chars[j] >= 0x80)
-            continue;
-
-        if (g_ascii_isalpha(name_chars[i])
-            || (suggestion->len && (name_chars[i] == '_'
-                                    || name_chars[i] == '-'
-                                    || g_ascii_isdigit(name_chars[i]))))
-            g_string_append_c(suggestion, g_ascii_tolower(name_chars[i]));
-    }
+    for (i = 0; i < name_len; i++)
+        add_unichar_if_ident(suggestion, name_chars[j]);
 #endif
 
     gtk_entry_set_text(GTK_ENTRY(geditor->id), suggestion->str);
@@ -928,28 +946,8 @@ edit_item_dialogue(GwyToolboxEditor *editor, GwyToolboxItemSpec *ispec)
     ieditor.editor = editor;
     ieditor.ispec = *ispec;
 
-    if (!editor->function_model[GWY_APP_ACTION_TYPE_PROC]) {
-        GtkListStore **stores = editor->function_model;
-
-        stores[GWY_APP_ACTION_TYPE_BUILTIN] = create_function_list_builtin();
-        stores[GWY_APP_ACTION_TYPE_PROC]
-            = create_function_list(gwy_process_func_foreach);
-        stores[GWY_APP_ACTION_TYPE_GRAPH]
-            = create_function_list(gwy_graph_func_foreach);
-        stores[GWY_APP_ACTION_TYPE_VOLUME]
-            = create_function_list(gwy_volume_func_foreach);
-        stores[GWY_APP_ACTION_TYPE_XYZ]
-            = create_function_list(gwy_xyz_func_foreach);
-        /* TODO: Add the placeholder for remaining tools. */
-        stores[GWY_APP_ACTION_TYPE_TOOL]
-            = create_function_list(gwy_tool_func_foreach);
-
-        editor->icon_model_gwy = create_gwy_icon_list(editor->dialogue);
-        editor->icon_model_gtk = create_gtk_icon_list(editor->dialogue);
-        editor->icon_model_default = gtk_list_store_new(2,
-                                                        G_TYPE_UINT,
-                                                        GDK_TYPE_PIXBUF);
-    }
+    if (!editor->function_model[GWY_APP_ACTION_TYPE_PROC])
+        create_item_editor_models(editor);
 
     ieditor.dialogue = gtk_dialog_new_with_buttons(_("Toolbox Item"),
                                                    GTK_WINDOW(editor->dialogue),
@@ -1008,20 +1006,12 @@ edit_item_dialogue(GwyToolboxEditor *editor, GwyToolboxItemSpec *ispec)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), ieditor.mode);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Use _icon from:"));
+    label = ieditor.icon_source_label
+        = gtk_label_new_with_mnemonic(_("Use _icon from:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     iconsource = TOOLBOX_ICON_SOURCE_DEFAULT;
-    if (ieditor.ispec.icon) {
-        const gchar *stock_id = g_quark_to_string(ieditor.ispec.icon);
-        if (g_str_has_prefix(stock_id, "gtk-"))
-            iconsource = TOOLBOX_ICON_SOURCE_GTK;
-        else if (g_str_has_prefix(stock_id, "gwy_"))
-            iconsource = TOOLBOX_ICON_SOURCE_GWY;
-        else
-            g_warning("Cannot guess where did icon %s come from.", stock_id);
-    }
     ieditor.icon_source
         = gwy_enum_combo_box_newl(G_CALLBACK(function_icon_source_changed),
                                   &ieditor,
@@ -1072,10 +1062,16 @@ edit_item_dialogue(GwyToolboxEditor *editor, GwyToolboxItemSpec *ispec)
     gtk_label_set_ellipsize(GTK_LABEL(ieditor.detail), PANGO_ELLIPSIZE_END);
     gtk_box_pack_start(vbox, ieditor.detail, FALSE, FALSE, 0);
 
+    function_type_changed(GTK_COMBO_BOX(ieditor.type), &ieditor);
+    if (ispec->mode)
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(ieditor.mode), ispec->mode);
+    try_to_select_item_function(&ieditor, ispec->function);
+    try_to_select_item_icon(&ieditor, ispec->icon);
+
     gtk_widget_show_all(ieditor.dialogue);
     response = gtk_dialog_run(GTK_DIALOG(ieditor.dialogue));
     if (response == GTK_RESPONSE_OK) {
-        /* TODO: Set caller's ispec to our private ispec. */
+        *ispec = ieditor.ispec;
     }
 
     gtk_widget_destroy(ieditor.dialogue);
@@ -1084,29 +1080,142 @@ edit_item_dialogue(GwyToolboxEditor *editor, GwyToolboxItemSpec *ispec)
 }
 
 static void
+create_item_editor_models(GwyToolboxEditor *editor)
+{
+    GtkListStore **stores = editor->function_model;
+    GtkTreeIter iter;
+
+    stores[GWY_APP_ACTION_TYPE_BUILTIN] = create_function_list_builtin();
+    stores[GWY_APP_ACTION_TYPE_PROC]
+        = create_function_list(gwy_process_func_foreach);
+    stores[GWY_APP_ACTION_TYPE_GRAPH]
+        = create_function_list(gwy_graph_func_foreach);
+    stores[GWY_APP_ACTION_TYPE_VOLUME]
+        = create_function_list(gwy_volume_func_foreach);
+    stores[GWY_APP_ACTION_TYPE_XYZ]
+        = create_function_list(gwy_xyz_func_foreach);
+    stores[GWY_APP_ACTION_TYPE_TOOL]
+        = create_function_list(gwy_tool_func_foreach);
+    gtk_list_store_insert_with_values(stores[GWY_APP_ACTION_TYPE_TOOL], &iter,
+                                      G_MAXINT, 0, 0, -1);
+
+    editor->icon_model_gwy = create_gwy_icon_list(editor->dialogue);
+    editor->icon_model_gtk = create_gtk_icon_list(editor->dialogue);
+    editor->icon_model_default = gtk_list_store_new(2,
+                                                    G_TYPE_UINT,
+                                                    GDK_TYPE_PIXBUF);
+}
+
+static void
+try_to_select_item_function(GwyToolboxItemEditor *ieditor, GQuark qname)
+{
+    GtkTreeModel *model = gtk_tree_view_get_model(ieditor->function_view);
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GQuark quark;
+
+    if (!model) {
+        g_assert(ieditor->ispec.type == GWY_APP_ACTION_TYPE_PLACEHOLDER);
+        return;
+    }
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return;
+
+    do {
+        gtk_tree_model_get(model, &iter, 0, &quark, -1);
+        if (quark == qname) {
+            selection = gtk_tree_view_get_selection(ieditor->function_view);
+            gtk_tree_selection_select_iter(selection, &iter);
+            return;
+        }
+    } while (gtk_tree_model_iter_next(model, &iter));
+}
+
+static void
+try_to_select_item_icon(GwyToolboxItemEditor *ieditor, GQuark qname)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    GQuark quark;
+    const gchar *name;
+    ToolboxIconSource iconsource;
+
+    if (!qname) {
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(ieditor->icon_source),
+                                      TOOLBOX_ICON_SOURCE_DEFAULT);
+    }
+    else {
+        name = g_quark_to_string(qname);
+        if (g_str_has_prefix(name, "gtk-"))
+            iconsource = TOOLBOX_ICON_SOURCE_GTK;
+        else if (g_str_has_prefix(name, "gwy_"))
+            iconsource = TOOLBOX_ICON_SOURCE_GWY;
+        else {
+            iconsource = TOOLBOX_ICON_SOURCE_DEFAULT;
+            g_warning("Cannot guess where did icon %s come from.", name);
+        }
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(ieditor->icon_source),
+                                      iconsource);
+    }
+    model = gtk_icon_view_get_model(ieditor->icon_view);
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return;
+
+    do {
+        gtk_tree_model_get(model, &iter, 0, &quark, -1);
+        /* This select the first icon for the DEFAULT source. */
+        if (TOOLBOX_ICON_SOURCE_DEFAULT || quark == qname) {
+            path = gtk_tree_model_get_path(model, &iter);
+            gtk_icon_view_select_path(ieditor->icon_view, path);
+            gtk_tree_path_free(path);
+            return;
+        }
+    } while (gtk_tree_model_iter_next(model, &iter));
+}
+
+static void
 function_type_changed(GtkComboBox *combo, GwyToolboxItemEditor *ieditor)
 {
     GwyAppActionType type = gwy_enum_combo_box_get_active(combo);
+    GtkTreeModel *func_model;
     GwyToolboxEditor *editor = ieditor->editor;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
 
     ieditor->ispec.type = type;
-    gtk_tree_view_set_model(ieditor->function_view,
-                            GTK_TREE_MODEL(editor->function_model[type]));
+    func_model = GTK_TREE_MODEL(editor->function_model[type]);
+    gtk_tree_view_set_model(ieditor->function_view, func_model);
     if (type == GWY_APP_ACTION_TYPE_PLACEHOLDER) {
-        /* TODO: Insensitive icon selector; insensitive function, insensitive
-         * run mode; clear all in the item. */
+        gtk_widget_set_sensitive(ieditor->icon_source, FALSE);
+        gtk_widget_set_sensitive(ieditor->icon_source_label, FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(ieditor->icon_view), FALSE);
+        gtk_widget_set_sensitive(ieditor->mode, FALSE);
+        gtk_widget_set_sensitive(ieditor->mode_label, FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(ieditor->function_view), FALSE);
         gtk_icon_view_set_model(ieditor->icon_view,
                                 GTK_TREE_MODEL(editor->icon_model_default));
         gtk_list_store_clear(editor->icon_model_default);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(ieditor->icon_source),
+                                      TOOLBOX_ICON_SOURCE_DEFAULT);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(ieditor->mode), 0);
+        ieditor->ispec.function = 0;
+        return;
     }
-    else {
-        if (!gtk_icon_view_get_model(ieditor->icon_view)) {
-            gtk_icon_view_set_model(ieditor->icon_view,
-                                    GTK_TREE_MODEL(editor->icon_model_gwy));
-        }
-        /* TODO: Make sensitive; select the first available item;
-         * tools do not have run mode, functions may not support all modes; */
-    }
+
+    gtk_widget_set_sensitive(ieditor->icon_source, TRUE);
+    gtk_widget_set_sensitive(ieditor->icon_source_label, TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(ieditor->icon_view), TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(ieditor->function_view), TRUE);
+
+    /* Set the selection to the first item. */
+    selection = gtk_tree_view_get_selection(ieditor->function_view);
+    if (gtk_tree_model_get_iter_first(func_model, &iter))
+        gtk_tree_selection_select_iter(selection, &iter);
+    else
+        function_selection_changed(ieditor);
 }
 
 static void
@@ -1121,6 +1230,9 @@ function_icon_source_changed(GtkComboBox *combo, GwyToolboxItemEditor *ieditor)
 {
     ToolboxIconSource iconsource = gwy_enum_combo_box_get_active(combo);
     GwyToolboxEditor *editor = ieditor->editor;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path;
 
     if (iconsource == TOOLBOX_ICON_SOURCE_GWY) {
         gtk_icon_view_set_model(ieditor->icon_view,
@@ -1137,6 +1249,15 @@ function_icon_source_changed(GtkComboBox *combo, GwyToolboxItemEditor *ieditor)
         gtk_icon_view_set_model(ieditor->icon_view,
                                 GTK_TREE_MODEL(editor->icon_model_default));
     }
+
+    model = gtk_icon_view_get_model(ieditor->icon_view);
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        path = gtk_tree_model_get_path(model, &iter);
+        gtk_icon_view_select_path(ieditor->icon_view, path);
+        gtk_tree_path_free(path);
+    }
+    else
+        function_icon_changed(ieditor);
 }
 
 static void
@@ -1203,6 +1324,11 @@ function_icon_changed(GwyToolboxItemEditor *ieditor)
     GtkTreeIter iter;
 
     model = gtk_icon_view_get_model(ieditor->icon_view);
+    if (model == GTK_TREE_MODEL(ieditor->editor->icon_model_default)) {
+        ieditor->ispec.icon = 0;
+        return;
+    }
+
     items = gtk_icon_view_get_selected_items(ieditor->icon_view);
     if (!model || !g_list_length(items)) {
         ieditor->ispec.icon = 0;
@@ -1342,6 +1468,7 @@ add_toolbox_item(GwyToolboxEditor *editor)
     guint i, j, depth;
     GwyToolboxItemSpec ispec;
     GwyToolboxEditorRow *row;
+    gboolean ok;
 
     selection = gtk_tree_view_get_selection(editor->toolbox_view);
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
@@ -1357,11 +1484,10 @@ add_toolbox_item(GwyToolboxEditor *editor)
         j++;
     }
 
-    ispec.type = GWY_APP_ACTION_TYPE_PLACEHOLDER;
-    ispec.function = 0;
-    ispec.icon = 0;
-    ispec.mode = 0;
-    if (!edit_item_dialogue(editor, &ispec))
+    ispec = editor->last_item_spec;
+    ok = edit_item_dialogue(editor, &ispec);
+    editor->last_item_spec = ispec;
+    if (!ok)
         return;
 
     gwy_toolbox_spec_add_item(editor->spec, &ispec, i, j);
@@ -1413,6 +1539,7 @@ edit_item_or_group(GwyToolboxEditor *editor)
     GtkTreePath *path;
     guint depth, i, j;
     GwyToolboxGroupSpec *gspec;
+    GwyToolboxItemSpec *ispec;
     GwyToolboxEditorRow *row;
 
     selection = gtk_tree_view_get_selection(editor->toolbox_view);
@@ -1431,7 +1558,14 @@ edit_item_or_group(GwyToolboxEditor *editor)
         }
     }
     else if (depth == 2) {
-        g_warning("Implement me!");
+        gspec = &g_array_index(editor->spec->group, GwyToolboxGroupSpec, i);
+        ispec = &g_array_index(gspec->item, GwyToolboxItemSpec, j);
+        if (edit_item_dialogue(editor, ispec)) {
+            fill_toolbox_row_for_item(row, ispec);
+            path = gtk_tree_model_get_path(model, &iter);
+            gtk_tree_model_row_changed(model, path, &iter);
+            gtk_tree_path_free(path);
+        }
     }
 }
 
@@ -1531,6 +1665,27 @@ apply_toolbox_spec(GwyToolboxEditor *editor)
     gwy_toolbox_rebuild_to_spec(spec);
 }
 
+static void
+reset_toolbox_to_default(GwyToolboxEditor *editor)
+{
+    GwyToolboxSpec *spec = gwy_parse_toolbox_ui(TRUE);
+    GtkTreeStore *store;
+
+    if (!spec)
+        return;
+
+    store = gtk_tree_store_new(1, G_TYPE_POINTER);
+    fill_toolbox_treestore(store, spec);
+    GWY_SWAP(GwyToolboxSpec*, spec, editor->spec);
+    GWY_SWAP(GtkTreeStore*, store, editor->toolbox_model);
+    gtk_tree_view_set_model(editor->toolbox_view,
+                            GTK_TREE_MODEL(editor->toolbox_model));
+    gtk_tree_view_expand_all(editor->toolbox_view);
+
+    free_toolbox_treestore(store);
+    gwy_toolbox_spec_free(spec);
+}
+
 /* Copied from menu.c */
 static void
 gwy_app_menu_canonicalize_label(gchar *label)
@@ -1556,9 +1711,12 @@ action_get_nice_name(GwyAppActionType type, const gchar *name)
     const gchar *menupath = NULL;
 
     if (type == GWY_APP_ACTION_TYPE_TOOL) {
-        GType gtype = g_type_from_name(name);
-        GwyToolClass *tool_class = g_type_class_peek(gtype);
-        return gwy_tool_class_get_title(tool_class);
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_title(tool_class);
+        }
+        return _("remaining tools");
     }
     if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
         const GwyToolboxBuiltinSpec* spec;
@@ -1608,9 +1766,11 @@ find_default_stock_id(GwyAppActionType type, const gchar *name)
     if (type == GWY_APP_ACTION_TYPE_XYZ)
         return gwy_xyz_func_get_stock_id(name);
     if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
-        GType gtype = g_type_from_name(name);
-        GwyToolClass *tool_class = g_type_class_peek(gtype);
-        return gwy_tool_class_get_stock_id(tool_class);
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_stock_id(tool_class);
+        }
     }
     if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
         const GwyToolboxBuiltinSpec* spec;
@@ -1635,9 +1795,12 @@ find_function_detail(GwyAppActionType type, const gchar *name)
     if (type == GWY_APP_ACTION_TYPE_XYZ)
         return gwy_xyz_func_get_tooltip(name);
     if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
-        GType gtype = g_type_from_name(name);
-        GwyToolClass *tool_class = g_type_class_peek(gtype);
-        return gwy_tool_class_get_tooltip(tool_class);
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_tooltip(tool_class);
+        }
+        return _("All tools not placed explicitly go here.");
     }
     if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
         const GwyToolboxBuiltinSpec* spec;

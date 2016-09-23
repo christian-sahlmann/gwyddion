@@ -414,7 +414,7 @@ gwy_toolbox_spec_add_group(GwyToolboxSpec *spec,
 }
 
 GwyToolboxSpec*
-gwy_parse_toolbox_ui(void)
+gwy_parse_toolbox_ui(gboolean ignore_user)
 {
     GwyToolboxSpec *spec;
     GError *error = NULL;
@@ -422,7 +422,7 @@ gwy_parse_toolbox_ui(void)
     gsize ui_len;
 
     p = g_build_filename(gwy_get_user_dir(), "ui", TOOLBOX_UI_FILE_NAME, NULL);
-    if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
+    if (ignore_user || !g_file_get_contents(p, &ui, &ui_len, NULL)) {
         g_free(p);
         q = gwy_find_self_dir("data");
         p = g_build_filename(q, "ui", TOOLBOX_UI_FILE_NAME, NULL);

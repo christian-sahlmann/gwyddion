@@ -589,7 +589,7 @@ gwy_app_toolbox_window_create(void)
 
     /***************************************************************/
 
-    spec = gwy_parse_toolbox_ui();
+    spec = gwy_parse_toolbox_ui(FALSE);
     if (spec) {
         /* TODO: free the spec upon exit so that it does not show as a leak. */
         gwy_app_toolbox_build(spec, vbox, gwy_app_get_tooltips(), accel_group);
