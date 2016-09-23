@@ -36,7 +36,7 @@
 
 #define LOGISTIC_RUN_MODES GWY_RUN_INTERACTIVE
 
-#define NFEATURES (1 + 4 * 5)
+#define NFEATURES (1 + 7 * 5)
 #define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
 
 enum {
@@ -93,6 +93,9 @@ static void      logistic_load_args     (GwyContainer *settings,
 static void      logistic_save_args     (GwyContainer *settings,
                                          LogisticArgs *args);
 static void      logistic_reset_args    (LogisticArgs *args);
+static void      logistic_filter_dx2    (GwyDataField *dfield);
+static void      logistic_filter_dy2    (GwyDataField *dfield);
+static void      logistic_filter_dxdy   (GwyDataField *dfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -321,6 +324,43 @@ create_feature_vector(GwyDataField *dfield)
         memmove(fdata, bdata + (z-3) * xres * yres,
                 xres * yres * sizeof(gdouble));
         z++;
+        logistic_filter_dx2(feature);
+        max = gwy_data_field_get_max(feature);
+        min = gwy_data_field_get_min(feature);
+        g_return_val_if_fail(max - min > 0.0, NULL);
+        gwy_data_field_multiply(feature, 1.0/(max - min));
+        avg = gwy_data_field_get_avg(feature);
+        gwy_data_field_add(feature, -avg);
+        memmove(bdata + z * xres * yres, fdata,
+                xres * yres * sizeof(gdouble));
+        memmove(fdata, bdata + (z-4) * xres * yres,
+                xres * yres * sizeof(gdouble));
+        z++;
+        logistic_filter_dy2(feature);
+        max = gwy_data_field_get_max(feature);
+        min = gwy_data_field_get_min(feature);
+        g_return_val_if_fail(max - min > 0.0, NULL);
+        gwy_data_field_multiply(feature, 1.0/(max - min));
+        avg = gwy_data_field_get_avg(feature);
+        gwy_data_field_add(feature, -avg);
+        memmove(bdata + z * xres * yres, fdata,
+                xres * yres * sizeof(gdouble));
+        memmove(fdata, bdata + (z-5) * xres * yres,
+                xres * yres * sizeof(gdouble));
+        z++;
+        logistic_filter_dxdy(feature);
+        max = gwy_data_field_get_max(feature);
+        min = gwy_data_field_get_min(feature);
+        g_return_val_if_fail(max - min > 0.0, NULL);
+        gwy_data_field_multiply(feature, 1.0/(max - min));
+        avg = gwy_data_field_get_avg(feature);
+        gwy_data_field_add(feature, -avg);
+        memmove(bdata + z * xres * yres, fdata,
+                xres * yres * sizeof(gdouble));
+        memmove(fdata, bdata + (z-6) * xres * yres,
+                xres * yres * sizeof(gdouble));
+        z++;
+
         g_object_unref(feature);
     }
     g_object_unref(feature0);
@@ -560,32 +600,127 @@ logistic_reset_args(LogisticArgs *args)
     gdouble *p;
     gint i;
 
-    thetas[0] = 1.25099;
-    thetas[1] = 1.41348;
-    thetas[2] = 1.41405;
-    thetas[3] = -0.283954;
-    thetas[4] = -0.0738085;
-    thetas[5] = 2.95126;
-    thetas[6] = -0.157917;
-    thetas[7] = 0.0817234;
-    thetas[8] = 0.0388422;
-    thetas[9] = 3.60457;
-    thetas[10] = 3.18731;
-    thetas[11] = 3.92896;
-    thetas[12] = 0.434874;
-    thetas[13] = 2.02171;
-    thetas[14] = -24.9334;
-    thetas[15] = 0.116424;
-    thetas[16] = 0.0659015;
-    thetas[17] = -8.54693;
-    thetas[18] = -38.0947;
-    thetas[19] = -6.55105;
-    thetas[20] = 1.31064;
+	thetas[0] = 0.425046;
+    thetas[1] = 0.634522;
+    thetas[2] = 1.45483;
+    thetas[3] = 0.140818;
+    thetas[4] = 0.0111444;
+    thetas[5] = 0.377558;
+    thetas[6] = 0.159253;
+    thetas[7] = -0.0866127;
+    thetas[8] = 1.1986;
+    thetas[9] = 0.955458;
+    thetas[10] = 0.615229;
+    thetas[11] = -0.0589722;
+    thetas[12] = -0.199368;
+    thetas[13] = 0.345082;
+    thetas[14] = 0.346605;
+    thetas[15] = 1.40107;
+    thetas[16] = 1.14958;
+    thetas[17] = 0.76787;
+    thetas[18] = 0.0941677;
+    thetas[19] = 1.2597;
+    thetas[20] = 0.5242;
+    thetas[21] = -0.0549204;
+    thetas[22] = 1.11674;
+    thetas[23] = -7.39412;
+    thetas[24] = -1.203;
+    thetas[25] = 0.0899886;
+    thetas[26] = -5.59255;
+    thetas[27] = -4.69718;
+    thetas[28] = -0.865665;
+    thetas[29] = -3.01023;
+    thetas[30] = -20.2098;
+    thetas[31] = -3.60824;
+    thetas[32] = -0.497726;
+    thetas[33] = -14.5519;
+    thetas[34] = -14.054;
+    thetas[35] = 1.01437;
 
     p = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < NFEATURES; i++) {
         *(p++) = thetas[i];
     }
+}
+
+static void
+gwy_data_field_area_convolve_3x3(GwyDataField *data_field,
+                                 const gdouble *kernel,
+                                 gint col, gint row,
+                                 gint width, gint height)
+{
+    gdouble *rm, *rc, *rp;
+    gdouble t, v;
+    gint xres, i, j;
+
+    xres = data_field->xres;
+    rp = data_field->data + row*xres + col;
+
+    /* Special-case width == 1 to avoid complications below.  It's silly but
+     * the API guarantees it. */
+    if (width == 1) {
+        t = rp[0];
+        for (i = 0; i < height; i++) {
+            rc = rp = data_field->data + (row + i)*xres + col;
+            if (i < height-1)
+                rp += xres;
+
+            v = (kernel[0] + kernel[1] + kernel[2])*t
+                + (kernel[3] + kernel[4] + kernel[5])*rc[0]
+                + (kernel[6] + kernel[7] + kernel[8])*rp[0];
+            t = rc[0];
+            rc[0] = v;
+        }
+        gwy_data_field_invalidate(data_field);
+
+        return;
+    }
+
+    rm = g_new(gdouble, width);
+    memcpy(rm, rp, width*sizeof(gdouble));
+
+    for (i = 0; i < height; i++) {
+        rc = rp;
+        if (i < height-1)
+            rp += xres;
+        v = (kernel[0] + kernel[1])*rm[0] + kernel[2]*rm[1]
+            + (kernel[3] + kernel[4])*rc[0] + kernel[5]*rc[1]
+            + (kernel[6] + kernel[7])*rp[0] + kernel[8]*rp[1];
+        t = rc[0];
+        rc[0] = v;
+        if (i < height-1) {
+            for (j = 1; j < width-1; j++) {
+                v = kernel[0]*rm[j-1] + kernel[1]*rm[j] + kernel[2]*rm[j+1]
+                    + kernel[3]*t + kernel[4]*rc[j] + kernel[5]*rc[j+1]
+                    + kernel[6]*rp[j-1] + kernel[7]*rp[j] + kernel[8]*rp[j+1];
+                rm[j-1] = t;
+                t = rc[j];
+                rc[j] = v;
+            }
+            v = kernel[0]*rm[j-1] + (kernel[1] + kernel[2])*rm[j]
+                + kernel[3]*t + (kernel[4] + kernel[5])*rc[j]
+                + kernel[6]*rp[j-1] + (kernel[7] + kernel[8])*rp[j];
+        }
+        else {
+            for (j = 1; j < width-1; j++) {
+                v = kernel[0]*rm[j-1] + kernel[1]*rm[j] + kernel[2]*rm[j+1]
+                    + kernel[3]*t + kernel[4]*rc[j] + kernel[5]*rc[j+1]
+                    + kernel[6]*t + kernel[7]*rc[j] + kernel[8]*rc[j+1];
+                rm[j-1] = t;
+                t = rc[j];
+                rc[j] = v;
+            }
+            v = kernel[0]*rm[j-1] + (kernel[1] + kernel[2])*rm[j]
+                + kernel[3]*t + (kernel[4] + kernel[5])*rc[j]
+                + kernel[6]*t + (kernel[7] + kernel[8])*rc[j];
+        }
+        rm[j-1] = t;
+        rm[j] = rc[j];
+        rc[j] = v;
+    }
+
+    g_free(rm);
+    gwy_data_field_invalidate(data_field);
 }
 
 static void
@@ -602,15 +737,14 @@ logistic_filter_dx2(GwyDataField *dfield)
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-
-    gwy_data_field_convolve(dfield, dx2_kernel);
+    gwy_data_field_area_convolve_3x3(dfield, dx2_kernel,
+                                     0, 0, xres, yres);
 }
 
 static void
 logistic_filter_dy2(GwyDataField *dfield)
 {
     gint xres, yres;
-
     static const gdouble dy2_kernel[] = {
         0.125,  0.25, 0.125,
         -0.25,  -0.5, -0.25,
@@ -619,16 +753,15 @@ logistic_filter_dy2(GwyDataField *dfield)
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-
-    gwy_data_field_convolve(dfield, dy2_kernel);
+    yres = gwy_data_field_get_yres(dfield);    
+    gwy_data_field_area_convolve_3x3(dfield, dy2_kernel,
+                                     0, 0, xres, yres);
 }
 
 static void
 logistic_filter_dxdy(GwyDataField *dfield)
 {
     gint xres, yres;
-
     static const gdouble dxdy_kernel[] = {
         0.5,  0, -0.5,
         0,    0, 0,
@@ -637,9 +770,9 @@ logistic_filter_dxdy(GwyDataField *dfield)
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-
-    gwy_data_field_convolve(dfield, dxdy_kernel);
+    yres = gwy_data_field_get_yres(dfield);    
+    gwy_data_field_area_convolve_3x3(dfield, dxdy_kernel,
+                                     0, 0, xres, yres);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
