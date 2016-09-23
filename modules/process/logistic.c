@@ -318,15 +318,6 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
-        max = gwy_data_field_get_max(feature);
-        min = gwy_data_field_get_min(feature);
-        g_return_val_if_fail(max - min > 0.0, NULL);
-        gwy_data_field_multiply(feature, 1.0/(max - min));
-        avg = gwy_data_field_get_avg(feature);
-        gwy_data_field_add(feature, -avg);
-        memmove(bdata + z * xres * yres, fdata,
-                xres * yres * sizeof(gdouble));
         memmove(fdata, bdata + (z-3) * xres * yres,
                 xres * yres * sizeof(gdouble));
         z++;
