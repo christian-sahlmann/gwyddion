@@ -556,8 +556,10 @@ static void
 logistic_save_args(GwyContainer *settings,
                    LogisticArgs *args)
 {
+	/*
     gwy_container_set_object_by_name(settings,
                                      thetas_key, args->thetas);
+                                     */
 }
 
 static void
