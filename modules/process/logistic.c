@@ -50,7 +50,7 @@ typedef enum {
 
 typedef struct {
     LogisticMode mode;
-    gint zres;
+    gint nfeatures;
     GwyDataLine *thetas;
 } LogisticArgs;
 
@@ -556,7 +556,7 @@ static void
 logistic_save_args(GwyContainer *settings,
                    LogisticArgs *args)
 {
-	/*
+    /*
     gwy_container_set_object_by_name(settings,
                                      thetas_key, args->thetas);
                                      */
@@ -595,6 +595,60 @@ logistic_reset_args(LogisticArgs *args)
     for (i = 0; i < NFEATURES; i++) {
         *(p++) = thetas[i];
     }
+}
+
+static void
+logistic_filter_dx2(GwyDataField *dfield)
+{
+    gint xres, yres;
+
+    static const gdouble dx2_kernel[] = {
+        0.125, -0.25, 0.125,
+        0.25,  -0.5,  0.25,
+        0.125, -0.25, 0.125,
+    };
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    gwy_data_field_convolve(dfield, dx2_kernel);
+}
+
+static void
+logistic_filter_dy2(GwyDataField *dfield)
+{
+    gint xres, yres;
+
+    static const gdouble dy2_kernel[] = {
+        0.125,  0.25, 0.125,
+        -0.25,  -0.5, -0.25,
+        0.125,  0.25, 0.125,
+    };
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    gwy_data_field_convolve(dfield, dy2_kernel);
+}
+
+static void
+logistic_filter_dxdy(GwyDataField *dfield)
+{
+    gint xres, yres;
+
+    static const gdouble dxdy_kernel[] = {
+        0.5,  0, -0.5,
+        0,    0, 0,
+        -0.5, 0, 0.5,
+    };
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    gwy_data_field_convolve(dfield, dxdy_kernel);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
