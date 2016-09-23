@@ -215,6 +215,11 @@ gwy_app_settings_load(const gchar *filename,
     gwy_app_settings_set_defaults(gwy_settings);
     gwy_app_settings_apply(gwy_settings);
 
+    //FIXME: deleting "/module/logistic/thetas" stored in wrong
+    //FIXME: format during 2.46 development cycle
+    gwy_container_remove_by_prefix(gwy_settings,
+                                   "/module/logistic/thetas");
+
     return TRUE;
 }
 
