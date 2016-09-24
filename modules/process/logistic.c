@@ -36,7 +36,6 @@
 
 #define LOGISTIC_RUN_MODES GWY_RUN_INTERACTIVE
 
-#define NFEATURES 42
 #define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
 
 enum {
@@ -50,7 +49,11 @@ typedef enum {
 
 typedef struct {
     LogisticMode mode;
-    gint nfeatures;
+    gboolean use_gaussians;
+    gint ngaussians;
+    gboolean use_sobel;
+    gboolean use_laplasian;
+    gboolean use_hessian;
     GwyDataLine *thetas;
 } LogisticArgs;
 
@@ -65,7 +68,8 @@ static void      logistic_run           (GwyContainer *data,
                                          GwyRunType run);
 static void      logistic_dialog        (GwyContainer *data,
                                          LogisticArgs *args);
-static GwyBrick* create_feature_vector  (GwyDataField *dfield);
+static GwyBrick* create_feature_vector  (GwyDataField *dfield,
+                                         LogisticArgs *args);
 static gdouble   cost_function          (GwyBrick *brick,
                                          GwyDataField *mask,
                                          gdouble *thetas,
@@ -96,6 +100,7 @@ static void      logistic_reset_args    (LogisticArgs *args);
 static void      logistic_filter_dx2    (GwyDataField *dfield);
 static void      logistic_filter_dy2    (GwyDataField *dfield);
 static void      logistic_filter_dxdy   (GwyDataField *dfield);
+static gint      logistic_nfeatures     (LogisticArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -136,13 +141,14 @@ logistic_run(GwyContainer *data, GwyRunType run)
 
     g_return_if_fail(run & LOGISTIC_RUN_MODES);
     logistic_load_args(gwy_app_settings_get(), &args);
+    logistic_reset_args(&args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_MASK_FIELD_KEY, &quark,
                                      0);
     logistic_dialog(data, &args);
-    features = create_feature_vector(dfield);
+    features = create_feature_vector(dfield, &args);
 
     /*
     xres = gwy_brick_get_xres(features);
@@ -256,7 +262,7 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
 }
 
 static GwyBrick *
-create_feature_vector(GwyDataField *dfield)
+create_feature_vector(GwyDataField *dfield, LogisticArgs *args)
 {
     GwyBrick *features = NULL;
     GwyDataField *feature0 = NULL,
@@ -264,34 +270,18 @@ create_feature_vector(GwyDataField *dfield)
                  *feature  = NULL;
     gdouble max, min, avg, xreal, yreal, size;
     gdouble *f0data, *gdata, *fdata, *bdata;
-    gint xres, yres, z, zres, i, ngauss, nfeatures;
-    gboolean gaussians   = TRUE,
-             sobel       = TRUE,
-             laplasian   = TRUE,
-             hessian     = TRUE,
-             hess_deriv  = FALSE;
+    gint xres, yres, z, zres, i, ngauss;
 
     feature0 = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(feature0);
     yres = gwy_data_field_get_yres(feature0);
     xreal = gwy_data_field_get_xreal(feature0);
     yreal = gwy_data_field_get_yreal(feature0);
-    ngauss = 5;
-    nfeatures = 1;
-    if (!gaussians) {
+    ngauss = args->ngaussians;
+    if (!args->use_gaussians) {
         ngauss = 0;
     }
-    nfeatures += ngauss;
-    if (laplasian) {
-        nfeatures += ngauss + 1;
-    }
-    if (sobel) {
-        nfeatures += 2 * (ngauss + 1);
-    }
-    if (hessian) {
-        nfeatures += 3 * (ngauss + 1);
-    }
-    zres = nfeatures;
+    zres = logistic_nfeatures(args);
     z = 0;
     max = gwy_data_field_get_max(feature0);
     min = gwy_data_field_get_min(feature0);
@@ -310,7 +300,7 @@ create_feature_vector(GwyDataField *dfield)
     feature = gwy_data_field_duplicate(feature0);
     fdata = gwy_data_field_get_data(feature);
 
-    if (laplasian) {
+    if (args->use_laplasian) {
         gwy_data_field_filter_laplacian(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -324,7 +314,7 @@ create_feature_vector(GwyDataField *dfield)
         z++;
     }
 
-    if (sobel) {
+    if (args->use_sobel) {
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -350,7 +340,7 @@ create_feature_vector(GwyDataField *dfield)
         z++;
     }
 
-    if (hessian) {
+    if (args->use_hessian) {
         logistic_filter_dx2(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -407,7 +397,7 @@ create_feature_vector(GwyDataField *dfield)
         feature = gwy_data_field_duplicate(featureg);
         fdata = gwy_data_field_get_data(feature);
 
-        if (laplasian) {
+        if (args->use_laplasian) {
             gwy_data_field_filter_laplacian(feature);
             max = gwy_data_field_get_max(feature);
             min = gwy_data_field_get_min(feature);
@@ -421,7 +411,7 @@ create_feature_vector(GwyDataField *dfield)
             z++;
         }
 
-        if (sobel) {
+        if (args->use_sobel) {
             gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
             max = gwy_data_field_get_max(feature);
             min = gwy_data_field_get_min(feature);
@@ -447,7 +437,7 @@ create_feature_vector(GwyDataField *dfield)
             z++;
         }
 
-        if (hessian) {
+        if (args->use_hessian) {
             logistic_filter_dx2(feature);
             max = gwy_data_field_get_max(feature);
             min = gwy_data_field_get_min(feature);
@@ -696,11 +686,22 @@ static void
 logistic_load_args(GwyContainer *settings,
                    LogisticArgs *args)
 {
+    gint nfeatures;
+
+    /*
     if (!gwy_container_gis_object_by_name(settings,
                                           thetas_key, &args->thetas)) {
         args->thetas = gwy_data_line_new(NFEATURES, NFEATURES, TRUE);
         logistic_reset_args(args);
     }
+    */
+    args->use_gaussians = TRUE;
+    args->ngaussians = 4;
+    args->use_sobel = TRUE;
+    args->use_laplasian = TRUE;
+    args->use_hessian = TRUE;    
+    nfeatures = logistic_nfeatures(args);
+    args->thetas = gwy_data_line_new(nfeatures, nfeatures, TRUE);
 }
 
 static void
@@ -716,57 +717,52 @@ logistic_save_args(GwyContainer *settings,
 static void
 logistic_reset_args(LogisticArgs *args)
 {
-    gdouble thetas[NFEATURES];
-    gdouble *p;
-    gint i;
+    gdouble *thetas;
+    gint i, nfeatures;
 
-    thetas[0] = 1.33081;
-    thetas[1] = 1.37593;
-    thetas[2] = 0.358389;
-    thetas[3] = 0.00171081;
-    thetas[4] = 0.322548;
-    thetas[5] = 0.227418;
-    thetas[6] = 0.00197188;
-    thetas[7] = 2.21344;
-    thetas[8] = 1.00522;
-    thetas[9] = 0.4861;
-    thetas[10] = -0.0078498;
-    thetas[11] = 0.226521;
-    thetas[12] = 0.711188;
-    thetas[13] = 0.259935;
-    thetas[14] = 2.64307;
-    thetas[15] = 1.52634;
-    thetas[16] = -0.102946;
-    thetas[17] = 0.0593559;
-    thetas[18] = 1.44539;
-    thetas[19] = 0.686324;
-    thetas[20] = -0.0880707;
-    thetas[21] = 2.0556;
-    thetas[22] = -9.47665;
-    thetas[23] = -1.65004;
-    thetas[24] = -0.0224822;
-    thetas[25] = -7.14919;
-    thetas[26] = -5.95944;
-    thetas[27] = -0.196352;
-    thetas[28] = -2.16704;
-    thetas[29] = -15.1234;
-    thetas[30] = -2.98174;
-    thetas[31] = -0.61164;
-    thetas[32] = -10.6664;
-    thetas[33] = -10.6847;
-    thetas[34] = 0.060821;
-    thetas[35] = -5.11742;
-    thetas[36] = -2.13578;
-    thetas[37] = 0.383576;
-    thetas[38] = 0.193679;
-    thetas[39] = -1.7626;
-    thetas[40] = -1.45696;
-    thetas[41] = 0.625375;
+    args->use_gaussians = TRUE;
+    args->ngaussians = 4;
+    args->use_sobel = TRUE;
+    args->use_laplasian = TRUE;
+    args->use_hessian = TRUE;
 
-    p = gwy_data_line_get_data(args->thetas);
-    for (i = 0; i < NFEATURES; i++) {
-        *(p++) = thetas[i];
-    }
+    thetas = gwy_data_line_get_data(args->thetas);
+    thetas[0] = 0.592032;
+    thetas[1] = 1.21119;
+    thetas[2] = 0.105035;
+    thetas[3] = 0.0131375;
+    thetas[4] = 0.435931;
+    thetas[5] = 0.218747;
+    thetas[6] = -0.0838838;
+    thetas[7] = 1.2983;
+    thetas[8] = 0.985186;
+    thetas[9] = 0.669358;
+    thetas[10] = -0.060548;
+    thetas[11] = -0.166977;
+    thetas[12] = 0.359395;
+    thetas[13] = 0.341714;
+    thetas[14] = 1.50746;
+    thetas[15] = 1.10401;
+    thetas[16] = 0.751877;
+    thetas[17] = 0.0940333;
+    thetas[18] = 1.22919;
+    thetas[19] = 0.485005;
+    thetas[20] = -0.0659881;
+    thetas[21] = 1.21087;
+    thetas[22] = -7.40608;
+    thetas[23] = -1.2167;
+    thetas[24] = 0.085099;
+    thetas[25] = -5.60057;
+    thetas[26] = -4.7028;
+    thetas[27] = -0.848886;
+    thetas[28] = -2.91391;
+    thetas[29] = -20.2171;
+    thetas[30] = -3.59727;
+    thetas[31] = -0.49366;
+    thetas[32] = -14.5555;
+    thetas[33] = -14.0601;
+    thetas[34] = 1.00873;
+
 }
 
 static void
@@ -899,6 +895,30 @@ logistic_filter_dxdy(GwyDataField *dfield)
     yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_area_convolve_3x3(dfield, dxdy_kernel,
                                      0, 0, xres, yres);
+}
+
+static gint
+logistic_nfeatures(LogisticArgs *args)
+{
+    gint ngauss, nfeatures;
+
+    ngauss = args->ngaussians;
+    nfeatures = 1;
+    if (!args->use_gaussians) {
+        ngauss = 0;
+    }
+    nfeatures += ngauss;
+    if (args->use_laplasian) {
+        nfeatures += ngauss + 1;
+    }
+    if (args->use_sobel) {
+        nfeatures += 2 * (ngauss + 1);
+    }
+    if (args->use_hessian) {
+        nfeatures += 3 * (ngauss + 1);
+    }
+
+    return nfeatures;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
