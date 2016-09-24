@@ -49,6 +49,8 @@ typedef struct {
     gint pos;
     GtkRadioButton *first_tool;
     const gchar *first_tool_func;
+    GtkRadioButton *current_tool;
+    const gchar *current_tool_func;
     GPtrArray *unseen_tools;
     GtkAccelGroup *accel_group;
     gboolean seen_unseen_tools;
@@ -206,6 +208,9 @@ toolbox_make_tool_button(GwyAppToolboxBuilder *builder,
         builder->first_tool = GTK_RADIO_BUTTON(button);
         builder->first_tool_func = name;
     }
+    if (builder->current_tool_func && gwy_strequal(name,
+                                                   builder->current_tool_func))
+        builder->current_tool = GTK_RADIO_BUTTON(button);
     gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
     accel_path = g_strconcat("<tool>/", name, NULL);
     gtk_widget_set_accel_path(button, accel_path, builder->accel_group);
@@ -480,11 +485,6 @@ remove_seen_unseen_tools(GwyAppToolboxBuilder *builder,
     }
 }
 
-/* TODO: Do not simply switch to the first tool; when we use this in the
- * toolbox editor it makes the tool dialogue to come up and other odd things.
- * Ideally, keep the current tool and do not change its shown/hidden state.
- * Only resort to switching to the first tool when (a) there is no current
- * tool (initial construction) or (b) the current tool was removed. */
 static void
 gwy_app_toolbox_build(GwyToolboxSpec *spec,
                       GtkBox *vbox,
@@ -503,6 +503,7 @@ gwy_app_toolbox_build(GwyToolboxSpec *spec,
     builder.tips = tips;
     builder.unseen_tools = g_ptr_array_new();
     builder.accel_group = accel_group;
+    builder.current_tool_func = gwy_app_current_tool_name();
 
     gwy_tool_func_foreach((GFunc)gather_tools, builder.unseen_tools);
     remove_seen_unseen_tools(&builder, spec);
@@ -522,7 +523,17 @@ gwy_app_toolbox_build(GwyToolboxSpec *spec,
         builder.group = NULL;
     }
 
-    if (builder.first_tool) {
+    if (builder.current_tool) {
+        guint handler_id = g_signal_handler_find(builder.current_tool,
+                                                 G_SIGNAL_MATCH_FUNC,
+                                                 0, 0, NULL,
+                                                 toolbox_action_run, NULL);
+        g_signal_handler_block(builder.current_tool, handler_id);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(builder.current_tool),
+                                     TRUE);
+        g_signal_handler_unblock(builder.current_tool, handler_id);
+    }
+    else if (builder.first_tool) {
         gwy_app_switch_tool(builder.first_tool_func);
         gtk_widget_grab_focus(GTK_WIDGET(builder.first_tool));
     }
@@ -641,7 +652,6 @@ gwy_toolbox_rebuild_to_spec(GwyToolboxSpec *spec)
     accel_group = g_object_get_data(G_OBJECT(toolbox), "accel_group");
     gwy_app_toolbox_build(spec, vbox, gwy_app_get_tooltips(), accel_group);
     gtk_widget_show_all(GTK_WIDGET(vbox));
-
 }
 
 const GwyToolboxBuiltinSpec*
