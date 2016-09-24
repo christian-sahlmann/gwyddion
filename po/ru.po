@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-09-10 19:33+0300\n"
-"PO-Revision-Date: 2016-09-10 19:34+0300\n"
+"POT-Creation-Date: 2016-09-24 10:34+0300\n"
+"PO-Revision-Date: 2016-09-24 10:40+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Poedit-Basepath: .\n"
-"X-Generator: Poedit 1.8.8\n"
+"X-Generator: Poedit 1.8.9\n"
 "X-Poedit-SearchPath-0: /home/dan/.poedit\n"
 
 #: libgwyddion/gwyexpr.c:765
@@ -140,12 +140,12 @@ msgstr "Безымянный"
 msgid "Initial residua evaluation..."
 msgstr "Оценка начальной невязки..."
 
-#: libgwyddion/gwynlfit.c:423 modules/process/fit-shape.c:1859
+#: libgwyddion/gwynlfit.c:423 modules/process/fit-shape.c:1860
 msgid "Fitting..."
 msgstr "Аппроксимация..."
 
 #: libgwyddion/gwynlfitpreset.c:1442 libprocess/gwyprocessenums.c:101
-#: modules/process/fit-shape.c:542
+#: modules/process/fit-shape.c:531
 msgid "Gaussian"
 msgstr "Гауссиана"
 
@@ -226,7 +226,7 @@ msgstr "Гладкая ступень с изгибом"
 msgid "Power"
 msgstr "Степенная"
 
-#: libgwyddion/gwynlfitpreset.c:1712 modules/process/fit-shape.c:543
+#: libgwyddion/gwynlfitpreset.c:1712 modules/process/fit-shape.c:532
 msgid "Lorentzian"
 msgstr "Лоренцева"
 
@@ -471,7 +471,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:118
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:108
 msgid "Volume"
 msgstr "Объём"
 
@@ -815,7 +815,7 @@ msgid "Hide full controls"
 msgstr "Скрыть все элементы управления"
 
 #: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4754
-#: modules/process/fit-shape.c:747
+#: modules/process/fit-shape.c:736
 msgid "adjective|Basic"
 msgstr "Основные"
 
@@ -836,7 +836,7 @@ msgstr "φ:"
 #: libgwydgets/gwy3dwindow.c:828 libgwydgets/gwy3dwindow.c:834
 #: libgwydgets/gwy3dwindow.c:1032 libgwydgets/gwy3dwindow.c:1040
 #: modules/process/facet_analysis.c:375 modules/process/indent_analyze.c:460
-#: modules/process/rotate.c:243 modules/process/shade.c:237
+#: modules/process/rotate.c:264 modules/process/shade.c:237
 #: modules/process/shade.c:245 modules/process/tilt.c:211
 #: modules/process/tilt.c:223 modules/process/tip_model.c:231
 #: modules/process/tip_model.c:237 modules/process/unrotate.c:334
@@ -918,41 +918,42 @@ msgid "L_ight θ:"
 msgstr "Уг_ол θ света:"
 
 #: libgwydgets/gwy3dwindow.c:1070 libgwydgets/gwy3dwindow.c:1240
-#: modules/file/hdrimage.cc:2213 modules/file/imgexport.c:4718
-#: modules/file/pixmap.c:789 modules/file/rawfile.c:424
-#: modules/process/angle_dist.c:172 modules/process/bdep_synth.c:341
-#: modules/process/calcoefs_new.c:352 modules/process/calibrate.c:391
-#: modules/process/col_synth.c:382 modules/process/correct_affine.c:301
-#: modules/process/curvature.c:615 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:351 modules/process/diff_synth.c:411
-#: modules/process/domain_synth.c:354 modules/process/drift.c:245
-#: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
-#: modules/process/edge.c:638 modules/process/extend.c:192
-#: modules/process/facet-level.c:193 modules/process/facet_analysis.c:271
-#: modules/process/fbm_synth.c:303 modules/process/fft.c:336
-#: modules/process/fft_filter_2d.c:417 modules/process/fft_synth.c:341
-#: modules/process/fractal.c:231 modules/process/grain_edge.c:213
-#: modules/process/grain_mark.c:247 modules/process/grain_wshed.c:167
-#: modules/process/hough.c:179 modules/process/lat_synth.c:523
-#: modules/process/latsim.c:158 modules/process/level.c:245
-#: modules/process/linematch.c:804 modules/process/lno_synth.c:433
-#: modules/process/local_contrast.c:130 modules/process/logistic.c:177
-#: modules/process/mark_disconn.c:208 modules/process/mask_distribute.c:152
-#: modules/process/measure_lattice.c:256 modules/process/median-bg.c:180
-#: modules/process/noise_synth.c:336 modules/process/obj_synth.c:438
-#: modules/process/pat_synth.c:385 modules/process/pid.c:199
-#: modules/process/polydistort.c:210 modules/process/polylevel.c:373
-#: modules/process/psdf_logphi.c:249 modules/process/rank.c:158
-#: modules/process/rotate.c:222 modules/process/scale.c:196
-#: modules/process/scars.c:448 modules/process/semsim.c:211
-#: modules/process/shade.c:208 modules/process/slope_dist.c:276
-#: modules/process/sphere-revolve.c:218 modules/process/straighten_path.c:249
-#: modules/process/tilt.c:161 modules/process/tip_model.c:166
-#: modules/process/unrotate.c:220 modules/process/volumize_layers.c:221
-#: modules/process/wave_synth.c:349 modules/process/wpour_mark.c:278
-#: modules/volume/volume_calibrate.c:370 modules/volume/volume_extract.c:331
-#: modules/volume/volume_kmeans.c:146 modules/volume/volume_kmedians.c:147
-#: modules/volume/volume_linestat.c:292 modules/volume/volume_slice.c:292
+#: app/toolbox-editor.c:216 modules/file/hdrimage.cc:2213
+#: modules/file/imgexport.c:4718 modules/file/pixmap.c:789
+#: modules/file/rawfile.c:424 modules/process/angle_dist.c:172
+#: modules/process/bdep_synth.c:341 modules/process/calcoefs_new.c:352
+#: modules/process/calibrate.c:391 modules/process/col_synth.c:382
+#: modules/process/correct_affine.c:301 modules/process/curvature.c:615
+#: modules/process/cwt.c:135 modules/process/deposit_synth.c:351
+#: modules/process/diff_synth.c:411 modules/process/domain_synth.c:354
+#: modules/process/drift.c:245 modules/process/dwt.c:166
+#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:638
+#: modules/process/extend.c:192 modules/process/facet-level.c:193
+#: modules/process/facet_analysis.c:271 modules/process/fbm_synth.c:303
+#: modules/process/fft.c:336 modules/process/fft_filter_2d.c:417
+#: modules/process/fft_synth.c:341 modules/process/fractal.c:231
+#: modules/process/grain_edge.c:213 modules/process/grain_mark.c:247
+#: modules/process/grain_wshed.c:167 modules/process/hough.c:179
+#: modules/process/lat_synth.c:523 modules/process/latsim.c:159
+#: modules/process/level.c:245 modules/process/linematch.c:804
+#: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
+#: modules/process/logistic.c:180 modules/process/mark_disconn.c:208
+#: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
+#: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
+#: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
+#: modules/process/pid.c:199 modules/process/polydistort.c:210
+#: modules/process/polylevel.c:373 modules/process/psdf_logphi.c:249
+#: modules/process/rank.c:158 modules/process/rotate.c:243
+#: modules/process/scale.c:196 modules/process/scars.c:298
+#: modules/process/semsim.c:211 modules/process/shade.c:208
+#: modules/process/slope_dist.c:276 modules/process/sphere-revolve.c:218
+#: modules/process/straighten_path.c:249 modules/process/tilt.c:161
+#: modules/process/tip_model.c:166 modules/process/unrotate.c:220
+#: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
+#: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
+#: modules/volume/volume_slice.c:292
 msgid "_Reset"
 msgstr "_Сброс"
 
@@ -1228,12 +1229,12 @@ msgstr "_Обратное расположение"
 msgid "Abscissa"
 msgstr "Абсцисса"
 
-#: libgwydgets/gwygraphwindow.c:163 app/toolbox.c:118
+#: libgwydgets/gwygraphwindow.c:163 app/toolbox-editor.c:983 app/toolbox.c:106
 msgid "Graph"
 msgstr "График"
 
 #: libgwydgets/gwygraphwindow.c:170 modules/file/hdrimage.cc:472
-#: modules/process/fit-shape.c:943
+#: modules/process/fit-shape.c:932
 msgid "Data"
 msgstr "Данные"
 
@@ -1614,8 +1615,8 @@ msgid "Max. position"
 msgstr "Положение максимума"
 
 #: app/app.c:1608 modules/process/bdep_synth.c:134
-#: modules/process/col_synth.c:168 modules/process/scars.c:496
-#: modules/process/scars.c:503 modules/process/threshold.c:341
+#: modules/process/col_synth.c:168 modules/process/scars.c:346
+#: modules/process/scars.c:353 modules/process/threshold.c:341
 msgid "RMS"
 msgstr "Ср. квадр."
 
@@ -2110,7 +2111,7 @@ msgstr "Тип"
 msgid "Function"
 msgstr "Функция"
 
-#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/fit-shape.c:751
+#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/fit-shape.c:740
 #: modules/process/neural.c:610 modules/tools/stats.c:426
 msgid "Parameters"
 msgstr "Параметры"
@@ -2123,19 +2124,19 @@ msgstr "Время"
 msgid "Export Log"
 msgstr "Экспортировать журнал"
 
-#: app/menu.c:556 app/toolbox.c:651
+#: app/menu.c:556 app/toolbox.c:576
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
-#: app/menu.c:598 app/toolbox.c:654
+#: app/menu.c:598 app/toolbox.c:579
 msgid "_Graph"
 msgstr "_График"
 
-#: app/menu.c:641 app/toolbox.c:657
+#: app/menu.c:641 app/toolbox.c:582
 msgid "_Volume Data"
 msgstr "_Объёмные данные"
 
-#: app/menu.c:684 app/toolbox.c:660
+#: app/menu.c:684 app/toolbox.c:585
 msgid "_XYZ Data"
 msgstr "_Данные XYZ"
 
@@ -2223,17 +2224,17 @@ msgstr "Файл повреждён, ключевые значения заго�
 msgid "File is corrupted, deserialization failed."
 msgstr "Файл повреждён, разбор завершился неудачно."
 
-#: app/settings.c:260
+#: app/settings.c:265
 #, c-format
 msgid "Cannot create user config directory %s: %s"
 msgstr "Не удаётся создать каталог настроек пользователя %s: %s"
 
-#: app/settings.c:273
+#: app/settings.c:278
 #, c-format
 msgid "Cannot create user ui directory %s: %s"
 msgstr "Не удаётся создать каталог интерфейса пользователя %s: %s"
 
-#: app/settings.c:290
+#: app/settings.c:295
 #, c-format
 msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
@@ -2790,147 +2791,276 @@ msgstr "_Следующий совет"
 msgid "_Show tips at startup"
 msgstr "_Показывать подсказки при старте"
 
-#: app/toolbox.c:118
-msgid "View"
-msgstr "Вид"
+#: app/toolbox-editor.c:213
+msgid "Toolbox Editor"
+msgstr "Редактор панели инструментов"
 
-#: app/toolbox.c:118
-msgid "Data Process"
-msgstr "Обработка данных"
+#: app/toolbox-editor.c:258
+msgid "_New Item"
+msgstr "_Новый элемент"
 
-#: app/toolbox.c:118
-msgid "Tools"
-msgstr "Инструменты"
+#: app/toolbox-editor.c:263
+msgid "_New Group"
+msgstr "Новая _группа"
 
-#: app/toolbox.c:174
-msgid "Display a 3D view of data"
-msgstr "Показать трехмерный вид данных"
-
-#: app/toolbox.c:181
-msgid "Zoom in"
-msgstr "Приблизить"
-
-#: app/toolbox.c:185
-msgid "Zoom 1:1"
-msgstr "Масштаб 1:1"
-
-#: app/toolbox.c:189
-msgid "Zoom out"
-msgstr "Отдалить"
-
-#: app/toolbox.c:645
-msgid "_File"
-msgstr "_Файл"
-
-#: app/toolbox.c:647
+#: app/toolbox-editor.c:269 app/toolbox.c:572
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:663
+#: app/toolbox-editor.c:274 modules/process/fft_filter_2d.c:499
+#: modules/tools/maskedit.c:548 modules/volume/volume_zcal.c:173
+msgid "_Remove"
+msgstr "_Удалить"
+
+#: app/toolbox-editor.c:279
+msgid "Move _Up"
+msgstr "Переместить _вверх"
+
+#: app/toolbox-editor.c:284
+msgid "Move _Down"
+msgstr "Переместить в_низ"
+
+#: app/toolbox-editor.c:293 modules/file/hdrimage.cc:2304
+#: modules/file/imgexport.c:3084 modules/file/pixmap.c:872
+#: modules/file/rawfile.c:658 modules/process/crosscor.c:252
+#: modules/process/dimensions.h:473 modules/process/tip_blind.c:333
+msgid "_Width:"
+msgstr "_Ширина:"
+
+#: app/toolbox-editor.c:642 app/toolbox-editor.c:1719
+msgid "remaining tools"
+msgstr "остальные инструменты"
+
+#: app/toolbox-editor.c:650
+msgid "placeholder"
+msgstr "заполнитель"
+
+#: app/toolbox-editor.c:755
+msgid "Toolbox Group"
+msgstr "Группа инструментов"
+
+#: app/toolbox-editor.c:772 modules/file/rawgraph.c:267
+msgid "_Title:"
+msgstr "_Заголовок:"
+
+#: app/toolbox-editor.c:786
+msgid "_Id:"
+msgstr "_Индентификатор"
+
+#: app/toolbox-editor.c:799
+msgid "_Suggest"
+msgstr "_Предложить"
+
+#: app/toolbox-editor.c:805
+msgid "Trans_latable title"
+msgstr "П_ереводимое название"
+
+#: app/toolbox-editor.c:855
+msgid "Group id is not a valid identifier"
+msgstr "Идентификатор группы не является правильным идентификатором"
+
+#: app/toolbox-editor.c:863
+msgid "Duplicate group id"
+msgstr "Дублировать идентификатор группы"
+
+#: app/toolbox-editor.c:952
+msgid "Toolbox Item"
+msgstr "Элемент панели инструментов"
+
+#: app/toolbox-editor.c:973 modules/process/coerce.c:331
+#: modules/tools/filter.c:284
+msgid "_Type:"
+msgstr "_Тип:"
+
+#: app/toolbox-editor.c:980
+msgid "Placeholder"
+msgstr "Заполнитель"
+
+#: app/toolbox-editor.c:981
+msgid "Builtin"
+msgstr "Встроенные"
+
+#: app/toolbox-editor.c:982 app/toolbox.c:105
+msgid "Data Process"
+msgstr "Обработка данных"
+
+#: app/toolbox-editor.c:984
+msgid "Volume Data"
+msgstr "Объёмные данные"
+
+#: app/toolbox-editor.c:985
+msgid "XYZ Data"
+msgstr "Данные XYZ"
+
+#: app/toolbox-editor.c:986
+msgid "Tool"
+msgstr "Инструмент"
+
+#: app/toolbox-editor.c:993
+msgid "_Mode:"
+msgstr "_Режим"
+
+#: app/toolbox-editor.c:1000 app/toolbox-editor.c:1019
+msgid "Default"
+msgstr "По умолчанию"
+
+#: app/toolbox-editor.c:1001
+msgid "Interactive"
+msgstr "Интерактивно"
+
+#: app/toolbox-editor.c:1002
+msgid "Non-interactive"
+msgstr "Неинтерактивно"
+
+#: app/toolbox-editor.c:1010
+msgid "Use _icon from:"
+msgstr "Использовать _иконку из:"
+
+#: app/toolbox-editor.c:1044
+msgid "Functions"
+msgstr "Функции"
+
+#: app/toolbox-editor.c:1803
+msgid "All tools not placed explicitly go here."
+msgstr "Все инструменты, чьё положение явно не задано, попадут сюда."
+
+#: app/toolbox.c:104
+msgid "View"
+msgstr "Вид"
+
+#: app/toolbox.c:107
+msgid "Tools"
+msgstr "Инструменты"
+
+#: app/toolbox.c:570
+msgid "_File"
+msgstr "_Файл"
+
+#: app/toolbox.c:588
 msgid "_Info"
 msgstr "_Информация"
 
-#: app/toolbox.c:698
+#: app/toolbox.c:659
+msgid "Display a 3D view of data"
+msgstr "Показать трехмерный вид данных"
+
+#: app/toolbox.c:663
+msgid "Zoom in"
+msgstr "Приблизить"
+
+#: app/toolbox.c:667
+msgid "Zoom out"
+msgstr "Отдалить"
+
+#: app/toolbox.c:671
+msgid "Zoom 1:1"
+msgstr "Масштаб 1:1"
+
+#: app/toolbox.c:718
 msgid "/Show _Data Browser"
 msgstr "/Показать браузер _данных"
 
-#: app/toolbox.c:706
+#: app/toolbox.c:726
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:714
+#: app/toolbox.c:734
 msgid "/Program _Messages"
 msgstr "/_Сообщения программы"
 
-#: app/toolbox.c:729
+#: app/toolbox.c:749
 msgid "/_User Guide"
 msgstr "/_Руководство пользователя"
 
-#: app/toolbox.c:737
+#: app/toolbox.c:757
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:745
+#: app/toolbox.c:765
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:782
+#: app/toolbox.c:802
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:790
+#: app/toolbox.c:810
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:798
+#: app/toolbox.c:818
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:806
+#: app/toolbox.c:826
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:814
+#: app/toolbox.c:834
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:822
+#: app/toolbox.c:842
 msgid "/_Close"
 msgstr "/_Закрыть"
 
-#: app/toolbox.c:830
+#: app/toolbox.c:850
 msgid "/Remo_ve All Logs"
 msgstr "/_Удалить все журналы"
 
-#: app/toolbox.c:846
+#: app/toolbox.c:866
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:886
+#: app/toolbox.c:906
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:894
+#: app/toolbox.c:914
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:910
+#: app/toolbox.c:930
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:918
+#: app/toolbox.c:938
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:926
+#: app/toolbox.c:946
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:934
+#: app/toolbox.c:954
+msgid "/_Toolbox.."
+msgstr "/И_нструменты.."
+
+#: app/toolbox.c:962
 msgid "/_Keyboard Shortcuts"
 msgstr "/_Комбинации клавиш"
 
-#: app/toolbox.c:942
+#: app/toolbox.c:970
 msgid "/_Logging Enabled"
 msgstr "/Включить _журналирование"
 
-#: app/toolbox.c:1083
+#: app/toolbox.c:1079
 msgid "Program Messages"
 msgstr "Сообщения программы"
 
-#: app/toolbox.c:1312
+#: app/toolbox.c:1316
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1340
+#: app/toolbox.c:1344
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1345
+#: app/toolbox.c:1349
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL был отключен опцией командной строки."
 
-#: app/toolbox.c:1353
+#: app/toolbox.c:1357
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -2938,7 +3068,7 @@ msgstr ""
 "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и "
 "предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1360
+#: app/toolbox.c:1364
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -3939,13 +4069,6 @@ msgstr "Страницы:"
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:3084
-#: modules/file/pixmap.c:872 modules/file/rawfile.c:658
-#: modules/process/crosscor.c:252 modules/process/dimensions.h:473
-#: modules/process/tip_blind.c:333
-msgid "_Width:"
-msgstr "_Ширина:"
-
 #: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
 #: modules/file/pixmap.c:894 modules/file/pixmap.c:949
 #: modules/file/rawfile.c:681 modules/file/rawfile.c:737
@@ -4316,7 +4439,7 @@ msgstr "Изображение"
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:294 modules/process/fft_profile.c:292
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
-#: modules/process/polydistort.c:247 modules/process/rotate.c:253
+#: modules/process/polydistort.c:247 modules/process/rotate.c:274
 #: modules/process/scale.c:253 modules/process/straighten_path.c:271
 #: modules/process/unrotate.c:277 modules/tools/linestats.c:401
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
@@ -5699,7 +5822,7 @@ msgstr "Формат данных"
 #: modules/process/grain_edge.c:210 modules/process/grain_filter.c:313
 #: modules/process/grain_mark.c:244 modules/process/grain_wshed.c:164
 #: modules/process/mark_disconn.c:205 modules/process/mark_with.c:195
-#: modules/process/polydistort.c:205 modules/process/scars.c:445
+#: modules/process/polydistort.c:205 modules/process/scars.c:295
 #: modules/process/slope_dist.c:273 modules/process/straighten_path.c:198
 #: modules/process/synth.h:509 modules/process/tip_model.c:163
 #: modules/process/wpour_mark.c:273 modules/tools/linestats.c:455
@@ -5919,10 +6042,6 @@ msgstr "Импорт графиков из ASCII должен запускать
 #: modules/file/rawgraph.c:242
 msgid "Import Graph Data"
 msgstr "Импорт данных графика"
-
-#: modules/file/rawgraph.c:267
-msgid "_Title:"
-msgstr "_Заголовок:"
 
 #: modules/file/rawgraph.c:274
 msgid "_X label:"
@@ -6554,7 +6673,7 @@ msgstr "Экспорт XYZ"
 
 #: modules/file/xyzexport.c:340 modules/process/curvature.c:704
 #: modules/process/entropy.c:214 modules/process/facet-level.c:207
-#: modules/process/fit-shape.c:1018 modules/process/level.c:259
+#: modules/process/fit-shape.c:1007 modules/process/level.c:259
 #: modules/process/linematch.c:906 modules/process/neural.c:593
 #: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
 #: modules/tools/filter.c:300 modules/tools/linestats.c:437
@@ -6622,12 +6741,12 @@ msgid "Fit Graph"
 msgstr "Аппроксимировать график"
 
 #: modules/graph/graph_cd.c:212 modules/graph/graph_fdfit.c:251
-#: modules/graph/graph_fit.c:270 modules/process/fit-shape.c:679
+#: modules/graph/graph_fit.c:270 modules/process/fit-shape.c:668
 #: modules/volume/volume_fdfit.c:299
 msgid "verb|_Fit"
 msgstr "_Аппрокс."
 
-#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:160
+#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:166
 #: modules/graph/graph_fdfit.c:306 modules/graph/graph_fit.c:325
 #: modules/graph/graph_peaks.c:199
 msgid "_Graph curve:"
@@ -6640,23 +6759,23 @@ msgstr "_Функция:"
 
 #: modules/graph/graph_cd.c:305 modules/graph/graph_fdfit.c:361
 #: modules/graph/graph_fit.c:375 modules/process/curvature.c:745
-#: modules/process/fit-shape.c:1067 modules/volume/volume_fdfit.c:446
+#: modules/process/fit-shape.c:1056 modules/volume/volume_fdfit.c:446
 msgid "Parameter"
 msgstr "Параметр"
 
 #: modules/graph/graph_cd.c:307 modules/graph/graph_fdfit.c:363
-#: modules/graph/graph_fit.c:377 modules/process/fit-shape.c:1069
+#: modules/graph/graph_fit.c:377 modules/process/fit-shape.c:1058
 #: modules/volume/volume_fdfit.c:448
 msgid "Error"
 msgstr "Ошибка"
 
-#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:190
+#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:196
 #: modules/graph/graph_fdfit.c:415 modules/graph/graph_fit.c:433
 #: modules/volume/volume_fdfit.c:500 modules/volume/volume_linestat.c:389
 msgid "Range:"
 msgstr "Диапазон:"
 
-#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:201
+#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:207
 #: modules/graph/graph_fdfit.c:426 modules/graph/graph_fit.c:444
 #: modules/volume/volume_fdfit.c:511 modules/volume/volume_linestat.c:400
 msgid "range|to"
@@ -6667,7 +6786,7 @@ msgid "_Draw whole circle"
 msgstr "_Рисовать полный круг"
 
 #: modules/graph/graph_cd.c:382 modules/graph/graph_fdfit.c:491
-#: modules/graph/graph_fit.c:531 modules/process/fit-shape.c:808
+#: modules/graph/graph_fit.c:531 modules/process/fit-shape.c:797
 #: modules/volume/volume_fdfit.c:573
 msgid "Save Fit Report"
 msgstr "Сохранить отчёт аппроксимации"
@@ -6699,20 +6818,20 @@ msgid "N.A."
 msgstr "недоступно"
 
 #: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1363
-#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4371
+#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4325
 #: modules/volume/volume_fdfit.c:1720
 msgid "===== Fit Results ====="
 msgstr "===== Результаты аппроксимации ====="
 
 #: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1367
-#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4373
+#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4327
 #: modules/volume/volume_fdfit.c:1724
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Данные:            %s\n"
 
 #: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1370
-#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4375
+#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4329
 #: modules/volume/volume_fdfit.c:1727
 #, c-format
 msgid "Number of points: %d of %d\n"
@@ -6725,35 +6844,35 @@ msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1380
-#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4377
+#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4331
 #: modules/volume/volume_fdfit.c:1737
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Аппроксимирующая функция:  %s\n"
 
 #: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1383
-#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4379
+#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4333
 #: modules/volume/volume_fdfit.c:1740
 msgid "Results\n"
 msgstr "Результаты\n"
 
-#: modules/graph/graph_cut.c:84
+#: modules/graph/graph_cut.c:88
 msgid "Cut graph"
 msgstr "Обрезает график"
 
-#: modules/graph/graph_cut.c:98
+#: modules/graph/graph_cut.c:102
 msgid "/_Cut..."
 msgstr "/_Обрезать..."
 
-#: modules/graph/graph_cut.c:101
+#: modules/graph/graph_cut.c:105
 msgid "Extract part of graph into new one"
 msgstr "Извлечь часть старого графика в новый"
 
-#: modules/graph/graph_cut.c:140
+#: modules/graph/graph_cut.c:146
 msgid "Cut Graph"
 msgstr "Обрезать график"
 
-#: modules/graph/graph_cut.c:173
+#: modules/graph/graph_cut.c:180
 msgid "Cut _all curves"
 msgstr "Обрезать _все кривые"
 
@@ -6884,7 +7003,7 @@ msgid "Fit FD Curve"
 msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:255 modules/graph/graph_fit.c:274
-#: modules/process/fit-shape.c:683 modules/process/measure_lattice.c:257
+#: modules/process/fit-shape.c:672 modules/process/measure_lattice.c:257
 #: modules/volume/volume_fdfit.c:303
 msgid "verb|_Estimate"
 msgstr "О_ценить"
@@ -6895,7 +7014,7 @@ msgid "_Plot Inits"
 msgstr "_Исходный"
 
 #: modules/graph/graph_fdfit.c:359 modules/graph/graph_fit.c:373
-#: modules/process/fit-shape.c:1065 modules/volume/volume_fdfit.c:444
+#: modules/process/fit-shape.c:1054 modules/volume/volume_fdfit.c:444
 msgid "Fix"
 msgstr "Править"
 
@@ -6910,7 +7029,7 @@ msgid "χ<sup>2</sup> result:"
 msgstr "Результирующее χ<sup>2</sup>:"
 
 #: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
-#: modules/process/fit-shape.c:755 modules/process/fit-shape.c:4415
+#: modules/process/fit-shape.c:744 modules/process/fit-shape.c:4378
 #: modules/volume/volume_fdfit.c:477
 msgid "Correlation Matrix"
 msgstr "Матрица корреляции"
@@ -7385,8 +7504,8 @@ msgstr "Создать поверхность используя баллист�
 
 #: modules/process/bdep_synth.c:239 modules/process/bdep_synth.c:596
 #: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:278
-#: modules/process/col_synth.c:723 modules/process/crosscor.c:817
-#: modules/process/crosscor.c:877 modules/process/deposit_synth.c:270
+#: modules/process/col_synth.c:723 modules/process/crosscor.c:820
+#: modules/process/crosscor.c:883 modules/process/deposit_synth.c:270
 #: modules/process/deposit_synth.c:861 modules/process/diff_synth.c:304
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
@@ -7690,7 +7809,7 @@ msgstr[2] "найдено %d объектов"
 msgid "Search canceled"
 msgstr "Поиск отменён"
 
-#: modules/process/calcoefs_simple.c:638 modules/process/crosscor.c:858
+#: modules/process/calcoefs_simple.c:638 modules/process/crosscor.c:863
 #: modules/process/maskcor.c:332 modules/process/mcrop.c:317
 #: modules/process/merge.c:1074
 msgid "Correlating..."
@@ -7769,7 +7888,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/fft_filter_1d.c:299 modules/process/grain_edge.c:290
 #: modules/process/grain_filter.c:347 modules/process/grain_mark.c:372
 #: modules/process/mark_with.c:318 modules/process/polydistort.c:316
-#: modules/process/scars.c:536 modules/process/slope_dist.c:407
+#: modules/process/scars.c:386 modules/process/slope_dist.c:407
 #: modules/process/synth.h:513 modules/volume/volume_extract.c:424
 #: modules/volume/volume_extract.c:505 modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
@@ -7995,10 +8114,6 @@ msgstr "_Шаблон:"
 msgid "Same area"
 msgstr "Одинаковая площадь"
 
-#: modules/process/coerce.c:331 modules/tools/filter.c:284
-msgid "_Type:"
-msgstr "_Тип:"
-
 #: modules/process/coerce.c:339
 msgid "Number of _levels:"
 msgstr "Число _уровней:"
@@ -8049,7 +8164,7 @@ msgstr "Угол падения"
 msgid "Inclination"
 msgstr "Наклон"
 
-#: modules/process/col_synth.c:499 modules/process/crosscor.c:1075
+#: modules/process/col_synth.c:499 modules/process/crosscor.c:1089
 msgid "Direction"
 msgstr "Направление"
 
@@ -8302,12 +8417,12 @@ msgstr "Расстояние по X"
 msgid "Y Distance"
 msgstr "Расстояние по Y"
 
-#: modules/process/crosscor.c:355 modules/process/crosscor.c:1089
+#: modules/process/crosscor.c:355 modules/process/crosscor.c:1103
 msgid "Score"
 msgstr "Степень"
 
 #: modules/process/crosscor.c:357 modules/process/fft.c:395
-#: modules/process/fit-shape.c:975 modules/process/maskcor.c:176
+#: modules/process/fit-shape.c:964 modules/process/maskcor.c:176
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
 
@@ -8348,31 +8463,31 @@ msgstr "Расширить результат до границ"
 msgid "Create corrected data from 2nd channel"
 msgstr "Создать исправленные данные из второго канала"
 
-#: modules/process/crosscor.c:857
+#: modules/process/crosscor.c:861
 msgid "Correlating first set..."
 msgstr "Корреляция первого множества..."
 
-#: modules/process/crosscor.c:887
+#: modules/process/crosscor.c:893
 msgid "Correlating second set..."
 msgstr "Корреляция второго множества..."
 
-#: modules/process/crosscor.c:949
+#: modules/process/crosscor.c:957
 msgid "Borders extension..."
 msgstr "Расширение границ..."
 
-#: modules/process/crosscor.c:1011
+#: modules/process/crosscor.c:1025
 msgid "Corrected 2nd channel"
 msgstr "Исправленный второй канал"
 
-#: modules/process/crosscor.c:1035
+#: modules/process/crosscor.c:1049
 msgid "X difference"
 msgstr "Различие X"
 
-#: modules/process/crosscor.c:1049
+#: modules/process/crosscor.c:1063
 msgid "Y difference"
 msgstr "Различие Y"
 
-#: modules/process/crosscor.c:1062
+#: modules/process/crosscor.c:1076
 msgid "Absolute difference"
 msgstr "Разница по модулю"
 
@@ -8745,7 +8860,7 @@ msgstr "_Исключить линейный уклон"
 msgid "Plot drift _graph"
 msgstr "Строить _график дрейфа"
 
-#: modules/process/drift.c:356 modules/process/fit-shape.c:980
+#: modules/process/drift.c:356 modules/process/fit-shape.c:969
 #: modules/process/neural.c:548 modules/process/polydistort.c:275
 msgid "Preview:"
 msgstr "Предпросмотр:"
@@ -8757,7 +8872,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/drift.c:374 modules/process/facet_analysis.c:407
 #: modules/process/grain_edge.c:285 modules/process/grain_filter.c:357
 #: modules/process/grain_mark.c:367 modules/process/grain_wshed.c:267
-#: modules/process/mark_disconn.c:310 modules/process/scars.c:531
+#: modules/process/mark_disconn.c:310 modules/process/scars.c:381
 #: modules/process/wpour_mark.c:369
 msgid "_Mask color:"
 msgstr "_Цвет маски:"
@@ -9439,9 +9554,9 @@ msgstr "Двумерная фильтрация БПФ"
 msgid "Filtered Data"
 msgstr "Отфильтрованные данные"
 
-#: modules/process/fft_filter_2d.c:305 modules/process/fit-shape.c:880
-#: modules/process/fit-shape.c:929 modules/process/fit-shape.c:945
-#: modules/process/fit-shape.c:949 modules/process/neural.c:560
+#: modules/process/fft_filter_2d.c:305 modules/process/fit-shape.c:869
+#: modules/process/fit-shape.c:918 modules/process/fit-shape.c:934
+#: modules/process/fit-shape.c:938 modules/process/neural.c:560
 msgid "Difference"
 msgstr "Разница"
 
@@ -9496,11 +9611,6 @@ msgstr "Маска фильтра"
 #: modules/process/fft_filter_2d.c:490
 msgid "_Undo"
 msgstr "_Отменить"
-
-#: modules/process/fft_filter_2d.c:499 modules/tools/maskedit.c:548
-#: modules/volume/volume_zcal.c:173
-msgid "_Remove"
-msgstr "_Удалить"
 
 #: modules/process/fft_filter_2d.c:507 modules/tools/maskedit.c:556
 msgid "_Fill"
@@ -9622,107 +9732,111 @@ msgstr "Разрешить _лоренцев множитель"
 msgid "Enable _power multiplier"
 msgstr "Разрешить сте_пенной множитель"
 
-#: modules/process/fit-shape.c:536
+#: modules/process/fit-shape.c:525
 msgid "Grating (simple)"
 msgstr "Решетка (простая)"
 
-#: modules/process/fit-shape.c:537
+#: modules/process/fit-shape.c:526
 msgid "Grating (3-level)"
 msgstr "Решетка (3х-уровневая)"
 
-#: modules/process/fit-shape.c:538 modules/process/pat_synth.c:215
+#: modules/process/fit-shape.c:527 modules/process/pat_synth.c:215
 msgid "Holes"
 msgstr "Отверстия"
 
-#: modules/process/fit-shape.c:539
+#: modules/process/fit-shape.c:528
 msgid "Ring"
 msgstr "Кольцо"
 
-#: modules/process/fit-shape.c:540
+#: modules/process/fit-shape.c:529
 msgid "Sphere"
 msgstr "Сфера"
 
-#: modules/process/fit-shape.c:541
+#: modules/process/fit-shape.c:530
 msgid "Cylinder (lying)"
 msgstr "Цилиндр (лежащий)"
 
-#: modules/process/fit-shape.c:544
+#: modules/process/fit-shape.c:533
 msgid "Pyramid (diamond)"
 msgstr "Пирамида (алмаз)"
 
-#: modules/process/fit-shape.c:558
+#: modules/process/fit-shape.c:547
 msgid "Fits predefined geometrical shapes to data."
 msgstr "Аппроксимирует данные заданными геометрическими формами."
 
-#: modules/process/fit-shape.c:572
+#: modules/process/fit-shape.c:561
 msgid "/_Level/_Fit Shape..."
 msgstr "/_Выравнивание/Аппроксимировать _фигуру..."
 
-#: modules/process/fit-shape.c:576 modules/process/fit-shape.c:583
+#: modules/process/fit-shape.c:565 modules/process/fit-shape.c:572
 msgid "Fit geometrical shapes"
 msgstr "Аппрокисимровать геометрическими формами"
 
-#: modules/process/fit-shape.c:579
+#: modules/process/fit-shape.c:568
 msgid "/_Fit Shape..."
 msgstr "/_Аппроксимировать форму..."
 
-#: modules/process/fit-shape.c:676
+#: modules/process/fit-shape.c:665
 msgid "Fit Shape"
 msgstr "Аппроксимировать форму"
 
-#: modules/process/fit-shape.c:681
+#: modules/process/fit-shape.c:670
 msgid "verb|_Quick Fit"
 msgstr "_Быстро аппрокс."
 
-#: modules/process/fit-shape.c:759 modules/process/fit-shape.c:4432
+#: modules/process/fit-shape.c:748 modules/process/fit-shape.c:4403
 msgid "Derived Quantities"
 msgstr "Производные величины"
 
-#: modules/process/fit-shape.c:764 modules/process/fit-shape.c:4410
+#: modules/process/fit-shape.c:753 modules/process/fit-shape.c:4373
 msgid "Mean square difference:"
 msgstr "азница:"
 
-#: modules/process/fit-shape.c:866 modules/process/fit-shape.c:912
-#: modules/process/fit-shape.c:944 modules/process/fit-shape.c:948
+#: modules/process/fit-shape.c:855 modules/process/fit-shape.c:901
+#: modules/process/fit-shape.c:933 modules/process/fit-shape.c:937
 msgid "Fitted shape"
 msgstr "Аппроксимирующая фигура"
 
-#: modules/process/fit-shape.c:950 modules/process/mark_disconn.c:189
-#: modules/process/scars.c:431
+#: modules/process/fit-shape.c:939 modules/process/mark_disconn.c:189
+#: modules/process/scars.c:281
 msgid "Both"
 msgstr "Оба"
 
-#: modules/process/fit-shape.c:967
+#: modules/process/fit-shape.c:956
 msgid "_Function type:"
 msgstr "Тип _функции:"
 
-#: modules/process/fit-shape.c:995
+#: modules/process/fit-shape.c:984
 msgid "Show differences with _adapted color map"
 msgstr "Показывать различия с _адаптированной шкалой цвета"
 
-#: modules/process/fit-shape.c:1032
+#: modules/process/fit-shape.c:1021
 msgid "Calculate differences for e_xcluded pixels"
 msgstr "Рассчитать различия для _исключенных пикселей"
 
-#: modules/process/fit-shape.c:1079
+#: modules/process/fit-shape.c:1068
 msgid "_Recalculate Image"
 msgstr "Пе_ресчитать изображение"
 
-#: modules/process/fit-shape.c:1086
+#: modules/process/fit-shape.c:1075
 msgid "Revert to _Previous Values"
 msgstr "Вернуться к _предыдущим значениям"
 
-#: modules/process/fit-shape.c:2067
+#: modules/process/fit-shape.c:2077
 msgid "Parameter estimation failed"
 msgstr "Оценка параметров закончилась ошибкой"
 
-#: modules/process/fit-shape.c:2070
+#: modules/process/fit-shape.c:2080
 msgid "Fit failed"
 msgstr "Аппроксимация закончилась ошибкой"
 
-#: modules/process/fit-shape.c:2072
+#: modules/process/fit-shape.c:2082
 msgid "Fit was interruped"
 msgstr "Аппроксимация была прервана"
+
+#: modules/process/fit-shape.c:4359
+msgid "(fixed)"
+msgstr "(фикс.)"
 
 #: modules/process/flatten_base.c:44
 msgid "Levels the flat base of a surface with positive features."
@@ -10683,27 +10797,27 @@ msgstr "/_Зонд и индентация/_Латеральная сила..."
 msgid "Simulate topography artifacts in lateral force channels"
 msgstr "Моделировать артефакты топографии в каналах измерения латеральных сил"
 
-#: modules/process/latsim.c:135
+#: modules/process/latsim.c:136
 msgid "Fw lateral force "
 msgstr "Лат. сила на прямом ходе"
 
-#: modules/process/latsim.c:144
+#: modules/process/latsim.c:145
 msgid "Rev lateral force"
 msgstr "Лат. сила на обратном ходе"
 
-#: modules/process/latsim.c:157
+#: modules/process/latsim.c:158
 msgid "Lateral force simulation"
 msgstr "Модель латеральных сил"
 
-#: modules/process/latsim.c:174
+#: modules/process/latsim.c:175
 msgid "_Friction coef.:"
 msgstr "Коэффициент _трения:"
 
-#: modules/process/latsim.c:180
+#: modules/process/latsim.c:181
 msgid "_Normal force:"
 msgstr "_Сила вдоль нормали:"
 
-#: modules/process/latsim.c:186
+#: modules/process/latsim.c:187
 msgid "_Adhesion force:"
 msgstr "Сила _адгезии:"
 
@@ -10968,31 +11082,31 @@ msgstr "Размер _ядра:"
 msgid "Blending _depth:"
 msgstr "_Глубина смешения:"
 
-#: modules/process/logistic.c:100
+#: modules/process/logistic.c:103
 msgid "Trains logistic regression to mark grains."
 msgstr "Обучает и использует логистическую регрессию для выделения зёрен."
 
-#: modules/process/logistic.c:114
+#: modules/process/logistic.c:117
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Зёрна/_Логистическая регрессия..."
 
-#: modules/process/logistic.c:118
+#: modules/process/logistic.c:121
 msgid "Mark grains with logistic regression"
 msgstr "Пометить зёрна логистической регрессией"
 
-#: modules/process/logistic.c:174
+#: modules/process/logistic.c:177
 msgid "Logistic Regression"
 msgstr "Логистическая регрессия"
 
-#: modules/process/logistic.c:197
+#: modules/process/logistic.c:200
 msgid "_Train logistic regression"
 msgstr "_Обучить регрессию"
 
-#: modules/process/logistic.c:199
+#: modules/process/logistic.c:202
 msgid "_Use trained regression"
 msgstr "_Использовать регрессию"
 
-#: modules/process/logistic.c:370 modules/process/neural.c:1101
+#: modules/process/logistic.c:401 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Обучение..."
 
@@ -11009,12 +11123,12 @@ msgid "Mark data disconnected from other values"
 msgstr "Пометить данные, не связанные с другими значениями"
 
 #: modules/process/mark_disconn.c:187 modules/process/obj_synth.c:419
-#: modules/process/scars.c:429
+#: modules/process/scars.c:279
 msgid "Positive"
 msgstr "Положительные"
 
 #: modules/process/mark_disconn.c:188 modules/process/obj_synth.c:420
-#: modules/process/scars.c:430
+#: modules/process/scars.c:280
 msgid "Negative"
 msgstr "Отрицательные"
 
@@ -12156,51 +12270,51 @@ msgstr "Тип фильтра:"
 msgid "Rank transform..."
 msgstr "Преобразование ранжирования..."
 
-#: modules/process/rotate.c:94
+#: modules/process/rotate.c:96
 msgid "Rotates data by arbitrary angle."
 msgstr "Вращает данные на произвольно выбранный угол."
 
-#: modules/process/rotate.c:108
+#: modules/process/rotate.c:110
 msgid "/_Basic Operations/Rotate by _Angle..."
 msgstr "/_Базовые действия/Повернуть на _угол..."
 
-#: modules/process/rotate.c:112
+#: modules/process/rotate.c:114
 msgid "Rotate by arbitrary angle"
 msgstr "Вращение на заданный угол"
 
-#: modules/process/rotate.c:171
+#: modules/process/rotate.c:192
 msgid "Rotated Data"
 msgstr "Повёрнутые данные"
 
-#: modules/process/rotate.c:221
+#: modules/process/rotate.c:242
 msgid "Rotate"
 msgstr "Повернуть"
 
-#: modules/process/rotate.c:243
+#: modules/process/rotate.c:264
 msgid "Rotate by _angle:"
 msgstr "Вращение на _угол:"
 
-#: modules/process/rotate.c:259
+#: modules/process/rotate.c:280
 msgid "Show _grid"
 msgstr "Показывать с_етку"
 
-#: modules/process/rotate.c:269
+#: modules/process/rotate.c:290
 msgid "Create _mask over exterior"
 msgstr "Создать _маску поверх внешней области"
 
-#: modules/process/rotate.c:279
+#: modules/process/rotate.c:300
 msgid "Result size:"
 msgstr "Размер результата:"
 
-#: modules/process/rotate.c:288
+#: modules/process/rotate.c:309
 msgid "_Same as original"
 msgstr "_Такой же как исходное"
 
-#: modules/process/rotate.c:290
+#: modules/process/rotate.c:311
 msgid "_Expanded to complete data"
 msgstr "_Расширен до полных данных"
 
-#: modules/process/rotate.c:292
+#: modules/process/rotate.c:313
 msgid "C_ut to valid data"
 msgstr "_Обрезан до верных данных"
 
@@ -12240,47 +12354,47 @@ msgstr "Новая _ширина:"
 msgid "New _height:"
 msgstr "Новая _высота:"
 
-#: modules/process/scars.c:112
+#: modules/process/scars.c:113
 msgid "Marks and/or removes scars (horizontal linear artifacts)."
 msgstr "Помечает и/или удаляет царапины (горизонтальные линейные артефакты)."
 
-#: modules/process/scars.c:126
+#: modules/process/scars.c:127
 msgid "/_Correct Data/M_ark Scars..."
 msgstr "/Исправить _данные/Пометить _царапины..."
 
-#: modules/process/scars.c:130
+#: modules/process/scars.c:131
 msgid "Mark horizontal scars (strokes)"
 msgstr "Помечает горизонтальные царапины (штрихи)"
 
-#: modules/process/scars.c:133
+#: modules/process/scars.c:134
 msgid "/_Correct Data/Remove _Scars"
 msgstr "/Исправить _данные/_Убрать царапины"
 
-#: modules/process/scars.c:137
+#: modules/process/scars.c:138
 msgid "Correct horizontal scars (strokes)"
 msgstr "Убрать горизонтальные царапины"
 
-#: modules/process/scars.c:443
+#: modules/process/scars.c:293
 msgid "Mark Scars"
 msgstr "Пометить царапины"
 
-#: modules/process/scars.c:481
+#: modules/process/scars.c:331
 msgid "Maximum _width:"
 msgstr "Максимальная _ширина:"
 
-#: modules/process/scars.c:488
+#: modules/process/scars.c:338
 msgid "Minimum _length:"
 msgstr "Минимальная _длина:"
 
-#: modules/process/scars.c:495
+#: modules/process/scars.c:345
 msgid "_Hard threshold:"
 msgstr "_Жёсткий порог:"
 
-#: modules/process/scars.c:503
+#: modules/process/scars.c:353
 msgid "_Soft threshold:"
 msgstr "_Мягкий порог:"
 
-#: modules/process/scars.c:511
+#: modules/process/scars.c:361
 msgid "Scars type:"
 msgstr "Тип царапин:"
 
