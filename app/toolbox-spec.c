@@ -22,6 +22,8 @@
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -32,6 +34,7 @@
 #include "toolbox.h"
 
 #define TOOLBOX_UI_FILE_NAME "toolbox.xml"
+#define TOOLBOX_INDENT "  "
 
 static const GwyEnum modes[] = {
     { "default",         0,                   },
@@ -49,7 +52,10 @@ static const GwyEnum action_types[] = {
     { "tool",    GWY_APP_ACTION_TYPE_TOOL,        },
 };
 
-static void gwy_app_menu_canonicalize_label(gchar *label);
+static GwyToolboxSpec* gwy_toolbox_parse              (const gchar *ui,
+                                                       gsize ui_len,
+                                                       GError **error);
+static void            gwy_app_menu_canonicalize_label(gchar *label);
 
 static void
 toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
@@ -272,7 +278,7 @@ gwy_toolbox_spec_free(GwyToolboxSpec *spec)
     g_free(spec);
 }
 
-GwyToolboxSpec*
+static GwyToolboxSpec*
 gwy_toolbox_parse(const gchar *ui, gsize ui_len, GError **error)
 {
     static const GMarkupParser parser = {
@@ -458,6 +464,83 @@ gwy_parse_toolbox_ui(gboolean ignore_user)
     }
 
     return spec;
+}
+
+gboolean
+gwy_save_toolbox_ui(GwyToolboxSpec *spec, GError **error)
+{
+    GwyToolboxGroupSpec *gspec;
+    GwyToolboxItemSpec *ispec;
+    GArray *group, *item;
+    guint i, j;
+    GString *xml;
+    FILE *fh;
+    gchar *filename;
+
+    if (!gwy_app_settings_create_config_dir(error))
+        return FALSE;
+
+    xml = g_string_new("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+    g_string_append_printf(xml, "<toolbox width='%u'>\n", spec->width);
+
+    group = spec->group;
+    for (i = 0; i < group->len; i++) {
+        gspec = &g_array_index(group, GwyToolboxGroupSpec, i);
+        g_string_append_printf(xml, "%s<group id='%s' title='%s'",
+                               TOOLBOX_INDENT,
+                               g_quark_to_string(gspec->id), gspec->name);
+        if (gspec->translatable)
+            g_string_append(xml, " translatable='yes'");
+        g_string_append(xml, ">\n");
+
+        item = gspec->item;
+        for (j = 0; j < item->len; j++) {
+            ispec = &g_array_index(item, GwyToolboxItemSpec, j);
+            g_string_append_printf(xml, "%s<item type='%s'",
+                                   TOOLBOX_INDENT TOOLBOX_INDENT,
+                                   gwy_toolbox_action_type_name(ispec->type));
+            if (ispec->function) {
+                g_string_append_printf(xml, " function='%s'",
+                                       g_quark_to_string(ispec->function));
+            }
+            if (ispec->icon) {
+                g_string_append_printf(xml, " icon='%s'",
+                                       g_quark_to_string(ispec->icon));
+            }
+            if (ispec->mode) {
+                g_string_append_printf(xml, " run='%s'",
+                                       gwy_toolbox_mode_name(ispec->mode));
+            }
+            g_string_append(xml, "/>\n");
+        }
+        g_string_append(xml, TOOLBOX_INDENT "</group>\n");
+    }
+    g_string_append(xml, "</toolbox>\n");
+
+    filename = g_build_filename(gwy_get_user_dir(), "ui", TOOLBOX_UI_FILE_NAME,
+                                NULL);
+    fh = gwy_fopen(filename, "w");
+    g_free(filename);
+    if (!fh) {
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                    _("Cannot open file for writing: %s."),
+                    g_strerror(errno));
+        g_string_free(xml, TRUE);
+        return FALSE;
+    }
+    if (fwrite(xml->str, 1, xml->len, fh) != xml->len) {
+        g_set_error(error,
+                    GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_FILE,
+                    _("Cannot write to file: %s."), g_strerror(errno));
+        fclose(fh);
+        g_string_free(xml, TRUE);
+        return FALSE;
+    }
+    fclose(fh);
+    g_string_free(xml, TRUE);
+
+    return TRUE;
 }
 
 GwyToolboxSpec*

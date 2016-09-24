@@ -83,8 +83,7 @@ typedef struct {
 
 void                         gwy_toolbox_rebuild_to_spec  (GwyToolboxSpec *spec);
 GwyToolboxSpec*              gwy_parse_toolbox_ui         (gboolean ignore_user);
-GwyToolboxSpec*              gwy_toolbox_parse            (const gchar *ui,
-                                                           gsize ui_len,
+gboolean                     gwy_save_toolbox_ui          (GwyToolboxSpec *spec,
                                                            GError **error);
 GwyToolboxSpec*              gwy_toolbox_spec_duplicate   (GwyToolboxSpec *spec);
 void                         gwy_toolbox_spec_free        (GwyToolboxSpec *spec);

@@ -74,6 +74,7 @@ typedef struct {
     GtkListStore *icon_model_gtk;
     GtkListStore *icon_model_default;
     GwyToolboxItemSpec last_item_spec;
+    gboolean do_save;
 } GwyToolboxEditor;
 
 typedef struct {
@@ -322,6 +323,12 @@ gwy_toolbox_editor(void)
     gwy_object_unref(editor.icon_model_gwy);
     gwy_object_unref(editor.icon_model_gtk);
     gwy_toolbox_spec_free(editor.spec);
+
+    if (editor.do_save) {
+        spec = g_object_get_data(G_OBJECT(toolbox), "gwy-app-toolbox-spec");
+        g_return_if_fail(spec);
+        gwy_save_toolbox_ui(spec, NULL);
+    }
 }
 
 static void
@@ -1712,6 +1719,7 @@ apply_toolbox_spec(GwyToolboxEditor *editor)
      * makes the passed spec the actual primary spec.  So pass a copy. */
     spec = gwy_toolbox_spec_duplicate(editor->spec);
     gwy_toolbox_rebuild_to_spec(spec);
+    editor->do_save = TRUE;
 }
 
 static void

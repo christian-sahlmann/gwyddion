@@ -239,8 +239,7 @@ gwy_app_settings_create_config_dir(GError **error)
 }
 
 static gboolean
-create_config_dir_real(const gchar *cfgdir,
-                       GError **error)
+create_config_dir_real(const gchar *cfgdir, GError **error)
 {
     gboolean ok;
     gchar **moddirs;
