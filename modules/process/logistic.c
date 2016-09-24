@@ -36,7 +36,7 @@
 
 #define LOGISTIC_RUN_MODES GWY_RUN_INTERACTIVE
 
-#define NFEATURES (1 + 7 * 5)
+#define NFEATURES 42
 #define FWHM2SIGMA (1.0/(2.0*sqrt(2*G_LN2)))
 
 enum {
@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Trains logistic regression to mark grains."),
     "Daniil Bratashov <dn2010@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2016",
 };
@@ -126,9 +126,10 @@ module_register(void)
 static void
 logistic_run(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *mfield;
+    GwyDataField *dfield, *mfield, *preview;
     GwyBrick *features;
     gint id;
+    // gint xres, yres, newid;
     LogisticArgs args;
     gdouble *thetas;
     GQuark quark;
@@ -142,6 +143,16 @@ logistic_run(GwyContainer *data, GwyRunType run)
                                      0);
     logistic_dialog(data, &args);
     features = create_feature_vector(dfield);
+
+    /*
+    xres = gwy_brick_get_xres(features);
+    yres = gwy_brick_get_tres(features);
+    gwy_brick_extract_plane(features, preview,
+                            0, 0, 0, xres, yres, -1, TRUE);
+    newid = gwy_app_data_browser_add_brick(features, preview, data, TRUE);
+    g_object_unref(preview);
+    */
+
     thetas = gwy_data_line_get_data(args.thetas);
     if (args.mode == LOGISTIC_MODE_TRAIN) {
         if (mfield) {
@@ -149,6 +160,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
         }
     }
     else {
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
         if (!mfield) {
             mfield = gwy_data_field_new_alike(dfield, TRUE);
             predict_mask(features, thetas, mfield);
@@ -156,7 +168,6 @@ logistic_run(GwyContainer *data, GwyRunType run)
             g_object_unref(mfield);
         }
         else {
-            gwy_app_undo_qcheckpointv(data, 1, &quark);
             predict_mask(features, thetas, mfield);
             gwy_data_field_data_changed(mfield);
         }
@@ -248,10 +259,17 @@ static GwyBrick *
 create_feature_vector(GwyDataField *dfield)
 {
     GwyBrick *features = NULL;
-    GwyDataField *feature0 = NULL, *feature = NULL;
+    GwyDataField *feature0 = NULL,
+                 *featureg = NULL,
+                 *feature  = NULL;
     gdouble max, min, avg, xreal, yreal, size;
-    gdouble *fdata, *bdata;
-    gint xres, yres, z, zres, i, ngauss;
+    gdouble *f0data, *gdata, *fdata, *bdata;
+    gint xres, yres, z, zres, i, ngauss, nfeatures;
+    gboolean gaussians   = TRUE,
+             sobel       = TRUE,
+             laplasian   = TRUE,
+             hessian     = TRUE,
+             hess_deriv  = FALSE;
 
     feature0 = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(feature0);
@@ -259,7 +277,21 @@ create_feature_vector(GwyDataField *dfield)
     xreal = gwy_data_field_get_xreal(feature0);
     yreal = gwy_data_field_get_yreal(feature0);
     ngauss = 5;
-    zres = NFEATURES;
+    nfeatures = 1;
+    if (!gaussians) {
+        ngauss = 0;
+    }
+    nfeatures += ngauss;
+    if (laplasian) {
+        nfeatures += ngauss + 1;
+    }
+    if (sobel) {
+        nfeatures += 2 * (ngauss + 1);
+    }
+    if (hessian) {
+        nfeatures += 3 * (ngauss + 1);
+    }
+    zres = nfeatures;
     z = 0;
     max = gwy_data_field_get_max(feature0);
     min = gwy_data_field_get_min(feature0);
@@ -271,23 +303,14 @@ create_feature_vector(GwyDataField *dfield)
     features = gwy_brick_new(xres, yres, zres,
                               xreal, yreal, zres, TRUE);
     bdata = gwy_brick_get_data(features);
-    fdata = gwy_data_field_get_data(feature0);
-    memmove(bdata, fdata, xres * yres * sizeof(gdouble));
+    f0data = gwy_data_field_get_data(feature0);
+    memmove(bdata, f0data, xres * yres * sizeof(gdouble));
     z++;
 
-    for (i = 0, size = 1.0; i < ngauss; i++, size *= 2.0) {
-        feature = gwy_data_field_duplicate(feature0);
-        gwy_data_field_filter_gaussian(feature, size * FWHM2SIGMA);
-        max = gwy_data_field_get_max(feature);
-        min = gwy_data_field_get_min(feature);
-        g_return_val_if_fail(max - min > 0.0, NULL);
-        gwy_data_field_multiply(feature, 1.0/(max - min));
-        avg = gwy_data_field_get_avg(feature);
-        gwy_data_field_add(feature, -avg);
-        fdata = gwy_data_field_get_data(feature);
-        memmove(bdata + z * xres * yres, fdata,
-                xres * yres * sizeof(gdouble));
-        z++;
+    feature = gwy_data_field_duplicate(feature0);
+    fdata = gwy_data_field_get_data(feature);
+
+    if (laplasian) {
         gwy_data_field_filter_laplacian(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -297,9 +320,11 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-1) * xres * yres,
-                xres * yres * sizeof(gdouble));
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
         z++;
+    }
+
+    if (sobel) {
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -309,9 +334,9 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-2) * xres * yres,
-                xres * yres * sizeof(gdouble));
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
         z++;
+
         gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_VERTICAL);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -321,9 +346,11 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-3) * xres * yres,
-                xres * yres * sizeof(gdouble));
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
         z++;
+    }
+
+    if (hessian) {
         logistic_filter_dx2(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -333,9 +360,9 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-4) * xres * yres,
-                xres * yres * sizeof(gdouble));
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
         z++;
+
         logistic_filter_dy2(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -345,9 +372,9 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-5) * xres * yres,
-                xres * yres * sizeof(gdouble));
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
         z++;
+
         logistic_filter_dxdy(feature);
         max = gwy_data_field_get_max(feature);
         min = gwy_data_field_get_min(feature);
@@ -357,11 +384,109 @@ create_feature_vector(GwyDataField *dfield)
         gwy_data_field_add(feature, -avg);
         memmove(bdata + z * xres * yres, fdata,
                 xres * yres * sizeof(gdouble));
-        memmove(fdata, bdata + (z-6) * xres * yres,
+        memmove(fdata, f0data, xres * yres * sizeof(gdouble));
+        z++;
+    }
+
+    g_object_unref(feature);
+
+    for (i = 0, size = 2.0; i < ngauss; i++, size *= 2.0) {
+        featureg = gwy_data_field_duplicate(feature0);
+        gdata = gwy_data_field_get_data(featureg);
+        gwy_data_field_filter_gaussian(featureg, size * FWHM2SIGMA);
+        max = gwy_data_field_get_max(featureg);
+        min = gwy_data_field_get_min(featureg);
+        g_return_val_if_fail(max - min > 0.0, NULL);
+        gwy_data_field_multiply(featureg, 1.0/(max - min));
+        avg = gwy_data_field_get_avg(featureg);
+        gwy_data_field_add(featureg, -avg);
+        memmove(bdata + z * xres * yres, gdata,
                 xres * yres * sizeof(gdouble));
         z++;
 
+        feature = gwy_data_field_duplicate(featureg);
+        fdata = gwy_data_field_get_data(feature);
+
+        if (laplasian) {
+            gwy_data_field_filter_laplacian(feature);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+        }
+
+        if (sobel) {
+            gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_HORIZONTAL);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+
+            gwy_data_field_filter_sobel(feature, GWY_ORIENTATION_VERTICAL);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+        }
+
+        if (hessian) {
+            logistic_filter_dx2(feature);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+
+            logistic_filter_dy2(feature);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+
+            logistic_filter_dxdy(feature);
+            max = gwy_data_field_get_max(feature);
+            min = gwy_data_field_get_min(feature);
+            g_return_val_if_fail(max - min > 0.0, NULL);
+            gwy_data_field_multiply(feature, 1.0/(max - min));
+            avg = gwy_data_field_get_avg(feature);
+            gwy_data_field_add(feature, -avg);
+            memmove(bdata + z * xres * yres, fdata,
+                    xres * yres * sizeof(gdouble));
+            memmove(fdata, gdata, xres * yres * sizeof(gdouble));
+            z++;
+        }
+
         g_object_unref(feature);
+        g_object_unref(featureg);
     }
     g_object_unref(feature0);
 
@@ -415,10 +540,10 @@ GwyDataField *mfield, gdouble *thetas, gdouble lambda)
             alpha *= 1.05;
         }
         else if (sum < 0) {
-            alpha /= 2.0;
-            for (i = 0; i < zres; i++) {
+            for (i =0; i < zres; i++) {
                 grad[i] += oldgrad[i];
             }
+            alpha /= 2.0;
         }
 
         converged = TRUE;
@@ -452,9 +577,8 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
               gdouble *thetas, gdouble *grad, gdouble lambda)
 {
     gint i, j, k, m, xres, yres, zres;
-    GwyDataField *hfield;
     gdouble sum, jsum, h, x, y, theta;
-    gdouble *bp, *mp, *hp;
+    gdouble *bp, *mp;
 
     xres = gwy_brick_get_xres(brick);
     yres = gwy_brick_get_yres(brick);
@@ -462,11 +586,9 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
     bp = gwy_brick_get_data(brick);
     m = xres * yres;
 
-    hfield = gwy_data_field_new_alike(mask, TRUE);
-    hp = gwy_data_field_get_data(hfield);
     mp = gwy_data_field_get_data(mask);
-    jsum = 0;
 
+    jsum = 0;
     grad[0] = 0;
     for (k = 1; k < zres; k++) {
         grad[k] = thetas[k] * lambda / m;
@@ -480,7 +602,6 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
                 sum += x * thetas[k];
             }
             h = sigmoid(sum);
-            *(hp + i * xres + j) = h;
             y = *(mp + i * xres + j);
             jsum += -log(h)*y - log(1-h)*(1-y);
             for (k = 0; k < zres; k++) {
@@ -496,8 +617,6 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
         sum += theta * theta;
     }
     jsum += sum * lambda/2.0/m;
-
-    g_object_unref(hfield);
 
     return jsum;
 }
@@ -570,6 +689,7 @@ logistic_dialog_update(LogisticControls *controls,
 {
     controls->args = args;
 }
+
 static const gchar thetas_key[]  = "/module/logistic/thetas";
 
 static void
@@ -600,42 +720,48 @@ logistic_reset_args(LogisticArgs *args)
     gdouble *p;
     gint i;
 
-	thetas[0] = 0.425046;
-    thetas[1] = 0.634522;
-    thetas[2] = 1.45483;
-    thetas[3] = 0.140818;
-    thetas[4] = 0.0111444;
-    thetas[5] = 0.377558;
-    thetas[6] = 0.159253;
-    thetas[7] = -0.0866127;
-    thetas[8] = 1.1986;
-    thetas[9] = 0.955458;
-    thetas[10] = 0.615229;
-    thetas[11] = -0.0589722;
-    thetas[12] = -0.199368;
-    thetas[13] = 0.345082;
-    thetas[14] = 0.346605;
-    thetas[15] = 1.40107;
-    thetas[16] = 1.14958;
-    thetas[17] = 0.76787;
-    thetas[18] = 0.0941677;
-    thetas[19] = 1.2597;
-    thetas[20] = 0.5242;
-    thetas[21] = -0.0549204;
-    thetas[22] = 1.11674;
-    thetas[23] = -7.39412;
-    thetas[24] = -1.203;
-    thetas[25] = 0.0899886;
-    thetas[26] = -5.59255;
-    thetas[27] = -4.69718;
-    thetas[28] = -0.865665;
-    thetas[29] = -3.01023;
-    thetas[30] = -20.2098;
-    thetas[31] = -3.60824;
-    thetas[32] = -0.497726;
-    thetas[33] = -14.5519;
-    thetas[34] = -14.054;
-    thetas[35] = 1.01437;
+    thetas[0] = 1.33081;
+    thetas[1] = 1.37593;
+    thetas[2] = 0.358389;
+    thetas[3] = 0.00171081;
+    thetas[4] = 0.322548;
+    thetas[5] = 0.227418;
+    thetas[6] = 0.00197188;
+    thetas[7] = 2.21344;
+    thetas[8] = 1.00522;
+    thetas[9] = 0.4861;
+    thetas[10] = -0.0078498;
+    thetas[11] = 0.226521;
+    thetas[12] = 0.711188;
+    thetas[13] = 0.259935;
+    thetas[14] = 2.64307;
+    thetas[15] = 1.52634;
+    thetas[16] = -0.102946;
+    thetas[17] = 0.0593559;
+    thetas[18] = 1.44539;
+    thetas[19] = 0.686324;
+    thetas[20] = -0.0880707;
+    thetas[21] = 2.0556;
+    thetas[22] = -9.47665;
+    thetas[23] = -1.65004;
+    thetas[24] = -0.0224822;
+    thetas[25] = -7.14919;
+    thetas[26] = -5.95944;
+    thetas[27] = -0.196352;
+    thetas[28] = -2.16704;
+    thetas[29] = -15.1234;
+    thetas[30] = -2.98174;
+    thetas[31] = -0.61164;
+    thetas[32] = -10.6664;
+    thetas[33] = -10.6847;
+    thetas[34] = 0.060821;
+    thetas[35] = -5.11742;
+    thetas[36] = -2.13578;
+    thetas[37] = 0.383576;
+    thetas[38] = 0.193679;
+    thetas[39] = -1.7626;
+    thetas[40] = -1.45696;
+    thetas[41] = 0.625375;
 
     p = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < NFEATURES; i++) {
@@ -753,7 +879,7 @@ logistic_filter_dy2(GwyDataField *dfield)
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);    
+    yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_area_convolve_3x3(dfield, dy2_kernel,
                                      0, 0, xres, yres);
 }
@@ -770,7 +896,7 @@ logistic_filter_dxdy(GwyDataField *dfield)
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);    
+    yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_area_convolve_3x3(dfield, dxdy_kernel,
                                      0, 0, xres, yres);
 }
