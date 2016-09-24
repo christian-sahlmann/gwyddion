@@ -81,9 +81,6 @@ typedef struct {
     gboolean seen_tool_placeholder;
 } GwyToolboxSpec;
 
-extern const GwyEnum *gwy_toolbox_action_types;
-extern const GwyEnum *gwy_toolbox_mode_types;
-
 void                         gwy_toolbox_rebuild_to_spec  (GwyToolboxSpec *spec);
 GwyToolboxSpec*              gwy_parse_toolbox_ui         (gboolean ignore_user);
 GwyToolboxSpec*              gwy_toolbox_parse            (const gchar *ui,
@@ -113,6 +110,18 @@ void                         gwy_toolbox_spec_add_group   (GwyToolboxSpec *spec,
 void                         gwy_toolbox_editor           (void);
 const GwyToolboxBuiltinSpec* gwy_toolbox_get_builtins     (guint *nspec);
 const GwyToolboxBuiltinSpec* gwy_toolbox_find_builtin_spec(const gchar *name);
+const gchar*                 gwy_toolbox_action_type_name (GwyAppActionType type);
+GwyAppActionType             gwy_toolbox_find_action_type (const gchar *name);
+const gchar*                 gwy_toolbox_mode_name        (GwyRunType mode);
+GwyRunType                   gwy_toolbox_find_mode        (const gchar *name);
+const gchar*                 gwy_toolbox_action_nice_name (GwyAppActionType type,
+                                                           const gchar *name);
+const gchar*                 gwy_toolbox_action_stock_id  (GwyAppActionType type,
+                                                           const gchar *name);
+const gchar*                 gwy_toolbox_action_detail    (GwyAppActionType type,
+                                                           const gchar *name);
+GwyRunType                   gwy_toolbox_action_run_modes (GwyAppActionType type,
+                                                           const gchar *name);
 
 G_END_DECLS
 

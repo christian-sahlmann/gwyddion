@@ -24,6 +24,8 @@
 #include <string.h>
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwymodule/gwymodule.h>
+#include <app/gwyapp.h>
 #include <app/gwyapp.h>
 
 #include "gwyddion.h"
@@ -31,14 +33,13 @@
 
 #define TOOLBOX_UI_FILE_NAME "toolbox.xml"
 
-static const GwyEnum mode_types_array[] = {
+static const GwyEnum modes[] = {
     { "default",         0,                   },
     { "interactive",     GWY_RUN_INTERACTIVE, },
     { "non-interactive", GWY_RUN_IMMEDIATE,   },
-    { NULL,              0,                   },
 };
 
-static const GwyEnum action_types_array[] = {
+static const GwyEnum action_types[] = {
     { "empty",   GWY_APP_ACTION_TYPE_PLACEHOLDER, },
     { "builtin", GWY_APP_ACTION_TYPE_BUILTIN,     },
     { "proc",    GWY_APP_ACTION_TYPE_PROC,        },
@@ -46,11 +47,9 @@ static const GwyEnum action_types_array[] = {
     { "volume",  GWY_APP_ACTION_TYPE_VOLUME,      },
     { "xyz",     GWY_APP_ACTION_TYPE_XYZ,         },
     { "tool",    GWY_APP_ACTION_TYPE_TOOL,        },
-    { NULL,      0,                               },
 };
 
-const GwyEnum *gwy_toolbox_mode_types = mode_types_array;
-const GwyEnum *gwy_toolbox_action_types = action_types_array;
+static void gwy_app_menu_canonicalize_label(gchar *label);
 
 static void
 toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
@@ -166,15 +165,10 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
         for (i = 0; (attname = attribute_names[i]); i++) {
             attval = attribute_values[i];
             if (gwy_strequal(attname, "type")
-                && (tmptype = gwy_string_to_enum(attval,
-                                                 gwy_toolbox_action_types, -1))
-                != -1)
+                && (tmptype = gwy_toolbox_find_action_type(attval)) != -1)
                 type = tmptype;
             else if (gwy_strequal(attname, "run")
-                     && (tmpmode = gwy_string_to_enum(attval,
-                                                      gwy_toolbox_mode_types,
-                                                      -1))
-                != -1)
+                     && (tmpmode = gwy_toolbox_find_mode(attval)) != -1)
                 mode = tmpmode;
             else if (gwy_strequal(attname, "function"))
                 function = attval;
@@ -310,10 +304,16 @@ void
 gwy_toolbox_spec_remove_item(GwyToolboxSpec *spec, guint i, guint j)
 {
     GwyToolboxGroupSpec *gspec;
+    GwyToolboxItemSpec *ispec;
 
     g_return_if_fail(i < spec->group->len);
     gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
     g_return_if_fail(j < gspec->item->len);
+    ispec = &g_array_index(gspec->item, GwyToolboxItemSpec, j);
+    if (ispec->type == GWY_APP_ACTION_TYPE_TOOL && !ispec->function) {
+        g_assert(spec->seen_tool_placeholder);
+        spec->seen_tool_placeholder = FALSE;
+    }
     g_array_remove_index(gspec->item, j);
 }
 
@@ -321,12 +321,22 @@ void
 gwy_toolbox_spec_remove_group(GwyToolboxSpec *spec, guint i)
 {
     GwyToolboxGroupSpec *gspec;
+    GwyToolboxItemSpec *ispec;
+    guint j;
 
     g_return_if_fail(i < spec->group->len);
     gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
     g_free(gspec->name);
-    if (gspec->item)
+    if (gspec->item) {
+        for (j = 0; j < gspec->item->len; j++) {
+            ispec = &g_array_index(gspec->item, GwyToolboxItemSpec, j);
+            if (ispec->type == GWY_APP_ACTION_TYPE_TOOL && !ispec->function) {
+                g_assert(spec->seen_tool_placeholder);
+                spec->seen_tool_placeholder = FALSE;
+            }
+        }
         g_array_free(gspec->item, TRUE);
+    }
     g_array_remove_index(spec->group, i);
 }
 
@@ -390,6 +400,11 @@ gwy_toolbox_spec_add_item(GwyToolboxSpec *spec,
 
     g_return_if_fail(i < spec->group->len);
     gspec = &g_array_index(spec->group, GwyToolboxGroupSpec, i);
+
+    if (ispec->type == GWY_APP_ACTION_TYPE_TOOL && !ispec->function) {
+        g_assert(!spec->seen_tool_placeholder);
+        spec->seen_tool_placeholder = TRUE;
+    }
 
     if (j >= gspec->item->len)
         g_array_append_vals(gspec->item, ispec, 1);
@@ -479,6 +494,176 @@ gwy_toolbox_spec_duplicate(GwyToolboxSpec *spec)
     }
 
     return dup;
+}
+
+const gchar*
+gwy_toolbox_action_type_name(GwyAppActionType type)
+{
+    if (type < 0)
+        return NULL;
+
+    return gwy_enum_to_string(type, action_types, G_N_ELEMENTS(action_types));
+}
+
+GwyAppActionType
+gwy_toolbox_find_action_type(const gchar *name)
+{
+    return gwy_string_to_enum(name, action_types, G_N_ELEMENTS(action_types));
+}
+
+const gchar*
+gwy_toolbox_mode_name(GwyRunType mode)
+{
+    return gwy_enum_to_string(mode, modes, G_N_ELEMENTS(modes));
+}
+
+GwyRunType
+gwy_toolbox_find_mode(const gchar *name)
+{
+    return gwy_string_to_enum(name, modes, G_N_ELEMENTS(modes));
+}
+
+const gchar*
+gwy_toolbox_action_nice_name(GwyAppActionType type, const gchar *name)
+{
+    static GString *label = NULL;
+
+    const gchar *menupath = NULL;
+
+    if (type == GWY_APP_ACTION_TYPE_PLACEHOLDER)
+        return _("placeholder");
+
+    if (type == GWY_APP_ACTION_TYPE_TOOL) {
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_title(tool_class);
+        }
+        return _("remaining tools");
+    }
+    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
+        const GwyToolboxBuiltinSpec* spec;
+
+        if ((spec = gwy_toolbox_find_builtin_spec(name)))
+            return spec->nice_name;
+    }
+
+    if (type == GWY_APP_ACTION_TYPE_PROC)
+        menupath = gwy_process_func_get_menu_path(name);
+    else if (type == GWY_APP_ACTION_TYPE_GRAPH)
+        menupath = gwy_graph_func_get_menu_path(name);
+    else if (type == GWY_APP_ACTION_TYPE_VOLUME)
+        menupath = gwy_volume_func_get_menu_path(name);
+    else if (type == GWY_APP_ACTION_TYPE_XYZ)
+        menupath = gwy_xyz_func_get_menu_path(name);
+
+    if (menupath) {
+        const gchar *p;
+        gchar *s = g_strdup(menupath);
+
+        if (!label)
+            label = g_string_new(NULL);
+
+        gwy_app_menu_canonicalize_label(s);
+        p = strrchr(s, '/');
+        g_string_assign(label, p ? p+1 : s);
+        g_free(s);
+
+        return label->str;
+    }
+
+    return NULL;
+}
+
+const gchar*
+gwy_toolbox_action_stock_id(GwyAppActionType type, const gchar *name)
+{
+    if (!name)
+        return NULL;
+    if (type == GWY_APP_ACTION_TYPE_PROC)
+        return gwy_process_func_get_stock_id(name);
+    if (type == GWY_APP_ACTION_TYPE_GRAPH)
+        return gwy_graph_func_get_stock_id(name);
+    if (type == GWY_APP_ACTION_TYPE_VOLUME)
+        return gwy_volume_func_get_stock_id(name);
+    if (type == GWY_APP_ACTION_TYPE_XYZ)
+        return gwy_xyz_func_get_stock_id(name);
+    if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_stock_id(tool_class);
+        }
+    }
+    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
+        const GwyToolboxBuiltinSpec* spec;
+
+        if ((spec = gwy_toolbox_find_builtin_spec(name)))
+            return spec->stock_id;
+    }
+    return NULL;
+}
+
+const gchar*
+gwy_toolbox_action_detail(GwyAppActionType type, const gchar *name)
+{
+    if (!name)
+        return NULL;
+    if (type == GWY_APP_ACTION_TYPE_PROC)
+        return gwy_process_func_get_tooltip(name);
+    if (type == GWY_APP_ACTION_TYPE_GRAPH)
+        return gwy_graph_func_get_tooltip(name);
+    if (type == GWY_APP_ACTION_TYPE_VOLUME)
+        return gwy_volume_func_get_tooltip(name);
+    if (type == GWY_APP_ACTION_TYPE_XYZ)
+        return gwy_xyz_func_get_tooltip(name);
+    if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
+        if (name) {
+            GType gtype = g_type_from_name(name);
+            GwyToolClass *tool_class = g_type_class_peek(gtype);
+            return gwy_tool_class_get_tooltip(tool_class);
+        }
+        return _("All tools not placed explicitly go here.");
+    }
+    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
+        const GwyToolboxBuiltinSpec* spec;
+
+        if ((spec = gwy_toolbox_find_builtin_spec(name)))
+            return spec->tooltip;
+    }
+    return NULL;
+}
+
+GwyRunType
+gwy_toolbox_action_run_modes(GwyAppActionType type, const gchar *name)
+{
+    if (!name)
+        return 0;
+    if (type == GWY_APP_ACTION_TYPE_PROC)
+        return gwy_process_func_get_run_types(name);
+    if (type == GWY_APP_ACTION_TYPE_VOLUME)
+        return gwy_volume_func_get_run_types(name);
+    if (type == GWY_APP_ACTION_TYPE_XYZ)
+        return gwy_xyz_func_get_run_types(name);
+
+    return 0;
+}
+
+/* Copied from menu.c */
+static void
+gwy_app_menu_canonicalize_label(gchar *label)
+{
+    guint i, j;
+
+    for (i = j = 0; label[i]; i++) {
+        label[j] = label[i];
+        if (label[i] != '_' || label[i+1] == '_')
+            j++;
+    }
+    /* If the label *ends* with an underscore, just kill it */
+    label[j] = '\0';
+    if (j >= 3 && label[j-3] == '.' && label[j-2] == '.' && label[j-1] == '.')
+        label[j-3] = '\0';
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

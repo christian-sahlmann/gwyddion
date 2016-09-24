@@ -244,12 +244,6 @@ toolbox_action_free(Action *action)
     g_slice_free(Action, action);
 }
 
-static const gchar*
-action_type_name(GwyAppActionType type)
-{
-    return gwy_enum_to_string(type, gwy_toolbox_action_types, -1);
-}
-
 static void
 check_run_mode(GwyAppActionType type, const gchar *name,
                GwyRunType available_modes, GwyRunType *mode)
@@ -272,7 +266,7 @@ check_run_mode(GwyAppActionType type, const gchar *name,
         return;
 
     g_warning("Function %s::%s cannot be run in mode %d",
-              action_type_name(type), name, *mode);
+              gwy_toolbox_action_type_name(type), name, *mode);
     *mode = first_mode;
 }
 
@@ -405,7 +399,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
 
     if (!action.stock_id) {
         g_warning("Function %s::%s has no icon set",
-                  action_type_name(action.type), func);
+                  gwy_toolbox_action_type_name(action.type), func);
         stock_id = GTK_STOCK_MISSING_IMAGE;
         action.stock_id = g_quark_from_static_string(stock_id);
     }
@@ -413,7 +407,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
         stock_id = g_quark_to_string(action.stock_id);
         if (!gtk_icon_factory_lookup_default(stock_id)) {
             g_warning("Function %s::%s icon %s not found",
-                      action_type_name(action.type), func,
+                      gwy_toolbox_action_type_name(action.type), func,
                       g_quark_to_string(action.stock_id));
             stock_id = GTK_STOCK_MISSING_IMAGE;
             action.stock_id = g_quark_from_static_string(stock_id);

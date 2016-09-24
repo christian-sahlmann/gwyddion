@@ -114,6 +114,11 @@ static void          toolbox_cell_renderer_icon_flags(GtkTreeViewColumn *column,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *iter,
                                                       gpointer userdata);
+static void          toolbox_cell_renderer_type      (GtkTreeViewColumn *column,
+                                                      GtkCellRenderer *cell,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
+                                                      gpointer userdata);
 static void          toolbox_cell_renderer_name      (GtkTreeViewColumn *column,
                                                       GtkCellRenderer *cell,
                                                       GtkTreeModel *model,
@@ -147,6 +152,7 @@ static void          group_title_transl_changed      (GwyToolboxGroupEditor *ged
 static gboolean      edit_item_dialogue              (GwyToolboxEditor *editor,
                                                       GwyToolboxItemSpec *ispec);
 static void          create_item_editor_models       (GwyToolboxEditor *editor);
+static void          sync_remaining_tools_item       (GwyToolboxEditor *editor);
 static void          try_to_select_item_function     (GwyToolboxItemEditor *ieditor,
                                                       GQuark qname);
 static void          try_to_select_item_icon         (GwyToolboxItemEditor *ieditor,
@@ -176,14 +182,6 @@ static void          apply_toolbox_spec              (GwyToolboxEditor *editor);
 static void          reset_toolbox_to_default        (GwyToolboxEditor *editor);
 static GtkListStore* create_function_list            (ForeachFunc foreach_do);
 static GtkListStore* create_function_list_builtin    (void);
-static const gchar*  action_get_nice_name            (GwyAppActionType type,
-                                                      const gchar *name);
-static GwyRunType    find_function_run_modes         (GwyAppActionType type,
-                                                      const gchar *name);
-static const gchar*  find_default_stock_id           (GwyAppActionType type,
-                                                      const gchar *name);
-static const gchar*  find_function_detail            (GwyAppActionType type,
-                                                      const gchar *name);
 static GtkListStore* create_gtk_icon_list            (GtkWidget *widget);
 static GtkListStore* create_gwy_icon_list            (GtkWidget *widget);
 
@@ -478,6 +476,16 @@ create_toolbox_tree_view(GwyToolboxEditor *editor)
                                             NULL, NULL);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_append_column(editor->toolbox_view, column);
+
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, FALSE);
+    gtk_cell_renderer_set_fixed_size(renderer, -1, height);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            toolbox_cell_renderer_type,
+                                            NULL, NULL);
+
+    column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_expand(column, TRUE);
     gtk_tree_view_append_column(editor->toolbox_view, column);
 
@@ -574,7 +582,7 @@ toolbox_cell_renderer_icon(GtkTreeViewColumn *column,
     id = row->id;
 
     if (!id)
-        id = find_default_stock_id(row->type, row->func);
+        id = gwy_toolbox_action_stock_id(row->type, row->func);
 
     if (!id) {
         g_object_set(renderer, "pixbuf", NULL, NULL);
@@ -620,7 +628,7 @@ toolbox_cell_renderer_icon_flags(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-toolbox_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+toolbox_cell_renderer_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
                            GtkCellRenderer *renderer,
                            GtkTreeModel *model,
                            GtkTreeIter *iter,
@@ -629,38 +637,43 @@ toolbox_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GwyToolboxEditorRow *row;
 
     gtk_tree_model_get(model, iter, 0, &row, -1);
+    g_object_set(renderer,
+                 "text", gwy_toolbox_action_type_name(row->type),
+                 NULL);
+}
+
+static void
+toolbox_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                           GtkCellRenderer *renderer,
+                           GtkTreeModel *model,
+                           GtkTreeIter *iter,
+                           G_GNUC_UNUSED gpointer userdata)
+{
+    GwyToolboxEditorRow *row;
+    const gchar *name;
+    PangoWeight weight = PANGO_WEIGHT_NORMAL;
+    PangoStyle style = PANGO_STYLE_NORMAL;
+
+    gtk_tree_model_get(model, iter, 0, &row, -1);
     if (row->type == GWY_APP_ACTION_TYPE_GROUP) {
-        g_object_set(renderer,
-                     "text", row->name,
-                     "weight", PANGO_WEIGHT_BOLD,
-                     "weight-set", TRUE,
-                     "style-set", FALSE,
-                     NULL);
-    }
-    else if (row->type == GWY_APP_ACTION_TYPE_TOOL && !row->func) {
-        g_object_set(renderer,
-                     "text", _("remaining tools"),
-                     "style", PANGO_STYLE_ITALIC,
-                     "style-set", TRUE,
-                     "weight-set", FALSE,
-                     NULL);
-    }
-    else if (row->type == GWY_APP_ACTION_TYPE_PLACEHOLDER) {
-        g_object_set(renderer,
-                     "text", _("placeholder"),
-                     "style", PANGO_STYLE_ITALIC,
-                     "style-set", TRUE,
-                     "weight-set", FALSE,
-                     NULL);
+        name = row->name;
+        weight = PANGO_WEIGHT_BOLD;
     }
     else {
-        const gchar *s = action_get_nice_name(row->type, row->func);
-        g_object_set(renderer,
-                     "text", s ? s : row->func,
-                     "weight-set", FALSE,
-                     "style-set", FALSE,
-                     NULL);
+        name = gwy_toolbox_action_nice_name(row->type, row->func);
+        if (row->type == GWY_APP_ACTION_TYPE_TOOL && !row->func)
+            style = PANGO_STYLE_ITALIC;
+        else if (row->type == GWY_APP_ACTION_TYPE_PLACEHOLDER)
+            style = PANGO_STYLE_ITALIC;
     }
+
+    g_object_set(renderer,
+                 "text", name ? name : row->func,
+                 "weight-set", weight != PANGO_WEIGHT_NORMAL,
+                 "weight", weight,
+                 "style-set", style != PANGO_STYLE_NORMAL,
+                 "style", style,
+                 NULL);
 }
 
 static void
@@ -679,9 +692,7 @@ toolbox_cell_renderer_mode(G_GNUC_UNUSED GtkTreeViewColumn *column,
         g_object_set(renderer, "text", NULL, NULL);
     }
     else {
-        const gchar *mode = gwy_enum_to_string(row->mode,
-                                               gwy_toolbox_mode_types, -1);
-        g_object_set(renderer, "text", mode, NULL);
+        g_object_set(renderer, "text", gwy_toolbox_mode_name(row->mode), NULL);
     }
 }
 
@@ -702,7 +713,7 @@ function_cell_renderer_icon(GtkTreeViewColumn *column,
 
     type = ieditor->ispec.type;
     gtk_tree_model_get(model, iter, 0, &qname, -1);
-    if (!(id = find_default_stock_id(type, g_quark_to_string(qname)))) {
+    if (!(id = gwy_toolbox_action_stock_id(type, g_quark_to_string(qname)))) {
         g_object_set(renderer, "pixbuf", NULL, NULL);
         return;
     }
@@ -731,7 +742,8 @@ function_cell_renderer_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     type = ieditor->ispec.type;
     gtk_tree_model_get(model, iter, 0, &qname, -1);
     g_object_set(renderer,
-                 "text", action_get_nice_name(type, g_quark_to_string(qname)),
+                 "text", gwy_toolbox_action_nice_name(type,
+                                                      g_quark_to_string(qname)),
                  NULL);
 }
 
@@ -1083,7 +1095,6 @@ static void
 create_item_editor_models(GwyToolboxEditor *editor)
 {
     GtkListStore **stores = editor->function_model;
-    GtkTreeIter iter;
 
     stores[GWY_APP_ACTION_TYPE_BUILTIN] = create_function_list_builtin();
     stores[GWY_APP_ACTION_TYPE_PROC]
@@ -1096,14 +1107,48 @@ create_item_editor_models(GwyToolboxEditor *editor)
         = create_function_list(gwy_xyz_func_foreach);
     stores[GWY_APP_ACTION_TYPE_TOOL]
         = create_function_list(gwy_tool_func_foreach);
-    gtk_list_store_insert_with_values(stores[GWY_APP_ACTION_TYPE_TOOL], &iter,
-                                      G_MAXINT, 0, 0, -1);
+    sync_remaining_tools_item(editor);
 
     editor->icon_model_gwy = create_gwy_icon_list(editor->dialogue);
     editor->icon_model_gtk = create_gtk_icon_list(editor->dialogue);
     editor->icon_model_default = gtk_list_store_new(2,
                                                     G_TYPE_UINT,
                                                     GDK_TYPE_PIXBUF);
+}
+
+static void
+sync_remaining_tools_item(GwyToolboxEditor *editor)
+{
+    GtkTreeIter iter;
+    GtkListStore *store = editor->function_model[GWY_APP_ACTION_TYPE_TOOL];
+    GtkTreeModel *model;
+    gboolean seen_tool_placeholder = editor->spec->seen_tool_placeholder;
+    GQuark qname;
+
+    if (!store)
+        return;
+
+    model = GTK_TREE_MODEL(store);
+    if (!gtk_tree_model_get_iter_first(model, &iter)) {
+        if (!seen_tool_placeholder)
+            gtk_list_store_insert_with_values(store, &iter, G_MAXINT, 0, 0, -1);
+        return;
+    }
+
+    do {
+        gtk_tree_model_get(model, &iter, 0, &qname, -1);
+        if (!qname)
+            break;
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    if ((seen_tool_placeholder && qname)
+        || (!seen_tool_placeholder && !qname))
+        return;
+
+    if (seen_tool_placeholder)
+        gtk_list_store_remove(store, &iter);
+    if (qname)
+        gtk_list_store_insert_with_values(store, &iter, G_MAXINT, 0, 0, -1);
 }
 
 static void
@@ -1283,8 +1328,8 @@ function_selection_changed(GwyToolboxItemEditor *ieditor)
     /* Update run modes, make the chooser unavailable if there is nothing to
      * choose from. */
     if (qname) {
-        modes = find_function_run_modes(ieditor->ispec.type,
-                                        g_quark_to_string(qname));
+        modes = gwy_toolbox_action_run_modes(ieditor->ispec.type,
+                                             g_quark_to_string(qname));
     }
     /* We only care if the function has both run modes.  Otherwise there is
      * nothing to choose from and we enforce the default mode. */
@@ -1310,8 +1355,8 @@ function_selection_changed(GwyToolboxItemEditor *ieditor)
     }
 
     /* Update function information. */
-    detail = find_function_detail(ieditor->ispec.type,
-                                  g_quark_to_string(qname));
+    detail = gwy_toolbox_action_detail(ieditor->ispec.type,
+                                       g_quark_to_string(qname));
     gtk_label_set_text(GTK_LABEL(ieditor->detail), detail ? detail : "");
 }
 
@@ -1355,8 +1400,8 @@ add_default_function_icon(GtkListStore *store, GwyToolboxItemSpec *ispec,
     if (!ispec->function)
         return;
 
-    stock_id = find_default_stock_id(ispec->type,
-                                     g_quark_to_string(ispec->function));
+    stock_id = gwy_toolbox_action_stock_id(ispec->type,
+                                           g_quark_to_string(ispec->function));
     if (!stock_id)
         return;
 
@@ -1495,6 +1540,8 @@ add_toolbox_item(GwyToolboxEditor *editor)
     fill_toolbox_row_for_item(row, &ispec);
     gtk_tree_store_insert_with_values(editor->toolbox_model,
                                       &iter, &parent, j, 0, row, -1);
+
+    sync_remaining_tools_item(editor);
 }
 
 static void
@@ -1593,6 +1640,8 @@ remove_from_toolbox(GwyToolboxEditor *editor)
     gtk_tree_model_get(model, &iter, 0, &row, -1);
     gtk_tree_store_remove(editor->toolbox_model, &iter);
     g_slice_free(GwyToolboxEditorRow, row);
+
+    sync_remaining_tools_item(editor);
 }
 
 static void
@@ -1684,146 +1733,6 @@ reset_toolbox_to_default(GwyToolboxEditor *editor)
 
     free_toolbox_treestore(store);
     gwy_toolbox_spec_free(spec);
-}
-
-/* Copied from menu.c */
-static void
-gwy_app_menu_canonicalize_label(gchar *label)
-{
-    guint i, j;
-
-    for (i = j = 0; label[i]; i++) {
-        label[j] = label[i];
-        if (label[i] != '_' || label[i+1] == '_')
-            j++;
-    }
-    /* If the label *ends* with an underscore, just kill it */
-    label[j] = '\0';
-    if (j >= 3 && label[j-3] == '.' && label[j-2] == '.' && label[j-1] == '.')
-        label[j-3] = '\0';
-}
-
-static const gchar*
-action_get_nice_name(GwyAppActionType type, const gchar *name)
-{
-    static GString *label = NULL;
-
-    const gchar *menupath = NULL;
-
-    if (type == GWY_APP_ACTION_TYPE_TOOL) {
-        if (name) {
-            GType gtype = g_type_from_name(name);
-            GwyToolClass *tool_class = g_type_class_peek(gtype);
-            return gwy_tool_class_get_title(tool_class);
-        }
-        return _("remaining tools");
-    }
-    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
-        const GwyToolboxBuiltinSpec* spec;
-
-        if ((spec = gwy_toolbox_find_builtin_spec(name)))
-            return spec->nice_name;
-    }
-
-    if (type == GWY_APP_ACTION_TYPE_PROC)
-        menupath = gwy_process_func_get_menu_path(name);
-    else if (type == GWY_APP_ACTION_TYPE_GRAPH)
-        menupath = gwy_graph_func_get_menu_path(name);
-    else if (type == GWY_APP_ACTION_TYPE_VOLUME)
-        menupath = gwy_volume_func_get_menu_path(name);
-    else if (type == GWY_APP_ACTION_TYPE_XYZ)
-        menupath = gwy_xyz_func_get_menu_path(name);
-
-    if (menupath) {
-        const gchar *p;
-        gchar *s = g_strdup(menupath);
-
-        if (!label)
-            label = g_string_new(NULL);
-
-        gwy_app_menu_canonicalize_label(s);
-        p = strrchr(s, '/');
-        g_string_assign(label, p ? p+1 : s);
-        g_free(s);
-
-        return label->str;
-    }
-
-    return NULL;
-}
-
-static const gchar*
-find_default_stock_id(GwyAppActionType type, const gchar *name)
-{
-    if (!name)
-        return NULL;
-    if (type == GWY_APP_ACTION_TYPE_PROC)
-        return gwy_process_func_get_stock_id(name);
-    if (type == GWY_APP_ACTION_TYPE_GRAPH)
-        return gwy_graph_func_get_stock_id(name);
-    if (type == GWY_APP_ACTION_TYPE_VOLUME)
-        return gwy_volume_func_get_stock_id(name);
-    if (type == GWY_APP_ACTION_TYPE_XYZ)
-        return gwy_xyz_func_get_stock_id(name);
-    if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
-        if (name) {
-            GType gtype = g_type_from_name(name);
-            GwyToolClass *tool_class = g_type_class_peek(gtype);
-            return gwy_tool_class_get_stock_id(tool_class);
-        }
-    }
-    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
-        const GwyToolboxBuiltinSpec* spec;
-
-        if ((spec = gwy_toolbox_find_builtin_spec(name)))
-            return spec->stock_id;
-    }
-    return NULL;
-}
-
-static const gchar*
-find_function_detail(GwyAppActionType type, const gchar *name)
-{
-    if (!name)
-        return NULL;
-    if (type == GWY_APP_ACTION_TYPE_PROC)
-        return gwy_process_func_get_tooltip(name);
-    if (type == GWY_APP_ACTION_TYPE_GRAPH)
-        return gwy_graph_func_get_tooltip(name);
-    if (type == GWY_APP_ACTION_TYPE_VOLUME)
-        return gwy_volume_func_get_tooltip(name);
-    if (type == GWY_APP_ACTION_TYPE_XYZ)
-        return gwy_xyz_func_get_tooltip(name);
-    if (type == GWY_APP_ACTION_TYPE_TOOL && name) {
-        if (name) {
-            GType gtype = g_type_from_name(name);
-            GwyToolClass *tool_class = g_type_class_peek(gtype);
-            return gwy_tool_class_get_tooltip(tool_class);
-        }
-        return _("All tools not placed explicitly go here.");
-    }
-    if (type == GWY_APP_ACTION_TYPE_BUILTIN) {
-        const GwyToolboxBuiltinSpec* spec;
-
-        if ((spec = gwy_toolbox_find_builtin_spec(name)))
-            return spec->tooltip;
-    }
-    return NULL;
-}
-
-static GwyRunType
-find_function_run_modes(GwyAppActionType type, const gchar *name)
-{
-    if (!name)
-        return 0;
-    if (type == GWY_APP_ACTION_TYPE_PROC)
-        return gwy_process_func_get_run_types(name);
-    if (type == GWY_APP_ACTION_TYPE_VOLUME)
-        return gwy_volume_func_get_run_types(name);
-    if (type == GWY_APP_ACTION_TYPE_XYZ)
-        return gwy_xyz_func_get_run_types(name);
-
-    return 0;
 }
 
 static GtkListStore*
