@@ -272,7 +272,7 @@ logistic_dialog(GwyContainer *data, LogisticArgs *args)
     row++;
 
     controls.use_laplasian
-                  = gtk_check_button_new_with_mnemonic(_("_Laplasian"));
+                  = gtk_check_button_new_with_mnemonic(_("_Laplacian"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.use_laplasian),
                                  args->use_laplasian);
     gtk_table_attach(GTK_TABLE(table), controls.use_laplasian,

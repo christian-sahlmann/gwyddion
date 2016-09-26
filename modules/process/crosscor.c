@@ -269,7 +269,7 @@ crosscor_dialog(CrosscorArgs *args)
 
     row++;
 
-    label = gtk_label_new(_("2nd channel global offset"));
+    label = gtk_label_new(_("Global offset of 2nd channel"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -286,7 +286,7 @@ crosscor_dialog(CrosscorArgs *args)
 
     controls.search_area_xoffset = gtk_adjustment_new(args->search_xoffset,
                                                 -200.0, 200.0, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("_x offset:"), "px",
+    gwy_table_attach_hscale(table, row, _("_X offset:"), "px",
                             controls.search_area_xoffset, 0);
 
     g_signal_connect(controls.search_area_xoffset, "value-changed",
@@ -297,7 +297,7 @@ crosscor_dialog(CrosscorArgs *args)
 
     controls.search_area_yoffset = gtk_adjustment_new(args->search_yoffset,
                                                 -200.0, 200.0, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("_y offset:"), "px",
+    gwy_table_attach_hscale(table, row, _("_Y offset:"), "px",
                             controls.search_area_yoffset, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     g_signal_connect(controls.search_area_yoffset, "value-changed",

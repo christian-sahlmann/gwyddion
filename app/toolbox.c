@@ -955,7 +955,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             GWY_STOCK_GL_MATERIAL
         },
         {
-            N_("/_Toolbox.."),
+            N_("/_Toolbox..."),
             NULL,
             gwy_toolbox_editor,
             0,

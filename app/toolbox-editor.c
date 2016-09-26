@@ -879,7 +879,7 @@ group_id_changed(GwyToolboxGroupEditor *geditor, GtkEntry *entry)
             gspec = &g_array_index(group, GwyToolboxGroupSpec, i);
             if (i != geditor->i && gwy_strequal(g_quark_to_string(gspec->id),
                                                 newid)) {
-                errmessage = _("Duplicate group id");
+                errmessage = _("Group id is not unique");
                 break;
             }
         }
