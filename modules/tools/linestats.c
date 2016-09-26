@@ -150,7 +150,6 @@ static const gchar interpolation_key[]   = "/module/linestats/interpolation";
 static const gchar masking_key[]         = "/module/linestats/masking";
 static const gchar options_visible_key[] = "/module/linestats/options_visible";
 static const gchar output_type_key[]     = "/module/linestats/output_type";
-static const gchar resolution_key[]      = "/module/linestats/resolution";
 
 static const ToolArgs default_args = {
     GWY_LINE_STAT_MEAN,
