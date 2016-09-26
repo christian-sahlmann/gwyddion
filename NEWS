@@ -1,6 +1,8 @@
 2.46 (0000-00-00)
 Application:
 - Translations updated: Czech, French, Russian.
+- Toolbox: Is now editable in the program using Edit → Toolbox.  It is possible
+  to specify whether a button runs the function interactively or not.
 
 Libraries:
 - libgwyddion: GwySIUnit can parse prefixed spelled out unit names such as
@@ -24,6 +26,7 @@ Libraries:
   and GwyDataField were added.
 - libgwyprocess: Construction of GwySurface from a GwyDataField with masking
   support was added.
+- libgwyprocess: gwy_data_field_mark_scars() was added as a public function.
 - libdraw: Memory handling bugs in GwyGradient updates were fixed.
 - libgwydgets: Graph ASCII export can create multi-column files with a single
   merged abscissa.  Exported values are always in base units (not power of 10
@@ -70,8 +73,8 @@ Modules:
 - Grain statistics: The values are displayed with more significant digits.
 - Raw XYZ import: No longer loses the first data point in the file.
 - Graph cut: The ‘cut all’ setting is remembered, some GUI improvements.
-- Cross correlate: Introduced weighting function, result smoothing and extension and 
-  back-correction according to the results.
+- Cross correlate: Introduced weighting function, result smoothing and
+  extension and back-correction according to the results.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
