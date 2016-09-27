@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-09-24 10:34+0300\n"
-"PO-Revision-Date: 2016-09-24 10:40+0300\n"
+"POT-Creation-Date: 2016-09-28 00:27+0300\n"
+"PO-Revision-Date: 2016-09-28 00:29+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -471,7 +471,7 @@ msgstr "Значение"
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:108
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:110
 msgid "Volume"
 msgstr "Объём"
 
@@ -481,7 +481,7 @@ msgstr "Граница"
 
 #: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:829
 #: modules/process/pat_synth.c:1131 modules/process/pat_synth.c:1466
-#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:147
+#: modules/tools/linestats.c:171 modules/volume/volume_linestat.c:147
 msgid "Slope"
 msgstr "Уклон"
 
@@ -918,7 +918,7 @@ msgid "L_ight θ:"
 msgstr "Уг_ол θ света:"
 
 #: libgwydgets/gwy3dwindow.c:1070 libgwydgets/gwy3dwindow.c:1240
-#: app/toolbox-editor.c:216 modules/file/hdrimage.cc:2213
+#: app/toolbox-editor.c:215 modules/file/hdrimage.cc:2213
 #: modules/file/imgexport.c:4718 modules/file/pixmap.c:789
 #: modules/file/rawfile.c:424 modules/process/angle_dist.c:172
 #: modules/process/bdep_synth.c:341 modules/process/calcoefs_new.c:352
@@ -937,7 +937,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/lat_synth.c:523 modules/process/latsim.c:159
 #: modules/process/level.c:245 modules/process/linematch.c:804
 #: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
-#: modules/process/logistic.c:180 modules/process/mark_disconn.c:208
+#: modules/process/logistic.c:205 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
@@ -1229,7 +1229,7 @@ msgstr "_Обратное расположение"
 msgid "Abscissa"
 msgstr "Абсцисса"
 
-#: libgwydgets/gwygraphwindow.c:163 app/toolbox-editor.c:983 app/toolbox.c:106
+#: libgwydgets/gwygraphwindow.c:163 app/toolbox-editor.c:1002 app/toolbox.c:108
 msgid "Graph"
 msgstr "График"
 
@@ -1271,7 +1271,7 @@ msgid "Points anywhere"
 msgstr "Точки в любом  месте"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:394
-#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:171
+#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:170
 #: modules/tools/roughness.c:516 modules/volume/volume_linestat.c:157
 msgid "Length"
 msgstr "Длина"
@@ -1461,7 +1461,7 @@ msgstr ""
 "версии. Для получения полного текста лицензии смотрите файл COPYING в архиве "
 "исходного кода программы."
 
-#: app/about.c:160
+#: app/about.c:160 modules/process/logistic.c:241
 msgid "Features"
 msgstr "Возможности"
 
@@ -1589,19 +1589,19 @@ msgstr "Изменить изображение предпросмотра дл�
 msgid "Preview quantity:"
 msgstr "Величина для предпросмотра:"
 
-#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:166
+#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Среднее"
 
 #: app/app.c:1604 modules/process/polydistort.c:255 modules/tools/filter.c:240
-#: modules/tools/icolorange.c:424 modules/tools/linestats.c:168
+#: modules/tools/icolorange.c:424 modules/tools/linestats.c:167
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Минимум"
 
 #: app/app.c:1605 modules/process/col_synth.c:167 modules/tools/filter.c:241
-#: modules/tools/icolorange.c:435 modules/tools/linestats.c:169
+#: modules/tools/icolorange.c:435 modules/tools/linestats.c:168
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Максимум"
@@ -2016,7 +2016,7 @@ msgstr ""
 "заголовка"
 
 #: app/gwymoduleutils.c:197 app/settings.c:131 app/settings.c:142
-#: modules/file/err.h:62
+#: app/toolbox-spec.c:535 modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
 msgstr "Невозможно записать в файл: %s."
@@ -2124,19 +2124,19 @@ msgstr "Время"
 msgid "Export Log"
 msgstr "Экспортировать журнал"
 
-#: app/menu.c:556 app/toolbox.c:576
+#: app/menu.c:556 app/toolbox.c:581
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
-#: app/menu.c:598 app/toolbox.c:579
+#: app/menu.c:598 app/toolbox.c:584
 msgid "_Graph"
 msgstr "_График"
 
-#: app/menu.c:641 app/toolbox.c:582
+#: app/menu.c:641 app/toolbox.c:587
 msgid "_Volume Data"
 msgstr "_Объёмные данные"
 
-#: app/menu.c:684 app/toolbox.c:585
+#: app/menu.c:684 app/toolbox.c:590
 msgid "_XYZ Data"
 msgstr "_Данные XYZ"
 
@@ -2202,7 +2202,7 @@ msgstr "Удалить выделенный элемент"
 msgid "Set selected item as default"
 msgstr "Установить выбранный элемент по умолчанию"
 
-#: app/settings.c:124 modules/file/err.h:55
+#: app/settings.c:124 app/toolbox-spec.c:527 modules/file/err.h:55
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr "Не удаётся открыть файл для записи: %s."
@@ -2224,17 +2224,17 @@ msgstr "Файл повреждён, ключевые значения заго�
 msgid "File is corrupted, deserialization failed."
 msgstr "Файл повреждён, разбор завершился неудачно."
 
-#: app/settings.c:265
+#: app/settings.c:264
 #, c-format
 msgid "Cannot create user config directory %s: %s"
 msgstr "Не удаётся создать каталог настроек пользователя %s: %s"
 
-#: app/settings.c:278
+#: app/settings.c:277
 #, c-format
 msgid "Cannot create user ui directory %s: %s"
 msgstr "Не удаётся создать каталог интерфейса пользователя %s: %s"
 
-#: app/settings.c:295
+#: app/settings.c:294
 #, c-format
 msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
@@ -2791,276 +2791,276 @@ msgstr "_Следующий совет"
 msgid "_Show tips at startup"
 msgstr "_Показывать подсказки при старте"
 
-#: app/toolbox-editor.c:213
+#: app/toolbox-editor.c:212
 msgid "Toolbox Editor"
 msgstr "Редактор панели инструментов"
 
-#: app/toolbox-editor.c:258
+#: app/toolbox-editor.c:257
 msgid "_New Item"
 msgstr "_Новый элемент"
 
-#: app/toolbox-editor.c:263
+#: app/toolbox-editor.c:262
 msgid "_New Group"
 msgstr "Новая _группа"
 
-#: app/toolbox-editor.c:269 app/toolbox.c:572
+#: app/toolbox-editor.c:268 app/toolbox.c:577
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox-editor.c:274 modules/process/fft_filter_2d.c:499
+#: app/toolbox-editor.c:273 modules/process/fft_filter_2d.c:499
 #: modules/tools/maskedit.c:548 modules/volume/volume_zcal.c:173
 msgid "_Remove"
 msgstr "_Удалить"
 
-#: app/toolbox-editor.c:279
+#: app/toolbox-editor.c:278
 msgid "Move _Up"
 msgstr "Переместить _вверх"
 
-#: app/toolbox-editor.c:284
+#: app/toolbox-editor.c:283
 msgid "Move _Down"
 msgstr "Переместить в_низ"
 
-#: app/toolbox-editor.c:293 modules/file/hdrimage.cc:2304
+#: app/toolbox-editor.c:292 modules/file/hdrimage.cc:2304
 #: modules/file/imgexport.c:3084 modules/file/pixmap.c:872
 #: modules/file/rawfile.c:658 modules/process/crosscor.c:252
 #: modules/process/dimensions.h:473 modules/process/tip_blind.c:333
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: app/toolbox-editor.c:642 app/toolbox-editor.c:1719
-msgid "remaining tools"
-msgstr "остальные инструменты"
-
-#: app/toolbox-editor.c:650
-msgid "placeholder"
-msgstr "заполнитель"
-
-#: app/toolbox-editor.c:755
+#: app/toolbox-editor.c:774
 msgid "Toolbox Group"
 msgstr "Группа инструментов"
 
-#: app/toolbox-editor.c:772 modules/file/rawgraph.c:267
+#: app/toolbox-editor.c:791 modules/file/rawgraph.c:267
 msgid "_Title:"
 msgstr "_Заголовок:"
 
-#: app/toolbox-editor.c:786
+#: app/toolbox-editor.c:805
 msgid "_Id:"
 msgstr "_Индентификатор"
 
-#: app/toolbox-editor.c:799
+#: app/toolbox-editor.c:818
 msgid "_Suggest"
 msgstr "_Предложить"
 
-#: app/toolbox-editor.c:805
+#: app/toolbox-editor.c:824
 msgid "Trans_latable title"
 msgstr "П_ереводимое название"
 
-#: app/toolbox-editor.c:855
+#: app/toolbox-editor.c:874
 msgid "Group id is not a valid identifier"
 msgstr "Идентификатор группы не является правильным идентификатором"
 
-#: app/toolbox-editor.c:863
-msgid "Duplicate group id"
-msgstr "Дублировать идентификатор группы"
+#: app/toolbox-editor.c:882
+msgid "Group id is not unique"
+msgstr "Идентификатор группы не уникален"
 
-#: app/toolbox-editor.c:952
+#: app/toolbox-editor.c:971
 msgid "Toolbox Item"
 msgstr "Элемент панели инструментов"
 
-#: app/toolbox-editor.c:973 modules/process/coerce.c:331
+#: app/toolbox-editor.c:992 modules/process/coerce.c:331
 #: modules/tools/filter.c:284
 msgid "_Type:"
 msgstr "_Тип:"
 
-#: app/toolbox-editor.c:980
+#: app/toolbox-editor.c:999
 msgid "Placeholder"
 msgstr "Заполнитель"
 
-#: app/toolbox-editor.c:981
+#: app/toolbox-editor.c:1000
 msgid "Builtin"
 msgstr "Встроенные"
 
-#: app/toolbox-editor.c:982 app/toolbox.c:105
+#: app/toolbox-editor.c:1001 app/toolbox.c:107
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox-editor.c:984
+#: app/toolbox-editor.c:1003
 msgid "Volume Data"
 msgstr "Объёмные данные"
 
-#: app/toolbox-editor.c:985
+#: app/toolbox-editor.c:1004
 msgid "XYZ Data"
 msgstr "Данные XYZ"
 
-#: app/toolbox-editor.c:986
+#: app/toolbox-editor.c:1005
 msgid "Tool"
 msgstr "Инструмент"
 
-#: app/toolbox-editor.c:993
+#: app/toolbox-editor.c:1012
 msgid "_Mode:"
 msgstr "_Режим"
 
-#: app/toolbox-editor.c:1000 app/toolbox-editor.c:1019
+#: app/toolbox-editor.c:1019 app/toolbox-editor.c:1038
 msgid "Default"
 msgstr "По умолчанию"
 
-#: app/toolbox-editor.c:1001
+#: app/toolbox-editor.c:1020
 msgid "Interactive"
 msgstr "Интерактивно"
 
-#: app/toolbox-editor.c:1002
+#: app/toolbox-editor.c:1021
 msgid "Non-interactive"
 msgstr "Неинтерактивно"
 
-#: app/toolbox-editor.c:1010
+#: app/toolbox-editor.c:1029
 msgid "Use _icon from:"
 msgstr "Использовать _иконку из:"
 
-#: app/toolbox-editor.c:1044
+#: app/toolbox-editor.c:1063
 msgid "Functions"
 msgstr "Функции"
 
-#: app/toolbox-editor.c:1803
+#: app/toolbox-spec.c:617
+msgid "placeholder"
+msgstr "заполнитель"
+
+#: app/toolbox-spec.c:625
+msgid "remaining tools"
+msgstr "остальные инструменты"
+
+#: app/toolbox-spec.c:709
 msgid "All tools not placed explicitly go here."
 msgstr "Все инструменты, чьё положение явно не задано, попадут сюда."
 
-#: app/toolbox.c:104
+#: app/toolbox.c:106
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:107
+#: app/toolbox.c:109
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:570
+#: app/toolbox.c:575
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:588
+#: app/toolbox.c:593
 msgid "_Info"
 msgstr "_Информация"
 
-#: app/toolbox.c:659
+#: app/toolbox.c:663
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:663
+#: app/toolbox.c:667
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:667
+#: app/toolbox.c:671
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:671
+#: app/toolbox.c:675
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:718
+#: app/toolbox.c:722
 msgid "/Show _Data Browser"
 msgstr "/Показать браузер _данных"
 
-#: app/toolbox.c:726
+#: app/toolbox.c:730
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:734
+#: app/toolbox.c:738
 msgid "/Program _Messages"
 msgstr "/_Сообщения программы"
 
-#: app/toolbox.c:749
+#: app/toolbox.c:753
 msgid "/_User Guide"
 msgstr "/_Руководство пользователя"
 
-#: app/toolbox.c:757
+#: app/toolbox.c:761
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:765
+#: app/toolbox.c:769
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:802
+#: app/toolbox.c:806
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:810
+#: app/toolbox.c:814
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:818
+#: app/toolbox.c:822
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:826
+#: app/toolbox.c:830
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:834
+#: app/toolbox.c:838
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:842
+#: app/toolbox.c:846
 msgid "/_Close"
 msgstr "/_Закрыть"
 
-#: app/toolbox.c:850
+#: app/toolbox.c:854
 msgid "/Remo_ve All Logs"
 msgstr "/_Удалить все журналы"
 
-#: app/toolbox.c:866
+#: app/toolbox.c:870
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:906
+#: app/toolbox.c:910
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:914
+#: app/toolbox.c:918
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:930
+#: app/toolbox.c:934
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:938
+#: app/toolbox.c:942
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:946
+#: app/toolbox.c:950
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:954
-msgid "/_Toolbox.."
-msgstr "/И_нструменты.."
+#: app/toolbox.c:958
+msgid "/_Toolbox..."
+msgstr "/Панель _инструментов..."
 
-#: app/toolbox.c:962
+#: app/toolbox.c:966
 msgid "/_Keyboard Shortcuts"
 msgstr "/_Комбинации клавиш"
 
-#: app/toolbox.c:970
+#: app/toolbox.c:974
 msgid "/_Logging Enabled"
 msgstr "/Включить _журналирование"
 
-#: app/toolbox.c:1079
+#: app/toolbox.c:1083
 msgid "Program Messages"
 msgstr "Сообщения программы"
 
-#: app/toolbox.c:1316
+#: app/toolbox.c:1320
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1344
+#: app/toolbox.c:1348
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1349
+#: app/toolbox.c:1353
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL был отключен опцией командной строки."
 
-#: app/toolbox.c:1357
+#: app/toolbox.c:1361
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -3068,7 +3068,7 @@ msgstr ""
 "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и "
 "предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1364
+#: app/toolbox.c:1368
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -4441,7 +4441,7 @@ msgstr "Изображение"
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
 #: modules/process/polydistort.c:247 modules/process/rotate.c:274
 #: modules/process/scale.c:253 modules/process/straighten_path.c:271
-#: modules/process/unrotate.c:277 modules/tools/linestats.c:401
+#: modules/process/unrotate.c:277 modules/tools/linestats.c:400
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
 #: modules/tools/sfunctions.c:461 modules/xyz/xyz_raster.c:632
 msgid "_Interpolation type:"
@@ -5825,7 +5825,7 @@ msgstr "Формат данных"
 #: modules/process/polydistort.c:205 modules/process/scars.c:295
 #: modules/process/slope_dist.c:273 modules/process/straighten_path.c:198
 #: modules/process/synth.h:509 modules/process/tip_model.c:163
-#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:455
+#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:454
 #: modules/tools/sfunctions.c:527 modules/tools/stats.c:460
 #: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
 #: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
@@ -6676,7 +6676,7 @@ msgstr "Экспорт XYZ"
 #: modules/process/fit-shape.c:1007 modules/process/level.c:259
 #: modules/process/linematch.c:906 modules/process/neural.c:593
 #: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
-#: modules/tools/filter.c:300 modules/tools/linestats.c:437
+#: modules/tools/filter.c:300 modules/tools/linestats.c:436
 #: modules/tools/profile.c:595 modules/tools/sfunctions.c:509
 #: modules/tools/stats.c:390
 msgid "Masking Mode"
@@ -7759,12 +7759,14 @@ msgid "Detail"
 msgstr "Часть"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:491
-#: modules/process/calibrate.c:496 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:496 modules/process/crosscor.c:289
+#: modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:517
-#: modules/process/calibrate.c:509 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:509 modules/process/crosscor.c:300
+#: modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
@@ -8126,12 +8128,12 @@ msgstr "Обработка данных:"
 msgid "Number of maxima"
 msgstr "Число максимумов"
 
-#: modules/process/col_synth.c:170 modules/tools/linestats.c:179
+#: modules/process/col_synth.c:170 modules/tools/linestats.c:178
 #: modules/volume/volume_linestat.c:154
 msgid "Skew"
 msgstr "Асимметрия"
 
-#: modules/process/col_synth.c:171 modules/tools/linestats.c:180
+#: modules/process/col_synth.c:171 modules/tools/linestats.c:179
 #: modules/tools/roughness.c:386 modules/volume/volume_linestat.c:155
 msgid "Kurtosis"
 msgstr "Эксцесс"
@@ -8369,20 +8371,12 @@ msgid "Search size"
 msgstr "Размер поиска"
 
 #: modules/process/crosscor.c:272
-msgid "2nd channel global offset"
+msgid "Global offset of 2nd channel"
 msgstr "Общее смещение второго канала"
 
 #: modules/process/crosscor.c:277
 msgid "_Guess"
 msgstr "_Угадать"
-
-#: modules/process/crosscor.c:289
-msgid "_x offset:"
-msgstr "Смещение по _X:"
-
-#: modules/process/crosscor.c:300
-msgid "_y offset:"
-msgstr "Смещение по _Y:"
 
 #: modules/process/crosscor.c:311
 msgid "Window size"
@@ -8550,7 +8544,7 @@ msgstr "Строить _график"
 #: modules/process/curvature.c:685 modules/process/drift.c:337
 #: modules/process/fft_profile.c:310 modules/process/fractal.c:328
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:885
-#: modules/process/slope_dist.c:349 modules/tools/linestats.c:419
+#: modules/process/slope_dist.c:349 modules/tools/linestats.c:418
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:479 modules/tools/spectro.c:382
 #: modules/volume/volume_slice.c:398
@@ -8560,7 +8554,7 @@ msgstr "Добавить к _графику:"
 #: modules/process/curvature.c:691 modules/process/drift.c:343
 #: modules/process/fft_profile.c:316 modules/process/fractal.c:334
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:892
-#: modules/process/slope_dist.c:355 modules/tools/linestats.c:425
+#: modules/process/slope_dist.c:355 modules/tools/linestats.c:424
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:485 modules/tools/spectro.c:388
 #: modules/volume/volume_slice.c:406
@@ -8686,7 +8680,7 @@ msgstr "Ошибка: частицы слишком большие."
 msgid "Error: particles too small."
 msgstr "Ошибка: частицы слишком маленькие."
 
-#: modules/process/diff_synth.c:197 modules/tools/linestats.c:174
+#: modules/process/diff_synth.c:197 modules/tools/linestats.c:173
 #: modules/volume/volume_linestat.c:149
 msgid "Variation"
 msgstr "Вариация"
@@ -10925,7 +10919,7 @@ msgstr "/Исправить _данные/Линейная коррекция _�
 msgid "Correct steps in lines"
 msgstr "Исправить ступеньки в линиях"
 
-#: modules/process/linematch.c:158 modules/tools/linestats.c:167
+#: modules/process/linematch.c:158 modules/tools/linestats.c:166
 #: modules/volume/volume_linestat.c:143
 msgid "Median"
 msgstr "Срединное"
@@ -11082,31 +11076,51 @@ msgstr "Размер _ядра:"
 msgid "Blending _depth:"
 msgstr "_Глубина смешения:"
 
-#: modules/process/logistic.c:103
+#: modules/process/logistic.c:115
 msgid "Trains logistic regression to mark grains."
 msgstr "Обучает и использует логистическую регрессию для выделения зёрен."
 
-#: modules/process/logistic.c:117
+#: modules/process/logistic.c:129
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Зёрна/_Логистическая регрессия..."
 
-#: modules/process/logistic.c:121
+#: modules/process/logistic.c:133
 msgid "Mark grains with logistic regression"
 msgstr "Пометить зёрна логистической регрессией"
 
-#: modules/process/logistic.c:177
+#: modules/process/logistic.c:202
 msgid "Logistic Regression"
 msgstr "Логистическая регрессия"
 
-#: modules/process/logistic.c:200
+#: modules/process/logistic.c:225
 msgid "_Train logistic regression"
 msgstr "_Обучить регрессию"
 
-#: modules/process/logistic.c:202
+#: modules/process/logistic.c:227
 msgid "_Use trained regression"
 msgstr "_Использовать регрессию"
 
-#: modules/process/logistic.c:401 modules/process/neural.c:1101
+#: modules/process/logistic.c:246
+msgid "_Gaussian blur"
+msgstr "_Гауссово размытие"
+
+#: modules/process/logistic.c:259
+msgid "_Number of Gaussians:"
+msgstr "_Число гауссиан:"
+
+#: modules/process/logistic.c:264
+msgid "_Sobel derivatives"
+msgstr "Производные _Собеля"
+
+#: modules/process/logistic.c:275
+msgid "_Laplacian"
+msgstr "_Лапласиан"
+
+#: modules/process/logistic.c:286
+msgid "_Hessian"
+msgstr "_Гессиан"
+
+#: modules/process/logistic.c:580 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Обучение..."
 
@@ -13018,7 +13032,7 @@ msgstr "Генерировать волны"
 msgid "Waves"
 msgstr "Волны"
 
-#: modules/process/wave_synth.c:422 modules/tools/linestats.c:338
+#: modules/process/wave_synth.c:422 modules/tools/linestats.c:337
 #: modules/tools/sfunctions.c:394 modules/volume/volume_linestat.c:369
 msgid "_Quantity:"
 msgstr "_Величина:"
@@ -13421,7 +13435,7 @@ msgstr "по _умолчанию"
 msgid "Height histogram"
 msgstr "Гистограмма высот"
 
-#: modules/tools/icolorange.c:329 modules/tools/linestats.c:170
+#: modules/tools/icolorange.c:329 modules/tools/linestats.c:169
 #: modules/tools/sfunctions.c:219 modules/volume/volume_linestat.c:146
 msgid "Range"
 msgstr "Диапазон"
@@ -13486,52 +13500,52 @@ msgstr ""
 "Функция статистики по строке/столбцу, средние, срединные, максимумы, "
 "минимумы. среднеквадратичные, и т.п., строк и столбцов."
 
-#: modules/tools/linestats.c:173 modules/volume/volume_linestat.c:148
+#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:148
 msgid "tan β<sub>0</sub>"
 msgstr "tan β<sub>0</sub>"
 
-#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:150
+#: modules/tools/linestats.c:174 modules/volume/volume_linestat.c:150
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:151
+#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:151
 msgid "Rq (RMS)"
 msgstr "Rq (Ср. квадр.)"
 
-#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:152
+#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:152
 msgid "Rz"
 msgstr "Rz"
 
-#: modules/tools/linestats.c:178 modules/volume/volume_linestat.c:153
+#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:153
 msgid "Rt"
 msgstr "Rt"
 
-#: modules/tools/linestats.c:205
+#: modules/tools/linestats.c:204
 msgid "Row/Column Statistics"
 msgstr "Статистика по столбцам/строкам"
 
-#: modules/tools/linestats.c:206
+#: modules/tools/linestats.c:205
 msgid "Calculate row/column statistical functions"
 msgstr "Рассчитать статистические функции для строки/колонки"
 
-#: modules/tools/linestats.c:308
+#: modules/tools/linestats.c:307
 msgid "Ro_ws"
 msgstr "Стро_ки"
 
-#: modules/tools/linestats.c:309
+#: modules/tools/linestats.c:308
 msgid "Co_lumns"
 msgstr "С_толбцы"
 
-#: modules/tools/linestats.c:355
+#: modules/tools/linestats.c:354
 msgid "Average:"
 msgstr "Среднее:"
 
-#: modules/tools/linestats.c:364 modules/tools/profile.c:468
+#: modules/tools/linestats.c:363 modules/tools/profile.c:468
 #: modules/tools/sfunctions.c:407 modules/tools/spectro.c:343
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
-#: modules/tools/linestats.c:380 modules/tools/sfunctions.c:423
+#: modules/tools/linestats.c:379 modules/tools/sfunctions.c:423
 #: modules/tools/stats.c:409
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
@@ -14913,6 +14927,21 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "Duplicate group id"
+#~ msgstr "Дублировать идентификатор группы"
+
+#~ msgid "/_Toolbox.."
+#~ msgstr "/Панель _инструментов..."
+
+#~ msgid "2nd channel global offset"
+#~ msgstr "Общее смещение второго канала"
+
+#~ msgid "_x offset:"
+#~ msgstr "Смещение по _X:"
+
+#~ msgid "_y offset:"
+#~ msgstr "Смещение по _Y:"
 
 #~ msgid "E_xpand result to fit complete data"
 #~ msgstr "_Расширить окно результата, чтобы все данные поместились"
