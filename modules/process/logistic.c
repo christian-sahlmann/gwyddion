@@ -23,6 +23,8 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <glib.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
@@ -138,7 +140,8 @@ module_register(void)
 static void
 logistic_run(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *mfield, *preview;
+    GwyDataField *dfield, *mfield;
+    // GwyDataField *preview;
     GwyBrick *features;
     gint id;
     // gint xres, yres, newid;
@@ -154,6 +157,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
                                      0);
     logistic_load_args(gwy_app_settings_get(), &args);
     logistic_dialog(data, &args);
+    
     features = create_feature_vector(dfield, &args);
 
     /*
@@ -173,6 +177,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
     }
     else {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
+
         if (!mfield) {
             mfield = gwy_data_field_new_alike(dfield, TRUE);
             predict_mask(features, thetas, mfield);
@@ -191,7 +196,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
 }
 
 static void
-logistic_dialog(GwyContainer *data, LogisticArgs *args)
+logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
 {
     GtkWidget *dialog, *table, *button;
     gint response, row;
@@ -565,7 +570,6 @@ GwyDataField *mfield, gdouble *thetas, gdouble lambda)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     zres = gwy_brick_get_zres(features);
-    thetas = g_malloc(zres * sizeof(gdouble));
     grad = g_malloc(zres * sizeof(gdouble));
     oldgrad = g_malloc(zres * sizeof(gdouble));
     for (i = 0; i < zres; i++) {
@@ -931,8 +935,12 @@ static void
 logistic_load_args(GwyContainer *settings,
                    LogisticArgs *args)
 {
-    gint nfeatures;
+    gchar *filename, *buffer, *line, *p;
+    gsize size;
+    gint i, nfeatures;
+    gdouble *thetas;
 
+    args->thetas = NULL;
     logistic_reset_args(args);
     gwy_container_gis_boolean_by_name(settings, gaussians_key,
                                       &args->use_gaussians);
@@ -946,7 +954,24 @@ logistic_load_args(GwyContainer *settings,
                                       &args->use_hessian);
 
     nfeatures = logistic_nfeatures(args);
-    args->thetas = gwy_data_line_new(nfeatures, nfeatures, TRUE);
+    thetas = gwy_data_line_get_data(args->thetas);
+    for (i = 0; i < nfeatures; i++) {
+        *(thetas + i) = 0.0;
+    }
+
+    filename = g_build_filename(gwy_get_user_dir(), "logistic",
+                                "thetas", NULL);
+
+    if (g_file_get_contents(filename, &buffer, &size, NULL)) {
+        p = buffer;
+        i = 0;
+        while ((line = gwy_str_next_line(&p)) && (i++ < nfeatures)) {
+            g_strstrip(line);
+            *(thetas++) = g_ascii_strtod(line, NULL);
+        }
+        g_free(buffer);
+    }
+    g_free(filename);
 
     logistic_sanitize_args(args);
 }
@@ -955,29 +980,66 @@ static void
 logistic_save_args(GwyContainer *settings,
                    LogisticArgs *args)
 {
-    gwy_container_set_boolean_by_name(settings, gaussians_key, args->use_gaussians);
-    gwy_container_set_int32_by_name(settings, ngaussians_key, args->ngaussians);
-    gwy_container_set_boolean_by_name(settings, sobel_key, args->use_sobel);
-    gwy_container_set_boolean_by_name(settings, laplasian_key, args->use_laplasian);
-    gwy_container_set_boolean_by_name(settings, hessian_key, args->use_hessian);
+    gchar *filename, *s;
+    gdouble *thetas;
+    FILE *fh;
+    gint i, nfeatures;
+
+    gwy_container_set_boolean_by_name(settings, gaussians_key,
+                                      args->use_gaussians);
+    gwy_container_set_int32_by_name(settings, ngaussians_key,
+                                    args->ngaussians);
+    gwy_container_set_boolean_by_name(settings, sobel_key,
+                                      args->use_sobel);
+    gwy_container_set_boolean_by_name(settings, laplasian_key,
+                                      args->use_laplasian);
+    gwy_container_set_boolean_by_name(settings, hessian_key,
+                                      args->use_hessian);
+
+    filename = g_build_filename(gwy_get_user_dir(), "logistic", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_IS_DIR))
+        g_mkdir(filename, 0700);
+    g_free(filename);
+
+    filename = g_build_filename(gwy_get_user_dir(), "logistic",
+                                "thetas", NULL);
+    thetas = gwy_data_line_get_data(args->thetas);
+    if ((fh = gwy_fopen(filename, "w"))) {
+        nfeatures = logistic_nfeatures(args);
+        for (i = 0; i < nfeatures; i++) {
+            s = g_malloc(G_ASCII_DTOSTR_BUF_SIZE);
+            g_ascii_dtostr(s, G_ASCII_DTOSTR_BUF_SIZE, *(thetas+i));
+            fputs(s, fh);
+            fputc('\n', fh);
+            g_free(s);
+        }
+        fclose(fh);
+    }
+    g_free(filename);
 }
 
 static void
 logistic_reset_args(LogisticArgs *args)
 {
-    gdouble *thetas;
-    gint i, nfeatures;
+    gint nfeatures;
 
+    args->mode = LOGISTIC_MODE_TRAIN;
     args->use_gaussians = TRUE;
     args->ngaussians = 4;
     args->use_sobel = TRUE;
     args->use_laplasian = TRUE;
     args->use_hessian = TRUE;
+    nfeatures = logistic_nfeatures(args);
+    if (args->thetas) {
+        g_object_unref(args->thetas);
+    }
+    args->thetas = gwy_data_line_new(nfeatures, nfeatures, TRUE);
 }
 
 static void
 logistic_sanitize_args(LogisticArgs *args)
 {
+    args->mode = MIN(args->mode, LOGISTIC_MODE_USE);
     args->use_gaussians = !!args->use_gaussians;
     args->ngaussians = CLAMP(args->ngaussians, 1.0, 10.0);
     args->use_sobel = !!args->use_sobel;
