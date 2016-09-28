@@ -157,7 +157,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
                                      0);
     logistic_load_args(gwy_app_settings_get(), &args);
     logistic_dialog(data, &args);
-    
+
     features = create_feature_vector(dfield, &args);
 
     /*
@@ -227,10 +227,10 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
 
     controls.mode = gwy_radio_buttons_createl(G_CALLBACK(logistic_mode_changed),
                                               &controls, args->mode,
-                                              _("_Train logistic regression"),
-                                              LOGISTIC_MODE_TRAIN,
                                               _("_Use trained regression"),
                                               LOGISTIC_MODE_USE,
+                                              _("_Train logistic regression"),
+                                              LOGISTIC_MODE_TRAIN,
                                               NULL);
     button = gwy_radio_buttons_find(controls.mode, LOGISTIC_MODE_TRAIN);
     gtk_table_attach(GTK_TABLE(table), button, 0, 3, row, row+1,
@@ -263,6 +263,9 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
     gwy_table_attach_hscale(table, row,
                             _("_Number of Gaussians:"), NULL,
                             controls.ngaussians, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.ngaussians, "value-changed",
+                             G_CALLBACK(logistic_invalidate),
+                             &controls);
     row++;
 
     controls.use_sobel
@@ -732,6 +735,20 @@ logistic_mode_changed(G_GNUC_UNUSED GtkWidget *button,
                       LogisticControls *controls)
 {
     controls->args->mode = gwy_radio_buttons_get_current(controls->mode);
+    if (controls->args->mode == LOGISTIC_MODE_USE) {
+        gtk_widget_set_sensitive(controls->use_gaussians, FALSE);
+        gwy_table_hscale_set_sensitive(controls->ngaussians, FALSE);
+        gtk_widget_set_sensitive(controls->use_sobel, FALSE);
+        gtk_widget_set_sensitive(controls->use_laplasian, FALSE);
+        gtk_widget_set_sensitive(controls->use_hessian, FALSE);
+    }
+    else {
+        gtk_widget_set_sensitive(controls->use_gaussians, TRUE);
+        gwy_table_hscale_set_sensitive(controls->ngaussians, TRUE);
+        gtk_widget_set_sensitive(controls->use_sobel, TRUE);
+        gtk_widget_set_sensitive(controls->use_laplasian, TRUE);
+        gtk_widget_set_sensitive(controls->use_hessian, TRUE);
+    }
 }
 
 static void
@@ -767,6 +784,8 @@ static void
 logistic_invalidate(LogisticControls *controls)
 {
     logistic_values_update(controls, controls->args);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(controls->mode,
+                             LOGISTIC_MODE_USE), FALSE);
 }
 
 static void
