@@ -269,7 +269,7 @@ xyzlevel_dialogue(XYZLevelArgs *args, GwySurface *surface)
                                  FALSE);
     }
 
-    check = gtk_check_button_new_with_mnemonic(_("Update X and Y of _all"
+    check = gtk_check_button_new_with_mnemonic(_("Update X and Y of _all "
                                                  "compatible data"));
     controls.update_all = check;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->update_all);
