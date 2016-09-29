@@ -925,7 +925,7 @@ suggest_group_id(GwyToolboxGroupEditor *geditor)
 #if GLIB_CHECK_VERSION(2, 30, 0)
     {
         guint decomp_len, j;
-        gunichar buf[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
+        gunichar buf[18];
 
         for (i = 0; i < name_len; i++) {
             decomp_len = g_unichar_fully_decompose(name_chars[i], TRUE,
