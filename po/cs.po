@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-09-26 02:14+0200\n"
-"PO-Revision-Date: 2016-09-26 10:41+0200\n"
+"POT-Creation-Date: 2016-09-29 02:14+0200\n"
+"PO-Revision-Date: 2016-09-29 09:57+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -473,7 +473,7 @@ msgstr "Hranice"
 
 #: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:829
 #: modules/process/pat_synth.c:1131 modules/process/pat_synth.c:1466
-#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:147
+#: modules/tools/linestats.c:171 modules/volume/volume_linestat.c:147
 msgid "Slope"
 msgstr "Sklon"
 
@@ -929,7 +929,7 @@ msgstr "θ s_větla:"
 #: modules/process/lat_synth.c:523 modules/process/latsim.c:159
 #: modules/process/level.c:245 modules/process/linematch.c:804
 #: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
-#: modules/process/logistic.c:205 modules/process/mark_disconn.c:208
+#: modules/process/logistic.c:210 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
@@ -1263,7 +1263,7 @@ msgid "Points anywhere"
 msgstr "Libovolné body"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:394
-#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:171
+#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:170
 #: modules/tools/roughness.c:516 modules/volume/volume_linestat.c:157
 msgid "Length"
 msgstr "Délka"
@@ -1452,7 +1452,7 @@ msgstr ""
 "kterékoli pozdější verze. Plné znění licence najdeš v souboru COPYING v "
 "balíku se zdrojovým kódem."
 
-#: app/about.c:160 modules/process/logistic.c:241
+#: app/about.c:160 modules/process/logistic.c:246
 msgid "Features"
 msgstr "Vlastnosti"
 
@@ -1580,19 +1580,19 @@ msgstr "Změnit náhled objemových dat"
 msgid "Preview quantity:"
 msgstr "Veličina zobrazená v náhledu:"
 
-#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:166
+#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Střední hodnota"
 
 #: app/app.c:1604 modules/process/polydistort.c:255 modules/tools/filter.c:240
-#: modules/tools/icolorange.c:424 modules/tools/linestats.c:168
+#: modules/tools/icolorange.c:424 modules/tools/linestats.c:167
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Minimum"
 
 #: app/app.c:1605 modules/process/col_synth.c:167 modules/tools/filter.c:241
-#: modules/tools/icolorange.c:435 modules/tools/linestats.c:169
+#: modules/tools/icolorange.c:435 modules/tools/linestats.c:168
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Maximum"
@@ -1711,6 +1711,7 @@ msgid "Imported data are likely incorrect."
 msgstr "Importovaná data jsou nejspíš nesprávná."
 
 #: app/file.c:214
+#, c-format
 msgid ""
 "Import support for files of type\n"
 "\n"
@@ -4403,7 +4404,7 @@ msgstr "Obraz"
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
 #: modules/process/polydistort.c:247 modules/process/rotate.c:274
 #: modules/process/scale.c:253 modules/process/straighten_path.c:271
-#: modules/process/unrotate.c:277 modules/tools/linestats.c:401
+#: modules/process/unrotate.c:277 modules/tools/linestats.c:400
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
 #: modules/tools/sfunctions.c:461 modules/xyz/xyz_raster.c:632
 msgid "_Interpolation type:"
@@ -5772,7 +5773,7 @@ msgstr "Formát dat"
 #: modules/process/polydistort.c:205 modules/process/scars.c:295
 #: modules/process/slope_dist.c:273 modules/process/straighten_path.c:198
 #: modules/process/synth.h:509 modules/process/tip_model.c:163
-#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:455
+#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:454
 #: modules/tools/sfunctions.c:527 modules/tools/stats.c:460
 #: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
 #: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
@@ -6620,7 +6621,7 @@ msgstr "Export jako XYZ"
 #: modules/process/fit-shape.c:1007 modules/process/level.c:259
 #: modules/process/linematch.c:906 modules/process/neural.c:593
 #: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
-#: modules/tools/filter.c:300 modules/tools/linestats.c:437
+#: modules/tools/filter.c:300 modules/tools/linestats.c:436
 #: modules/tools/profile.c:595 modules/tools/sfunctions.c:509
 #: modules/tools/stats.c:390
 msgid "Masking Mode"
@@ -7699,12 +7700,14 @@ msgid "Detail"
 msgstr "Detail"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:491
-#: modules/process/calibrate.c:496 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:496 modules/process/crosscor.c:289
+#: modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr "Posun v _X:"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:517
-#: modules/process/calibrate.c:509 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:509 modules/process/crosscor.c:300
+#: modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr "Posun v _Y:"
 
@@ -8063,12 +8066,12 @@ msgstr "Zpracování dat:"
 msgid "Number of maxima"
 msgstr "Počet maxim"
 
-#: modules/process/col_synth.c:170 modules/tools/linestats.c:179
+#: modules/process/col_synth.c:170 modules/tools/linestats.c:178
 #: modules/volume/volume_linestat.c:154
 msgid "Skew"
 msgstr "Šikmost"
 
-#: modules/process/col_synth.c:171 modules/tools/linestats.c:180
+#: modules/process/col_synth.c:171 modules/tools/linestats.c:179
 #: modules/tools/roughness.c:386 modules/volume/volume_linestat.c:155
 msgid "Kurtosis"
 msgstr "Špičatost"
@@ -8306,20 +8309,12 @@ msgid "Search size"
 msgstr "Velikost hledání"
 
 #: modules/process/crosscor.c:272
-msgid "2nd channel global offset"
+msgid "Global offset of 2nd channel"
 msgstr "Globální posun druhého kanálu"
 
 #: modules/process/crosscor.c:277
 msgid "_Guess"
 msgstr "Od_hadnout"
-
-#: modules/process/crosscor.c:289
-msgid "_x offset:"
-msgstr "Posun v _X:"
-
-#: modules/process/crosscor.c:300
-msgid "_y offset:"
-msgstr "Posun v _X:"
 
 #: modules/process/crosscor.c:311
 msgid "Window size"
@@ -8485,7 +8480,7 @@ msgstr "Vykreslit _graf"
 #: modules/process/curvature.c:685 modules/process/drift.c:337
 #: modules/process/fft_profile.c:310 modules/process/fractal.c:328
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:885
-#: modules/process/slope_dist.c:349 modules/tools/linestats.c:419
+#: modules/process/slope_dist.c:349 modules/tools/linestats.c:418
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:479 modules/tools/spectro.c:382
 #: modules/volume/volume_slice.c:398
@@ -8495,7 +8490,7 @@ msgstr "Cílový _graf:"
 #: modules/process/curvature.c:691 modules/process/drift.c:343
 #: modules/process/fft_profile.c:316 modules/process/fractal.c:334
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:892
-#: modules/process/slope_dist.c:355 modules/tools/linestats.c:425
+#: modules/process/slope_dist.c:355 modules/tools/linestats.c:424
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:485 modules/tools/spectro.c:388
 #: modules/volume/volume_slice.c:406
@@ -8621,7 +8616,7 @@ msgstr "Chyba: částice jsou příliš velké."
 msgid "Error: particles too small."
 msgstr "Chyba: částice jsou příliš malé."
 
-#: modules/process/diff_synth.c:197 modules/tools/linestats.c:174
+#: modules/process/diff_synth.c:197 modules/tools/linestats.c:173
 #: modules/volume/volume_linestat.c:149
 msgid "Variation"
 msgstr "Variace"
@@ -10847,7 +10842,7 @@ msgstr "/_Korekce dat/Srovnání s_chodů v řádcích"
 msgid "Correct steps in lines"
 msgstr "Opravuje schody v řádcích"
 
-#: modules/process/linematch.c:158 modules/tools/linestats.c:167
+#: modules/process/linematch.c:158 modules/tools/linestats.c:166
 #: modules/volume/volume_linestat.c:143
 msgid "Median"
 msgstr "Medián"
@@ -11004,51 +10999,51 @@ msgstr "_Velikost jádra:"
 msgid "Blending _depth:"
 msgstr "Rozsah _mísení:"
 
-#: modules/process/logistic.c:115
+#: modules/process/logistic.c:117
 msgid "Trains logistic regression to mark grains."
 msgstr "Trénuje logistickou regresi pro označování zrn."
 
-#: modules/process/logistic.c:129
+#: modules/process/logistic.c:131
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Zrna/Logistická _regrese..."
 
-#: modules/process/logistic.c:133
+#: modules/process/logistic.c:135
 msgid "Mark grains with logistic regression"
 msgstr "Označit zrna pomocí logistické regrese"
 
-#: modules/process/logistic.c:202
+#: modules/process/logistic.c:207
 msgid "Logistic Regression"
 msgstr "Logistická regrese"
 
-#: modules/process/logistic.c:225
-msgid "_Train logistic regression"
-msgstr "_Trénovat logistickou regresi"
-
-#: modules/process/logistic.c:227
+#: modules/process/logistic.c:230
 msgid "_Use trained regression"
 msgstr "_Použít natrénovanou regresi"
 
-#: modules/process/logistic.c:246
+#: modules/process/logistic.c:232
+msgid "_Train logistic regression"
+msgstr "_Trénovat logistickou regresi"
+
+#: modules/process/logistic.c:251
 msgid "_Gaussian blur"
 msgstr "_Gaussovské rozmazání"
 
-#: modules/process/logistic.c:259
+#: modules/process/logistic.c:264
 msgid "_Number of Gaussians:"
 msgstr "_Počet gaussiánů:"
 
-#: modules/process/logistic.c:264
+#: modules/process/logistic.c:272
 msgid "_Sobel derivatives"
 msgstr "_Sobelova derivace"
 
-#: modules/process/logistic.c:275
-msgid "_Laplasian"
-msgstr "Laplacián"
+#: modules/process/logistic.c:283
+msgid "_Laplacian"
+msgstr "_Laplacián"
 
-#: modules/process/logistic.c:286
+#: modules/process/logistic.c:294
 msgid "_Hessian"
 msgstr "Hessián"
 
-#: modules/process/logistic.c:580 modules/process/neural.c:1101
+#: modules/process/logistic.c:587 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Trénování..."
 
@@ -12951,7 +12946,7 @@ msgstr "Generovat vlny"
 msgid "Waves"
 msgstr "Vlny"
 
-#: modules/process/wave_synth.c:422 modules/tools/linestats.c:338
+#: modules/process/wave_synth.c:422 modules/tools/linestats.c:337
 #: modules/tools/sfunctions.c:394 modules/volume/volume_linestat.c:369
 msgid "_Quantity:"
 msgstr "_Veličina:"
@@ -13349,7 +13344,7 @@ msgstr "_výchozí"
 msgid "Height histogram"
 msgstr "Rozdělení výšek"
 
-#: modules/tools/icolorange.c:329 modules/tools/linestats.c:170
+#: modules/tools/icolorange.c:329 modules/tools/linestats.c:169
 #: modules/tools/sfunctions.c:219 modules/volume/volume_linestat.c:146
 msgid "Range"
 msgstr "Rozsah"
@@ -13414,52 +13409,52 @@ msgstr ""
 "Nástroj řádkových/sloupcových statistických funkcí: počítá střední hodnoty, "
 "mediány, maxima, minima, RMS, ..., řádků čí sloupců."
 
-#: modules/tools/linestats.c:173 modules/volume/volume_linestat.c:148
+#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:148
 msgid "tan β<sub>0</sub>"
 msgstr "tg β<sub>0</sub>"
 
-#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:150
+#: modules/tools/linestats.c:174 modules/volume/volume_linestat.c:150
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:151
+#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:151
 msgid "Rq (RMS)"
 msgstr "Rq (RMS)"
 
-#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:152
+#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:152
 msgid "Rz"
 msgstr "Rz"
 
-#: modules/tools/linestats.c:178 modules/volume/volume_linestat.c:153
+#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:153
 msgid "Rt"
 msgstr "Rt"
 
-#: modules/tools/linestats.c:205
+#: modules/tools/linestats.c:204
 msgid "Row/Column Statistics"
 msgstr "Řádková/sloupcová statistika"
 
-#: modules/tools/linestats.c:206
+#: modules/tools/linestats.c:205
 msgid "Calculate row/column statistical functions"
 msgstr "Spočítat řádkové/sloupcové statistické funkce"
 
-#: modules/tools/linestats.c:308
+#: modules/tools/linestats.c:307
 msgid "Ro_ws"
 msgstr "Řá_dky"
 
-#: modules/tools/linestats.c:309
+#: modules/tools/linestats.c:308
 msgid "Co_lumns"
 msgstr "S_loupce"
 
-#: modules/tools/linestats.c:355
+#: modules/tools/linestats.c:354
 msgid "Average:"
 msgstr "Střední hodnota:"
 
-#: modules/tools/linestats.c:364 modules/tools/profile.c:468
+#: modules/tools/linestats.c:363 modules/tools/profile.c:468
 #: modules/tools/sfunctions.c:407 modules/tools/spectro.c:343
 msgid "<b>Options</b>"
 msgstr "<b>Volby</b>"
 
-#: modules/tools/linestats.c:380 modules/tools/sfunctions.c:423
+#: modules/tools/linestats.c:379 modules/tools/sfunctions.c:423
 #: modules/tools/stats.c:409
 msgid "_Instant updates"
 msgstr "Okamžité aktuali_zace"
@@ -14784,7 +14779,7 @@ msgstr "Vyrovnat _XYZ data"
 
 #: modules/xyz/xyz_level.c:272
 msgid "Update X and Y of _all compatible data"
-msgstr "Opravit X a Y všech kompatibilních dat"
+msgstr "Opravit X a Y _všech kompatibilních dat"
 
 #: modules/xyz/xyz_raster.c:197
 msgid "Rasterizes XYZ data to images."
@@ -14835,6 +14830,18 @@ msgid ""
 "interrupted."
 msgstr ""
 "Regularizace XYZ dat selhala kvůli numerické nestabilitě nebo byla přerušena."
+
+#~ msgid "2nd channel global offset"
+#~ msgstr "Globální posun druhého kanálu"
+
+#~ msgid "_x offset:"
+#~ msgstr "Posun v _X:"
+
+#~ msgid "_y offset:"
+#~ msgstr "Posun v _X:"
+
+#~ msgid "_Laplasian"
+#~ msgstr "Laplacián"
 
 #~ msgid "Placement:"
 #~ msgstr "Umístění:"
