@@ -63,6 +63,7 @@ cat >check_deps_versions.ignore <<':'
 ^app/help\.c:[0-9]+: gtk2-2\.14 required for gtk_show_uri$
 libgwydgets/gwy3dview\.c:[0-9]+: cairo-1\.6 required for cairo_format_stride_for_width$
 ^modules/file/imgexport\.c:[0-9]+: cairo-1\.6 required for cairo_ps_surface_set_eps$
+^app/toolbox-editor\.c:[0-9]+: glib-2\.30 required for g_unichar_fully_decompose$
 ^WARNING: Malformed symbol name: "The Poke\(\) method" \(type=method\) in gio\.$
 ':'
 :
