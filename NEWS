@@ -48,6 +48,7 @@ Modules:
   (unweighted), plane levelling by subtraction and true rotation.
 - Fit shape (new): Fits various geometrical shapes on entire data.  Available
   both as image and XYZ data processing function.
+- Logistic regression (new): Image segmentation based on logistic regression.
 - Fit sphere: Was removed, use new Fit shape module instead.
 - Row/column statistics tool: Masking support was added.  The misguided fixed
   resolution option was removed.
