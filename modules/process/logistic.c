@@ -57,6 +57,7 @@ typedef struct {
     gboolean use_laplasian;
     gboolean use_hessian;
     GwyDataLine *thetas;
+    gdouble lambda;
 } LogisticArgs;
 
 typedef struct {
@@ -67,6 +68,7 @@ typedef struct {
     GtkWidget *use_sobel;
     GtkWidget *use_laplasian;
     GtkWidget *use_hessian;
+    GtkObject *lambda;
     GtkWidget *dialog;
 } LogisticControls;
 
@@ -87,9 +89,11 @@ static void      train_logistic         (GwyContainer *container,
                                          GwyDataField *mfield,
                                          gdouble *thetas,
                                          gdouble lambda);
+/*
 static void      predict                (GwyBrick *brick,
                                          gdouble *thetas,
                                          GwyDataField *dfield);
+*/
 static void      predict_mask           (GwyBrick *brick,
                                          gdouble *thetas,
                                          GwyDataField *mask);
@@ -141,7 +145,7 @@ static void
 logistic_run(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield;
-    // GwyDataField *preview;
+    // GwyDataField *preview, *predicted;
     GwyBrick *features;
     gint id;
     // gint xres, yres, newid;
@@ -162,7 +166,8 @@ logistic_run(GwyContainer *data, GwyRunType run)
 
     /*
     xres = gwy_brick_get_xres(features);
-    yres = gwy_brick_get_tres(features);
+    yres = gwy_brick_get_yres(features);
+    preview = gwy_data_field_new_alike(dfield, FALSE);
     gwy_brick_extract_plane(features, preview,
                             0, 0, 0, xres, yres, -1, TRUE);
     newid = gwy_app_data_browser_add_brick(features, preview, data, TRUE);
@@ -172,7 +177,8 @@ logistic_run(GwyContainer *data, GwyRunType run)
     thetas = gwy_data_line_get_data(args.thetas);
     if (args.mode == LOGISTIC_MODE_TRAIN) {
         if (mfield) {
-            train_logistic(data, features, mfield, thetas, 1.0);
+            train_logistic(data,
+                           features, mfield, thetas, args.lambda);
         }
     }
     else {
@@ -188,6 +194,13 @@ logistic_run(GwyContainer *data, GwyRunType run)
             predict_mask(features, thetas, mfield);
             gwy_data_field_data_changed(mfield);
         }
+        /*
+        predicted = gwy_data_field_new_alike(dfield, FALSE);
+        predict(features, thetas, predicted);
+        newid = gwy_app_data_browser_add_data_field(predicted, data,
+                                                    TRUE);
+        g_object_unref(predicted);
+        */
     }
     logistic_save_args(gwy_app_settings_get(), &args);
     gwy_app_channel_log_add_proc(data, id, id);
@@ -217,7 +230,7 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
     gwy_help_add_to_proc_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
     controls.dialog = dialog;
 
-    table = gtk_table_new(8, 4, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -297,6 +310,16 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
     gtk_table_attach(GTK_TABLE(table), controls.use_hessian,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.use_hessian, "toggled",
+                             G_CALLBACK(logistic_invalidate),
+                             &controls);
+    row++;
+
+    controls.lambda
+             = gtk_adjustment_new(args->lambda, 0.0, 10.0, 0.1, 1.0, 0);
+    gwy_table_attach_hscale(table, row,
+                            _("_Regularization parameter:"), NULL,
+                            controls.lambda, GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(controls.lambda, "value-changed",
                              G_CALLBACK(logistic_invalidate),
                              &controls);
     row++;
@@ -566,7 +589,8 @@ train_logistic(GwyContainer *container, GwyBrick *features,
 GwyDataField *mfield, gdouble *thetas, gdouble lambda)
 {
     gdouble *grad, *oldgrad;
-    gdouble epsilon, alpha, cost, sum;
+    gdouble epsilon, alpha, sum;
+    G_GNUC_UNUSED gdouble cost;
     gint i, iter, maxiter, zres, id;
     gboolean converged = FALSE, cancelled = FALSE;
 
@@ -619,15 +643,8 @@ GwyDataField *mfield, gdouble *thetas, gdouble lambda)
         if (iter >= maxiter) {
             converged = TRUE;
         }
-        fprintf(stderr, "iter=%d cost=%g grad[0] = %g grad[20] = %g alpha=%g\n",
-                iter, cost, grad[0], grad[20], alpha);
         iter++;
     }
-
-    for (i = 0; i < zres; i++) {
-        fprintf(stderr,"thetas[%d] = %g\n", i, thetas[i]);
-    }
-
     gwy_app_wait_finish();
     g_free(grad);
     g_free(oldgrad);
@@ -682,6 +699,7 @@ cost_function(GwyBrick *brick, GwyDataField *mask,
     return jsum;
 }
 
+/*
 static void
 predict(GwyBrick *brick, gdouble *thetas, GwyDataField *dfield)
 {
@@ -705,6 +723,7 @@ predict(GwyBrick *brick, gdouble *thetas, GwyDataField *dfield)
             *(dp + i * xres + j) = sigmoid(sum);
         }
 }
+*/
 
 static void
 predict_mask(GwyBrick *brick, gdouble *thetas, GwyDataField *mask)
@@ -741,6 +760,7 @@ logistic_mode_changed(G_GNUC_UNUSED GtkWidget *button,
         gtk_widget_set_sensitive(controls->use_sobel, FALSE);
         gtk_widget_set_sensitive(controls->use_laplasian, FALSE);
         gtk_widget_set_sensitive(controls->use_hessian, FALSE);
+        gwy_table_hscale_set_sensitive(controls->lambda, FALSE);
     }
     else {
         gtk_widget_set_sensitive(controls->use_gaussians, TRUE);
@@ -748,6 +768,7 @@ logistic_mode_changed(G_GNUC_UNUSED GtkWidget *button,
         gtk_widget_set_sensitive(controls->use_sobel, TRUE);
         gtk_widget_set_sensitive(controls->use_laplasian, TRUE);
         gtk_widget_set_sensitive(controls->use_hessian, TRUE);
+        gwy_table_hscale_set_sensitive(controls->lambda, FALSE);
     }
 }
 
@@ -762,6 +783,8 @@ logistic_values_update(LogisticControls *controls,
     args->use_sobel = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->use_sobel));
     args->use_laplasian = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->use_laplasian));
     args->use_hessian = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->use_hessian));
+    args->lambda
+           = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->lambda));
 }
 
 static void
@@ -778,6 +801,8 @@ logistic_dialog_update(LogisticControls *controls,
                                  args->use_laplasian);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->use_hessian),
                                  args->use_hessian);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->lambda),
+                             args->lambda);
 }
 
 static void
@@ -949,6 +974,7 @@ static const gchar ngaussians_key[] = "/module/logistic/numgaussians";
 static const gchar sobel_key[]      = "/module/logistic/usesobel";
 static const gchar laplasian_key[]  = "/module/logistic/uselaplasians";
 static const gchar hessian_key[]    = "/module/logistic/usehessian";
+static const gchar lambda_key[] = "/module/logistic/lambda";
 
 static void
 logistic_load_args(GwyContainer *settings,
@@ -971,6 +997,8 @@ logistic_load_args(GwyContainer *settings,
                                       &args->use_laplasian);
     gwy_container_gis_boolean_by_name(settings, hessian_key,
                                       &args->use_hessian);
+    gwy_container_gis_double_by_name(settings, lambda_key,
+                                     &args->lambda);
 
     nfeatures = logistic_nfeatures(args);
     thetas = gwy_data_line_get_data(args->thetas);
@@ -1014,6 +1042,8 @@ logistic_save_args(GwyContainer *settings,
                                       args->use_laplasian);
     gwy_container_set_boolean_by_name(settings, hessian_key,
                                       args->use_hessian);
+    gwy_container_set_double_by_name(settings, lambda_key,
+                                     args->lambda);
 
     filename = g_build_filename(gwy_get_user_dir(), "logistic", NULL);
     if (!g_file_test(filename, G_FILE_TEST_IS_DIR))
@@ -1048,6 +1078,7 @@ logistic_reset_args(LogisticArgs *args)
     args->use_sobel = TRUE;
     args->use_laplasian = TRUE;
     args->use_hessian = TRUE;
+    args->lambda = 1.0;
     nfeatures = logistic_nfeatures(args);
     if (args->thetas) {
         g_object_unref(args->thetas);
@@ -1064,6 +1095,7 @@ logistic_sanitize_args(LogisticArgs *args)
     args->use_sobel = !!args->use_sobel;
     args->use_laplasian = !!args->use_laplasian;
     args->use_hessian = !!args->use_hessian;
+    args->lambda = CLAMP(args->lambda, 0.0, 10.0);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
