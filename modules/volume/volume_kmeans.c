@@ -46,6 +46,8 @@ typedef struct {
     gdouble epsilon;     /* convergence precision */
     gint max_iterations; /* maximum number of main cycle iterations */
     gboolean normalize;  /* normalize brick before K-means run */
+    gboolean remove_outliers;
+    gdouble outliers_threshold;
 } KMeansArgs;
 
 typedef struct {
@@ -53,7 +55,8 @@ typedef struct {
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
-    GtkWidget *normalize;
+    GtkWidget *remove_outliers;
+    GtkWidget *outliers_threshold;
 } KMeansControls;
 
 static gboolean  module_register     (void);
@@ -79,14 +82,16 @@ static const KMeansArgs kmeans_defaults = {
     1.0e-12,
     100,
     FALSE,
+    FALSE,
+    3.0
 };
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculates K-means clustering on volume data."),
-    "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov",
-    "1.3",
+    "Daniil Bratashov <dn2010@gmail.com> & Evgeniy Ryabov <k1u2r3ka@mail.ru>",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov & Evgeniy Ryabov",
     "2014",
 };
@@ -151,7 +156,7 @@ kmeans_dialog(GwyContainer *data, KMeansArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gwy_help_add_to_volume_dialog(GTK_DIALOG(dialog), GWY_HELP_DEFAULT);
 
-    table = gtk_table_new(4, 4, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -179,9 +184,23 @@ kmeans_dialog(GwyContainer *data, KMeansArgs *args)
     row++;
 
     controls.normalize
-        = gtk_check_button_new_with_mnemonic(_("_Normalize"));
+                  = gtk_check_button_new_with_mnemonic(_("_Normalize"));
     gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
                               0, 3, row, row+1);
+    row++
+
+    controls.remove_outliers
+        = gtk_check_button_new_with_mnemonic(_("_Remove outliers"));
+    gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
+                              0, 3, row, row+1);
+
+    controls.outliers_threshold
+                          = gtk_adjustment_new(args->outliers_threshold,
+                                               0.1, 10.0, 0.1, 1, 0);
+    gwy_table_attach_hscale(table, row,
+                            _("Outliers _threshold:"), NULL,
+                            controls.max_iterations, GWY_HSCALE_LOG);
+    row++;
 
     kmeans_dialog_update(&controls, args);
     gtk_widget_show_all(dialog);
@@ -293,6 +312,10 @@ kmeans_values_update(KMeansControls *controls,
         = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->max_iterations));
     args->normalize
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
+    args->remove_outliers
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->remove_outliers));
+    args->outliers_threshold
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->outliers_threshold));
 }
 
 static void
@@ -306,6 +329,10 @@ kmeans_dialog_update(KMeansControls *controls,
                              args->max_iterations);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->normalize),
                                  args->normalize);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->remove_outliers),
+                                 args->remove_outliers);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->outliers_threshold),
+                             args->outliers_threshold);
 }
 
 static void
@@ -572,10 +599,12 @@ fail:
     g_free(centers);
 }
 
-static const gchar epsilon_key[]        = "/module/kmeans/epsilon";
-static const gchar kmeans_k_key[]       = "/module/kmeans/k";
-static const gchar max_iterations_key[] = "/module/kmeans/max_iterations";
-static const gchar normalize_key[]      = "/module/kmeans/normalize";
+static const gchar epsilon_key[]         = "/module/kmeans/epsilon";
+static const gchar kmeans_k_key[]        = "/module/kmeans/k";
+static const gchar max_iterations_key[]  = "/module/kmeans/max_iterations";
+static const gchar normalize_key[]       = "/module/kmeans/normalize";
+static const gchar remove_outliers_key[] = "/module/kmeans/remove_outliers";
+static const gchar outliers_threshold_key[] = "/module/kmeans/outliers_threshold";
 
 static void
 kmeans_sanitize_args(KMeansArgs *args)
@@ -584,6 +613,8 @@ kmeans_sanitize_args(KMeansArgs *args)
     args->epsilon = CLAMP(args->epsilon, 1e-20, 0.1);
     args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
     args->normalize = !!args->normalize;
+    args->remove_outliers = !!args->remove_outliers;
+    args->outliers_threshold = CLAMP(args->outliers_threshold, 0.1, 10.0);
 }
 
 static void
@@ -593,11 +624,17 @@ kmeans_load_args(GwyContainer *container,
     *args = kmeans_defaults;
 
     gwy_container_gis_int32_by_name(container, kmeans_k_key, &args->k);
-    gwy_container_gis_double_by_name(container, epsilon_key, &args->epsilon);
+    gwy_container_gis_double_by_name(container, epsilon_key,
+                                     &args->epsilon);
     gwy_container_gis_int32_by_name(container, max_iterations_key,
-                                                 &args->max_iterations);
+                                    &args->max_iterations);
     gwy_container_gis_boolean_by_name(container, normalize_key,
-                                                      &args->normalize);
+                                      &args->normalize);
+    gwy_container_gis_boolean_by_name(container,
+                                      remove_outliers_key_key,
+                                      &args->remove_outliers);
+    gwy_container_gis_double_by_name(container, outliers_threshold_key,
+                                     &args->outliers_threshold);
 
     kmeans_sanitize_args(args);
 }
@@ -607,11 +644,16 @@ kmeans_save_args(GwyContainer *container,
                  KMeansArgs *args)
 {
     gwy_container_set_int32_by_name(container, kmeans_k_key, args->k);
-    gwy_container_set_double_by_name(container, epsilon_key, args->epsilon);
+    gwy_container_set_double_by_name(container, epsilon_key,
+                                     args->epsilon);
     gwy_container_set_int32_by_name(container, max_iterations_key,
-                                                  args->max_iterations);
+                                    args->max_iterations);
     gwy_container_set_boolean_by_name(container, normalize_key,
-                                                       args->normalize);
+                                      args->normalize);
+    gwy_container_set_boolean_by_name(container, remove_outliers_key,
+                                      args->remove_outliers);
+    gwy_container_set_double_by_name(container, outliers_threshold_key,
+                                     args->outliers_threshold);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
