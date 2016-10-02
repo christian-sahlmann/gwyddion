@@ -55,8 +55,9 @@ typedef struct {
     GtkObject *k;
     GtkObject *epsilon;
     GtkObject *max_iterations;
+    GtkWidget *normalize;
     GtkWidget *remove_outliers;
-    GtkWidget *outliers_threshold;
+    GtkObject *outliers_threshold;
 } KMeansControls;
 
 static gboolean  module_register     (void);
@@ -64,6 +65,7 @@ static void      volume_kmeans       (GwyContainer *data,
                                       GwyRunType run);
 static void      kmeans_dialog       (GwyContainer *data,
                                       KMeansArgs *args);
+static void  remove_outliers_toggled (KMeansControls *controls);
 static void      kmeans_dialog_update(KMeansControls *controls,
                                       KMeansArgs *args);
 static void      kmeans_values_update(KMeansControls *controls,
@@ -187,19 +189,27 @@ kmeans_dialog(GwyContainer *data, KMeansArgs *args)
                   = gtk_check_button_new_with_mnemonic(_("_Normalize"));
     gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
                               0, 3, row, row+1);
-    row++
+    row++;
 
     controls.remove_outliers
         = gtk_check_button_new_with_mnemonic(_("_Remove outliers"));
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.normalize,
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                              controls.remove_outliers,
                               0, 3, row, row+1);
+    g_signal_connect_swapped(controls.remove_outliers, "toggled",
+                             G_CALLBACK(remove_outliers_toggled),
+                             &controls);
+    row++;
 
     controls.outliers_threshold
                           = gtk_adjustment_new(args->outliers_threshold,
                                                0.1, 10.0, 0.1, 1, 0);
     gwy_table_attach_hscale(table, row,
                             _("Outliers _threshold:"), NULL,
-                            controls.max_iterations, GWY_HSCALE_LOG);
+                            controls.outliers_threshold,
+                            GWY_HSCALE_DEFAULT);
+    gwy_table_hscale_set_sensitive(controls.outliers_threshold,
+                                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.remove_outliers)));                            
     row++;
 
     kmeans_dialog_update(&controls, args);
@@ -233,6 +243,12 @@ kmeans_dialog(GwyContainer *data, KMeansArgs *args)
     kmeans_values_update(&controls, args);
     gtk_widget_destroy(dialog);
     volume_kmeans_do(data, args);
+}
+
+static void remove_outliers_toggled (KMeansControls *controls)
+{
+    gwy_table_hscale_set_sensitive(controls->outliers_threshold,
+                                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->remove_outliers)));
 }
 
 /* XXX: Duplicate with volume_kmedians.c */
@@ -631,7 +647,7 @@ kmeans_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, normalize_key,
                                       &args->normalize);
     gwy_container_gis_boolean_by_name(container,
-                                      remove_outliers_key_key,
+                                      remove_outliers_key,
                                       &args->remove_outliers);
     gwy_container_gis_double_by_name(container, outliers_threshold_key,
                                      &args->outliers_threshold);
