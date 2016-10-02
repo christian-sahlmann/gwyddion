@@ -285,6 +285,8 @@ gwy_meta_update_title(MetadataBrowser *browser,
         dataname = gwy_app_get_data_field_title(data, id);
     else if (type == BROWSER_DATA_VOLUME)
         dataname = gwy_app_get_brick_title(data, id);
+    else if (type == BROWSER_DATA_XYZ)
+        dataname = gwy_app_get_surface_title(data, id);
     else {
         g_return_if_reached();
     }
