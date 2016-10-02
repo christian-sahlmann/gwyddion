@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-09-28 00:27+0300\n"
-"PO-Revision-Date: 2016-09-28 00:29+0300\n"
+"POT-Creation-Date: 2016-10-02 09:56+0300\n"
+"PO-Revision-Date: 2016-10-02 09:57+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -937,7 +937,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/lat_synth.c:523 modules/process/latsim.c:159
 #: modules/process/level.c:245 modules/process/linematch.c:804
 #: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
-#: modules/process/logistic.c:205 modules/process/mark_disconn.c:208
+#: modules/process/logistic.c:223 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
@@ -1461,7 +1461,7 @@ msgstr ""
 "версии. Для получения полного текста лицензии смотрите файл COPYING в архиве "
 "исходного кода программы."
 
-#: app/about.c:160 modules/process/logistic.c:241
+#: app/about.c:160 modules/process/logistic.c:259
 msgid "Features"
 msgstr "Возможности"
 
@@ -11076,51 +11076,55 @@ msgstr "Размер _ядра:"
 msgid "Blending _depth:"
 msgstr "_Глубина смешения:"
 
-#: modules/process/logistic.c:115
+#: modules/process/logistic.c:121
 msgid "Trains logistic regression to mark grains."
 msgstr "Обучает и использует логистическую регрессию для выделения зёрен."
 
-#: modules/process/logistic.c:129
+#: modules/process/logistic.c:135
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Зёрна/_Логистическая регрессия..."
 
-#: modules/process/logistic.c:133
+#: modules/process/logistic.c:139
 msgid "Mark grains with logistic regression"
 msgstr "Пометить зёрна логистической регрессией"
 
-#: modules/process/logistic.c:202
+#: modules/process/logistic.c:220
 msgid "Logistic Regression"
 msgstr "Логистическая регрессия"
 
-#: modules/process/logistic.c:225
-msgid "_Train logistic regression"
-msgstr "_Обучить регрессию"
-
-#: modules/process/logistic.c:227
+#: modules/process/logistic.c:243
 msgid "_Use trained regression"
 msgstr "_Использовать регрессию"
 
-#: modules/process/logistic.c:246
+#: modules/process/logistic.c:245
+msgid "_Train logistic regression"
+msgstr "_Обучить регрессию"
+
+#: modules/process/logistic.c:264
 msgid "_Gaussian blur"
 msgstr "_Гауссово размытие"
 
-#: modules/process/logistic.c:259
+#: modules/process/logistic.c:277
 msgid "_Number of Gaussians:"
 msgstr "_Число гауссиан:"
 
-#: modules/process/logistic.c:264
+#: modules/process/logistic.c:285
 msgid "_Sobel derivatives"
 msgstr "Производные _Собеля"
 
-#: modules/process/logistic.c:275
+#: modules/process/logistic.c:296
 msgid "_Laplacian"
 msgstr "_Лапласиан"
 
-#: modules/process/logistic.c:286
+#: modules/process/logistic.c:307
 msgid "_Hessian"
 msgstr "_Гессиан"
 
-#: modules/process/logistic.c:580 modules/process/neural.c:1101
+#: modules/process/logistic.c:320
+msgid "_Regularization parameter:"
+msgstr "Параметр _регуляризации:"
+
+#: modules/process/logistic.c:611 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Обучение..."
 
@@ -14874,7 +14878,7 @@ msgid "Level XYZ Data"
 msgstr "Выравнивание данных XYZ"
 
 #: modules/xyz/xyz_level.c:272
-msgid "Update X and Y of _allcompatible data"
+msgid "Update X and Y of _all compatible data"
 msgstr "Обновить X и Y _всех совместимых данных"
 
 #: modules/xyz/xyz_raster.c:197
@@ -14927,6 +14931,9 @@ msgid ""
 msgstr ""
 "Регуляризация данных XYZ завершилась неудачно вследствие численной "
 "нестабильности или была прервана."
+
+#~ msgid "Update X and Y of _allcompatible data"
+#~ msgstr "Обновить X и Y _всех совместимых данных"
 
 #~ msgid "Duplicate group id"
 #~ msgstr "Дублировать идентификатор группы"
