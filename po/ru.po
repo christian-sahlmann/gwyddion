@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-10-02 09:56+0300\n"
-"PO-Revision-Date: 2016-10-02 09:57+0300\n"
+"POT-Creation-Date: 2016-10-03 08:19+0300\n"
+"PO-Revision-Date: 2016-10-03 08:20+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: ru_RU\n"
@@ -461,7 +461,7 @@ msgstr "Идентификатор"
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4583
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:411 modules/file/imgexport.c:4583
 #: modules/process/curvature.c:762 modules/tools/level3.c:468
 #: modules/tools/readvalue.c:297
 msgid "Value"
@@ -951,7 +951,7 @@ msgstr "Уг_ол θ света:"
 #: modules/process/tip_model.c:166 modules/process/unrotate.c:220
 #: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
 #: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:153
 #: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
 #: modules/volume/volume_slice.c:292
 msgid "_Reset"
@@ -1307,7 +1307,7 @@ msgstr "Угол"
 msgid "Preferred"
 msgstr "Предпочтительное"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:408
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:410
 #: modules/file/imgexport.c:4120 modules/file/imgexport.c:4565
 #: modules/file/rawfile.c:995 modules/process/convolution_filter.c:538
 #: modules/process/neural.c:418 modules/tools/selectionmanager.c:345
@@ -2169,16 +2169,16 @@ msgstr "Новый _элемент"
 msgid "_Delete"
 msgstr "_Удалить"
 
-#: app/meta.c:292
+#: app/meta.c:294
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Метаданные %s (%s)"
 
-#: app/meta.c:617
+#: app/meta.c:619
 msgid "New item"
 msgstr "Новый элемент"
 
-#: app/meta.c:735
+#: app/meta.c:737
 msgid "Save Metadata"
 msgstr "Сохранить метаданные"
 
@@ -7516,7 +7516,7 @@ msgstr "Создать поверхность используя баллист�
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
 #: modules/process/tipops.c:320 modules/process/xydenoise.c:213
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
+#: modules/volume/volume_kmeans.c:407 modules/volume/volume_kmedians.c:365
 #: modules/xyz/xyz_raster.c:1028 modules/xyz/xyz_raster.c:1044
 msgid "Initializing..."
 msgstr "Инициализация..."
@@ -14453,58 +14453,66 @@ msgstr "/_Инвертировать значение"
 msgid "Invert value in volume data"
 msgstr "Инвертирует значения в объёмных данных"
 
-#: modules/volume/volume_kmeans.c:87
+#: modules/volume/volume_kmeans.c:94
 msgid "Calculates K-means clustering on volume data."
 msgstr "Рассчитывает кластеризацию K-средних для объёмных данных."
 
-#: modules/volume/volume_kmeans.c:101
+#: modules/volume/volume_kmeans.c:108
 msgid "/_K-means clustering..."
 msgstr "/_Кластеризация K-средних..."
 
-#: modules/volume/volume_kmeans.c:105
+#: modules/volume/volume_kmeans.c:112
 msgid "Calculate K-means clustering on volume data"
 msgstr "Рассчитать кластеризацию K-средних для объёмных данных"
 
-#: modules/volume/volume_kmeans.c:144
+#: modules/volume/volume_kmeans.c:151
 msgid "K-means"
 msgstr "K-средних"
 
-#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:164
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:164
 msgid "_Number of clusters:"
 msgstr "_Количество кластеров:"
 
-#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:171
+#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:171
 msgid "Convergence _precision digits:"
 msgstr "Знаков _точности сходимости:"
 
-#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:178
+#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:178
 msgid "_Max. iterations:"
 msgstr "_Макс. число шагов:"
 
-#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:183
+#: modules/volume/volume_kmeans.c:189 modules/volume/volume_kmedians.c:183
 msgid "_Normalize"
 msgstr "_Нормализовать"
 
-#: modules/volume/volume_kmeans.c:391
+#: modules/volume/volume_kmeans.c:195
+msgid "_Remove outliers"
+msgstr "_Удалить выпадающие"
+
+#: modules/volume/volume_kmeans.c:208
+msgid "Outliers _threshold:"
+msgstr "_Порог выпадающего:"
+
+#: modules/volume/volume_kmeans.c:434
 msgid "K-means iteration..."
 msgstr "Итерация K-средних..."
 
-#: modules/volume/volume_kmeans.c:494
+#: modules/volume/volume_kmeans.c:537
 #, c-format
 msgid "K-means cluster of %s"
 msgstr "Кластер К-средних %s"
 
-#: modules/volume/volume_kmeans.c:503
+#: modules/volume/volume_kmeans.c:546
 #, c-format
 msgid "K-means error of %s"
 msgstr "Ошибка K-средних для %s"
 
-#: modules/volume/volume_kmeans.c:513 modules/volume/volume_kmedians.c:514
+#: modules/volume/volume_kmeans.c:556 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Интенсивность до нормализации %s"
 
-#: modules/volume/volume_kmeans.c:545
+#: modules/volume/volume_kmeans.c:588
 #, c-format
 msgid "K-means center %d"
 msgstr "Центр кластера %d"
