@@ -1,6 +1,6 @@
 2.46 (0000-00-00)
 Application:
-- Translations updated: Czech, French, Russian.
+- Translations updated: Czech, French, Italian, Russian.
 - Toolbox: Is now editable in the program using Edit → Toolbox.  It is possible
   to specify whether a button runs the function interactively or not.
 
