@@ -436,7 +436,6 @@ read_data_field(GwyContainer *container,
 
     if (mfield) {
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(mfield), "m");
-        g_snprintf(key, sizeof(key), "/%d/mask", *id);
         gwy_container_set_object(container, gwy_app_get_mask_key_for_id(*id),
                                  mfield);
     }
