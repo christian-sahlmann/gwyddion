@@ -394,7 +394,6 @@ read_data_field(GwyContainer *container,
     GwyDataField *dfield, *mfield = NULL;
     gdouble *data, *mdata;
     gint j;
-    gchar key[32];
     gchar *s;
     gboolean flip_vertically = FALSE, flip_horizontally = FALSE;
 
@@ -440,22 +439,24 @@ read_data_field(GwyContainer *container,
                                  mfield);
     }
 
-    g_strlcat(key, "/title", sizeof(key));
-    if (!dir)
-        gwy_container_set_string_by_name(container, key,
-                                         g_strdup(data_info->name));
+    if (!dir) {
+        gwy_container_set_const_string(container,
+                                       gwy_app_get_data_title_key_for_id(*id),
+                                       data_info->name);
+    }
     else {
         gchar *title;
 
         title = g_strdup_printf("%s (%s)", data_info->name,
                                 dir == DIR_BACKWARD ? "Backward" : "Forward");
-        gwy_container_set_string_by_name(container, key, title);
+        gwy_container_set_string(container,
+                                 gwy_app_get_data_title_key_for_id(*id), title);
         /* Don't free title, container eats it */
     }
 
     if ((meta = sxm_build_meta(sxmfile, *id))) {
-        g_snprintf(key, sizeof(key), "/%d/meta", *id);
-        gwy_container_set_object_by_name(container, key, meta);
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_meta_key_for_id(*id), meta);
         g_object_unref(meta);
     }
 
