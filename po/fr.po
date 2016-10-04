@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-09-26 02:14+0200\n"
-"PO-Revision-Date: 2016-09-26 21:22+0100\n"
+"POT-Creation-Date: 2016-10-03 02:14+0200\n"
+"PO-Revision-Date: 2016-10-03 22:47+0100\n"
 "Last-Translator: François Riguet <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@gwyddion.net>\n"
 "Language: fr_FR\n"
@@ -458,7 +458,7 @@ msgstr "Identifiant"
 msgid "Position"
 msgstr "Position"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:409
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:411
 #: modules/file/imgexport.c:4583 modules/process/curvature.c:762
 #: modules/tools/level3.c:468 modules/tools/readvalue.c:297
 msgid "Value"
@@ -478,7 +478,7 @@ msgstr "Bord"
 
 #: libprocess/gwygrainvalue.c:1126 modules/process/pat_synth.c:829
 #: modules/process/pat_synth.c:1131 modules/process/pat_synth.c:1466
-#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:147
+#: modules/tools/linestats.c:171 modules/volume/volume_linestat.c:147
 msgid "Slope"
 msgstr "Pente"
 
@@ -932,7 +932,7 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/lat_synth.c:523 modules/process/latsim.c:159
 #: modules/process/level.c:245 modules/process/linematch.c:804
 #: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
-#: modules/process/logistic.c:205 modules/process/mark_disconn.c:208
+#: modules/process/logistic.c:223 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
@@ -946,7 +946,7 @@ msgstr "Angle lum_ière θ :"
 #: modules/process/tip_model.c:166 modules/process/unrotate.c:220
 #: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
 #: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:153
 #: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
 #: modules/volume/volume_slice.c:292
 msgid "_Reset"
@@ -1267,7 +1267,7 @@ msgid "Points anywhere"
 msgstr "Points quelconques"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:394
-#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:171
+#: libgwydgets/gwygraphwindowmeasuredialog.c:580 modules/tools/linestats.c:170
 #: modules/tools/roughness.c:516 modules/volume/volume_linestat.c:157
 msgid "Length"
 msgstr "Longueur"
@@ -1304,7 +1304,7 @@ msgstr "Angle"
 msgid "Preferred"
 msgstr "Préféré"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:408
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:410
 #: modules/file/imgexport.c:4120 modules/file/imgexport.c:4565
 #: modules/file/rawfile.c:995 modules/process/convolution_filter.c:538
 #: modules/process/neural.c:418 modules/tools/selectionmanager.c:345
@@ -1457,7 +1457,7 @@ msgstr ""
 "toute version ultérieure. Pour obtenir le texte complet de la licence "
 "reportez vous au fichier COPYING inclus dans le code source."
 
-#: app/about.c:160 modules/process/logistic.c:241
+#: app/about.c:160 modules/process/logistic.c:259
 msgid "Features"
 msgstr "Fonctionnalités"
 
@@ -1585,19 +1585,19 @@ msgstr "Modifier l'aperçu des données volumiques"
 msgid "Preview quantity:"
 msgstr "Quantité prévisualisée :"
 
-#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:166
+#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "Moyenne"
 
 #: app/app.c:1604 modules/process/polydistort.c:255 modules/tools/filter.c:240
-#: modules/tools/icolorange.c:424 modules/tools/linestats.c:168
+#: modules/tools/icolorange.c:424 modules/tools/linestats.c:167
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "Minimum"
 
 #: app/app.c:1605 modules/process/col_synth.c:167 modules/tools/filter.c:241
-#: modules/tools/icolorange.c:435 modules/tools/linestats.c:169
+#: modules/tools/icolorange.c:435 modules/tools/linestats.c:168
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "Maximum"
@@ -2164,16 +2164,16 @@ msgstr "_Nouveau"
 msgid "_Delete"
 msgstr "Supprimer"
 
-#: app/meta.c:292
+#: app/meta.c:294
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Méta-données de %s (%s)"
 
-#: app/meta.c:617
+#: app/meta.c:619
 msgid "New item"
 msgstr "Nouvel élément"
 
-#: app/meta.c:735
+#: app/meta.c:737
 msgid "Save Metadata"
 msgstr "Enregistrer les méta-données"
 
@@ -2837,15 +2837,15 @@ msgstr "_Suggérer"
 
 #: app/toolbox-editor.c:824
 msgid "Trans_latable title"
-msgstr ""
+msgstr "Traduire _le titre"
 
 #: app/toolbox-editor.c:874
 msgid "Group id is not a valid identifier"
 msgstr "L'identifiant du groupe n'est pas valide"
 
 #: app/toolbox-editor.c:882
-msgid "Duplicate group id"
-msgstr "Identifiant de groupe redondant"
+msgid "Group id is not unique"
+msgstr "L'identifiant du groupe n'est pas unique"
 
 #: app/toolbox-editor.c:971
 msgid "Toolbox Item"
@@ -2857,9 +2857,8 @@ msgid "_Type:"
 msgstr "_Type :"
 
 #: app/toolbox-editor.c:999
-#, fuzzy
 msgid "Placeholder"
-msgstr "Séparateur"
+msgstr "Espace vide"
 
 #: app/toolbox-editor.c:1000
 msgid "Builtin"
@@ -2906,9 +2905,8 @@ msgid "Functions"
 msgstr "Fonctions"
 
 #: app/toolbox-spec.c:617
-#, fuzzy
 msgid "placeholder"
-msgstr "Séparateur"
+msgstr "Espace vide"
 
 #: app/toolbox-spec.c:625
 msgid "remaining tools"
@@ -3027,7 +3025,7 @@ msgid "/G_L Materials..."
 msgstr "/Matériaux G_L..."
 
 #: app/toolbox.c:958
-msgid "/_Toolbox.."
+msgid "/_Toolbox..."
 msgstr "/Boî_te à outils..."
 
 #: app/toolbox.c:966
@@ -4451,7 +4449,7 @@ msgstr "Image"
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
 #: modules/process/polydistort.c:247 modules/process/rotate.c:274
 #: modules/process/scale.c:253 modules/process/straighten_path.c:271
-#: modules/process/unrotate.c:277 modules/tools/linestats.c:401
+#: modules/process/unrotate.c:277 modules/tools/linestats.c:400
 #: modules/tools/profile.c:559 modules/tools/roughness.c:868
 #: modules/tools/sfunctions.c:461 modules/xyz/xyz_raster.c:632
 msgid "_Interpolation type:"
@@ -5871,7 +5869,7 @@ msgstr "Format de données"
 #: modules/process/scars.c:295 modules/process/slope_dist.c:273
 #: modules/process/straighten_path.c:198 modules/process/synth.h:509
 #: modules/process/tip_model.c:163 modules/process/wpour_mark.c:273
-#: modules/tools/linestats.c:455 modules/tools/sfunctions.c:527
+#: modules/tools/linestats.c:454 modules/tools/sfunctions.c:527
 #: modules/tools/stats.c:460 modules/volume/volume_extract.c:328
 #: modules/volume/volume_linestat.c:287 modules/xyz/xyz_drift.c:618
 #: modules/xyz/xyz_raster.c:443
@@ -6723,7 +6721,7 @@ msgstr "Exporter au format XYZ"
 #: modules/process/fit-shape.c:1007 modules/process/level.c:259
 #: modules/process/linematch.c:906 modules/process/neural.c:593
 #: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
-#: modules/tools/filter.c:300 modules/tools/linestats.c:437
+#: modules/tools/filter.c:300 modules/tools/linestats.c:436
 #: modules/tools/profile.c:595 modules/tools/sfunctions.c:509
 #: modules/tools/stats.c:390
 msgid "Masking Mode"
@@ -7564,7 +7562,7 @@ msgstr "Générer une surface par dépôt balistique"
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
 #: modules/process/tipops.c:320 modules/process/xydenoise.c:213
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
+#: modules/volume/volume_kmeans.c:407 modules/volume/volume_kmedians.c:365
 #: modules/xyz/xyz_raster.c:1028 modules/xyz/xyz_raster.c:1044
 msgid "Initializing..."
 msgstr "Initialisation..."
@@ -7807,12 +7805,14 @@ msgid "Detail"
 msgstr "Détail"
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:491
-#: modules/process/calibrate.c:496 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:496 modules/process/crosscor.c:289
+#: modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr "Décalage _X :"
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:517
-#: modules/process/calibrate.c:509 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:509 modules/process/crosscor.c:300
+#: modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr "Décalage _Y :"
 
@@ -8173,12 +8173,12 @@ msgstr "Traitement des données :"
 msgid "Number of maxima"
 msgstr "Nombre de maxima :"
 
-#: modules/process/col_synth.c:170 modules/tools/linestats.c:179
+#: modules/process/col_synth.c:170 modules/tools/linestats.c:178
 #: modules/volume/volume_linestat.c:154
 msgid "Skew"
 msgstr "Asymétrie"
 
-#: modules/process/col_synth.c:171 modules/tools/linestats.c:180
+#: modules/process/col_synth.c:171 modules/tools/linestats.c:179
 #: modules/tools/roughness.c:386 modules/volume/volume_linestat.c:155
 msgid "Kurtosis"
 msgstr "Kurtosis"
@@ -8418,20 +8418,12 @@ msgid "Search size"
 msgstr "Dimensions de recherche"
 
 #: modules/process/crosscor.c:272
-msgid "2nd channel global offset"
+msgid "Global offset of 2nd channel"
 msgstr "Décalage global du second canal"
 
 #: modules/process/crosscor.c:277
 msgid "_Guess"
 msgstr "Deviner"
-
-#: modules/process/crosscor.c:289
-msgid "_x offset:"
-msgstr "Décalage _X :"
-
-#: modules/process/crosscor.c:300
-msgid "_y offset:"
-msgstr "Décalage _X :"
 
 #: modules/process/crosscor.c:311
 msgid "Window size"
@@ -8599,7 +8591,7 @@ msgstr "Afficher le graphe"
 #: modules/process/curvature.c:685 modules/process/drift.c:337
 #: modules/process/fft_profile.c:310 modules/process/fractal.c:328
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:885
-#: modules/process/slope_dist.c:349 modules/tools/linestats.c:419
+#: modules/process/slope_dist.c:349 modules/tools/linestats.c:418
 #: modules/tools/profile.c:577 modules/tools/roughness.c:876
 #: modules/tools/sfunctions.c:479 modules/tools/spectro.c:382
 #: modules/volume/volume_slice.c:398
@@ -8609,7 +8601,7 @@ msgstr "_Graphe cible :"
 #: modules/process/curvature.c:691 modules/process/drift.c:343
 #: modules/process/fft_profile.c:316 modules/process/fractal.c:334
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:892
-#: modules/process/slope_dist.c:355 modules/tools/linestats.c:425
+#: modules/process/slope_dist.c:355 modules/tools/linestats.c:424
 #: modules/tools/profile.c:583 modules/tools/roughness.c:882
 #: modules/tools/sfunctions.c:485 modules/tools/spectro.c:388
 #: modules/volume/volume_slice.c:406
@@ -8735,7 +8727,7 @@ msgstr "Erreur : les particules sont trop grandes."
 msgid "Error: particles too small."
 msgstr "Erreur : les particules sont trop petites."
 
-#: modules/process/diff_synth.c:197 modules/tools/linestats.c:174
+#: modules/process/diff_synth.c:197 modules/tools/linestats.c:173
 #: modules/volume/volume_linestat.c:149
 msgid "Variation"
 msgstr "Variation"
@@ -10977,7 +10969,7 @@ msgstr "/_Correction des données/Correction des sauts dans les lignes"
 msgid "Correct steps in lines"
 msgstr "Corriger les sauts dans les lignes"
 
-#: modules/process/linematch.c:158 modules/tools/linestats.c:167
+#: modules/process/linematch.c:158 modules/tools/linestats.c:166
 #: modules/volume/volume_linestat.c:143
 msgid "Median"
 msgstr "Médiane"
@@ -11134,52 +11126,55 @@ msgstr "Dimension du noyau :"
 msgid "Blending _depth:"
 msgstr "Profondeur _de mélange :"
 
-#: modules/process/logistic.c:115
+#: modules/process/logistic.c:121
 msgid "Trains logistic regression to mark grains."
 msgstr "Marquage de grains par régression logistique."
 
-#: modules/process/logistic.c:129
+#: modules/process/logistic.c:135
 msgid "/_Grains/Logistic _Regression..."
 msgstr "/_Grains/_Régression logistique..."
 
-#: modules/process/logistic.c:133
+#: modules/process/logistic.c:139
 msgid "Mark grains with logistic regression"
 msgstr "Marquer les grains par régression logistique"
 
-#: modules/process/logistic.c:202
+#: modules/process/logistic.c:220
 msgid "Logistic Regression"
 msgstr "Régression logistique"
 
-#: modules/process/logistic.c:225
-msgid "_Train logistic regression"
-msgstr "Apprentissage de la régression logistique"
-
-#: modules/process/logistic.c:227
+#: modules/process/logistic.c:243
 msgid "_Use trained regression"
 msgstr "Appliquer une régression"
 
-#: modules/process/logistic.c:246
+#: modules/process/logistic.c:245
+msgid "_Train logistic regression"
+msgstr "Apprentissage de la régression logistique"
+
+#: modules/process/logistic.c:264
 msgid "_Gaussian blur"
 msgstr "Flou _gaussien"
 
-#: modules/process/logistic.c:259
+#: modules/process/logistic.c:277
 msgid "_Number of Gaussians:"
 msgstr "_Nombre de gaussiennes :"
 
-#: modules/process/logistic.c:264
+#: modules/process/logistic.c:285
 msgid "_Sobel derivatives"
 msgstr "Dérivées de _Sobel :"
 
-#: modules/process/logistic.c:275
-#, fuzzy
-msgid "_Laplasian"
-msgstr "_Laplacien :"
+#: modules/process/logistic.c:296
+msgid "_Laplacian"
+msgstr "_Laplacien"
 
-#: modules/process/logistic.c:286
+#: modules/process/logistic.c:307
 msgid "_Hessian"
 msgstr "_Hessienne"
 
-#: modules/process/logistic.c:580 modules/process/neural.c:1101
+#: modules/process/logistic.c:320
+msgid "_Regularization parameter:"
+msgstr "Paramètre de _régularisation"
+
+#: modules/process/logistic.c:611 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Apprentissage..."
 
@@ -13095,7 +13090,7 @@ msgstr "Générer des ondes"
 msgid "Waves"
 msgstr "Ondes"
 
-#: modules/process/wave_synth.c:422 modules/tools/linestats.c:338
+#: modules/process/wave_synth.c:422 modules/tools/linestats.c:337
 #: modules/tools/sfunctions.c:394 modules/volume/volume_linestat.c:369
 msgid "_Quantity:"
 msgstr "Quantité"
@@ -13496,7 +13491,7 @@ msgstr "_défaut"
 msgid "Height histogram"
 msgstr "Histogramme des hauteurs"
 
-#: modules/tools/icolorange.c:329 modules/tools/linestats.c:170
+#: modules/tools/icolorange.c:329 modules/tools/linestats.c:169
 #: modules/tools/sfunctions.c:219 modules/volume/volume_linestat.c:146
 msgid "Range"
 msgstr "Plage"
@@ -13561,52 +13556,52 @@ msgstr ""
 "Outil de calcul statistique de ligne/colonne, calcule les valeurs moyenne, "
 "médiane, maximale, minimale, RMS, ..., de lignes ou de colonnes."
 
-#: modules/tools/linestats.c:173 modules/volume/volume_linestat.c:148
+#: modules/tools/linestats.c:172 modules/volume/volume_linestat.c:148
 msgid "tan β<sub>0</sub>"
 msgstr "tan β<sub>0</sub>"
 
-#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:150
+#: modules/tools/linestats.c:174 modules/volume/volume_linestat.c:150
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:151
+#: modules/tools/linestats.c:175 modules/volume/volume_linestat.c:151
 msgid "Rq (RMS)"
 msgstr "Rq (RMS)"
 
-#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:152
+#: modules/tools/linestats.c:176 modules/volume/volume_linestat.c:152
 msgid "Rz"
 msgstr "Rz"
 
-#: modules/tools/linestats.c:178 modules/volume/volume_linestat.c:153
+#: modules/tools/linestats.c:177 modules/volume/volume_linestat.c:153
 msgid "Rt"
 msgstr "Rt"
 
-#: modules/tools/linestats.c:205
+#: modules/tools/linestats.c:204
 msgid "Row/Column Statistics"
 msgstr "Statistiques de ligne/colonne"
 
-#: modules/tools/linestats.c:206
+#: modules/tools/linestats.c:205
 msgid "Calculate row/column statistical functions"
 msgstr "Calcule les statistiques de ligne/colonne"
 
-#: modules/tools/linestats.c:308
+#: modules/tools/linestats.c:307
 msgid "Ro_ws"
 msgstr "Lignes"
 
-#: modules/tools/linestats.c:309
+#: modules/tools/linestats.c:308
 msgid "Co_lumns"
 msgstr "Colonnes"
 
-#: modules/tools/linestats.c:355
+#: modules/tools/linestats.c:354
 msgid "Average:"
 msgstr "Moyenne :"
 
-#: modules/tools/linestats.c:364 modules/tools/profile.c:468
+#: modules/tools/linestats.c:363 modules/tools/profile.c:468
 #: modules/tools/sfunctions.c:407 modules/tools/spectro.c:343
 msgid "<b>Options</b>"
 msgstr "<b>Options</b>"
 
-#: modules/tools/linestats.c:380 modules/tools/sfunctions.c:423
+#: modules/tools/linestats.c:379 modules/tools/sfunctions.c:423
 #: modules/tools/stats.c:409
 msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
@@ -14512,58 +14507,66 @@ msgstr "/_Inverser les valeurs"
 msgid "Invert value in volume data"
 msgstr "Inverser les valeurs dans les données volumiques"
 
-#: modules/volume/volume_kmeans.c:87
+#: modules/volume/volume_kmeans.c:94
 msgid "Calculates K-means clustering on volume data."
 msgstr "Calcule le partitionnement par k-moyennes de données volumiques."
 
-#: modules/volume/volume_kmeans.c:101
+#: modules/volume/volume_kmeans.c:108
 msgid "/_K-means clustering..."
 msgstr "/Partitionnement par _k-moyennes..."
 
-#: modules/volume/volume_kmeans.c:105
+#: modules/volume/volume_kmeans.c:112
 msgid "Calculate K-means clustering on volume data"
 msgstr "Calculer le partitionnement par k-moyennes de données volumiques"
 
-#: modules/volume/volume_kmeans.c:144
+#: modules/volume/volume_kmeans.c:151
 msgid "K-means"
 msgstr "k-moyennes"
 
-#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:164
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:164
 msgid "_Number of clusters:"
 msgstr "_Nombre de partitions :"
 
-#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:171
+#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:171
 msgid "Convergence _precision digits:"
 msgstr "Décimales de convergence :"
 
-#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:178
+#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:178
 msgid "_Max. iterations:"
 msgstr "Nombre d'itérations _max :"
 
-#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:183
+#: modules/volume/volume_kmeans.c:189 modules/volume/volume_kmedians.c:183
 msgid "_Normalize"
 msgstr "_Normaliser"
 
-#: modules/volume/volume_kmeans.c:391
+#: modules/volume/volume_kmeans.c:195
+msgid "_Remove outliers"
+msgstr "Supp_rimer les points aberrants"
+
+#: modules/volume/volume_kmeans.c:208
+msgid "Outliers _threshold:"
+msgstr "Seuil des poin_ts aberrants : "
+
+#: modules/volume/volume_kmeans.c:434
 msgid "K-means iteration..."
 msgstr "Itération du calcul de k-moyennes..."
 
-#: modules/volume/volume_kmeans.c:494
+#: modules/volume/volume_kmeans.c:537
 #, c-format
 msgid "K-means cluster of %s"
 msgstr "Groupe des k-moyennes de %s"
 
-#: modules/volume/volume_kmeans.c:503
+#: modules/volume/volume_kmeans.c:546
 #, c-format
 msgid "K-means error of %s"
 msgstr "Erreur des k-moyennes de %s"
 
-#: modules/volume/volume_kmeans.c:513 modules/volume/volume_kmedians.c:514
+#: modules/volume/volume_kmeans.c:556 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Intensité pré-normalisée de %s"
 
-#: modules/volume/volume_kmeans.c:545
+#: modules/volume/volume_kmeans.c:588
 #, c-format
 msgid "K-means center %d"
 msgstr "Centre %d des k-moyennes"
@@ -14936,7 +14939,7 @@ msgid "Level XYZ Data"
 msgstr "Mettre à niveau les données _XYZ"
 
 #: modules/xyz/xyz_level.c:272
-msgid "Update X and Y of _allcompatible data"
+msgid "Update X and Y of _all compatible data"
 msgstr "Mettre à jour les valeurs X et Y de toutes les données comp_atibles"
 
 #: modules/xyz/xyz_raster.c:197
@@ -14991,6 +14994,21 @@ msgid ""
 msgstr ""
 "La régularisation des données XYZ a échoué à cause d'une instabilité "
 "numérique ou a été interrompue."
+
+#~ msgid "Duplicate group id"
+#~ msgstr "Identifiant de groupe redondant"
+
+#~ msgid "2nd channel global offset"
+#~ msgstr "Décalage global du second canal"
+
+#~ msgid "_x offset:"
+#~ msgstr "Décalage _X :"
+
+#~ msgid "_y offset:"
+#~ msgstr "Décalage _X :"
+
+#~ msgid "_Laplasian"
+#~ msgstr "_Laplacien"
 
 #~ msgid "%s %g %s\n"
 #~ msgstr "%s %g %s\n"
