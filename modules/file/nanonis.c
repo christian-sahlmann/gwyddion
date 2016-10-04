@@ -53,6 +53,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -109,7 +110,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -427,19 +428,18 @@ read_data_field(GwyContainer *container,
         gwy_app_channel_remove_bad_data(dfield, mfield);
     }
 
-    if (mfield) {
-        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(mfield), "m");
-        g_snprintf(key, sizeof(key), "/%d/mask", *id);
-        gwy_container_set_object_by_name(container, key, mfield);
-        g_object_unref(mfield);
-    }
-
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
                                 data_info->unit);
-    g_snprintf(key, sizeof(key), "/%d/data", *id);
-    gwy_container_set_object_by_name(container, key, dfield);
-    g_object_unref(dfield);
+    gwy_container_set_object(container, gwy_app_get_data_key_for_id(*id),
+                             dfield);
+
+    if (mfield) {
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(mfield), "m");
+        g_snprintf(key, sizeof(key), "/%d/mask", *id);
+        gwy_container_set_object(container, gwy_app_get_mask_key_for_id(*id),
+                                 mfield);
+    }
 
     g_strlcat(key, "/title", sizeof(key));
     if (!dir)
@@ -470,6 +470,13 @@ read_data_field(GwyContainer *container,
         flip_vertically = TRUE;
 
     gwy_data_field_invert(dfield, flip_vertically, flip_horizontally, FALSE);
+    g_object_unref(dfield);
+
+    if (mfield) {
+        gwy_data_field_invert(mfield, flip_vertically, flip_horizontally, FALSE);
+        g_object_unref(mfield);
+    }
+
     gwy_file_channel_import_log_add(container, *id, NULL, filename);
 
     (*id)++;
