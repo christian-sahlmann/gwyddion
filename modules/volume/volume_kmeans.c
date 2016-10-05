@@ -203,13 +203,13 @@ kmeans_dialog(GwyContainer *data, KMeansArgs *args)
 
     controls.outliers_threshold
                           = gtk_adjustment_new(args->outliers_threshold,
-                                               0.1, 10.0, 0.1, 1, 0);
+                                               1.0, 10.0, 0.1, 1, 0);
     gwy_table_attach_hscale(table, row,
                             _("Outliers _threshold:"), NULL,
                             controls.outliers_threshold,
                             GWY_HSCALE_DEFAULT);
     gwy_table_hscale_set_sensitive(controls.outliers_threshold,
-                                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.remove_outliers)));                            
+                                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.remove_outliers)));
     row++;
 
     kmeans_dialog_update(&controls, args);
@@ -366,7 +366,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     GRand *rand;
     const gdouble *data;
     gdouble *centers, *oldcenters, *sum, *data1, *xdata, *ydata;
-    gdouble *errordata;
+    gdouble *variance, *errordata;
     gdouble min, dist, xreal, yreal, zreal, xoffset, yoffset, zoffset;
     gdouble epsilon = args->epsilon;
     gint xres, yres, zres, i, j, l, c, newid;
@@ -418,6 +418,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
     oldcenters = g_new(gdouble, zres*k);
     sum = g_new(gdouble, zres*k);
     npix = g_new(gint, k);
+    variance = g_new(gdouble, k);
     data1 = gwy_data_field_get_data(dfield);
 
     rand = g_rand_new();
@@ -497,14 +498,131 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         }
         if (iterations == max_iterations) {
             converged = TRUE;
+            break;
         }
         iterations++;
     }
 
+    if (cancelled) {
+        gwy_app_wait_finish();
+        goto fail;
+    }
+    
+    /* second try, outliers are not counted now */
+    if (args->remove_outliers) {
+        converged = FALSE;
+	    while (!converged && !cancelled) {
+	        if (!gwy_app_wait_set_fraction((gdouble)iterations/max_iterations)) {
+	            cancelled = TRUE;
+	            break;
+	        }
+	
+	        /* pixels belong to cluster with min distance */
+	        for (j = 0; j < yres; j++)
+	            for (i = 0; i < xres; i++) {
+	                *(data1 + j * xres + i) = 0;
+	                min = G_MAXDOUBLE;
+	                for (c = 0; c < k; c++) {
+	                    dist = 0;
+	                    for (l = 0; l < zres; l++) {
+	                        *(oldcenters + c * zres + l)
+	                                        = *(centers + c * zres + l);
+	                        dist
+	                        += (*(data + l * xres * yres + j * xres + i)
+	                                        - *(centers + c * zres + l))
+	                         * (*(data + l * xres * yres + j * xres + i)
+	                                       - *(centers + c * zres + l));
+	                    }
+	                    if (dist < min) {
+	                        min = dist;
+	                        *(data1 + j * xres + i) = c;
+	                    }
+	                }
+	            }
+	            
+            /* variance calculation */
+            for (c = 0; c < k; c++) {
+                *(npix + c) = 0;
+                *(variance + c) = 0.0;
+            }
+        
+            for (i = 0; i < xres; i++) {
+                for (j = 0; j < yres; j++) {
+                    c = (gint)(*(data1 + j * xres + i));
+                    *(npix + c) += 1;
+                    dist = 0;
+                    for (l = 0; l < zres; l++) {
+						dist
+	                        += (*(data + l * xres * yres + j * xres + i)
+	                                        - *(centers + c * zres + l))
+	                         * (*(data + l * xres * yres + j * xres + i)
+	                                       - *(centers + c * zres + l));
+                    }            
+                    *(variance + c) += dist;
+                }
+            }
+        
+            for (c = 0; c < k; c++) {
+                if (*(npix + c) > 0) {
+                    *(variance + c) /= *(npix+c);
+                    *(variance + c) = sqrt(*(variance + c));
+                }
+            }	            
+	
+	        /* new center coordinates as average of pixels */
+	        for (c = 0; c < k; c++) {
+	            *(npix + c) = 0;
+	            for (l = 0; l < zres; l++) {
+	                *(sum + c * zres + l) = 0;
+	            }
+	        }
+	        for (i = 0; i < xres; i++) {
+	            for (j = 0; j < yres; j++) {
+	                c = (gint)(*(data1 + j * xres + i));
+                    dist = 0;
+                    for (l = 0; l < zres; l++) {
+						dist
+	                        += (*(data + l * xres * yres + j * xres + i)
+	                                        - *(centers + c * zres + l))
+	                         * (*(data + l * xres * yres + j * xres + i)
+	                                       - *(centers + c * zres + l));
+                    } 	                
+	                if (sqrt(dist) < args->outliers_threshold * (*(variance + c))) {
+						*(npix + c) += 1;
+						for (l = 0; l < zres; l++) {
+							*(sum + c * zres + l)
+	                        += *(data + l * xres * yres + j * xres + i);
+						}
+					}
+	            }
+	        }
+	        for (c = 0; c < k; c++)
+	            for (l = 0; l < zres; l++) {
+	                *(centers + c * zres + l) = (*(npix + c) > 0) ?
+	                     *(sum + c * zres + l)/(gdouble)(*(npix + c)) : 0.0;
+	        }
+	
+	        converged = TRUE;
+	        for (c = 0; c < k; c++) {
+	            for (l = 0; l < zres; l++)
+	                if (fabs(*(oldcenters + c * zres + l)
+	                               - *(centers + c * zres + l)) > epsilon) {
+	                    converged = FALSE;
+	                    break;
+	                }
+	        }
+	        if (iterations == max_iterations) {
+	            converged = TRUE;
+	            break;
+	        }
+	        iterations++;
+	    }        
+    }    
+
     gwy_app_wait_finish();
     if (cancelled)
         goto fail;
-
+        
     errormap = gwy_data_field_new_alike(dfield, TRUE);
     if (!normalize) {
         siunit = gwy_brick_get_si_unit_w(brick);
@@ -526,7 +644,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             }
             *(errordata + j * xres + i) = sqrt(dist);
         }
-    }
+    }        
 
     gwy_data_field_add(dfield, 1.0);
     newid = gwy_app_data_browser_add_data_field(dfield,
@@ -609,6 +727,7 @@ fail:
     gwy_object_unref(intmap);
     gwy_object_unref(dfield);
     gwy_object_unref(normalized);
+    g_free(variance);
     g_free(npix);
     g_free(sum);
     g_free(oldcenters);
@@ -630,7 +749,7 @@ kmeans_sanitize_args(KMeansArgs *args)
     args->max_iterations = CLAMP(args->max_iterations, 0, 10000);
     args->normalize = !!args->normalize;
     args->remove_outliers = !!args->remove_outliers;
-    args->outliers_threshold = CLAMP(args->outliers_threshold, 0.1, 10.0);
+    args->outliers_threshold = CLAMP(args->outliers_threshold, 1.0, 10.0);
 }
 
 static void
