@@ -2153,7 +2153,7 @@ export_with_merged_abscissae(const GwyGraphModel *gmodel,
                              gboolean export_metadata,
                              GString *string)
 {
-    GwyGraphCurveModel *gcmodel;
+    GwyGraphCurveModel *gcmodel, **gcmodels;
     gdouble *mergedxdata;
     const gdouble **xdata, **ydata;
     guint n, ncurves, i, k, *j, *ndata;
@@ -2220,8 +2220,14 @@ export_with_merged_abscissae(const GwyGraphModel *gmodel,
     xdata = g_new(const gdouble*, ncurves);
     ydata = g_new(const gdouble*, ncurves);
     ndata = g_new(guint, ncurves);
+    gcmodels = g_new0(GwyGraphCurveModel*, ncurves);
     for (i = 0; i < ncurves; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
+        if (!gwy_graph_curve_model_is_ordered(gcmodel)) {
+            gcmodels[i] = gwy_graph_curve_model_duplicate(gcmodel);
+            gcmodel = gcmodels[i];
+            gwy_graph_curve_model_enforce_order(gcmodel);
+        }
         ndata[i] = gwy_graph_curve_model_get_ndata(gcmodel);
         xdata[i] = gwy_graph_curve_model_get_xdata(gcmodel);
         ydata[i] = gwy_graph_curve_model_get_ydata(gcmodel);
@@ -2247,6 +2253,9 @@ export_with_merged_abscissae(const GwyGraphModel *gmodel,
     g_free(ydata);
     g_free(ndata);
     g_free(mergedxdata);
+    for (i = 0; i < ncurves; i++)
+        gwy_object_unref(gcmodels[i]);
+    g_free(gcmodels);
 }
 
 static gdouble*

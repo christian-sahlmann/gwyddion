@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -104,6 +104,7 @@ void     gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmode
                                                       gint from_index,
                                                       gint to_index);
 void     gwy_graph_curve_model_enforce_order         (GwyGraphCurveModel *gcmodel);
+gboolean gwy_graph_curve_model_is_ordered            (GwyGraphCurveModel *gcmodel);
 const gdouble* gwy_graph_curve_model_get_xdata  (GwyGraphCurveModel *gcmodel);
 const gdouble* gwy_graph_curve_model_get_ydata  (GwyGraphCurveModel *gcmodel);
 gint           gwy_graph_curve_model_get_ndata  (GwyGraphCurveModel *gcmodel);

@@ -759,10 +759,10 @@ compare_double(gconstpointer a, gconstpointer b)
  * gwy_graph_curve_model_enforce_order:
  * @gcmodel: A graph curve model.
  *
- * Ensures curve model data points are sorted by abscissa in ascending order.
+ * Ensures curve model data points are ordered by abscissa in ascending order.
  *
- * The function sorts the data points currently present in the model.  It does
- * not prevent functions such as gwy_graph_curve_model_set_data() from
+ * The function reorders the data points currently present in the model.  It
+ * does not prevent functions such as gwy_graph_curve_model_set_data() from
  * disrupting the order again.  See its documentation for further remarks.
  *
  * The "data-changed" signal is emitted if the data order actually changes.
@@ -825,6 +825,42 @@ gwy_graph_curve_model_enforce_order(GwyGraphCurveModel *gcmodel)
     g_free(bothdata);
     free_calibration(gcmodel);
     gwy_graph_curve_model_data_changed(gcmodel);
+}
+
+/**
+ * gwy_graph_curve_model_is_ordered:
+ * @gcmodel: A graph curve model.
+ *
+ * Checks if a curve model data points are ordered by abscissa in ascending
+ * order.
+ *
+ * If the curve model has less than two points it is considered ordered by
+ * abscissa.  Two points with the same abscissa are considered correctly
+ * ordered in both orders.
+ *
+ * See gwy_graph_curve_model_enforce_order() for fixing the point order.
+ *
+ * Returns: %TRUE if the graph curve model points are sorted by abscissa,
+ *          %FALSE when they are not.
+ *
+ * Since: 2.46
+ **/
+gboolean
+gwy_graph_curve_model_is_ordered(GwyGraphCurveModel *gcmodel)
+{
+    const gdouble *xdata;
+    gint n, i;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
+
+    n = gcmodel->n;
+    xdata = gcmodel->xdata;
+    for (i = 1; i < n; i++) {
+        if (xdata[i-1] > xdata[i])
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 /**
