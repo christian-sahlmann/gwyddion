@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -123,8 +123,13 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
                                                      gdouble maximum,
                                                      gint sdigits,
                                                      GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_value_format_new      (gdouble magnitude,
+                                                     gint precision,
+                                                     const gchar *units);
 void              gwy_si_unit_value_format_free     (GwySIValueFormat *format);
 GwySIValueFormat* gwy_si_unit_value_format_copy     (GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_value_format_clone    (GwySIValueFormat *source,
+                                                     GwySIValueFormat *dest);
 void              gwy_si_unit_value_format_set_units(GwySIValueFormat *format,
                                                      const gchar *units);
 

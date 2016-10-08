@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -679,6 +679,35 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 }
 
 /**
+ * gwy_si_unit_value_format_new:
+ * @magnitude: Number to divide a quantity by (a power of 1000).
+ * @precision: Number of decimal places to format a quantity to.
+ * @units: Units to put after quantity divided by @magnitude.
+ *
+ * Constructs a new value format directly.
+ *
+ * Usually you construct value formats from a #GwySIUnit using functions such
+ * as gwy_si_unit_get_format_with_digits() or obtain it from data object
+ * functions.
+ *
+ * Returns: Newly allocated value format.
+ *
+ * Since: 2.46
+ **/
+GwySIValueFormat*
+gwy_si_unit_value_format_new(gdouble magnitude,
+                             gint precision,
+                             const gchar *units)
+{
+    GwySIValueFormat *vf = g_new(GwySIValueFormat, 1);
+    vf->magnitude = magnitude;
+    vf->precision = precision;
+    vf->units_gstring = g_string_new(units);
+    vf->units = vf->units_gstring->str;
+    return vf;
+}
+
+/**
  * gwy_si_unit_value_format_copy:
  * @format: A value format to copy.
  *
@@ -691,7 +720,10 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 GwySIValueFormat*
 gwy_si_unit_value_format_copy(GwySIValueFormat *format)
 {
-    GwySIValueFormat *vf = g_memdup(format, sizeof(GwySIValueFormat));
+    GwySIValueFormat *vf;
+
+    g_return_val_if_fail(format, NULL);
+    vf = g_memdup(format, sizeof(GwySIValueFormat));
     vf->units_gstring = g_string_new(format->units);
     vf->units = vf->units_gstring->str;
     return vf;
@@ -706,9 +738,42 @@ gwy_si_unit_value_format_copy(GwySIValueFormat *format)
 void
 gwy_si_unit_value_format_free(GwySIValueFormat *format)
 {
+    g_return_if_fail(format);
     if (format->units_gstring)
         g_string_free(format->units_gstring, TRUE);
     g_free(format);
+}
+
+/**
+ * gwy_si_unit_value_format_clone:
+ * @source: Source value format.
+ * @dest: Destination value format, or %NULL.
+ *
+ * Clones a value format to another.
+ *
+ * This function follows the convention of many value format updating functions
+ * that can either modify an existing format or allocate a new one.
+ *
+ * Returns: The @dest value format.  If it was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @dest itself is returned.
+ *
+ * Since: 2.46
+ **/
+GwySIValueFormat*
+gwy_si_unit_value_format_clone(GwySIValueFormat *source,
+                               GwySIValueFormat *dest)
+{
+    g_return_val_if_fail(source, NULL);
+    if (!dest) {
+        return gwy_si_unit_value_format_new(source->magnitude,
+                                            source->precision,
+                                            source->units);
+    }
+    dest->magnitude = source->magnitude;
+    dest->precision = source->precision;
+    gwy_si_unit_value_format_set_units(dest, source->units);
+
+    return dest;
 }
 
 /**
@@ -724,6 +789,7 @@ void
 gwy_si_unit_value_format_set_units(GwySIValueFormat *format,
                                    const gchar *units)
 {
+    g_return_if_fail(format);
     if (!format->units_gstring)
         format->units_gstring = g_string_new(units);
     else
@@ -748,6 +814,9 @@ gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
 
     if (siunit2 == siunit1)
         return TRUE;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), FALSE);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), FALSE);
 
     if (siunit2->units->len != siunit1->units->len)
         return FALSE;
