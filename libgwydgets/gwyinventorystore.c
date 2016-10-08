@@ -135,7 +135,7 @@ gwy_inventory_store_finalize(GObject *object)
         g_signal_handler_disconnect(store->inventory,
                                     store->items_reordered_id);
     }
-    gwy_object_unref(store->inventory);
+    GWY_OBJECT_UNREF(store->inventory);
 
     G_OBJECT_CLASS(gwy_inventory_store_parent_class)->finalize(object);
 }

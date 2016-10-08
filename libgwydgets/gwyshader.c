@@ -219,7 +219,7 @@ gwy_shader_unrealize(GtkWidget *widget)
 
     shader = GWY_SHADER(widget);
 
-    gwy_object_unref(shader->pixbuf);
+    GWY_OBJECT_UNREF(shader->pixbuf);
     shader->radius = 0;
 
     if (shader->timer_id) {
@@ -599,7 +599,7 @@ gwy_shader_make_pixmap(GwyShader *shader)
               - (focus_width + focus_pad);
     if (radius != shader->radius) {
         shader->radius = radius;
-        gwy_object_unref(shader->pixbuf);
+        GWY_OBJECT_UNREF(shader->pixbuf);
         /* FIXME: using clipping would be better than alpha */
         shader->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                         TRUE,

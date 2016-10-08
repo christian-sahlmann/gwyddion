@@ -102,7 +102,7 @@ gwy_graph_data_destroy(GtkObject *object)
     graph_data = GWY_GRAPH_DATA(object);
 
     gwy_graph_data_set_model(graph_data, NULL);
-    gwy_object_unref(graph_data->store);
+    GWY_OBJECT_UNREF(graph_data->store);
 
     GTK_OBJECT_CLASS(gwy_graph_data_parent_class)->destroy(object);
 }
@@ -150,12 +150,12 @@ gwy_graph_data_set_model(GwyGraphData *graph_data,
     if (gmodel == graph_data->graph_model)
         return;
 
-    gwy_signal_handler_disconnect(graph_data->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph_data->graph_model,
                                   graph_data->notify_id);
-    gwy_signal_handler_disconnect(graph_data->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph_data->graph_model,
                                   graph_data->handler_ids[HANDLER_CURVE_DATA]);
 
-    gwy_object_unref(graph_data->graph_model);
+    GWY_OBJECT_UNREF(graph_data->graph_model);
     gwy_debug("setting model to: %p", gmodel);
     graph_data->graph_model = gmodel;
     if (gmodel) {
@@ -287,7 +287,7 @@ gwy_graph_data_update_ncurves(GwyGraphData *graph_data)
     /* Rebuild the array */
     for (i = 0; i < graph_data->curves->len; i++) {
         curve = &g_array_index(graph_data->curves, GwyGraphDataCurve, i);
-        gwy_object_unref(curve->gcmodel);
+        GWY_OBJECT_UNREF(curve->gcmodel);
     }
     g_array_set_size(graph_data->curves, 0);
 

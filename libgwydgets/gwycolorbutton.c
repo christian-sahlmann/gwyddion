@@ -284,7 +284,7 @@ gwy_color_button_style_set(GtkWidget *widget,
                                                                previous_style);
 
     if (GTK_WIDGET_REALIZED(widget))
-        gwy_object_unref(color_button->pixbuf);
+        GWY_OBJECT_UNREF(color_button->pixbuf);
 }
 
 static void
@@ -295,7 +295,7 @@ gwy_color_button_state_changed(GtkWidget   *widget,
 
     if (widget->state == GTK_STATE_INSENSITIVE
         || previous_state == GTK_STATE_INSENSITIVE)
-        gwy_object_unref(color_button->pixbuf);
+        GWY_OBJECT_UNREF(color_button->pixbuf);
 }
 
 static void
@@ -349,8 +349,8 @@ gwy_color_button_finalize(GObject *object)
 {
     GwyColorButton *color_button = GWY_COLOR_BUTTON(object);
 
-    gwy_object_unref(color_button->gc);
-    gwy_object_unref(color_button->pixbuf);
+    GWY_OBJECT_UNREF(color_button->gc);
+    GWY_OBJECT_UNREF(color_button->pixbuf);
 
     G_OBJECT_CLASS(gwy_color_button_parent_class)->finalize(object);
 }
@@ -404,7 +404,7 @@ gwy_color_button_set_color (GwyColorButton *color_button,
     color_button->color.g = color->g;
     color_button->color.b = color->b;
     color_button->color.a = color->a;
-    gwy_object_unref(color_button->pixbuf);
+    GWY_OBJECT_UNREF(color_button->pixbuf);
     gtk_widget_queue_draw(color_button->drawing_area);
 
     g_object_notify(G_OBJECT(color_button), "color");

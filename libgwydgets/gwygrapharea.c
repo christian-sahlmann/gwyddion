@@ -196,18 +196,18 @@ gwy_graph_area_finalize(GObject *object)
     g_array_free(area->x_grid_data, TRUE);
     g_array_free(area->y_grid_data, TRUE);
 
-    gwy_signal_handler_disconnect(area->graph_model, area->curve_notify_id);
-    gwy_signal_handler_disconnect(area->graph_model, area->model_notify_id);
-    gwy_signal_handler_disconnect(area->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model, area->curve_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model, area->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model,
                                   area->curve_data_changed_id);
-    gwy_object_unref(area->graph_model);
+    GWY_OBJECT_UNREF(area->graph_model);
 
-    gwy_object_unref(area->pointsdata);
-    gwy_object_unref(area->xseldata);
-    gwy_object_unref(area->yseldata);
-    gwy_object_unref(area->xlinesdata);
-    gwy_object_unref(area->ylinesdata);
-    gwy_object_unref(area->zoomdata);
+    GWY_OBJECT_UNREF(area->pointsdata);
+    GWY_OBJECT_UNREF(area->xseldata);
+    GWY_OBJECT_UNREF(area->yseldata);
+    GWY_OBJECT_UNREF(area->xlinesdata);
+    GWY_OBJECT_UNREF(area->ylinesdata);
+    GWY_OBJECT_UNREF(area->zoomdata);
 
     G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
@@ -361,14 +361,14 @@ gwy_graph_area_set_model(GwyGraphArea *area,
     if (area->graph_model == gmodel)
         return;
 
-    gwy_signal_handler_disconnect(area->graph_model, area->curve_notify_id);
-    gwy_signal_handler_disconnect(area->graph_model, area->model_notify_id);
-    gwy_signal_handler_disconnect(area->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model, area->curve_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model, area->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(area->graph_model,
                                   area->curve_data_changed_id);
 
     if (gmodel)
         g_object_ref(gmodel);
-    gwy_object_unref(area->graph_model);
+    GWY_OBJECT_UNREF(area->graph_model);
     area->graph_model = gmodel;
 
     if (gmodel) {
@@ -542,7 +542,7 @@ gwy_graph_area_unrealize(GtkWidget *widget)
 
     area = GWY_GRAPH_AREA(widget);
 
-    gwy_object_unref(area->gc);
+    GWY_OBJECT_UNREF(area->gc);
     gdk_cursor_unref(area->cross_cursor);
     gdk_cursor_unref(area->fleur_cursor);
     gdk_cursor_unref(area->harrow_cursor);

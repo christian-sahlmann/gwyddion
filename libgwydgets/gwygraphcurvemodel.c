@@ -638,8 +638,8 @@ gwy_graph_curve_model_clone_real(GObject *source,
         clone->ydata = g_renew(gdouble, clone->ydata, gcmodel->n);
         clone->n = gcmodel->n;
     }
-    memcpy(clone->xdata, gcmodel->xdata, gcmodel->n);
-    memcpy(clone->ydata, gcmodel->ydata, gcmodel->n);
+    gwy_assign(clone->xdata, gcmodel->xdata, gcmodel->n);
+    gwy_assign(clone->ydata, gcmodel->ydata, gcmodel->n);
 
     g_object_thaw_notify(copy);
     gwy_graph_curve_model_set_calibration_data(clone, gcmodel->calibration);
@@ -673,8 +673,8 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
     g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
 
     if (gcmodel->n == n) {
-        memcpy(gcmodel->xdata, xdata, n*sizeof(gdouble));
-        memcpy(gcmodel->ydata, ydata, n*sizeof(gdouble));
+        gwy_assign(gcmodel->xdata, xdata, n);
+        gwy_assign(gcmodel->ydata, ydata, n);
     }
     else {
         gdouble *old;

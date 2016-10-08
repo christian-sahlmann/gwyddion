@@ -1021,7 +1021,7 @@ gwy_get_pango_ft2_font_map(gboolean unref)
     static PangoFontMap *ft2_font_map = NULL;
 
     if (unref) {
-        gwy_object_unref(ft2_font_map);
+        GWY_OBJECT_UNREF(ft2_font_map);
         return NULL;
     }
 

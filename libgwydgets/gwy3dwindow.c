@@ -1348,7 +1348,7 @@ gwy_3d_window_class_set_tooltips(GtkTooltips *tips)
         g_object_ref(tips);
         gtk_object_sink(GTK_OBJECT(tips));
     }
-    gwy_object_unref(tooltips);
+    GWY_OBJECT_UNREF(tooltips);
     tooltips = tips;
     tooltips_set = TRUE;
 }

@@ -114,9 +114,9 @@ gwy_graph_label_finalize(GObject *object)
 
     label = GWY_GRAPH_LABEL(object);
 
-    gwy_signal_handler_disconnect(label->graph_model, label->model_notify_id);
-    gwy_signal_handler_disconnect(label->graph_model, label->curve_notify_id);
-    gwy_object_unref(label->graph_model);
+    GWY_SIGNAL_HANDLER_DISCONNECT(label->graph_model, label->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(label->graph_model, label->curve_notify_id);
+    GWY_OBJECT_UNREF(label->graph_model);
 
     pango_font_description_free(label->font_desc);
     g_array_free(label->samplepos, TRUE);
@@ -233,12 +233,12 @@ gwy_graph_label_set_model(GwyGraphLabel *label,
     if (label->graph_model == gmodel)
         return;
 
-    gwy_signal_handler_disconnect(label->graph_model, label->model_notify_id);
-    gwy_signal_handler_disconnect(label->graph_model, label->curve_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(label->graph_model, label->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(label->graph_model, label->curve_notify_id);
 
     if (gmodel)
         g_object_ref(gmodel);
-    gwy_object_unref(label->graph_model);
+    GWY_OBJECT_UNREF(label->graph_model);
     label->graph_model = gmodel;
 
     if (gmodel) {

@@ -97,8 +97,8 @@ gwy_pixmap_layer_dispose(GObject *object)
     GwyPixmapLayer *layer;
 
     layer = GWY_PIXMAP_LAYER(object);
-    gwy_object_unref(layer->data_field);
-    gwy_object_unref(layer->pixbuf);
+    GWY_OBJECT_UNREF(layer->data_field);
+    GWY_OBJECT_UNREF(layer->pixbuf);
 
     G_OBJECT_CLASS(gwy_pixmap_layer_parent_class)->dispose(object);
 }
@@ -236,9 +236,9 @@ gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
 static void
 gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer)
 {
-    gwy_signal_handler_disconnect(pixmap_layer->data_field,
+    GWY_SIGNAL_HANDLER_DISCONNECT(pixmap_layer->data_field,
                                   pixmap_layer->data_changed_id);
-    gwy_object_unref(pixmap_layer->data_field);
+    GWY_OBJECT_UNREF(pixmap_layer->data_field);
 }
 
 static void
@@ -267,7 +267,7 @@ gwy_pixmap_layer_unplugged(GwyDataViewLayer *layer)
 
     pixmap_layer->wants_repaint = FALSE;
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
-    gwy_signal_handler_disconnect(layer->data, pixmap_layer->item_changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, pixmap_layer->item_changed_id);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_pixmap_layer_parent_class)->unplugged(layer);
 }
@@ -323,7 +323,7 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
         return;
     }
 
-    gwy_signal_handler_disconnect(layer->data, pixmap_layer->item_changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, pixmap_layer->item_changed_id);
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     pixmap_layer->data_key = quark;
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
@@ -398,7 +398,7 @@ gwy_pixmap_layer_make_pixbuf(GwyPixmapLayer *pixmap_layer,
         if (pwidth == dwidth && pheight == dheight)
             return;
 
-        gwy_object_unref(pixmap_layer->pixbuf);
+        GWY_OBJECT_UNREF(pixmap_layer->pixbuf);
     }
 
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, has_alpha,

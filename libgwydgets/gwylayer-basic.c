@@ -391,7 +391,7 @@ gwy_layer_basic_gradient_disconnect(GwyLayerBasic *layer)
     if (!layer->gradient)
         return;
 
-    gwy_signal_handler_disconnect(layer->gradient, layer->gradient_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->gradient, layer->gradient_id);
     gwy_resource_release(GWY_RESOURCE(layer->gradient));
     layer->gradient = NULL;
 }
@@ -437,13 +437,13 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     gwy_debug("disconnecting all handlers");
 
     gwy_layer_basic_disconnect_fixed(basic_layer);
-    gwy_signal_handler_disconnect(layer->data, basic_layer->range_type_id);
-    gwy_signal_handler_disconnect(layer->data, basic_layer->gradient_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->range_type_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->gradient_item_id);
     gwy_layer_basic_gradient_disconnect(basic_layer);
-    gwy_signal_handler_disconnect(layer->data, basic_layer->show_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->show_item_id);
     gwy_layer_basic_show_field_disconnect(basic_layer);
 
-    gwy_object_unref(pixmap_layer->pixbuf);
+    GWY_OBJECT_UNREF(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_basic_parent_class)->unplugged(layer);
 }
 
@@ -470,7 +470,7 @@ gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
         return;
     }
 
-    gwy_signal_handler_disconnect(layer->data, basic_layer->gradient_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->gradient_item_id);
     gwy_layer_basic_gradient_disconnect(basic_layer);
     basic_layer->gradient_key = quark;
     gwy_layer_basic_gradient_connect(basic_layer);
@@ -521,7 +521,7 @@ gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
         return;
     }
 
-    gwy_signal_handler_disconnect(layer->data, basic_layer->range_type_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->range_type_id);
     basic_layer->range_type_key = q;
     if (q)
         gwy_layer_basic_container_connect
@@ -740,7 +740,7 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
     }
 
     presentation_switched = !!basic_layer->show_field;
-    gwy_signal_handler_disconnect(layer->data, basic_layer->show_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->show_item_id);
     gwy_layer_basic_show_field_disconnect(basic_layer);
     basic_layer->show_key = quark;
     gwy_layer_basic_show_field_connect(basic_layer);
@@ -843,8 +843,8 @@ gwy_layer_basic_disconnect_fixed(GwyLayerBasic *basic_layer)
 
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
 
-    gwy_signal_handler_disconnect(layer->data, basic_layer->min_id);
-    gwy_signal_handler_disconnect(layer->data, basic_layer->max_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->min_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, basic_layer->max_id);
 }
 
 /**
@@ -908,9 +908,9 @@ gwy_layer_basic_show_field_connect(GwyLayerBasic *basic_layer)
 static void
 gwy_layer_basic_show_field_disconnect(GwyLayerBasic *basic_layer)
 {
-    gwy_signal_handler_disconnect(basic_layer->show_field,
+    GWY_SIGNAL_HANDLER_DISCONNECT(basic_layer->show_field,
                                   basic_layer->show_id);
-    gwy_object_unref(basic_layer->show_field);
+    GWY_OBJECT_UNREF(basic_layer->show_field);
 }
 
 static void

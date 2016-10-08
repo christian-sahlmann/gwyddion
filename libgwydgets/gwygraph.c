@@ -97,13 +97,13 @@ gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
 
-    gwy_signal_handler_disconnect(graph->zoom_selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph->zoom_selection,
                                   graph->zoom_finished_id);
-    gwy_signal_handler_disconnect(graph->graph_model, graph->model_notify_id);
-    gwy_signal_handler_disconnect(graph->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph->graph_model, graph->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph->graph_model,
                                   graph->curve_data_changed_id);
-    gwy_object_unref(graph->graph_model);
-    gwy_object_unref(graph->zoom_selection);
+    GWY_OBJECT_UNREF(graph->graph_model);
+    GWY_OBJECT_UNREF(graph->zoom_selection);
 
     G_OBJECT_CLASS(gwy_graph_parent_class)->finalize(object);
 }
@@ -287,13 +287,13 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
     if (graph->graph_model == gmodel)
         return;
 
-    gwy_signal_handler_disconnect(graph->graph_model, graph->model_notify_id);
-    gwy_signal_handler_disconnect(graph->graph_model,
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph->graph_model, graph->model_notify_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(graph->graph_model,
                                   graph->curve_data_changed_id);
 
     if (gmodel)
         g_object_ref(gmodel);
-    gwy_object_unref(graph->graph_model);
+    GWY_OBJECT_UNREF(graph->graph_model);
     graph->graph_model = gmodel;
 
     if (gmodel) {

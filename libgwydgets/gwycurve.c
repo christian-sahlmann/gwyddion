@@ -540,8 +540,7 @@ gwy_curve_button_press(GtkWidget *widget,
                 g_realloc(channel->ctlpoints,
                           channel->num_ctlpoints * sizeof(GwyPoint));
             for (i = channel->num_ctlpoints - 1; i > closest_point; --i)
-                memcpy(channel->ctlpoints + i, channel->ctlpoints + i - 1,
-                       sizeof(GwyPoint));
+                channel->ctlpoints[i] = channel->ctlpoints[i - 1];
         }
         c->grab_point = closest_point;
         c->grab_channel = closest_channel;
@@ -596,8 +595,7 @@ gwy_curve_button_release(GtkWidget *widget,
     if (c->curve_type != GWY_CURVE_TYPE_FREE) {
         for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
             if (channel->ctlpoints[src].x >= c->min_x) {
-                memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
-                       sizeof(GwyPoint));
+                channel->ctlpoints[dst] = channel->ctlpoints[src];
                 ++dst;
             }
         }
@@ -1014,8 +1012,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
             g_array_free(remove_points, TRUE);
             for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
                 if (channel->ctlpoints[src].x >= curve->min_x) {
-                    memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
-                        sizeof(GwyPoint));
+                    channel->ctlpoints[dst] = channel->ctlpoints[src];
                     ++dst;
                 }
             }

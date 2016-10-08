@@ -78,10 +78,7 @@ G_BEGIN_DECLS
 typedef struct _GwyCurve        GwyCurve;
 typedef struct _GwyCurveClass   GwyCurveClass;
 
-typedef struct {
-    gdouble x;
-    gdouble y;
-} GwyPoint;
+typedef GwyXY GwyPoint;
 
 typedef struct {
     /* curve points: */

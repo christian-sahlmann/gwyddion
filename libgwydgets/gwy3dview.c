@@ -381,11 +381,11 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy3dview = GWY_3D_VIEW(object);
     priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
 
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data_item_id);
-    gwy_signal_handler_disconnect(gwy3dview->data,
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->data_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data,
                                   priv->mask_item_id);
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->material_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->gradient_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->material_item_id);
 
     gwy_3d_view_setup_disconnect(gwy3dview);
     gwy_3d_view_data_field_disconnect(gwy3dview);
@@ -396,17 +396,17 @@ gwy_3d_view_destroy(GtkObject *object)
     if (gwy3dview->shape_list_base > 0)
         gwy_3d_view_release_lists(gwy3dview);
 
-    gwy_object_unref(gwy3dview->data_field);
-    gwy_object_unref(priv->mask_field);
-    gwy_object_unref(gwy3dview->data);
+    GWY_OBJECT_UNREF(gwy3dview->data_field);
+    GWY_OBJECT_UNREF(priv->mask_field);
+    GWY_OBJECT_UNREF(gwy3dview->data);
 
     /* free overlays and disconnect them */
     if (gwy3dview->ovlays) {
         for (i = 0; i < gwy3dview->novlays; i++) {
-            gwy_signal_handler_disconnect(gwy3dview->ovlays[i],
+            GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->ovlays[i],
                                           gwy3dview->ovlay_updated_id[i]);
             gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlays[i]));
-            gwy_object_unref(gwy3dview->ovlays[i]);
+            GWY_OBJECT_UNREF(gwy3dview->ovlays[i]);
         };
         g_free(gwy3dview->ovlays);
         gwy3dview->ovlays = NULL;
@@ -670,7 +670,7 @@ gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
     if (gwy3dview->data_key == quark)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->data_item_id);
     gwy_3d_view_data_field_disconnect(gwy3dview);
     gwy3dview->data_key = quark;
     gwy_3d_view_data_field_connect(gwy3dview);
@@ -726,8 +726,8 @@ gwy_3d_view_data_field_connect(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview)
 {
-    gwy_signal_handler_disconnect(gwy3dview->data_field, gwy3dview->data_id);
-    gwy_object_unref(gwy3dview->data_field);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data_field, gwy3dview->data_id);
+    GWY_OBJECT_UNREF(gwy3dview->data_field);
 }
 
 static void
@@ -762,7 +762,7 @@ gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
     if (gwy3dview->ovlays) {
         for (i = 0; i < gwy3dview->novlays; i++) {
             gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlays[i]));
-            gwy_object_unref(gwy3dview->ovlays[i]);
+            GWY_OBJECT_UNREF(gwy3dview->ovlays[i]);
         };
         g_free(gwy3dview->ovlays);
     };
@@ -821,7 +821,7 @@ gwy_3d_view_set_setup_prefix(Gwy3DView *gwy3dview,
     if (gwy3dview->setup_key == quark)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->setup_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->setup_item_id);
     gwy_3d_view_setup_disconnect(gwy3dview);
     gwy3dview->setup_key = quark;
     gwy_3d_view_ensure_setup(gwy3dview);
@@ -929,13 +929,13 @@ gwy_3d_view_setup_disconnect(Gwy3DView *gwy3dview)
 {
     guint i;
 
-    gwy_signal_handler_disconnect(gwy3dview->setup, gwy3dview->setup_id);
-    gwy_object_unref(gwy3dview->setup);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->setup, gwy3dview->setup_id);
+    GWY_OBJECT_UNREF(gwy3dview->setup);
 
     for (i = 0; i < GWY_3D_VIEW_NLABELS; i++) {
-        gwy_signal_handler_disconnect(gwy3dview->labels[i],
+        GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->labels[i],
                                       gwy3dview->label_ids[i]);
-        gwy_object_unref(gwy3dview->labels[i]);
+        GWY_OBJECT_UNREF(gwy3dview->labels[i]);
     }
 }
 
@@ -1026,7 +1026,7 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
         gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(gwy3dview->ovlays[0]),
                                          key);
 
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->gradient_item_id);
     gwy_3d_view_gradient_disconnect(gwy3dview);
     gwy3dview->gradient_key = quark;
     gwy_3d_view_gradient_connect(gwy3dview);
@@ -1068,7 +1068,7 @@ gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview)
     if (!gwy3dview->gradient)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->gradient, gwy3dview->gradient_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->gradient, gwy3dview->gradient_id);
     gwy_resource_release(GWY_RESOURCE(gwy3dview->gradient));
     gwy3dview->gradient = NULL;
 }
@@ -1121,7 +1121,7 @@ gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
     if (gwy3dview->material_key == quark)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->material_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, gwy3dview->material_item_id);
     gwy_3d_view_material_disconnect(gwy3dview);
     gwy3dview->material_key = quark;
     gwy_3d_view_material_connect(gwy3dview);
@@ -1163,7 +1163,7 @@ gwy_3d_view_material_disconnect(Gwy3DView *gwy3dview)
     if (!gwy3dview->material)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->material, gwy3dview->material_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->material, gwy3dview->material_id);
     gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
     gwy3dview->material = NULL;
 }
@@ -3121,7 +3121,7 @@ gwy_3d_view_set_mask_key(Gwy3DView *gwy3dview,
     if (priv->mask_key == quark)
         return;
 
-    gwy_signal_handler_disconnect(gwy3dview->data, priv->mask_item_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(gwy3dview->data, priv->mask_item_id);
     gwy_3d_view_mask_field_disconnect(gwy3dview);
     priv->mask_key = quark;
     gwy_3d_view_mask_field_connect(gwy3dview);
@@ -3181,8 +3181,8 @@ gwy_3d_view_mask_field_disconnect(Gwy3DView *gwy3dview)
 {
     Gwy3DViewPrivate *priv = GWY_3D_VIEW_GET_PRIVATE(gwy3dview);
 
-    gwy_signal_handler_disconnect(priv->mask_field, priv->mask_id);
-    gwy_object_unref(priv->mask_field);
+    GWY_SIGNAL_HANDLER_DISCONNECT(priv->mask_field, priv->mask_id);
+    GWY_OBJECT_UNREF(priv->mask_field);
 }
 
 static void

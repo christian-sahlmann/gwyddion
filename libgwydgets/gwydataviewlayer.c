@@ -122,7 +122,7 @@ gwy_data_view_layer_destroy(GtkObject *object)
     GwyDataViewLayer *layer;
 
     layer = GWY_DATA_VIEW_LAYER(object);
-    gwy_object_unref(layer->data);
+    GWY_OBJECT_UNREF(layer->data);
     GTK_OBJECT_CLASS(gwy_data_view_layer_parent_class)->destroy(object);
 }
 
@@ -217,7 +217,7 @@ gwy_data_view_layer_real_plugged(GwyDataViewLayer *layer)
 
     gwy_debug("");
 
-    gwy_object_unref(layer->data);
+    GWY_OBJECT_UNREF(layer->data);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -230,7 +230,7 @@ gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer)
 {
     gwy_debug("");
 
-    gwy_object_unref(layer->data);
+    GWY_OBJECT_UNREF(layer->data);
 }
 
 /************************** Documentation ****************************/

@@ -360,8 +360,8 @@ gwy_axis_finalize(GObject *object)
     if (axis->mjpubticks)
         g_array_free(axis->mjpubticks, TRUE);
 
-    gwy_object_unref(axis->unit);
-    gwy_object_unref(axis->gc);
+    GWY_OBJECT_UNREF(axis->unit);
+    GWY_OBJECT_UNREF(axis->gc);
 
     if (axis->par.major_font)
         pango_font_description_free(axis->par.major_font);
@@ -1545,8 +1545,7 @@ gwy_axis_formatticks(GwyAxis *a)
         totalheight += rect.height;
     }
 
-    if (format)
-        gwy_si_unit_value_format_free(format);
+    GWY_SI_VALUE_FORMAT_FREE(format);
     g_object_unref(layout);
     g_object_unref(context);
 

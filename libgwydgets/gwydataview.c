@@ -310,10 +310,10 @@ gwy_data_view_finalize(GObject *object)
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
-    gwy_object_unref(data_view->base_layer);
-    gwy_object_unref(data_view->alpha_layer);
-    gwy_object_unref(data_view->top_layer);
-    gwy_object_unref(data_view->data);
+    GWY_OBJECT_UNREF(data_view->base_layer);
+    GWY_OBJECT_UNREF(data_view->alpha_layer);
+    GWY_OBJECT_UNREF(data_view->top_layer);
+    GWY_OBJECT_UNREF(data_view->data);
 
     G_OBJECT_CLASS(gwy_data_view_parent_class)->finalize(object);
 }
@@ -388,8 +388,8 @@ gwy_data_view_unrealize(GtkWidget *widget)
         gwy_data_view_layer_unrealize
                                     (GWY_DATA_VIEW_LAYER(data_view->top_layer));
 
-    gwy_object_unref(data_view->pixbuf);
-    gwy_object_unref(data_view->base_pixbuf);
+    GWY_OBJECT_UNREF(data_view->pixbuf);
+    GWY_OBJECT_UNREF(data_view->base_pixbuf);
 
     if (GTK_WIDGET_CLASS(gwy_data_view_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_data_view_parent_class)->unrealize(widget);
@@ -526,7 +526,7 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     gint width, height, scwidth, scheight;
 
     if (!data_view->xres || !data_view->yres) {
-        gwy_object_unref(data_view->base_pixbuf);
+        GWY_OBJECT_UNREF(data_view->base_pixbuf);
         return;
     }
 
@@ -534,7 +534,7 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         width = gdk_pixbuf_get_width(data_view->base_pixbuf);
         height = gdk_pixbuf_get_height(data_view->base_pixbuf);
         if (width != data_view->xres || height != data_view->yres)
-            gwy_object_unref(data_view->base_pixbuf);
+            GWY_OBJECT_UNREF(data_view->base_pixbuf);
     }
     if (!data_view->base_pixbuf) {
         data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
@@ -575,7 +575,7 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     data_view->xoff = (alloc->width - scwidth)/2;
     data_view->yoff = (alloc->height - scheight)/2;
     if (scwidth != width || scheight != height) {
-        gwy_object_unref(data_view->pixbuf);
+        GWY_OBJECT_UNREF(data_view->pixbuf);
         data_view->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                            FALSE,
                                            BITS_PER_SAMPLE,
@@ -1758,7 +1758,7 @@ gwy_data_view_connect_data(GwyDataView *data_view)
 static void
 gwy_data_view_disconnect_data(GwyDataView *data_view)
 {
-    gwy_signal_handler_disconnect(data_view->data, data_view->square_hid);
+    GWY_SIGNAL_HANDLER_DISCONNECT(data_view->data, data_view->square_hid);
 }
 
 /************************** Documentation ****************************/

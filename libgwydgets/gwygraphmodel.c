@@ -497,8 +497,8 @@ gwy_graph_model_finalize(GObject *object)
 
     g_free(gmodel->label_priv);
 
-    gwy_object_unref(gmodel->x_unit);
-    gwy_object_unref(gmodel->y_unit);
+    GWY_OBJECT_UNREF(gmodel->x_unit);
+    GWY_OBJECT_UNREF(gmodel->y_unit);
 
     g_string_free(gmodel->title, TRUE);
     g_string_free(gmodel->top_label, TRUE);
@@ -674,10 +674,10 @@ gwy_graph_model_deserialize(const guchar *buffer,
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                                 GWY_GRAPH_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec)) {
-            gwy_object_unref(gmodel->x_unit);
-            gwy_object_unref(gmodel->y_unit);
+            GWY_OBJECT_UNREF(gmodel->x_unit);
+            GWY_OBJECT_UNREF(gmodel->y_unit);
             for (i = 0; i < ncurves; i++)
-                gwy_object_unref(curves[i]);
+                GWY_OBJECT_UNREF(curves[i]);
             g_free(curves);
             g_free(top_label);
             g_free(bottom_label);
@@ -2255,7 +2255,7 @@ export_with_merged_abscissae(const GwyGraphModel *gmodel,
     g_free(ndata);
     g_free(mergedxdata);
     for (i = 0; i < ncurves; i++)
-        gwy_object_unref(gcmodels[i]);
+        GWY_OBJECT_UNREF(gcmodels[i]);
     g_free(gcmodels);
 }
 
@@ -2283,8 +2283,7 @@ merge_abscissae(const GwyGraphModel *gmodel,
     for (i = 0; i < ncurves; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
         j = gwy_graph_curve_model_get_ndata(gcmodel);
-        memcpy(xdata + n, gwy_graph_curve_model_get_xdata(gcmodel),
-               j*sizeof(gdouble));
+        gwy_assign(xdata + n, gwy_graph_curve_model_get_xdata(gcmodel), j);
         n += j;
     }
 

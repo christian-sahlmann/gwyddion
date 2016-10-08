@@ -130,7 +130,7 @@ gwy_graph_curves_destroy(GtkObject *object)
     graph_curves = GWY_GRAPH_CURVES(object);
 
     gwy_graph_curves_set_model(graph_curves, NULL);
-    gwy_object_unref(graph_curves->pixbuf);
+    GWY_OBJECT_UNREF(graph_curves->pixbuf);
 
     GTK_OBJECT_CLASS(gwy_graph_curves_parent_class)->destroy(object);
 }
@@ -231,10 +231,10 @@ gwy_graph_curves_set_model(GwyGraphCurves *graph_curves,
         return;
 
     for (i = 0; i < NHANDLERS; i++)
-        gwy_signal_handler_disconnect(graph_curves->graph_model,
+        GWY_SIGNAL_HANDLER_DISCONNECT(graph_curves->graph_model,
                                       graph_curves->handler_ids[i]);
 
-    gwy_object_unref(graph_curves->graph_model);
+    GWY_OBJECT_UNREF(graph_curves->graph_model);
     gwy_debug("setting model to: %p", gmodel);
     graph_curves->graph_model = gmodel;
     if (gmodel) {

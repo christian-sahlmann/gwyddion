@@ -217,7 +217,7 @@ gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
 
     gwy_layer_mask_disconnect_color(mask_layer);
 
-    gwy_object_unref(pixmap_layer->pixbuf);
+    GWY_OBJECT_UNREF(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_mask_parent_class)->unplugged(layer);
 }
 
@@ -307,10 +307,10 @@ gwy_layer_mask_disconnect_color(GwyLayerMask *mask_layer)
 
     layer = GWY_DATA_VIEW_LAYER(mask_layer);
 
-    gwy_signal_handler_disconnect(layer->data, mask_layer->red_id);
-    gwy_signal_handler_disconnect(layer->data, mask_layer->green_id);
-    gwy_signal_handler_disconnect(layer->data, mask_layer->blue_id);
-    gwy_signal_handler_disconnect(layer->data, mask_layer->alpha_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, mask_layer->red_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, mask_layer->green_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, mask_layer->blue_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, mask_layer->alpha_id);
 }
 
 static void

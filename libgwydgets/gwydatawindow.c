@@ -156,11 +156,8 @@ gwy_data_window_finalize(GObject *object)
 
     data_window = GWY_DATA_WINDOW(object);
     g_string_free(data_window->data_name, TRUE);
-    if (data_window->coord_format)
-        gwy_si_unit_value_format_free(data_window->coord_format);
-    if (data_window->value_format)
-        gwy_si_unit_value_format_free(data_window->value_format);
-
+    GWY_SI_VALUE_FORMAT_FREE(data_window->coord_format);
+    GWY_SI_VALUE_FORMAT_FREE(data_window->value_format);
     G_OBJECT_CLASS(gwy_data_window_parent_class)->finalize(object);
 }
 
@@ -776,7 +773,7 @@ gwy_data_window_class_set_tooltips(GtkTooltips *tips)
         g_object_ref(tips);
         gtk_object_sink(GTK_OBJECT(tips));
     }
-    gwy_object_unref(tooltips);
+    GWY_OBJECT_UNREF(tooltips);
     tooltips = tips;
     tooltips_set = TRUE;
 }

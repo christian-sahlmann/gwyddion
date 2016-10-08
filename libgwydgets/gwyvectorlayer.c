@@ -163,8 +163,8 @@ gwy_vector_layer_dispose(GObject *object)
     GwyVectorLayer *layer;
 
     layer = GWY_VECTOR_LAYER(object);
-    gwy_object_unref(layer->gc);
-    gwy_object_unref(layer->layout);
+    GWY_OBJECT_UNREF(layer->gc);
+    GWY_OBJECT_UNREF(layer->layout);
 
     G_OBJECT_CLASS(gwy_vector_layer_parent_class)->dispose(object);
 }
@@ -517,7 +517,7 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
         g_object_notify(G_OBJECT(layer), "selection-key");
         return;
     }
-    gwy_signal_handler_disconnect(view_layer->data, layer->item_changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(view_layer->data, layer->item_changed_id);
     gwy_vector_layer_selection_disconnect(layer);
     layer->selection_key = quark;
     gwy_vector_layer_selection_connect(layer);
@@ -597,12 +597,12 @@ gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
     if (!layer->selection)
         return;
 
-    gwy_signal_handler_disconnect(layer->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->selection,
                                   layer->selection_changed_id);
-    gwy_signal_handler_disconnect(layer->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->selection,
                                   layer->selection_notify_id);
     layer->selecting = -1;
-    gwy_object_unref(layer->selection);
+    GWY_OBJECT_UNREF(layer->selection);
 }
 
 /**
@@ -652,7 +652,7 @@ gwy_vector_layer_ensure_selection(GwyVectorLayer *layer)
         && G_OBJECT_TYPE(layer->selection) != klass->selection_type) {
         g_warning("Wrong selection type %s",
                   G_OBJECT_TYPE_NAME(layer->selection));
-        gwy_object_unref(layer->selection);
+        GWY_OBJECT_UNREF(layer->selection);
     }
 
     if (!layer->selection) {
@@ -705,7 +705,7 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
                                          layer);
 
     gwy_vector_layer_selection_disconnect(vector_layer);
-    gwy_signal_handler_disconnect(layer->data, vector_layer->item_changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(layer->data, vector_layer->item_changed_id);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
 }
@@ -742,8 +742,8 @@ gwy_vector_layer_unrealize(GwyDataViewLayer *layer)
 
     vector_layer = GWY_VECTOR_LAYER(layer);
 
-    gwy_object_unref(vector_layer->gc);
-    gwy_object_unref(vector_layer->layout);
+    GWY_OBJECT_UNREF(vector_layer->gc);
+    GWY_OBJECT_UNREF(vector_layer->layout);
 
     method
         = GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unrealize;

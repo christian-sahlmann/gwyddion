@@ -291,12 +291,12 @@ gwy_color_axis_destroy(GtkObject *object)
         g_signal_handler_disconnect(axis->gradient, axis->gradient_id);
         axis->gradient_id = 0;
     }
-    gwy_object_unref(axis->siunit);
+    GWY_OBJECT_UNREF(axis->siunit);
     if (axis->gradient) {
         gwy_resource_release(GWY_RESOURCE(axis->gradient));
         axis->gradient = NULL;
     }
-    gwy_object_unref(axis->stripe);
+    GWY_OBJECT_UNREF(axis->stripe);
 
     GTK_OBJECT_CLASS(gwy_color_axis_parent_class)->destroy(object);
 }
@@ -398,7 +398,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
 
     g_return_if_fail(axis->orientation == GTK_ORIENTATION_VERTICAL
                      || axis->orientation == GTK_ORIENTATION_HORIZONTAL);
-    gwy_object_unref(axis->stripe);
+    GWY_OBJECT_UNREF(axis->stripe);
 
     if (axis->orientation == GTK_ORIENTATION_VERTICAL)
         axis->stripe = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
@@ -713,8 +713,7 @@ gwy_color_axis_draw_labels_ticks(GwyColorAxis *axis)
             }
         }
     }
-    if (format)
-        gwy_si_unit_value_format_free(format);
+    GWY_SI_VALUE_FORMAT_FREE(format);
     g_string_free(strlabel, TRUE);
     g_object_unref(layoutlabel);
 }
@@ -870,8 +869,7 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis, gint prec)
     g_object_unref(layoutmax);
     g_string_free(strmin, TRUE);
     g_string_free(strmax, TRUE);
-    if (format)
-        gwy_si_unit_value_format_free(format);
+    GWY_SI_VALUE_FORMAT_FREE(format);
 }
 
 /**
@@ -1013,7 +1011,7 @@ gwy_color_axis_set_si_unit(GwyColorAxis *axis,
     old = axis->siunit;
     g_object_ref(unit);
     axis->siunit = unit;
-    gwy_object_unref(old);
+    GWY_OBJECT_UNREF(old);
 
     if (not_equal)
         gwy_color_axis_changed(axis);

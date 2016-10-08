@@ -144,8 +144,8 @@ gwy_graph_window_measure_dialog_connect_selection(GwyGraphWindowMeasureDialog *d
 static void
 gwy_graph_window_measure_dialog_disconnect_selection(GwyGraphWindowMeasureDialog *dialog)
 {
-    gwy_signal_handler_disconnect(dialog->selection, dialog->selection_id);
-    gwy_object_unref(dialog->selection);
+    GWY_SIGNAL_HANDLER_DISCONNECT(dialog->selection, dialog->selection_id);
+    GWY_OBJECT_UNREF(dialog->selection);
 }
 
 static void
