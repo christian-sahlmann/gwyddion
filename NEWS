@@ -13,6 +13,11 @@ Libraries:
   has new interface for fitting of fully opaque indexed data.
 - libgwyddion: Function for inversion of symmetric positive definite matrix
   was added.
+- libgwyddion: Macros gwy_assign, GWY_FREE, GWY_SI_VALUE_FORMAT_FREE were
+  added, as well as capitalised versions of gwy_object_unref and
+  gwy_signal_handler_disconnect.
+- libgwyddion: Functions for direct construction and clonning of
+  GwySIValueFormats were added.
 - libgwyprocess: GwyPeaks, graph curve peak finder with functionality similar
   to the Graph Peaks module, was added.
 - libgwyprocess: Functions for field rotation by multiples of 90 and rotation
@@ -52,6 +57,8 @@ Modules:
 - Fit sphere: Was removed, use new Fit shape module instead.
 - Row/column statistics tool: Masking support was added.  The misguided fixed
   resolution option was removed.
+- Statistical quantities tool: Automatic selection of units and precision for
+  the displayed quantities was improved.
 - XYZize: XYZ log is created for the new XYZ data, not volume data log.
 - Pygwy: Containers can be directly indexed both by strings and integers
   (quarks).  Overrides for Container methods get_value() and set_value() were
@@ -76,6 +83,8 @@ Modules:
 - Graph cut: The ‘cut all’ setting is remembered, some GUI improvements.
 - Cross correlate: Introduced weighting function, result smoothing and
   extension and back-correction according to the results.
+- Nanonis: Mask of invalid values is correctly flipped with the data now.
+- JPK: Support for single point spectroscopy was added.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
