@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -129,8 +129,12 @@ struct _GwyToolStats {
     GSList *masking;
     GtkWidget *instant_update;
 
-    GwySIValueFormat *area_format;
+    GwySIValueFormat *zrange_format;
+    GwySIValueFormat *rms_format;
+    GwySIValueFormat *parea_format;
+    GwySIValueFormat *sarea_format;
     GwySIValueFormat *var_format;
+    GwySIValueFormat *angle_format;
 
     gboolean same_units;
 
@@ -140,7 +144,6 @@ struct _GwyToolStats {
     GwyDataField *zunc;
 
     /* potential class data */
-    GwySIValueFormat *angle_format;
     GType layer_type_rect;
 };
 
@@ -220,7 +223,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.17",
+    "2.18",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -279,12 +282,12 @@ gwy_tool_stats_finalize(GObject *object)
     gwy_container_set_boolean_by_name(settings, instant_update_key,
                                       tool->args.instant_update);
 
-    if (tool->angle_format)
-        gwy_si_unit_value_format_free(tool->angle_format);
-    if (tool->area_format)
-        gwy_si_unit_value_format_free(tool->area_format);
-    if (tool->var_format)
-        gwy_si_unit_value_format_free(tool->var_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->zrange_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->rms_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->angle_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->parea_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->sarea_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->var_format);
 
     G_OBJECT_CLASS(gwy_tool_stats_parent_class)->finalize(object);
 }
@@ -313,11 +316,7 @@ gwy_tool_stats_init(GwyToolStats *tool)
     tool->args.masking = gwy_enum_sanitize_value(tool->args.masking,
                                                  GWY_TYPE_MASKING_TYPE);
 
-    tool->angle_format = g_new0(GwySIValueFormat, 1);
-    tool->angle_format->magnitude = 1.0;
-    tool->angle_format->precision = 1;
-    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
-
+    tool->angle_format = gwy_si_unit_value_format_new(1.0, 1, "deg");
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
 
@@ -486,15 +485,6 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
     tool = GWY_TOOL_STATS(gwytool);
     ignore = (data_view == plain_tool->data_view);
 
-    if (!ignore && tool->area_format) {
-        gwy_si_unit_value_format_free(tool->area_format);
-        tool->area_format = NULL;
-    }
-    if (!ignore && tool->var_format) {
-        gwy_si_unit_value_format_free(tool->var_format);
-        tool->var_format = NULL;
-    }
-
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
                                                                data_view);
     if (ignore || plain_tool->init_failed)
@@ -532,30 +522,55 @@ gwy_tool_stats_update_units(GwyToolStats *tool)
     GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
     GwyDataField *field = plain_tool->data_field;
     GwySIUnit *siunitxy, *siunitz, *siunitarea, *siunitvar;
-    gdouble xreal, yreal, q;
+    const ToolResults *res = &tool->results;
 
     siunitxy = gwy_data_field_get_si_unit_xy(field);
     siunitz = gwy_data_field_get_si_unit_z(field);
     tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
 
-    xreal = gwy_data_field_get_xreal(field);
-    yreal = gwy_data_field_get_xreal(field);
-    q = gwy_data_field_get_xmeasure(field) * gwy_data_field_get_ymeasure(field);
+    tool->zrange_format
+         = gwy_si_unit_get_format_with_digits(siunitz,
+                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                              res->max - res->min, 3,
+                                              tool->zrange_format);
+    /* If the data variation is zero just copy the zrange format. */
+    if (res->rms) {
+        tool->rms_format
+            = gwy_si_unit_get_format_with_digits(siunitz,
+                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                 res->rms, 3, tool->rms_format);
+    }
+    else {
+        tool->rms_format = gwy_si_unit_value_format_clone(tool->zrange_format,
+                                                          tool->rms_format);
+    }
 
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
-    tool->area_format
-        = gwy_si_unit_get_format_with_resolution(siunitarea,
+    tool->parea_format
+        = gwy_si_unit_get_format_with_digits(siunitarea,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                             res->projarea, 3,
+                                             tool->parea_format);
+    /* If the surface and projected area are similar use the same value format.
+     * But if surface area is something strange use a separate format. */
+    if (res->area <= 120.0*res->projarea) {
+        tool->sarea_format = gwy_si_unit_value_format_clone(tool->parea_format,
+                                                            tool->sarea_format);
+    }
+    else {
+        tool->sarea_format
+            = gwy_si_unit_get_format_with_digits(siunitarea,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 xreal*yreal, q,
-                                                 tool->area_format);
+                                                 res->area, 3,
+                                                 tool->sarea_format);
+    }
     g_object_unref(siunitarea);
 
-    q = gwy_data_field_get_variation(field);
     siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
     tool->var_format
         = gwy_si_unit_get_format_with_digits(siunitvar,
                                              GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                             q, 3, tool->var_format);
+                                             res->var, 3, tool->var_format);
     g_object_unref(siunitvar);
 }
 
@@ -631,7 +646,7 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
 {
     GwyPlainTool *plain_tool = GWY_PLAIN_TOOL(tool);
     ToolResults *results = &tool->results;
-    GwySIValueFormat *vf = plain_tool->value_format;
+    GwySIValueFormat *vf;
     gboolean mask_in_use;
     gchar buffer[64];
 
@@ -657,14 +672,19 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         return;
     }
 
-    if (!tool->area_format || !tool->var_format)
-        gwy_tool_stats_update_units(tool);
-
     mask_in_use = gwy_tool_stats_calculate(tool);
     if (!tool->results_up_to_date)
         return;
 
+    gwy_tool_stats_update_units(tool);
+
     if (tool->has_calibration) {
+        vf = tool->zrange_format;
+        update_label_unc(vf, tool->min, results->min, results->umin);
+        update_label_unc(vf, tool->max, results->max, results->umax);
+        update_label_unc(vf, tool->avg, results->avg, results->uavg);
+        update_label_unc(vf, tool->median, results->median, results->umedian);
+        vf = tool->rms_format;
         update_label_unc(vf, tool->ra, results->ra, results->ura);
         update_label_unc(vf, tool->rms, results->rms, results->urms);
         g_snprintf(buffer, sizeof(buffer), "%.3g±%.3g", results->skew,
@@ -673,29 +693,27 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         g_snprintf(buffer, sizeof(buffer), "%.3g±%.3g",
                    results->kurtosis, results->ukurtosis);
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-        update_label_unc(vf, tool->min, results->min, results->umin);
-        update_label_unc(vf, tool->max, results->max, results->umax);
-        update_label_unc(vf, tool->avg, results->avg, results->uavg);
-        update_label_unc(vf, tool->median, results->median, results->umedian);
-        update_label_unc(tool->area_format, tool->projarea,
+        update_label_unc(tool->parea_format, tool->projarea,
                          results->projarea, results->uprojarea);
     }
     else {
+        vf = tool->zrange_format;
+        update_label(vf, tool->min, results->min);
+        update_label(vf, tool->max, results->max);
+        update_label(vf, tool->avg, results->avg);
+        update_label(vf, tool->median, results->median);
+        vf = tool->rms_format;
         update_label(vf, tool->ra, results->ra);
         update_label(vf, tool->rms, results->rms);
         g_snprintf(buffer, sizeof(buffer), "%.3g", results->skew);
         gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.3g", results->kurtosis);
         gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-        update_label(vf, tool->min, results->min);
-        update_label(vf, tool->max, results->max);
-        update_label(vf, tool->avg, results->avg);
-        update_label(vf, tool->median, results->median);
-        update_label(tool->area_format, tool->projarea, results->projarea);
+        update_label(tool->parea_format, tool->projarea, results->projarea);
     }
 
     /* This has no calibration yet. */
-    update_label(vf, tool->rms_gw, results->rms_gw);
+    update_label(tool->rms_format, tool->rms_gw, results->rms_gw);
     update_label(tool->var_format, tool->var, results->var);
     g_snprintf(buffer, sizeof(buffer), "%.4g", results->entropy);
     gtk_label_set_text(GTK_LABEL(tool->entropy), buffer);
@@ -704,7 +722,7 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
 
     /* This has no calibration yet. */
     if (tool->same_units)
-        update_label(tool->area_format, tool->area, results->area);
+        update_label(tool->sarea_format, tool->area, results->area);
     else
         gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
 
@@ -830,8 +848,8 @@ gwy_tool_stats_calculate(GwyToolStats * tool)
 
     calculate_uncertainties(tool, field, mask, masking, nn, isel, w, h);
 
-    memcpy(results->isel, isel, sizeof(isel));
-    memcpy(results->sel, sel, sizeof(sel));
+    gwy_assign(results->isel, isel, 4);
+    gwy_assign(results->sel, sel, 4);
     sel[2] += gwy_data_field_get_xoffset(field);
     sel[3] += gwy_data_field_get_yoffset(field);
     tool->results_up_to_date = TRUE;
@@ -1059,7 +1077,6 @@ gwy_tool_stats_create_report(gpointer user_data,
     GwyDataField *field = report_data->data_field;
     GwyContainer *container = report_data->container;
     GwySIUnit *siunitxy, *siunitz, *siunitarea, *siunitvar;
-    gdouble xreal, yreal, q;
     GwySIValueFormat *vf = NULL;
     const guchar *title;
     gboolean mask_in_use, same_units = report_data->same_units;
@@ -1067,9 +1084,6 @@ gwy_tool_stats_create_report(gpointer user_data,
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *key, *retval;
     guint i, maxw;
-
-    xreal = gwy_data_field_get_xreal(field);
-    yreal = gwy_data_field_get_xreal(field);
 
     siunitxy = gwy_data_field_get_si_unit_xy(field);
     siunitz = gwy_data_field_get_si_unit_z(field);
@@ -1123,11 +1137,17 @@ gwy_tool_stats_create_report(gpointer user_data,
                            muse);
     g_string_append_c(report, '\n');
 
-    vf = gwy_data_field_get_value_format_z(field, GWY_SI_UNIT_FORMAT_PLAIN, vf);
+    vf = gwy_si_unit_get_format_with_digits(siunitz, GWY_SI_UNIT_FORMAT_PLAIN,
+                                            results->max - results->min, 4, vf);
     append_report_line_vf(report, 0, results->min, vf, maxw);
     append_report_line_vf(report, 1, results->max, vf, maxw);
     append_report_line_vf(report, 2, results->avg, vf, maxw);
     append_report_line_vf(report, 3, results->median, vf, maxw);
+    if (results->rms) {
+        vf = gwy_si_unit_get_format_with_digits(siunitz,
+                                                GWY_SI_UNIT_FORMAT_PLAIN,
+                                                results->rms, 4, vf);
+    }
     append_report_line_vf(report, 4, results->ra, vf, maxw);
     append_report_line_vf(report, 5, results->rms, vf, maxw);
     append_report_line_vf(report, 6, results->rms_gw, vf, maxw);
@@ -1136,22 +1156,24 @@ gwy_tool_stats_create_report(gpointer user_data,
     append_report_line_plain(report, 8, results->kurtosis, "%.4g", maxw);
 
     siunitarea = gwy_si_unit_power(siunitxy, 2, NULL);
-    q = gwy_data_field_get_xmeasure(field) * gwy_data_field_get_ymeasure(field);
-    vf = gwy_si_unit_get_format_with_resolution(siunitarea,
+    if (same_units) {
+        vf = gwy_si_unit_get_format_with_digits(siunitarea,
                                                 GWY_SI_UNIT_FORMAT_PLAIN,
-                                                xreal*yreal, q, vf);
-    if (same_units)
+                                                results->area, 4, vf);
         append_report_line_vf(report, 9, results->area, vf, maxw);
+    }
+    vf = gwy_si_unit_get_format_with_digits(siunitarea,
+                                            GWY_SI_UNIT_FORMAT_PLAIN,
+                                            results->projarea, 4, vf);
     append_report_line_vf(report, 10, results->projarea, vf, maxw);
     g_object_unref(siunitarea);
 
     siunitvar = gwy_si_unit_multiply(siunitxy, siunitz, NULL);
     vf = gwy_si_unit_get_format_with_digits(siunitvar, GWY_SI_UNIT_FORMAT_PLAIN,
-                                            results->var, 3, vf);
+                                            results->var, 4, vf);
     append_report_line_vf(report, 11, results->var, vf, maxw);
     g_object_unref(siunitvar);
-    gwy_si_unit_value_format_free(vf);
-    vf = NULL;
+    GWY_SI_VALUE_FORMAT_FREE(vf);
 
     append_report_line_plain(report, 12, results->entropy, "%.5g", maxw);
     append_report_line_plain(report, 13, results->entropydef, "%.5g", maxw);
