@@ -197,7 +197,7 @@ femtoscan_load(const gchar *filename,
     gwy_file_abandon_contents(buffer, size, NULL);
 
     if (!id) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         if (err)
             g_propagate_error(error, err);
         else
@@ -319,7 +319,7 @@ hash_to_data_field(GHashTable *hash,
     if (!gwy_si_unit_equal(unitx, unity)) {
         g_warning("X and Y units differ, using X.");
     }
-    gwy_object_unref(unity);
+    GWY_OBJECT_UNREF(unity);
 
     val = g_hash_table_lookup(hash, "Z scale");
     zscale = g_ascii_strtod(val, &end);

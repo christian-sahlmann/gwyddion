@@ -219,16 +219,8 @@ gwy_tool_read_value_init(GwyToolReadValue *tool)
     gwy_container_gis_boolean_by_name(settings, show_selection_key,
                                       &tool->args.show_selection);
 
-    tool->pixel_format = g_new0(GwySIValueFormat, 1);
-    tool->pixel_format->magnitude = 1.0;
-    tool->pixel_format->precision = 0;
-    gwy_si_unit_value_format_set_units(tool->pixel_format, "px");
-
-    tool->angle_format = g_new0(GwySIValueFormat, 1);
-    tool->angle_format->magnitude = 1.0;
-    tool->angle_format->precision = 1;
-    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
-
+    tool->pixel_format = gwy_si_unit_value_format_new(1.0, 0, "px");
+    tool->angle_format = gwy_si_unit_value_format_new(1.0, 1, "deg");
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
 

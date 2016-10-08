@@ -260,7 +260,7 @@ asc_load(const gchar *filename,
             value = p;
         }
         if (!gwy_app_channel_remove_bad_data(dfield, mfield))
-            gwy_object_unref(mfield);
+            GWY_OBJECT_UNREF(mfield);
     }
 
     container = gwy_container_new();
@@ -276,7 +276,7 @@ asc_load(const gchar *filename,
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
-    gwy_object_unref(dfield);
+    GWY_OBJECT_UNREF(dfield);
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);

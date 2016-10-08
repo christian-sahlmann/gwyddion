@@ -303,7 +303,7 @@ int_load(const gchar *filename,
     }
 
     if (!gwy_app_channel_remove_bad_data(dfield, mfield))
-        gwy_object_unref(mfield);
+        GWY_OBJECT_UNREF(mfield);
 
     container = gwy_container_new();
 

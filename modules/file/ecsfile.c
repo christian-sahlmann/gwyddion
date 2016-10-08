@@ -269,7 +269,7 @@ ecs_load(const gchar *filename,
 fail:
     g_free(s);
     g_free(s2);
-    gwy_object_unref(dfield);
+    GWY_OBJECT_UNREF(dfield);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;

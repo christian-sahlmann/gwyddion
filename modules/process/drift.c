@@ -405,9 +405,9 @@ drift_dialog(DriftArgs *args,
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
-            gwy_object_unref(controls.gmodel);
-            gwy_object_unref(controls.result);
-            gwy_object_unref(controls.drift);
+            GWY_OBJECT_UNREF(controls.gmodel);
+            GWY_OBJECT_UNREF(controls.result);
+            GWY_OBJECT_UNREF(controls.drift);
             case GTK_RESPONSE_NONE:
             drift_save_args(gwy_app_settings_get(), args);
             return;
@@ -432,7 +432,7 @@ drift_dialog(DriftArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
-    gwy_object_unref(controls.gmodel);
+    GWY_OBJECT_UNREF(controls.gmodel);
 
     drift_save_args(gwy_app_settings_get(), args);
 
@@ -441,8 +441,8 @@ drift_dialog(DriftArgs *args,
                            controls.result, controls.drift,
                            id);
     else {
-        gwy_object_unref(controls.result);
-        gwy_object_unref(controls.drift);
+        GWY_OBJECT_UNREF(controls.result);
+        GWY_OBJECT_UNREF(controls.drift);
         run_noninteractive(args, data, dfield, mfield, sfield, NULL, NULL, id);
     }
 }
@@ -474,8 +474,8 @@ run_noninteractive(DriftArgs *args,
     GString *str = g_string_new(NULL);
 
     if (!args->do_correct && !args->do_graph) {
-        gwy_object_unref(result);
-        gwy_object_unref(drift);
+        GWY_OBJECT_UNREF(result);
+        GWY_OBJECT_UNREF(drift);
         return;
     }
 
@@ -484,7 +484,7 @@ run_noninteractive(DriftArgs *args,
         result = gwy_data_field_duplicate(dfield);
         drift = gwy_data_line_new(1, 1.0, FALSE);
         drift_do(args, dfield, result, drift);
-        gwy_object_unref(result); /* wasteful but simplifies code a great deal*/
+        GWY_OBJECT_UNREF(result); /* wasteful but simplifies code a great deal*/
     }
 
     g_string_printf(str, "/%d/data", id);
@@ -574,7 +574,7 @@ run_noninteractive(DriftArgs *args,
                                         GWY_DATA_ITEM_MASK_COLOR,
                                         GWY_DATA_ITEM_REAL_SQUARE,
                                         0);
-                gwy_object_unref(result);
+                GWY_OBJECT_UNREF(result);
                 gwy_app_channel_log_add_proc(data, id_ctr, newid);
                 g_string_printf(str, "/%d/mask", id_ctr);
                 if (gwy_container_gis_object_by_name(data,
@@ -585,7 +585,7 @@ run_noninteractive(DriftArgs *args,
                     gwy_container_set_object(data,
                                              gwy_app_get_mask_key_for_id(newid),
                                              mfield);
-                    gwy_object_unref(mfield);
+                    GWY_OBJECT_UNREF(mfield);
                 }
                 g_string_printf(str, "/%d/show", id_ctr);
                 if (gwy_container_gis_object_by_name(data, str->str, &sfield)) {
@@ -594,7 +594,7 @@ run_noninteractive(DriftArgs *args,
                     gwy_container_set_object(data,
                                              gwy_app_get_show_key_for_id(newid),
                                              sfield);
-                    gwy_object_unref(sfield);
+                    GWY_OBJECT_UNREF(sfield);
                 }
             }
             channel_counter += 1;
@@ -619,9 +619,9 @@ run_noninteractive(DriftArgs *args,
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, drift, -1, -1);
         g_object_set(gcmodel, "description", _("x-axis drift"), NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
-        gwy_object_unref(gcmodel);
+        GWY_OBJECT_UNREF(gcmodel);
         gwy_app_add_graph_or_curves(gmodel, data, &args->target_graph, 1);
-        gwy_object_unref(gmodel);
+        GWY_OBJECT_UNREF(gmodel);
     }
     g_object_unref(drift);
 }
@@ -1074,7 +1074,7 @@ apply_drift(GwyDataField *dfield,
 
     for (i = 0; i < yres; i++) {
         corr = gwy_data_field_rtoj(dfield, gwy_data_line_get_val(drift, i));
-        memcpy(coeff, data + i*xres, xres*sizeof(gdouble));
+        gwy_assign(coeff, data + i*xres, xres);
         gwy_interpolation_shift_block_1d(xres, coeff, corr, data + i*xres,
                                          interp, GWY_EXTERIOR_BORDER_EXTEND,
                                          0.0, FALSE);

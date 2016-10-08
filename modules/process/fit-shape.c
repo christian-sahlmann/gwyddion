@@ -816,7 +816,7 @@ finalise:
     gwy_resource_release(GWY_RESOURCE(controls.diff_gradient));
     gwy_inventory_delete_item(gwy_gradients(), FIT_GRADIENT_NAME);
     g_object_unref(controls.mydata);
-    gwy_object_unref(mydfield);
+    GWY_OBJECT_UNREF(mydfield);
     g_free(controls.param);
     g_free(controls.alt_param);
     g_free(controls.param_err);
@@ -1443,7 +1443,7 @@ function_changed(GtkComboBox *combo, FitShapeControls *controls)
                      controls->estimcache);
     controls->state = FIT_SHAPE_INITIALISED;
     fit_copy_correl_matrix(controls, NULL);
-    memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
+    gwy_assign(controls->alt_param, controls->param, nparams);
     calculate_secondary_params(controls);
     update_param_table(controls, controls->param, NULL);
     update_correl_table(controls, NULL);
@@ -1781,9 +1781,7 @@ update_secondary_table(FitShapeControls *controls)
         gtk_label_set_markup(GTK_LABEL(cntrl->error_unit), vf->units);
     }
 
-    if (vf)
-        gwy_si_unit_value_format_free(vf);
-
+    GWY_SI_VALUE_FORMAT_FREE(vf);
     g_object_unref(unit);
 }
 
@@ -1796,7 +1794,7 @@ fit_shape_estimate(FitShapeControls *controls)
 
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start estimate");
-    memcpy(controls->alt_param, controls->param, nparams*sizeof(gdouble));
+    gwy_assign(controls->alt_param, controls->param, nparams);
     if (func->estimate(ctx->xyz, ctx->n, controls->param,
                        controls->estimcache))
         controls->state = FIT_SHAPE_ESTIMATED;
@@ -1827,7 +1825,7 @@ fit_shape_reduced_fit(FitShapeControls *controls)
     gwy_app_wait_cursor_start(GTK_WINDOW(controls->dialogue));
     gwy_debug("start reduced fit");
     update_all_param_values(controls);
-    memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
+    gwy_assign(controls->alt_param, controls->param, func->nparams);
     fitter = fit_reduced(func, ctx, controls->param, &rss);
     if (rss >= 0.0)
         controls->state = FIT_SHAPE_QUICK_FITTED;
@@ -1860,7 +1858,7 @@ fit_shape_full_fit(FitShapeControls *controls)
     gwy_app_wait_start(GTK_WINDOW(controls->dialogue), _("Fitting..."));
     gwy_debug("start fit");
     update_all_param_values(controls);
-    memcpy(controls->alt_param, controls->param, func->nparams*sizeof(gdouble));
+    gwy_assign(controls->alt_param, controls->param, func->nparams);
     fitter = fit(func, ctx, G_MAXUINT, controls->param, &rss,
                  gwy_app_wait_set_fraction, gwy_app_wait_set_message);
 
@@ -1962,7 +1960,7 @@ update_fields(FitShapeControls *controls)
         /* We know ctx->f contains all the theoretical values. */
         g_assert(ctx->n == n);
         gwy_debug("directly copying f[] to result field");
-        memcpy(gwy_data_field_get_data(resfield), ctx->f, n*sizeof(gdouble));
+        gwy_assign(gwy_data_field_get_data(resfield), ctx->f, n);
     }
     else if (controls->pageno == GWY_PAGE_XYZS) {
         surface = gwy_container_get_object_by_name(controls->mydata,
@@ -2187,7 +2185,7 @@ fit_context_resize_params(FitShapeContext *ctx,
 static void
 fit_context_free(FitShapeContext *ctx)
 {
-    gwy_object_unref(ctx->surface);
+    GWY_OBJECT_UNREF(ctx->surface);
     g_free(ctx->param_fixed);
     g_free(ctx->f);
     gwy_clear(ctx, 1);

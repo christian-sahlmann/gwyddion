@@ -194,11 +194,7 @@ gwy_tool_distance_init(GwyToolDistance *tool)
     gwy_container_gis_boolean_by_name(settings, number_lines_key,
                                       &tool->args.number_lines);
 
-    tool->angle_format = g_new0(GwySIValueFormat, 1);
-    tool->angle_format->magnitude = 1.0;
-    tool->angle_format->precision = 1;
-    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
-
+    tool->angle_format = gwy_si_unit_value_format_new(1.0, 1, "deg");
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
                                      "line");
 

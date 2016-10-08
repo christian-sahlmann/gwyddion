@@ -192,7 +192,7 @@ level_func(GwyContainer *data,
                       + by*gwy_data_field_get_yres(dfield));
             gwy_data_field_plane_level(dfield, c, bx, by);
         }
-        gwy_object_unref(mfield);
+        GWY_OBJECT_UNREF(mfield);
     }
     else if (gwy_strequal(funcname, "zero_mean")) {
         if (mfield) {

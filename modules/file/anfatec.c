@@ -444,9 +444,9 @@ fail:
         fclose(fh);
     if (buffer)
         g_free(buffer);
-    gwy_object_unref(unitx);
-    gwy_object_unref(unity);
-    gwy_object_unref(unitz);
+    GWY_OBJECT_UNREF(unitx);
+    GWY_OBJECT_UNREF(unity);
+    GWY_OBJECT_UNREF(unitz);
 
     return dfield;
 }

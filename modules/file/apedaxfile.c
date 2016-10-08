@@ -422,7 +422,7 @@ fail:
     }
     gwy_debug("Cleaning up after a fail");
     if (container != NULL) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     }
 
 cleanup:
@@ -593,7 +593,7 @@ apedax_get_meta(guchar *scan_xml_content,
 
 fail:
     gwy_debug("Cleaning up after a fail");
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
 cleanup:
     if (path_object != NULL) {
         xmlXPathFreeObject(path_object);

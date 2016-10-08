@@ -791,7 +791,7 @@ straighten_do(GwyDataField *dfield, GwyDataField *result,
     if (have_exterior)
         gwy_data_field_correct_average_unmasked(result, mask);
     else
-        gwy_object_unref(mask);
+        GWY_OBJECT_UNREF(mask);
 
     return mask;
 }

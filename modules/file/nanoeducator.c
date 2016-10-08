@@ -627,10 +627,10 @@ nanoedu_load(const gchar *filename,
 
 finish:
     gwy_file_abandon_contents(buffer, size, NULL);
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
 
     if (!nobjects)
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     else
         g_clear_error(error);
 

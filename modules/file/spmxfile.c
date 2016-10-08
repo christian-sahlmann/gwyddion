@@ -178,7 +178,7 @@ spmx_load(const gchar *filename,
 
     container = gwy_container_new();
     if (!read_binary_data(&spmxfile, zipfile, container, error))
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
 
 fail:
     gwyzip_close(zipfile);
@@ -563,9 +563,9 @@ spmx_file_free(SPMXFile *spmxfile)
             g_free(stream->id);
             g_free(stream->name);
             g_free(stream->filename);
-            gwy_object_unref(stream->unitxy[0]);
-            gwy_object_unref(stream->unitxy[1]);
-            gwy_object_unref(stream->unitz);
+            GWY_OBJECT_UNREF(stream->unitxy[0]);
+            GWY_OBJECT_UNREF(stream->unitxy[1]);
+            GWY_OBJECT_UNREF(stream->unitz);
 
             for (j = 0; j < stream->subimages->len; j++)
                 g_free(g_ptr_array_index(stream->subimages, j));

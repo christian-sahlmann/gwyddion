@@ -335,7 +335,7 @@ distort_dialog(DistortArgs *args,
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
-            gwy_object_unref(controls.result);
+            GWY_OBJECT_UNREF(controls.result);
             case GTK_RESPONSE_NONE:
             distort_save_args(gwy_app_settings_get(), args);
             return;
@@ -373,7 +373,7 @@ distort_dialog(DistortArgs *args,
         run_noninteractive(args, data, dfield, mfield, sfield,
                            controls.result, id);
     else {
-        gwy_object_unref(controls.result);
+        GWY_OBJECT_UNREF(controls.result);
         run_noninteractive(args, data, dfield, mfield, sfield, NULL, id);
     }
 }
@@ -692,8 +692,8 @@ distort_do(DistortArgs *args,
     g_assert(MAX_DEGREE == 3);
 
     param = g_new(gdouble, 2*(NCOEFF + 1));
-    memcpy(param, args->xcoeff, NCOEFF*sizeof(gdouble));
-    memcpy(param + NCOEFF, args->ycoeff, NCOEFF*sizeof(gdouble));
+    gwy_assign(param, args->xcoeff, NCOEFF);
+    gwy_assign(param + NCOEFF, args->ycoeff, NCOEFF);
     param[2*NCOEFF + 0] = gwy_data_field_get_xres(result);
     param[2*NCOEFF + 1] = gwy_data_field_get_yres(result);
 

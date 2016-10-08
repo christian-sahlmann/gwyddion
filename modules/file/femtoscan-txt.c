@@ -211,7 +211,7 @@ femto_load(const gchar *filename,
     yreal = (g_array_index(ycal, gdouble, yres-1)
              - g_array_index(ycal, gdouble, 0))*yres/(yres - 1.0)*Nanometre;
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
-    memcpy(dfield->data, data->data, xres*yres*sizeof(gdouble));
+    gwy_assign(dfield->data, data->data, xres*yres);
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     gwy_data_field_set_si_unit_z(dfield, unit);
@@ -223,8 +223,8 @@ femto_load(const gchar *filename,
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
-    gwy_object_unref(unit);
-    gwy_object_unref(dfield);
+    GWY_OBJECT_UNREF(unit);
+    GWY_OBJECT_UNREF(dfield);
     g_free(buffer);
     if (xcal)
         g_array_free(xcal, TRUE);

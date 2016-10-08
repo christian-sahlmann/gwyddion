@@ -147,7 +147,7 @@ mark_disconn(GwyContainer *data,
         gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                            _("Initializing..."));
         if (!disconn_do(dfield, maskfield, &args))
-            gwy_object_unref(maskfield);
+            GWY_OBJECT_UNREF(maskfield);
         disconn_save_args(gwy_app_settings_get(), &args);
     }
 
@@ -530,7 +530,7 @@ median_background(gint size,
 
                 from = MAX(0, j - circle[k - i + size]);
                 to = MIN(xres - 1, j + circle[k - i + size]);
-                memcpy(buffer + n, row + from, (to - from + 1)*sizeof(gdouble));
+                gwy_assign(buffer + n, row + from, to - from + 1);
                 n += to - from + 1;
             }
             rdata[i*xres + j] = gwy_math_median(n, buffer);
@@ -601,7 +601,7 @@ disconn_do(GwyDataField *dfield,
 
 finish:
     gwy_app_wait_finish();
-    gwy_object_unref(difffield);
+    GWY_OBJECT_UNREF(difffield);
     return ok;
 }
 

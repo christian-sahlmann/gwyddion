@@ -249,7 +249,7 @@ csmfile_load(const gchar *filename,
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
-    gwy_object_unref(unit);
+    GWY_OBJECT_UNREF(unit);
     if (header)
         g_free(header);
     if (hash)

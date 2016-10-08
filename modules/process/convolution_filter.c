@@ -834,8 +834,8 @@ convolution_filter_preview(ConvolutionControls *controls)
 
     pdata = &controls->args->preset->data;
     kernel = gwy_data_field_new(pdata->size, pdata->size, 1.0, 1.0, FALSE);
-    memcpy(gwy_data_field_get_data(kernel), pdata->matrix,
-           pdata->size*pdata->size*sizeof(gdouble));
+    gwy_assign(gwy_data_field_get_data(kernel), pdata->matrix,
+               pdata->size*pdata->size);
     if (pdata->divisor != 0.0)
         gwy_data_field_multiply(kernel, 1.0/pdata->divisor);
     gwy_data_field_convolve(preview, kernel);
@@ -857,8 +857,8 @@ convolution_filter_run_noninteractive(ConvolutionArgs *args,
 
     pdata = &args->preset->data;
     kernel = gwy_data_field_new(pdata->size, pdata->size, 1.0, 1.0, FALSE);
-    memcpy(gwy_data_field_get_data(kernel), pdata->matrix,
-           pdata->size*pdata->size*sizeof(gdouble));
+    gwy_assign(gwy_data_field_get_data(kernel), pdata->matrix,
+               pdata->size*pdata->size);
     if (pdata->divisor != 0.0)
         gwy_data_field_multiply(kernel, 1.0/pdata->divisor);
     gwy_data_field_convolve(dfield, kernel);

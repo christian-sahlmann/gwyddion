@@ -285,8 +285,8 @@ fail:
     g_free(header);
     if (hash)
         g_hash_table_destroy(hash);
-    gwy_object_unref(meta);
-    gwy_object_unref(dfield);
+    GWY_OBJECT_UNREF(meta);
+    GWY_OBJECT_UNREF(dfield);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;

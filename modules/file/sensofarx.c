@@ -197,7 +197,7 @@ sensofarx_load(const gchar *filename,
 
     container = gwy_container_new();
     if (!read_binary_data(&pluxfile, zipfile, filename, container, error))
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
 
 fail:
     gwyzip_close(zipfile);

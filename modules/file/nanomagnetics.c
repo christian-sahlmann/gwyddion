@@ -1691,7 +1691,7 @@ cleanup_data_fields(GwyDataField **dfields, gint no_of_channels)
     gint i;
 
     for (i = 0; i < no_of_channels; i++)
-        gwy_object_unref(dfields[i]);
+        GWY_OBJECT_UNREF(dfields[i]);
     g_free(dfields);
 }
 

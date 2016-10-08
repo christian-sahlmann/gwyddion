@@ -213,7 +213,7 @@ dimfile_load(const gchar *filename,
 
 fail:
     g_strfreev(images);
-    gwy_object_unref(xyunit);
+    GWY_OBJECT_UNREF(xyunit);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;

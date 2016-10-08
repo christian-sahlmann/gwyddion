@@ -2558,7 +2558,7 @@ preview(ImgExportControls *controls)
     }
 
     for (iter = 0; iter < 4; iter++) {
-        gwy_object_unref(pixbuf);
+        GWY_OBJECT_UNREF(pixbuf);
         pixbuf = render_pixbuf(&previewargs, "png");
         /* The sizes may be way off when the fonts are huge compared to the
          * image and so on.  Try to correct that and render again. */

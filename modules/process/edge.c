@@ -399,7 +399,7 @@ fit_local_plane_by_pos(gint n,
         b[3] += z[i]*z[i];
     }
     m[0] = n;
-    memcpy(m + 6, m, 6*sizeof(gdouble));
+    gwy_assign(m + 6, m, 6);
     if (gwy_math_choleski_decompose(3, m))
         gwy_math_choleski_solve(3, m, b);
     else

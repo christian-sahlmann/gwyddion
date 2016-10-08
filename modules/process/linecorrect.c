@@ -89,7 +89,7 @@ gwy_data_field_absdiff_line_correct(GwyDataField *dfield)
 
     buf = g_new(gdouble, xres);
     for (i = 0; i < yres; i++) {
-        memcpy(buf, d + i*xres, xres*sizeof(gdouble));
+        gwy_assign(buf, d + i*xres, xres);
         shift = gwy_math_median(xres, buf);
         gwy_data_field_area_add(dfield, 0, i, xres, 1, -shift);
     }

@@ -389,14 +389,14 @@ opd_load(const gchar *filename,
         g_object_unref(meta);
     }
     else {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         err_NO_DATA(error);
     }
 
 fail:
     g_free(header);
-    gwy_object_unref(dfield);
-    gwy_object_unref(mfield);
+    GWY_OBJECT_UNREF(dfield);
+    GWY_OBJECT_UNREF(mfield);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
@@ -856,8 +856,8 @@ opd_asc_load(const gchar *filename,
     }
 
 fail:
-    gwy_object_unref(dfield);
-    gwy_object_unref(mfield);
+    GWY_OBJECT_UNREF(dfield);
+    GWY_OBJECT_UNREF(mfield);
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);

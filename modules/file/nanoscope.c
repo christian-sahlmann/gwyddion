@@ -488,13 +488,13 @@ nanoscope_load(const gchar *filename,
             }
         }
         if (!i)
-            gwy_object_unref(container);
+            GWY_OBJECT_UNREF(container);
     }
 
     for (l = list; l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
-        gwy_object_unref(ndata->data_field);
-        gwy_object_unref(ndata->graph_model);
+        GWY_OBJECT_UNREF(ndata->data_field);
+        GWY_OBJECT_UNREF(ndata->graph_model);
         if (ndata->hash)
             g_hash_table_destroy(ndata->hash);
         g_free(ndata);

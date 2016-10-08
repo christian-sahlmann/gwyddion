@@ -578,13 +578,12 @@ fft_synth_dialog(FFTSynthArgs *args,
     }
     g_object_unref(controls.mydata);
     gwy_dimensions_free(controls.dims);
-    gwy_object_unref(controls.surface);
-    gwy_object_unref(controls.in_re);
-    gwy_object_unref(controls.in_im);
-    gwy_object_unref(controls.out_im);
-    gwy_object_unref(controls.out_re);
-    if (controls.freqvf)
-        gwy_si_unit_value_format_free(controls.freqvf);
+    GWY_OBJECT_UNREF(controls.surface);
+    GWY_OBJECT_UNREF(controls.in_re);
+    GWY_OBJECT_UNREF(controls.in_im);
+    GWY_OBJECT_UNREF(controls.out_im);
+    GWY_OBJECT_UNREF(controls.out_re);
+    GWY_SI_VALUE_FORMAT_FREE(controls.freqvf);
 
     return response == GTK_RESPONSE_OK;
 }

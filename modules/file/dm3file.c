@@ -408,11 +408,11 @@ dm3_load(const gchar *filename,
     } while (status == DM3_IMG_OK || status == DM3_IMG_SKIP);
 
     if (status == DM3_IMG_NOT_FOUND && !id) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         err_NO_DATA(error);
     }
     else if (status == DM3_IMG_ERROR) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     }
 
 fail:
@@ -468,11 +468,11 @@ dm4_load(const gchar *filename,
     } while (status == DM3_IMG_OK || status == DM3_IMG_SKIP);
 
     if (status == DM3_IMG_NOT_FOUND && !id) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         err_NO_DATA(error);
     }
     else if (status == DM3_IMG_ERROR) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     }
 
 fail:

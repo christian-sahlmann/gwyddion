@@ -823,7 +823,7 @@ build_values_from_data(gdouble *z, guint n, const gdouble *data, guint ndata)
     guint i;
 
     if (n == ndata) {
-        memcpy(z, data, n*sizeof(gdouble));
+        gwy_assign(z, data, n);
         gwy_math_sort(n, z);
         return;
     }

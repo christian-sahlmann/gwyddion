@@ -530,7 +530,7 @@ nrrdfile_load(const gchar *filename,
     }
 
 fail:
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
     for (l = buffers_to_free; l; l = g_slist_next(l))
         g_free(l->data);
     g_slist_free(buffers_to_free);

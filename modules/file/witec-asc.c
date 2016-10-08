@@ -258,8 +258,8 @@ dat_load(const gchar *filename,
 fail:
     g_object_unref(dfield);
     g_free(buffer);
-    gwy_object_unref(xyunit);
-    gwy_object_unref(zunit);
+    GWY_OBJECT_UNREF(xyunit);
+    GWY_OBJECT_UNREF(zunit);
     if (hash)
         g_hash_table_destroy(hash);
 

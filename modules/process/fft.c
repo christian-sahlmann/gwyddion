@@ -204,7 +204,7 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_data_field_2dfft_raw(rein, imin, raout, ipout,
                                  GWY_TRANSFORM_DIRECTION_BACKWARD);
         g_object_unref(rein);
-        gwy_object_unref(imin);
+        GWY_OBJECT_UNREF(imin);
 
         gwy_data_field_fft_postprocess(raout, FALSE);
         gwy_data_field_fft_postprocess(ipout, FALSE);

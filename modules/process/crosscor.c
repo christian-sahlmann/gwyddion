@@ -984,8 +984,8 @@ crosscor_do(CrosscorArgs * args)
         }
         gwy_app_wait_finish();
 
-        gwy_object_unref(buffer);
-        gwy_object_unref(mask);
+        GWY_OBJECT_UNREF(buffer);
+        GWY_OBJECT_UNREF(mask);
     }
 
     if (args->gaussian) {
@@ -1106,10 +1106,10 @@ crosscor_do(CrosscorArgs * args)
     g_object_unref(score);
     g_object_unref(dfieldy);
     g_object_unref(dfieldx);
-    gwy_object_unref(dfield2b);
-    gwy_object_unref(dfield4b);
-    gwy_object_unref(abs);
-    gwy_object_unref(dir);
+    GWY_OBJECT_UNREF(dfield2b);
+    GWY_OBJECT_UNREF(dfield4b);
+    GWY_OBJECT_UNREF(abs);
+    GWY_OBJECT_UNREF(dir);
 
     return TRUE;
 }

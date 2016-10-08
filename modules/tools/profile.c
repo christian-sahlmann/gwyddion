@@ -378,11 +378,7 @@ gwy_tool_profile_init(GwyToolProfile *tool)
     tool->colorpixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                        height, height);
 
-    tool->pixel_format = g_new0(GwySIValueFormat, 1);
-    tool->pixel_format->magnitude = 1.0;
-    tool->pixel_format->precision = 0;
-    gwy_si_unit_value_format_set_units(tool->pixel_format, "px");
-
+    tool->pixel_format = gwy_si_unit_value_format_new(1.0, 0, "px");
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
                                      "line");
 

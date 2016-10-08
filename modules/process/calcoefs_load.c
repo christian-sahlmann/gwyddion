@@ -387,7 +387,7 @@ load_caldata(CLoadControls *controls)
             zfrom = g_ascii_strtod(line, &line);
             zto = g_ascii_strtod(line, &line);
 
-            if (caldata) gwy_object_unref(caldata);
+            if (caldata) GWY_OBJECT_UNREF(caldata);
             caldata = gwy_caldata_new(ndata);
 
             line = gwy_str_next_line(&text);

@@ -514,7 +514,7 @@ omicronflat_load(const gchar *filename,
     for (i = 0; i < filelist.nfiles; i++) {
         if (filenames_match(filelist.ids[i].filename, filename)) {
             err_UNKNOWN_DATA_TYPE(error, filelist.files[i]);
-            gwy_object_unref(data);
+            GWY_OBJECT_UNREF(data);
             goto fail;
         }
     }

@@ -319,7 +319,7 @@ nmmxyz_load(const gchar *filename,
             f = 1.0 - (gdouble)ntodo/args.nincluded;
             f = CLAMP(f, 0.0, 1.0);
             if (!gwy_app_wait_set_fraction(f)) {
-                gwy_object_unref(container);
+                GWY_OBJECT_UNREF(container);
                 err_CANCELLED(error);
                 goto fail;
             }
@@ -330,7 +330,7 @@ fail:
     if (waiting)
         gwy_app_wait_finish();
 
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
     g_free(args.include_channel);
     g_free(points);
     free_profile_descriptions(dscs, TRUE);
@@ -1165,7 +1165,7 @@ parse_dsc_file(const gchar *filename)
     g_string_free(str, TRUE);
 
     if (!gwy_container_get_n_items(meta))
-        gwy_object_unref(meta);
+        GWY_OBJECT_UNREF(meta);
 
     return meta;
 }

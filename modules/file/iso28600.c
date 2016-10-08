@@ -1235,7 +1235,7 @@ free_header(ISO28600FieldValue *header)
     if (header) {
         for (i = 0; i < G_N_ELEMENTS(header_fields); i++) {
             if (header_fields[i].type == ISO28600_UNIT)
-                gwy_object_unref(header[i].unit.unit);
+                GWY_OBJECT_UNREF(header[i].unit.unit);
             else if (header_fields[i].type == ISO28600_TEXT_LIST)
                 g_free(header[i].text_list.items);
             else if (header_fields[i].type == ISO28600_INTEGERS)

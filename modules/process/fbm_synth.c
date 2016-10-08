@@ -462,7 +462,7 @@ fbm_synth_dialog(FBMSynthArgs *args,
         controls.sid = 0;
     }
     g_object_unref(controls.mydata);
-    gwy_object_unref(controls.surface);
+    GWY_OBJECT_UNREF(controls.surface);
     gwy_dimensions_free(controls.dims);
 
     return response == GTK_RESPONSE_OK;

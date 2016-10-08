@@ -340,7 +340,7 @@ median_background(gint size,
 
                 from = MAX(0, j - circle[k - i + size]);
                 to = MIN(xres - 1, j + circle[k - i + size]);
-                memcpy(buffer + n, row + from, (to - from + 1)*sizeof(gdouble));
+                gwy_assign(buffer + n, row + from, to - from + 1);
                 n += to - from + 1;
             }
             rdata[i*xres + j] = gwy_math_median(n, buffer);

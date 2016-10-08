@@ -240,7 +240,7 @@ wsf_load(const gchar *filename,
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
-    gwy_object_unref(dfield);
+    GWY_OBJECT_UNREF(dfield);
     g_free(header);
     g_free(buffer);
     g_hash_table_destroy(hash);

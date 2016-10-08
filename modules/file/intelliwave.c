@@ -498,7 +498,7 @@ read_data_field_opd(GwyContainer *container, gint *id,
         }
     }
     if (!gwy_app_channel_remove_bad_data(dfield, mask))
-        gwy_object_unref(mask);
+        GWY_OBJECT_UNREF(mask);
 
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
     gwy_container_set_object(container,
@@ -548,7 +548,7 @@ read_data_field_fringes(GwyContainer *container,
                 m[k] = 1.0;
         }
         if (!gwy_app_channel_remove_bad_data(dfield, mask))
-            gwy_object_unref(mask);
+            GWY_OBJECT_UNREF(mask);
 
         gwy_container_set_object(container,
                                  gwy_app_get_data_key_for_id(*id), dfield);

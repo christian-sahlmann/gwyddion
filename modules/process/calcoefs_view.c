@@ -667,8 +667,8 @@ field_inside(GwyCalData *caldata, GwyDataField *dfield,
 static void
 cc_view_dialog_abandon(CCViewControls *controls)
 {
-    gwy_object_unref(controls->view_field);
-    gwy_object_unref(controls->mydata);
+    GWY_OBJECT_UNREF(controls->view_field);
+    GWY_OBJECT_UNREF(controls->mydata);
 }
 
 static void show_info(CCViewControls *controls, GwyDataField *dfield)
@@ -678,22 +678,22 @@ static void show_info(CCViewControls *controls, GwyDataField *dfield)
     gdouble max, min;
     gchar msg[50];
 
-    if (gwy_data_field_get_sum(dfield)==0)
+    if (gwy_data_field_get_sum(dfield) == 0.0)
         g_snprintf(msg, sizeof(msg), _("Shown part has zero range."));
     else {
         siunit = gwy_data_field_get_si_unit_z(dfield);
         min = gwy_data_field_get_min(dfield);
         max = gwy_data_field_get_max(dfield);
-        maxf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, max, NULL);
+        maxf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, max,
+                                      NULL);
 
         g_snprintf(msg, sizeof(msg), _("Shown range (%.*f - %.*f) %s"),
-                    maxf->precision, min/maxf->magnitude, maxf->precision, max/maxf->magnitude,
-                    maxf->units);
+                   maxf->precision, min/maxf->magnitude,
+                   maxf->precision, max/maxf->magnitude,
+                   maxf->units);
         gwy_si_unit_value_format_free(maxf);
     }
     gtk_label_set_markup(GTK_LABEL(controls->message5), msg);
-
-
 }
 
 

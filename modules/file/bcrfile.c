@@ -402,7 +402,7 @@ file_load_real(const guchar *buffer,
         g_object_unref(siunit2);
         gwy_data_field_set_yreal(dfield, q);
     }
-    gwy_object_unref(siunit1);
+    GWY_OBJECT_UNREF(siunit1);
 
     if (!(s = g_hash_table_lookup(meta, "zunit")))
         s = "nm";
@@ -550,7 +550,7 @@ read_data_field(const guchar *buffer,
     }
 
     if (!gwy_app_channel_remove_bad_data(dfield, *voidmask))
-        gwy_object_unref(*voidmask);
+        GWY_OBJECT_UNREF(*voidmask);
 
     return dfield;
 }

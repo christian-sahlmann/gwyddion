@@ -392,7 +392,7 @@ gwyfile_gather_old_point_selection(GwyContainer *data)
     }
 
     if (!i)
-        gwy_object_unref(sel);
+        GWY_OBJECT_UNREF(sel);
 
     return sel;
 }
@@ -436,7 +436,7 @@ gwyfile_gather_old_line_selection(GwyContainer *data)
     }
 
     if (!i)
-        gwy_object_unref(sel);
+        GWY_OBJECT_UNREF(sel);
 
     return sel;
 }

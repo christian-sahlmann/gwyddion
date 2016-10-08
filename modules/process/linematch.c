@@ -274,9 +274,9 @@ linematch(GwyContainer *data, GwyRunType run)
     g_free(title);
 
 end:
-    gwy_object_unref(args.result);
-    gwy_object_unref(args.shifts);
-    gwy_object_unref(args.bg);
+    GWY_OBJECT_UNREF(args.result);
+    GWY_OBJECT_UNREF(args.shifts);
+    GWY_OBJECT_UNREF(args.bg);
 }
 
 static void
@@ -327,7 +327,7 @@ linematch_do(GwyDataField *mask,
 
     /* Transpose back if necessary. */
     if (args->direction == GWY_ORIENTATION_VERTICAL) {
-        gwy_object_unref(mymask);
+        GWY_OBJECT_UNREF(mymask);
         flip_xy(args->result, tmpresult, TRUE);
         GWY_SWAP(GwyDataField*, args->result, tmpresult);
         flip_xy(args->bg, tmpresult, TRUE);

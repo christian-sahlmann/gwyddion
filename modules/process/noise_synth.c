@@ -487,8 +487,8 @@ noise_synth_dialog(NoiseSynthArgs *args,
         controls.sid = 0;
     }
     g_object_unref(controls.mydata);
-    gwy_object_unref(controls.surface);
-    gwy_object_unref(controls.noise);
+    GWY_OBJECT_UNREF(controls.surface);
+    GWY_OBJECT_UNREF(controls.noise);
     gwy_dimensions_free(controls.dims);
 
     return response == GTK_RESPONSE_OK;

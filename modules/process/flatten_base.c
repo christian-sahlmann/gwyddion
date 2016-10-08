@@ -156,7 +156,7 @@ grow_mask(GwyDataField *mask, gint amount)
         min = G_MAXDOUBLE;
         for (j = 0; j < xres; j++)
             prow[j] = -G_MAXDOUBLE;
-        memcpy(buffer, data, xres*sizeof(gdouble));
+        gwy_assign(buffer, data, xres);
         for (i = 0; i < yres; i++) {
             gdouble *row = data + i*xres;
 
@@ -183,7 +183,7 @@ grow_mask(GwyDataField *mask, gint amount)
 
             GWY_SWAP(gdouble*, prow, buffer);
             if (i < yres-1)
-                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
+                gwy_assign(buffer, data + (i+1)*xres, xres);
         }
         if (min == max)
             break;
@@ -303,7 +303,7 @@ flatten_base(GwyContainer *data, GwyRunType run)
     gwy_data_field_data_changed(origfield);
 
 cancelled:
-    gwy_object_unref(mfield);
+    GWY_OBJECT_UNREF(mfield);
     g_object_unref(dfield);
 }
 

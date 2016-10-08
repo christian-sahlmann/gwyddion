@@ -237,7 +237,7 @@ hitachi_load(const gchar *filename,
     gwy_file_channel_import_log_add(container, 0, NULL, filename);
 
 fail:
-    gwy_object_unref(pixbuf);
+    GWY_OBJECT_UNREF(pixbuf);
     g_free(imagename);
     g_free(header);
     g_hash_table_destroy(hash);

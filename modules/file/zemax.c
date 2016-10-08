@@ -232,7 +232,7 @@ zemax_load(const gchar *filename,
 fail:
     g_free(buffer);
     for (i = 0; i < G_N_ELEMENTS(fields); i++)
-        gwy_object_unref(fields[i]);
+        GWY_OBJECT_UNREF(fields[i]);
 
     return container;
 }

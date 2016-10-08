@@ -248,7 +248,7 @@ fits_load(const gchar *filename,
 
 fail:
     fits_close_file(fptr, &status);
-    gwy_object_unref(field);
+    GWY_OBJECT_UNREF(field);
     g_free(invalid);
 
     return container;

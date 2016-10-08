@@ -347,7 +347,7 @@ nst_load(const gchar *filename,
 fail:
     gwyzip_close(zipfile);
     if (!channelno) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         if (error && !*error)
             err_NO_DATA(error);
     }
@@ -548,8 +548,7 @@ nst_read_3d(const gchar *buffer, gsize size, gboolean is_utf,
     gwy_data_field_set_xoffset(dfield, xoffset*pow10(power10xy));
     gwy_data_field_set_yoffset(dfield, yoffset*pow10(power10xy));
 
-    memcpy(gwy_data_field_get_data(dfield), dataarray->data,
-           xres*yres*sizeof(gdouble));
+    gwy_assign(gwy_data_field_get_data(dfield), dataarray->data, xres*yres);
 
     if (siunitxy)
         gwy_data_field_set_si_unit_xy(dfield, siunitxy);
@@ -559,10 +558,10 @@ nst_read_3d(const gchar *buffer, gsize size, gboolean is_utf,
     *metadata = g_object_ref(meta);
 
 fail:
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
     g_array_free(dataarray, TRUE);
-    gwy_object_unref(siunitz);
-    gwy_object_unref(siunitxy);
+    GWY_OBJECT_UNREF(siunitz);
+    GWY_OBJECT_UNREF(siunitxy);
 
     return dfield;
 }
@@ -740,11 +739,11 @@ fail:
     g_free(title);
     g_free(ylabel);
     g_free(xlabel);
-    gwy_object_unref(siunitx);
-    gwy_object_unref(siunity);
+    GWY_OBJECT_UNREF(siunitx);
+    GWY_OBJECT_UNREF(siunity);
 
     if (!ok)
-        gwy_object_unref(gmodel);
+        GWY_OBJECT_UNREF(gmodel);
 
     return gmodel;
 }

@@ -720,7 +720,7 @@ arithmetic_do(ArithmeticArgs *args, gint *id)
     }
 
     /* Free stuff */
-    gwy_object_unref(void_mask);
+    GWY_OBJECT_UNREF(void_mask);
     for (i = NARGS; i < ARITHMETIC_NVARS; i++) {
         if (data_fields[i])
             g_object_unref(data_fields[i]);
@@ -793,7 +793,7 @@ make_x(GwyDataField *dfield)
         data[j] = (j + 0.5)*dx + xoff;
 
     for (i = 1; i < yres; i++)
-        memcpy(data + i*xres, data, xres*sizeof(gdouble));
+        gwy_assign(data + i*xres, data, xres);
 
     return result;
 }
@@ -987,7 +987,7 @@ arithmetic_save_args(GwyContainer *settings,
     gchar *filename;
     FILE *fh;
 
-    memcpy(object_ids, args->objects, NARGS*sizeof(GwyAppDataId));
+    gwy_assign(object_ids, args->objects, NARGS);
 
     gwy_container_set_string_by_name(settings, expression_key,
                                      args->expression);

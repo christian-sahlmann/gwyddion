@@ -319,9 +319,9 @@ run_main(GwyContainer *data, GwyRunType run)
             gwy_app_channel_log_add_proc(data, id, newid);
         }
 
-        gwy_object_unref(out_diff);
-        gwy_object_unref(out_image);
-        gwy_object_unref(out_fft);
+        GWY_OBJECT_UNREF(out_diff);
+        GWY_OBJECT_UNREF(out_image);
+        GWY_OBJECT_UNREF(out_fft);
     }
 
     g_object_unref(controls.mydata);

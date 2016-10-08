@@ -371,7 +371,7 @@ read_text_data(const gchar *buffer,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Cannot parse data values after %d of %d."),
                         i, xres*yres);
-            gwy_object_unref(dfield);
+            GWY_OBJECT_UNREF(dfield);
             goto fail;
         }
         p = end + (*end == ',');

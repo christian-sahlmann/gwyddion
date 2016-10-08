@@ -831,7 +831,7 @@ preview(DepositSynthControls *controls)
         if (controls->out && (gwy_data_field_get_xres(controls->original)!=gwy_data_field_get_xres(controls->out) ||
             gwy_data_field_get_yres(controls->original)!=gwy_data_field_get_yres(controls->out)))
         {
-            gwy_object_unref(controls->out);
+            GWY_OBJECT_UNREF(controls->out);
             controls->out = NULL;
         }
 
@@ -877,7 +877,7 @@ preview(DepositSynthControls *controls)
     g_free(message);
 
     if (surface)
-        gwy_object_unref(surface);
+        GWY_OBJECT_UNREF(surface);
     surface = surface_for_preview(controls->out, PREVIEW_SIZE);
     gwy_data_field_copy(surface, dfield, FALSE);
     gwy_data_field_data_changed(dfield);
@@ -885,7 +885,7 @@ preview(DepositSynthControls *controls)
 
     gwy_data_field_data_changed(controls->out);
 
-    gwy_object_unref(surface);
+    GWY_OBJECT_UNREF(surface);
 }
 
 static inline gboolean
@@ -1154,7 +1154,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     if (showfield) {
         showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
                oxres, oxreal, oyres, oyreal, add, xres, yres);
-        if (surface) gwy_object_unref(surface);
+        if (surface) GWY_OBJECT_UNREF(surface);
         surface = surface_for_preview(dfield, PREVIEW_SIZE);
         gwy_data_field_copy(surface, showfield, FALSE);
         gwy_data_field_data_changed(showfield);
@@ -1312,7 +1312,7 @@ deposit_synth_do(const DepositSynthArgs *args,
             if (showfield) {
                 showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
                        oxres, oxreal, oyres, oyreal, add, xres, yres);
-                if (surface) gwy_object_unref(surface);
+                if (surface) GWY_OBJECT_UNREF(surface);
                 surface = surface_for_preview(dfield, PREVIEW_SIZE);
                 gwy_data_field_copy(surface, showfield, FALSE);
                 gwy_data_field_data_changed(showfield);
@@ -1332,7 +1332,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
            oxres, oxreal, oyres, oyreal, add, xres, yres);
-    if (surface) gwy_object_unref(surface);
+    if (surface) GWY_OBJECT_UNREF(surface);
 
     if (showfield) {
 
@@ -1350,9 +1350,9 @@ deposit_synth_do(const DepositSynthArgs *args,
     gwy_data_field_set_yreal(dfield, gwy_data_field_get_yreal(dfield)/norm);
     /*denormalized*/
 
-    gwy_object_unref(lfield);
-    gwy_object_unref(zlfield);
-    gwy_object_unref(zdfield);
+    GWY_OBJECT_UNREF(lfield);
+    GWY_OBJECT_UNREF(zlfield);
+    GWY_OBJECT_UNREF(zdfield);
 
     g_free(xdata);
     g_free(ydata);

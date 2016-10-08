@@ -213,7 +213,7 @@ rawgraph_load(const gchar *filename,
 
 fail:
     g_free(buffer);
-    gwy_object_unref(gmodel);
+    GWY_OBJECT_UNREF(gmodel);
     g_free(args.title);
     g_free(args.x_label);
     g_free(args.y_label);

@@ -412,11 +412,11 @@ mprofile_load(const gchar *filename,
     container = mprofile_load_data(mprofile, buffer, size, error);
 
     for (n = 0; n < mprofile->ac_n_buckets; n++) {
-        gwy_object_unref(mprofile->intensity_data[n]);
-        gwy_object_unref(mprofile->intensity_mask[n]);
+        GWY_OBJECT_UNREF(mprofile->intensity_data[n]);
+        GWY_OBJECT_UNREF(mprofile->intensity_mask[n]);
     }
-    gwy_object_unref(mprofile->phase_data);
-    gwy_object_unref(mprofile->phase_mask);
+    GWY_OBJECT_UNREF(mprofile->phase_data);
+    GWY_OBJECT_UNREF(mprofile->phase_mask);
     g_free(mprofile);
 
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -884,7 +884,7 @@ fill_data_fields(MProFile *mprofile,
             }
 
             if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
-                gwy_object_unref(vpmask);
+                GWY_OBJECT_UNREF(vpmask);
 
             mprofile->intensity_data[id] = dfield;
             mprofile->intensity_mask[id] = vpmask;
@@ -951,7 +951,7 @@ fill_data_fields(MProFile *mprofile,
 
         set_units(dfield, mprofile, "m");
         if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
-            gwy_object_unref(vpmask);
+            GWY_OBJECT_UNREF(vpmask);
 
         mprofile->phase_data = dfield;
         mprofile->phase_mask = vpmask;

@@ -280,9 +280,9 @@ text_dump_import(gchar *buffer,
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
                                                    FALSE));
         gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(uxy));
-        gwy_object_unref(uxy);
+        GWY_OBJECT_UNREF(uxy);
         gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(uz));
-        gwy_object_unref(uz);
+        GWY_OBJECT_UNREF(uz);
         d = gwy_data_field_get_data(dfield);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         memcpy(d, pos, n);
@@ -296,7 +296,7 @@ text_dump_import(gchar *buffer,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Missing end of data field marker."));
-            gwy_object_unref(dfield);
+            GWY_OBJECT_UNREF(dfield);
             goto fail;
         }
         gwy_container_remove_by_prefix(data, line);

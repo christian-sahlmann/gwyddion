@@ -268,9 +268,9 @@ nao_load(const gchar *filename,
 fail:
     gwyzip_close(zipfile);
     nao_file_free(&naofile);
-    gwy_object_unref(meta);
+    GWY_OBJECT_UNREF(meta);
     if (!channelno) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         if (error && !*error)
             err_NO_DATA(error);
     }

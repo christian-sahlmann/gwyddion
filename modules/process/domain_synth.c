@@ -581,7 +581,7 @@ domain_synth_dialog(DomainSynthArgs *args,
     domain_synth_save_args(gwy_app_settings_get(), args, dimsargs);
 
     g_object_unref(controls.mydata);
-    gwy_object_unref(controls.surface);
+    GWY_OBJECT_UNREF(controls.surface);
     gwy_dimensions_free(controls.dims);
 
     return response == GTK_RESPONSE_OK;

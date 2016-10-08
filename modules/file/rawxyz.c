@@ -242,7 +242,7 @@ rawxyz_load(const gchar *filename,
 fail:
     g_free(args.xy_units);
     g_free(args.z_units);
-    gwy_object_unref(surface);
+    GWY_OBJECT_UNREF(surface);
 
     return container;
 }

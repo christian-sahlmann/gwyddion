@@ -1137,9 +1137,9 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors, GwyGraphCurveModel *gcmodel,
          * it may improve convergence. */
         for (k = 0; k < npixels; k++) {
             for (irow = 0; irow < height; irow++) {
-                memcpy(nn->input + irow*width,
-                       dtmodel + indices[k] + irow*xres,
-                       width*sizeof(gdouble));
+                gwy_assign(nn->input + irow*width,
+                           dtmodel + indices[k] + irow*xres,
+                           width);
             }
             nn->target[0] = sfactor*(dtsignal[indices[k]
                                               + height/2*xres + width/2]
@@ -1193,10 +1193,10 @@ evaluate_do(GwyNeuralNetwork *nn,
     for (row = height/2; row < yres + height/2 - height; row++) {
         for (col = width/2; col < xres + width/2 - width; col++) {
             for (irow = 0; irow < height; irow++) {
-                memcpy(nn->input + irow*width,
-                       drmodel + ((row + irow - height/2)*xres
-                                  + col - width/2),
-                       width*sizeof(gdouble));
+                gwy_assign(nn->input + irow*width,
+                           drmodel + ((row + irow - height/2)*xres
+                                      + col - width/2),
+                           width);
             }
             gwy_neural_network_forward_feed(nn);
             dresult[row*xres + col] = nn->output[0]/sfactor + sshift;

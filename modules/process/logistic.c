@@ -847,7 +847,7 @@ gwy_data_field_area_convolve_3x3(GwyDataField *data_field,
     }
 
     rm = g_new(gdouble, width);
-    memcpy(rm, rp, width*sizeof(gdouble));
+    gwy_assign(rm, rp, width);
 
     for (i = 0; i < height; i++) {
         rc = rp;

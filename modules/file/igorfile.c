@@ -437,8 +437,8 @@ igor_load(const gchar *filename,
             };
             gwy_app_channel_title_fall_back(container,chid);
         }
-        gwy_object_unref(meta);
-        gwy_object_unref(maskfield);
+        GWY_OBJECT_UNREF(meta);
+        GWY_OBJECT_UNREF(maskfield);
 
         gwy_file_channel_import_log_add(container, chid, NULL, filename);
     }

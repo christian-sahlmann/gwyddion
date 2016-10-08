@@ -47,7 +47,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * JPK Instruments
  * .jpk .jpk-qi-image
- * Read
+ * Read SPS
  **/
 
 #include "config.h"
@@ -719,7 +719,7 @@ jpkforce_load(const gchar *filename,
     }
 
     if (!gwy_container_get_n_items(container)) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
         err_NO_DATA(error);
         goto fail;
     }

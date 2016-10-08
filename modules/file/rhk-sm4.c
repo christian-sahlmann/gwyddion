@@ -638,7 +638,7 @@ fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     rhk_sm4_free(&rhkfile);
     if (!imageid && !graphid) {
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     }
     if (key)
         g_string_free(key, TRUE);

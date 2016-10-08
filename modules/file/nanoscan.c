@@ -312,7 +312,7 @@ nanoscan_load(const gchar *filename,
 
     if (!id) {
         err_NO_DATA(error);
-        gwy_object_unref(container);
+        GWY_OBJECT_UNREF(container);
     }
 
 fail:

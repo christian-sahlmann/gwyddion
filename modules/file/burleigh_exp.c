@@ -200,8 +200,8 @@ fail:
 static void
 free_header(BurleighExpHeader *header)
 {
-    gwy_object_unref(header->xyunits);
-    gwy_object_unref(header->zunits);
+    GWY_OBJECT_UNREF(header->xyunits);
+    GWY_OBJECT_UNREF(header->zunits);
 }
 
 static gboolean

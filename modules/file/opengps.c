@@ -259,7 +259,7 @@ create_images(const X3PFile *x3pfile, GwyContainer *container)
                                     x3pfile->xres*x3pfile->dx,
                                     x3pfile->yres*x3pfile->dy,
                                     FALSE);
-        memcpy(dfield->data, x3pfile->values + id*n, n*sizeof(gdouble));
+        gwy_assign(dfield->data, x3pfile->values + id*n, n);
         for (k = 0; k < n; k++) {
             if (!valid[k])
                 dfield->data[k] = NAN;

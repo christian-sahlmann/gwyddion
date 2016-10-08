@@ -569,7 +569,7 @@ sis_load(const gchar *filename,
                 g_propagate_error(error, err);
             else
                 err_NO_DATA(error);
-            gwy_object_unref(data);
+            GWY_OBJECT_UNREF(data);
         }
     }
 
@@ -638,7 +638,7 @@ extract_data(SISFile *sisfile,
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
-    gwy_object_unref(siunit);
+    GWY_OBJECT_UNREF(siunit);
 
     switch (channel->data_type) {
         case SIS_DATA_TYPE_TOPOGRAPHY:

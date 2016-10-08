@@ -725,11 +725,7 @@ gwy_tool_roughness_init(GwyToolRoughness *tool)
                                     &tool->args.expanded);
 
     tool->slope_unit = gwy_si_unit_new(NULL);
-    tool->none_format = g_new0(GwySIValueFormat, 1);
-    tool->none_format->magnitude = 1.0;
-    tool->none_format->precision = 3;
-    gwy_si_unit_value_format_set_units(tool->none_format, "");
-
+    tool->none_format = gwy_si_unit_value_format_new(1.0, 3, NULL);
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_line,
                                      "line");
 

@@ -457,7 +457,7 @@ lat_meas_dialog(LatMeasArgs *args,
 
     g_signal_handler_disconnect(controls.selection, controls.selection_id);
     if (controls.vlayer)
-        gwy_object_unref(controls.vlayer);
+        GWY_OBJECT_UNREF(controls.vlayer);
     gtk_widget_destroy(controls.dialog);
 }
 
@@ -787,7 +787,7 @@ smart_init_selection(LatMeasControls *controls)
     gwy_data_field_mark_extrema(smoothed, mask, TRUE);
     grains = g_new0(gint, dfield->xres*dfield->yres);
     ngrains = gwy_data_field_number_grains(mask, grains);
-    gwy_object_unref(mask);
+    GWY_OBJECT_UNREF(mask);
 
     /* Find the position and value of each. */
     for (i = 0; i < nquantities; i++)
@@ -796,7 +796,7 @@ smart_init_selection(LatMeasControls *controls)
     gwy_data_field_grains_get_quantities(smoothed, values,
                                          quantities, nquantities,
                                          ngrains, grains);
-    gwy_object_unref(smoothed);
+    GWY_OBJECT_UNREF(smoothed);
 
     maxima = g_new(MaximumInfo, ngrains);
     dh = hypot(gwy_data_field_get_xmeasure(dfield),
@@ -941,7 +941,7 @@ set_selection(LatMeasControls *controls, const gdouble *xy)
     gdouble xoff, yoff;
     gdouble tmpxy[4];
 
-    memcpy(tmpxy, xy, sizeof(tmpxy));
+    gwy_assign(tmpxy, xy, 4);
     if (args->image_mode == IMAGE_PSDF)
         transform_selection(tmpxy);
 
@@ -1068,7 +1068,7 @@ image_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
         zoom_sens = TRUE;
         if (controls->vlayer) {
             gwy_data_view_set_top_layer(dataview, controls->vlayer);
-            gwy_object_unref(controls->vlayer);
+            GWY_OBJECT_UNREF(controls->vlayer);
         }
     }
 
@@ -1104,7 +1104,7 @@ selection_mode_changed(G_GNUC_UNUSED GtkToggleButton *button,
     dataview = GWY_DATA_VIEW(controls->view);
     if (controls->vlayer) {
         gwy_data_view_set_top_layer(dataview, controls->vlayer);
-        gwy_object_unref(controls->vlayer);
+        GWY_OBJECT_UNREF(controls->vlayer);
     }
 
     if (mode == SELECTION_LATTICE) {

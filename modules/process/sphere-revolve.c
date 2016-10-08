@@ -462,7 +462,7 @@ sphrev_horizontal(Sphrev1DArgs *args,
     for (j = 0; j < xres; j++)
         weight[j] = 1.0;
     moving_sums(xres, weight, sum, size);
-    memcpy(weight, sum, xres*sizeof(gdouble));
+    gwy_assign(weight, sum, xres);
 
     for (i = 0; i < yres; i++) {
         gdouble *rrow = rdata + i*xres;
@@ -538,7 +538,7 @@ sphrev_vertical(Sphrev1DArgs *args,
     for (j = 0; j < yres; j++)
         weight[j] = 1.0;
     moving_sums(yres, weight, sum, size);
-    memcpy(weight, sum, yres*sizeof(gdouble));
+    gwy_assign(weight, sum, yres);
 
     for (i = 0; i < xres; i++) {
         gdouble *rcol = rdata + i;

@@ -732,7 +732,7 @@ fit_plot_curve(FitArgs *args)
         gwy_data_line_resample(args->ydata, n, GWY_INTERPOLATION_NONE);
         curvexd = gwy_graph_curve_model_get_xdata(cmodel);
         xd = gwy_data_line_get_data(args->xdata);
-        memcpy(xd, curvexd, n*sizeof(gdouble));
+        gwy_assign(xd, curvexd, n);
         yd = gwy_data_line_get_data(args->ydata);
     }
     else {

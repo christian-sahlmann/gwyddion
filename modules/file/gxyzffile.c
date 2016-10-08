@@ -288,11 +288,11 @@ fail:
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);
-    gwy_object_unref(xyunit);
-    gwy_object_unref(zunit);
+    GWY_OBJECT_UNREF(xyunit);
+    GWY_OBJECT_UNREF(zunit);
     if (zunits) {
         for (i = 0; i < nchan; i++)
-            gwy_object_unref(zunits[i]);
+            GWY_OBJECT_UNREF(zunits[i]);
         g_free(zunits);
     }
 

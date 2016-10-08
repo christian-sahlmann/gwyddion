@@ -401,7 +401,7 @@ immerse_controls_destroy(ImmerseControls *controls)
     g_object_unref(controls->mydata);
     gdk_cursor_unref(controls->near_cursor);
     gdk_cursor_unref(controls->move_cursor);
-    gwy_object_unref(controls->detail);
+    GWY_OBJECT_UNREF(controls->detail);
 }
 
 static void
@@ -461,7 +461,7 @@ immerse_update_detail_pixbuf(ImmerseControls *controls)
     GQuark quark;
     gint w, h, xres, yres;
 
-    gwy_object_unref(controls->detail);
+    GWY_OBJECT_UNREF(controls->detail);
     data = gwy_app_data_browser_get(controls->args->detail.datano);
     if (!data)
         return;

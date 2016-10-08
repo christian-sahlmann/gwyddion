@@ -141,7 +141,7 @@ create_brick_from_datafield(GwyDataField *dfield)
         }
     }
     if (freeme)
-        gwy_object_unref(lowres);
+        GWY_OBJECT_UNREF(lowres);
 
     return brick;
 

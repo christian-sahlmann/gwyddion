@@ -268,7 +268,7 @@ omicron_load(const gchar *filename,
         channel = g_ptr_array_index(ofile.topo_channels, i);
         dfield = omicron_read_data(&ofile, channel, &datafilename, error);
         if (!dfield) {
-            gwy_object_unref(container);
+            GWY_OBJECT_UNREF(container);
             goto fail;
         }
 
@@ -327,7 +327,7 @@ omicron_load(const gchar *filename,
 
                 spectra = omicron_read_cs_data(&ofile, channel, error);
                 if (!spectra) {
-                    gwy_object_unref(container);
+                    GWY_OBJECT_UNREF(container);
                     goto fail;
                 }
 
@@ -352,7 +352,7 @@ omicron_load(const gchar *filename,
 
                 spectra = omicron_read_be_data(&ofile, channel, error);
                 if (!spectra) {
-                    gwy_object_unref(container);
+                    GWY_OBJECT_UNREF(container);
                     goto fail;
                 }
 
