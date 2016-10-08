@@ -360,8 +360,7 @@ gwy_math_nlfit_fit_real(GwyNLFitter *nlfit,
     func_idx = priv->func_idx;
     diff_idx = priv->diff_idx;
 
-    g_free(nlfit->covar);
-    nlfit->covar = NULL;
+    GWY_FREE(nlfit->covar);
     nlfit->dispersion = -1.0;
 
     if (ndata < nparam)
@@ -529,8 +528,8 @@ gwy_math_nlfit_fit_real(GwyNLFitter *nlfit,
                 }
             }
             if (nlfit->eval) {
-                memcpy(save_a, a, covar_size*sizeof(gdouble));
-                memcpy(saveparam, param, nparam*sizeof(gdouble));
+                gwy_assign(save_a, a, covar_size);
+                gwy_assign(saveparam, param, nparam);
             }
             else {
                 sumr = -1.0;
@@ -539,7 +538,7 @@ gwy_math_nlfit_fit_real(GwyNLFitter *nlfit,
         }
         while (!is_pos_def) {
             if (!first_pass)
-                memcpy(a, save_a, covar_size*sizeof(gdouble));
+                gwy_assign(a, save_a, covar_size);
             else
                 first_pass = FALSE;
 
@@ -648,17 +647,15 @@ gwy_math_nlfit_fit_real(GwyNLFitter *nlfit,
             /* XXX: else what? */
             //g_warning("Cannot invert covariance matrix");
             sumr = -1.0;
-            g_free(nlfit->covar);
-            nlfit->covar = NULL;
+            GWY_FREE(nlfit->covar);
         }
     }
 
     for (i = 0; i < nparam; i++) {
         if (gwy_isinf(param[i]) || gwy_isnan(param[i])) {
             sumr = -1.0;
-            g_free(nlfit->covar);
-            nlfit->covar = NULL;
-            memcpy(param, origparam, nparam*sizeof(gdouble));
+            GWY_FREE(nlfit->covar);
+            gwy_assign(param, origparam, nparam);
             break;
         }
     }
@@ -667,9 +664,8 @@ gwy_math_nlfit_fit_real(GwyNLFitter *nlfit,
         for (i = 0; i < nparam*(nparam + 1)/2; i++) {
              if (gwy_isinf(nlfit->covar[i]) || gwy_isnan(nlfit->covar[i])) {
                  sumr = -1.0;
-                 g_free(nlfit->covar);
-                 nlfit->covar = NULL;
-                 memcpy(param, origparam, nparam*sizeof(gdouble));
+                 GWY_FREE(nlfit->covar);
+                 gwy_assign(param, origparam, nparam);
                  break;
              }
         }
@@ -753,7 +749,7 @@ gwy_math_nlfit_diff(gdouble x,
     gint j;
 
     param_tmp = g_newa(gdouble, nparam);
-    memcpy(param_tmp, param, nparam*sizeof(gdouble));
+    gwy_assign(param_tmp, param, nparam);
 
     for (j = 0; j < nparam; j++) {
         if (fixed_param && fixed_param[j]) {
@@ -817,7 +813,7 @@ gwy_math_nlfit_diff_idx(guint i,
     gint j;
 
     param_tmp = g_newa(gdouble, nparam);
-    memcpy(param_tmp, param, nparam*sizeof(gdouble));
+    gwy_assign(param_tmp, param, nparam);
 
     for (j = 0; j < nparam; j++) {
         if (fixed_param && fixed_param[j]) {

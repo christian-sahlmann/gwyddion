@@ -59,23 +59,47 @@
 #define gwy_clear(array, n) \
     memset((array), 0, (n)*sizeof((array)[0]))
 
-#define gwy_object_unref(obj) \
+#define gwy_assign(dest, source, n) \
+    memcpy((dest), (source), (n)*sizeof((dest)[0]))
+
+#define GWY_OBJECT_UNREF(obj) \
     do { \
-        if (obj) \
+        if (obj) { \
             g_object_unref(obj); \
-        (obj) = NULL; \
+            (obj) = NULL; \
+        } \
     } while (0)
 
-#define gwy_signal_handler_disconnect(obj, hid) \
+#define gwy_object_unref GWY_OBJECT_UNREF
+
+#define GWY_SIGNAL_HANDLER_DISCONNECT(obj, hid) \
     do { \
         if (hid && obj) \
             g_signal_handler_disconnect(obj, hid); \
         (hid) = 0; \
     } while (0)
 
+#define gwy_signal_handler_disconnect GWY_SIGNAL_HANDLER_DISCONNECT
+
 #define GWY_FIND_PSPEC(type, id, spectype) \
     G_PARAM_SPEC_##spectype(g_object_class_find_property \
                                 (G_OBJECT_CLASS(g_type_class_peek(type)), id))
+
+#define GWY_SI_VALUE_FORMAT_FREE(vf) \
+    do { \
+        if (vf) { \
+            gwy_si_unit_value_format_free(vf); \
+            (vf) = NULL; \
+        } \
+    } while (0)
+
+#define GWY_FREE(ptr) \
+    do { \
+        if (ptr) { \
+            g_free(ptr); \
+            (ptr) = NULL; \
+        } \
+    } while (0)
 
 G_BEGIN_DECLS
 

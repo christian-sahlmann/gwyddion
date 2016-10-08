@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2011 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -2066,25 +2066,54 @@ gwy_fprintf(FILE        *file,
  *
  * Fills memory block representing an array with zeroes.
  *
- * This is a shorthand for memset, with the number of bytes to fill calculated
- * from the type of the pointer.
+ * This is a shorthand for memset(), with the number of bytes to fill
+ * calculated from the type of the pointer.
  *
  * Since: 2.12
+ **/
+
+/**
+ * gwy_assign:
+ * @dest: Pointer to the destination array of values.
+ *        This argument may be evaluated several times.
+ * @source: Pointer to the source array of values.
+ * @n: Number of items to copy.
+ *
+ * Copies items from one memory block representing an array to another.
+ *
+ * This is a shorthand for memcpy(), with the number of bytes to fill calculated
+ * from the type of the @dest pointer (the type of @source does not enter the
+ * calculation!)
+ *
+ * As with memcpy(), the memory blocks may not overlap.
+ *
+ * Since: 2.46
  **/
 
 /**
  * gwy_object_unref:
  * @obj: A pointer to #GObject or %NULL (must be an l-value).
  *
- * Unreferences an object if it exists.
+ * Unreferences and nulls an object if it exists.
  *
- * If @obj is not %NULL, g_object_unref() is called on it.
- * In all cases @obj is set to %NULL.
+ * Legacy name for %GWY_OBJECT_UNREF.
+ **/
+
+/**
+ * GWY_OBJECT_UNREF:
+ * @obj: A pointer to #GObject or %NULL (must be an l-value).
+ *
+ * Unreferences and nulls an object if it exists.
+ *
+ * If @obj is not %NULL, g_object_unref() is called on it and %NULL is assigned
+ * to the variable.  In all cases @obj will be %NULL at the end.
  *
  * A useful property of this macro is its idempotence.
  *
- * If the object reference count is greater than one, assure it should be
+ * If the object reference count is greater than one, ensure it should be
  * referenced elsewhere, otherwise it leaks memory.
+ *
+ * Since: 2.46
  **/
 
 /**
@@ -2094,10 +2123,42 @@ gwy_fprintf(FILE        *file,
  *
  * Disconnect a signal handler if it exists.
  *
+ * Legacy name for %GWY_SIGNAL_HANDLER_DISCONNECT.
+ **/
+
+/**
+ * GWY_SIGNAL_HANDLER_DISCONNECT:
+ * @obj: A pointer to #GObject or %NULL.
+ * @hid: An @obj signal handler id or 0 (must be an l-value).
+ *
+ * Disconnect a signal handler if it exists.
+ *
  * If @hid is nonzero and @obj is not %NULL, the signal handler identified by
- * @hid is disconnected.  In all cases @hid is set to 0.
+ * @hid is disconnected.  In all cases @hid is set to 0 while @obj is not
+ * changed.
  *
  * A useful property of this macro is its idempotence.
+ *
+ * If you pass non-zero @hid but %NULL @obj you are probably doing something
+ * wrong because you keep and try to disconnect a handler for a non-existent
+ * object.  A warning may be emitted in the future.
+ *
+ * Since: 2.46
+ **/
+
+/**
+ * GWY_SI_VALUE_FORMAT_FREE:
+ * @vf: A value format to free or %NULL.
+ *
+ * Frees and nulls a value format if it exists.
+ *
+ * If @vf is not %NULL, gwy_si_unit_value_format_free() is called on it and
+ * %NULL is assigned to the variable.  In all cases @vf will be %NULL at the
+ * end.
+ *
+ * A useful property of this macro is its idempotence.
+ *
+ * Since: 2.46
  **/
 
 /**
