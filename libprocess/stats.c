@@ -4909,7 +4909,7 @@ calculate_entropy_at_scales(GwyDataField *dfield,
         }
         else {
             for (i = 0; i < height; i++)
-                memcpy(xdata + i*width, base + i*xres, width*sizeof(gdouble));
+                gwy_assign(xdata + i*width, base + i*xres, width);
         }
     }
 
@@ -5697,11 +5697,10 @@ gwy_data_field_area_get_median_mask(GwyDataField *dfield,
     buffer = g_new(gdouble, width*height);
     datapos = dfield->data + row*dfield->xres + col;
     if (height == 1 || (col == 0 && width == dfield->xres))
-        memcpy(buffer, datapos, width*height*sizeof(gdouble));
+        gwy_assign(buffer, datapos, width*height);
     else {
         for (i = 0; i < height; i++)
-            memcpy(buffer + i*width, datapos + i*dfield->xres,
-                   width*sizeof(gdouble));
+            gwy_assign(buffer + i*width, datapos + i*dfield->xres, width);
     }
     median = gwy_math_median(width*height, buffer);
     g_free(buffer);
@@ -5944,7 +5943,7 @@ extract_field_row_masked(GwyDataField *dfield,
     }
     else {
         n = width;
-        memcpy(values, d, n*sizeof(gdouble));
+        gwy_assign(values, d, n);
     }
 
     return n;

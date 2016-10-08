@@ -32,9 +32,6 @@
 #include <libprocess/arithmetic.h>
 #include "gwyprocessinternal.h"
 
-#define gwy_assign(dest, source, n) \
-    memcpy((dest), (source), (n)*sizeof((dest)[0]))
-
 /* Data for one row.  To be used in conjuction with MinMaxPrecomputedReq. */
 typedef struct {
     gdouble *storage;
@@ -761,7 +758,7 @@ gwy_data_field_area_convolve_3x3(GwyDataField *data_field,
     }
 
     rm = g_new(gdouble, width);
-    memcpy(rm, rp, width*sizeof(gdouble));
+    gwy_assign(rm, rp, width);
 
     for (i = 0; i < height; i++) {
         rc = rp;
@@ -1638,7 +1635,7 @@ gwy_data_field_area_filter_dechecker(GwyDataField *data_field,
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     kernel = gwy_data_field_new(size, size, 1.0, 1.0, FALSE);
-    memcpy(kernel->data, checker, sizeof(checker));
+    gwy_assign(kernel->data, checker, size*size);
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
     g_object_unref(kernel);
 }
@@ -1776,9 +1773,9 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
             xto = MIN(width-1, j + size/2);
             len = xto - xfrom + 1;
             for (k = yfrom; k <= yto; k++)
-                memcpy(kernel + len*(k - yfrom),
-                       data + k*rowstride + xfrom,
-                       len*sizeof(gdouble));
+                gwy_assign(kernel + len*(k - yfrom),
+                           data + k*rowstride + xfrom,
+                           len);
             buffer[i*width + j] = gwy_math_median(len*(yto - yfrom + 1),
                                                   kernel);
         }
@@ -1786,7 +1783,7 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
 
     g_free(kernel);
     for (i = 0; i < height; i++)
-        memcpy(data + i*rowstride, buffer + i*width, width*sizeof(gdouble));
+        gwy_assign(data + i*rowstride, buffer + i*width, width);
     g_free(buffer);
     gwy_data_field_invalidate(data_field);
 }

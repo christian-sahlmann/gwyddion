@@ -831,11 +831,8 @@ gwy_interpolation_resample_block_2d(gint width,
                 data = coeffs = g_memdup(data, width*height*sizeof(gdouble));
             else {
                 coeffs = g_new(gdouble, width*height);
-                for (i = 0; i < height; i++) {
-                    memcpy(coeffs + i*width,
-                           data + i*rowstride,
-                           width*sizeof(gdouble));
-                }
+                for (i = 0; i < height; i++)
+                    gwy_assign(coeffs + i*width, data + i*rowstride, width);
                 data = coeffs;
                 rowstride = width;
             }

@@ -181,7 +181,7 @@ gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
     else
         gwy_data_line_resample(dline, size, GWY_INTERPOLATION_NONE);
 
-    memcpy(dline->data, coefficients[type].coeff, size*sizeof(gdouble));
+    gwy_assign(dline->data, coefficients[type].coeff, size);
 
     return dline;
 }
@@ -791,7 +791,7 @@ pwt(GwyDWTFilter *wt,
         break;
     }
 
-    memcpy(data + 1, wdata + 1, n*sizeof(gdouble));
+    gwy_assign(data + 1, wdata + 1, n);
 
     return dline;
 }
@@ -828,7 +828,7 @@ wtset_new(GwyDataLine *wt_coefs)
 static void
 wtset_free(GwyDWTFilter *wt)
 {
-    gwy_object_unref(wt->wksp);
+    GWY_OBJECT_UNREF(wt->wksp);
     g_free(wt->cc);
     g_free(wt->cr);
     g_free(wt);

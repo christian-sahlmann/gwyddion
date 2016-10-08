@@ -348,8 +348,8 @@ gwy_data_line_fft_do(GwyDataLine *rsrc,
                                         idest->data, rdest->data,
                                         _GWY_FFTW_PATIENCE);
     g_return_if_fail(plan);
-    memcpy(rsrc->data, rbuf, rsrc->res*sizeof(gdouble));
-    memcpy(isrc->data, ibuf, isrc->res*sizeof(gdouble));
+    gwy_assign(rsrc->data, rbuf, rsrc->res);
+    gwy_assign(isrc->data, ibuf, isrc->res);
     g_free(ibuf);
     g_free(rbuf);
     fftw_execute(plan);

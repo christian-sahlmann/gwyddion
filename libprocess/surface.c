@@ -32,9 +32,6 @@
 
 #define GWY_SURFACE_TYPE_NAME "GwySurface"
 
-#define gwy_assign(dest, source, n) \
-    memcpy((dest), (source), (n)*sizeof((dest)[0]))
-
 enum {
     DATA_CHANGED,
     N_SIGNALS
@@ -112,8 +109,7 @@ gwy_surface_init(GwySurface *surface)
 static void
 alloc_data(GwySurface *surface)
 {
-    g_free(surface->data);
-    surface->data = NULL;;
+    GWY_FREE(surface->data);
     if (surface->n)
         surface->data = g_new(GwyXYZ, surface->n);
 }
@@ -121,8 +117,7 @@ alloc_data(GwySurface *surface)
 static void
 free_data(GwySurface *surface)
 {
-    g_free(surface->data);
-    surface->data = NULL;;
+    GWY_FREE(surface->data);
 }
 
 static void
@@ -148,8 +143,8 @@ static void
 gwy_surface_dispose(GObject *object)
 {
     GwySurface *surface = GWY_SURFACE(object);
-    gwy_object_unref(surface->priv->si_unit_xy);
-    gwy_object_unref(surface->priv->si_unit_z);
+    GWY_OBJECT_UNREF(surface->priv->si_unit_xy);
+    GWY_OBJECT_UNREF(surface->priv->si_unit_z);
     G_OBJECT_CLASS(gwy_surface_parent_class)->dispose(object);
 }
 
@@ -220,16 +215,16 @@ gwy_surface_deserialize(const guchar *buffer,
                                             GWY_SURFACE_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        gwy_object_unref(si_unit_xy);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_xy);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
     if (datasize % 3 != 0) {
         g_critical("Serialized %s data size %u not a multiple of 3",
                    GWY_SURFACE_TYPE_NAME, datasize);
         g_free(data);
-        gwy_object_unref(si_unit_xy);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_xy);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
 
@@ -240,11 +235,11 @@ gwy_surface_deserialize(const guchar *buffer,
     surface->n = datasize/3;
 
     if (si_unit_z) {
-        gwy_object_unref(surface->priv->si_unit_z);
+        GWY_OBJECT_UNREF(surface->priv->si_unit_z);
         surface->priv->si_unit_z = si_unit_z;
     }
     if (si_unit_xy) {
-        gwy_object_unref(surface->priv->si_unit_xy);
+        GWY_OBJECT_UNREF(surface->priv->si_unit_xy);
         surface->priv->si_unit_xy = si_unit_xy;
     }
 
@@ -296,7 +291,7 @@ copy_info(GwySurface *dest,
     else if (spriv->si_unit_xy && !dpriv->si_unit_xy)
         dpriv->si_unit_xy = gwy_si_unit_duplicate(spriv->si_unit_xy);
     else if (!spriv->si_unit_xy && dpriv->si_unit_xy)
-        gwy_object_unref(dpriv->si_unit_xy);
+        GWY_OBJECT_UNREF(dpriv->si_unit_xy);
 
     if (spriv->si_unit_z && dpriv->si_unit_z)
         gwy_serializable_clone(G_OBJECT(spriv->si_unit_z),
@@ -304,7 +299,7 @@ copy_info(GwySurface *dest,
     else if (spriv->si_unit_z && !dpriv->si_unit_z)
         dpriv->si_unit_z = gwy_si_unit_duplicate(spriv->si_unit_z);
     else if (!spriv->si_unit_z && dpriv->si_unit_z)
-        gwy_object_unref(dpriv->si_unit_z);
+        GWY_OBJECT_UNREF(dpriv->si_unit_z);
 
     dpriv->cached_ranges = spriv->cached_ranges;
     dpriv->min = spriv->min;
@@ -777,7 +772,7 @@ gwy_surface_set_si_unit_xy(GwySurface *surface,
     if (surface->priv->si_unit_xy == si_unit)
         return;
 
-    gwy_object_unref(surface->priv->si_unit_xy);
+    GWY_OBJECT_UNREF(surface->priv->si_unit_xy);
     g_object_ref(si_unit);
     surface->priv->si_unit_xy = si_unit;
 }
@@ -803,7 +798,7 @@ gwy_surface_set_si_unit_z(GwySurface *surface,
     if (surface->priv->si_unit_z == si_unit)
         return;
 
-    gwy_object_unref(surface->priv->si_unit_z);
+    GWY_OBJECT_UNREF(surface->priv->si_unit_z);
     g_object_ref(si_unit);
     surface->priv->si_unit_z = si_unit;
 }
@@ -919,7 +914,7 @@ gwy_data_field_copy_units_to_surface(GwyDataField *data_field,
     else if (data_field->si_unit_xy && !priv->si_unit_xy)
         priv->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
     else if (!data_field->si_unit_xy && priv->si_unit_xy)
-        gwy_object_unref(priv->si_unit_xy);
+        GWY_OBJECT_UNREF(priv->si_unit_xy);
 
     if (data_field->si_unit_z && priv->si_unit_z)
         gwy_serializable_clone(G_OBJECT(data_field->si_unit_z),
@@ -927,7 +922,7 @@ gwy_data_field_copy_units_to_surface(GwyDataField *data_field,
     else if (data_field->si_unit_z && !priv->si_unit_z)
         priv->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
     else if (!data_field->si_unit_z && priv->si_unit_z)
-        gwy_object_unref(priv->si_unit_z);
+        GWY_OBJECT_UNREF(priv->si_unit_z);
 }
 
 /**
@@ -955,7 +950,7 @@ gwy_surface_copy_units_to_data_field(GwySurface *surface,
     else if (priv->si_unit_xy && !data_field->si_unit_xy)
         data_field->si_unit_xy = gwy_si_unit_duplicate(priv->si_unit_xy);
     else if (!priv->si_unit_xy && data_field->si_unit_xy)
-        gwy_object_unref(data_field->si_unit_xy);
+        GWY_OBJECT_UNREF(data_field->si_unit_xy);
 
     if (priv->si_unit_z && data_field->si_unit_z)
         gwy_serializable_clone(G_OBJECT(priv->si_unit_z),
@@ -963,7 +958,7 @@ gwy_surface_copy_units_to_data_field(GwySurface *surface,
     else if (priv->si_unit_z && !data_field->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_duplicate(priv->si_unit_z);
     else if (!priv->si_unit_z && data_field->si_unit_z)
-        gwy_object_unref(data_field->si_unit_z);
+        GWY_OBJECT_UNREF(data_field->si_unit_z);
 }
 
 /**

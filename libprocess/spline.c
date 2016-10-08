@@ -540,9 +540,9 @@ gwy_spline_sample_uniformly(GwySpline *spline,
     }
 
     if (xy)
-        memcpy(xy, fixed_samples->data, n*sizeof(GwyXY));
+        gwy_assign(xy, fixed_samples->data, n);
     if (t)
-        memcpy(t, fixed_tangents->data, n*sizeof(GwyXY));
+        gwy_assign(t, fixed_tangents->data, n);
 
     return length;
 }

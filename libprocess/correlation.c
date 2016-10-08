@@ -651,11 +651,11 @@ gwy_data_field_correlate_finalize(GwyComputationState *cstate)
 {
     GwyCorrelationState *state = (GwyCorrelationState*)cstate;
 
-    gwy_object_unref(state->data_field);
-    gwy_object_unref(state->kernel_field);
-    gwy_object_unref(state->score);
-    gwy_object_unref(state->avg);
-    gwy_object_unref(state->rms);
+    GWY_OBJECT_UNREF(state->data_field);
+    GWY_OBJECT_UNREF(state->kernel_field);
+    GWY_OBJECT_UNREF(state->score);
+    GWY_OBJECT_UNREF(state->avg);
+    GWY_OBJECT_UNREF(state->rms);
     g_free(state);
 }
 
@@ -1039,12 +1039,12 @@ gwy_data_field_crosscorrelate_finalize(GwyComputationState *cstate)
 {
     GwyCrossCorrelationState *state = (GwyCrossCorrelationState*)cstate;
 
-    gwy_object_unref(state->data_field1);
-    gwy_object_unref(state->data_field2);
-    gwy_object_unref(state->x_dist);
-    gwy_object_unref(state->y_dist);
-    gwy_object_unref(state->score);
-    gwy_object_unref(state->weights);
+    GWY_OBJECT_UNREF(state->data_field1);
+    GWY_OBJECT_UNREF(state->data_field2);
+    GWY_OBJECT_UNREF(state->x_dist);
+    GWY_OBJECT_UNREF(state->y_dist);
+    GWY_OBJECT_UNREF(state->score);
+    GWY_OBJECT_UNREF(state->weights);
     g_free(state);
 }
 

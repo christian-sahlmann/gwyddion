@@ -1330,7 +1330,7 @@ gwy_data_line_get_xpm(GwyDataLine *data_line, gint m, gint k)
     }
     g_free(peaks);
 
-    gwy_object_unref(dl);
+    GWY_OBJECT_UNREF(dl);
 
     return Xpm/m;
 }

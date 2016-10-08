@@ -645,11 +645,11 @@ gwy_data_field_grains_watershed_finalize(GwyComputationState *cstate)
 {
     GwyWatershedState *state = (GwyWatershedState*)cstate;
 
-    gwy_object_unref(state->min);
-    gwy_object_unref(state->water);
-    gwy_object_unref(state->mark_dfield);
-    gwy_object_unref(state->data_field);
-    gwy_object_unref(state->grain_field);
+    GWY_OBJECT_UNREF(state->min);
+    GWY_OBJECT_UNREF(state->water);
+    GWY_OBJECT_UNREF(state->mark_dfield);
+    GWY_OBJECT_UNREF(state->data_field);
+    GWY_OBJECT_UNREF(state->grain_field);
     g_free(state);
 }
 
@@ -3079,10 +3079,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         if ((guint)quantity >= NQ || need_aux[quantity] == INVALID)
             continue;
 
-        if (seen[quantity]) {
-            memcpy(values[i], quantity_data[quantity],
-                   (ngrains + 1)*sizeof(gdouble));
-        }
+        if (seen[quantity])
+            gwy_assign(values[i], quantity_data[quantity], ngrains + 1);
         seen[quantity] = TRUE;
     }
 
@@ -5443,7 +5441,7 @@ gwy_data_field_waterpour(GwyDataField *data_field,
     else if (data_field->si_unit_xy && !result->si_unit_xy)
         result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
     else if (!data_field->si_unit_xy && result->si_unit_xy)
-        gwy_object_unref(result->si_unit_xy);
+        GWY_OBJECT_UNREF(result->si_unit_xy);
 
     if (result->si_unit_z)
         gwy_si_unit_set_from_string(result->si_unit_z, NULL);

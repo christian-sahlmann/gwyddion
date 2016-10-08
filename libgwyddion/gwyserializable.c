@@ -1861,7 +1861,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             val = gwy_serializable_deserialize(buffer, size, position);
             if (val) {
                 *(GObject**)p = val;
-                gwy_object_unref(old);
+                GWY_OBJECT_UNREF(old);
             }
             else
                 return FALSE;
@@ -1990,7 +1990,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                 *(GObject***)p = val;
                 if (old) {
                     for (j = 0; j < oldlen; j++)
-                        gwy_object_unref(old[j]);
+                        GWY_OBJECT_UNREF(old[j]);
                     g_free(old);
                 }
             }

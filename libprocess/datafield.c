@@ -112,8 +112,8 @@ gwy_data_field_finalize(GObject *object)
 {
     GwyDataField *data_field = (GwyDataField*)object;
 
-    gwy_object_unref(data_field->si_unit_xy);
-    gwy_object_unref(data_field->si_unit_z);
+    GWY_OBJECT_UNREF(data_field->si_unit_xy);
+    GWY_OBJECT_UNREF(data_field->si_unit_z);
     g_free(data_field->data);
 
     G_OBJECT_CLASS(gwy_data_field_parent_class)->finalize(object);
@@ -362,16 +362,16 @@ gwy_data_field_deserialize(const guchar *buffer,
                                             GWY_DATA_FIELD_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        gwy_object_unref(si_unit_xy);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_xy);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
     if (datasize != (gsize)(xres*yres)) {
         g_critical("Serialized %s size mismatch %u != %u",
                    GWY_DATA_FIELD_TYPE_NAME, datasize, xres*yres);
         g_free(data);
-        gwy_object_unref(si_unit_xy);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_xy);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
 
@@ -399,11 +399,11 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->xoff = xoff;
     data_field->yoff = yoff;
     if (si_unit_z) {
-        gwy_object_unref(data_field->si_unit_z);
+        GWY_OBJECT_UNREF(data_field->si_unit_z);
         data_field->si_unit_z = si_unit_z;
     }
     if (si_unit_xy) {
-        gwy_object_unref(data_field->si_unit_xy);
+        GWY_OBJECT_UNREF(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
     }
 
@@ -418,11 +418,10 @@ gwy_data_field_duplicate_real(GObject *object)
     g_return_val_if_fail(GWY_IS_DATA_FIELD(object), NULL);
     data_field = GWY_DATA_FIELD(object);
     duplicate = gwy_data_field_new_alike(data_field, FALSE);
-    memcpy(duplicate->data, data_field->data,
-           data_field->xres*data_field->yres*sizeof(gdouble));
+    gwy_assign(duplicate->data, data_field->data,
+               data_field->xres*data_field->yres);
     duplicate->cached = data_field->cached;
-    memcpy(duplicate->cache, data_field->cache,
-           GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
+    gwy_assign(duplicate->cache, data_field->cache, GWY_DATA_FIELD_CACHE_SIZE);
 
     return (GObject*)duplicate;
 }
@@ -481,13 +480,13 @@ gwy_data_field_copy(GwyDataField *src,
     g_return_if_fail(GWY_IS_DATA_FIELD(dest));
     g_return_if_fail(src->xres == dest->xres && src->yres == dest->yres);
 
-    memcpy(dest->data, src->data, src->xres*src->yres*sizeof(gdouble));
+    gwy_assign(dest->data, src->data, src->xres*src->yres);
 
     dest->xreal = src->xreal;
     dest->yreal = src->yreal;
 
     dest->cached = src->cached;
-    memcpy(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
+    gwy_assign(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE);
 
     if (!nondata_too)
         return;
@@ -499,7 +498,7 @@ gwy_data_field_copy(GwyDataField *src,
     else if (src->si_unit_xy && !dest->si_unit_xy)
         dest->si_unit_xy = gwy_si_unit_duplicate(src->si_unit_xy);
     else if (!src->si_unit_xy && dest->si_unit_xy)
-        gwy_object_unref(dest->si_unit_xy);
+        GWY_OBJECT_UNREF(dest->si_unit_xy);
 
     if (src->si_unit_z && dest->si_unit_z)
         gwy_serializable_clone(G_OBJECT(src->si_unit_z),
@@ -507,7 +506,7 @@ gwy_data_field_copy(GwyDataField *src,
     else if (src->si_unit_z && !dest->si_unit_z)
         dest->si_unit_z = gwy_si_unit_duplicate(src->si_unit_z);
     else if (!src->si_unit_z && dest->si_unit_z)
-        gwy_object_unref(dest->si_unit_z);
+        GWY_OBJECT_UNREF(dest->si_unit_z);
 }
 
 /**
@@ -574,14 +573,14 @@ gwy_data_field_area_copy(GwyDataField *src,
         /* make it as fast as gwy_data_field_copy() whenever possible (and
          * maybe faster, as we don't play with units */
         g_assert(col == 0 && destcol == 0);
-        memcpy(dest->data + width*destrow, src->data + width*row,
-               width*height*sizeof(gdouble));
+        gwy_assign(dest->data + width*destrow, src->data + width*row,
+                   width*height);
     }
     else {
         for (i = 0; i < height; i++)
-            memcpy(dest->data + dest->xres*(destrow + i) + destcol,
-                   src->data + src->xres*(row + i) + col,
-                   width*sizeof(gdouble));
+            gwy_assign(dest->data + dest->xres*(destrow + i) + destcol,
+                       src->data + src->xres*(row + i) + col,
+                       width);
     }
 }
 
@@ -713,9 +712,9 @@ gwy_data_field_resize(GwyDataField *data_field,
     b = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
 
     for (i = ulrow; i < brrow; i++) {
-        memcpy(b->data + (i-ulrow)*xres,
-               data_field->data + i*data_field->xres + ulcol,
-               xres*sizeof(gdouble));
+        gwy_assign(b->data + (i-ulrow)*xres,
+                   data_field->data + i*data_field->xres + ulcol,
+                   xres);
     }
     data_field->xreal *= (gdouble)xres/data_field->xres;
     data_field->yreal *= (gdouble)yres/data_field->yres;
@@ -767,9 +766,9 @@ gwy_data_field_area_extract(GwyDataField *data_field,
                                 data_field->yreal*height/data_field->yres,
                                 FALSE);
     for (i = 0; i < height; i++) {
-        memcpy(result->data + i*width,
-               data_field->data + (i + row)*data_field->xres + col,
-               width*sizeof(gdouble));
+        gwy_assign(result->data + i*width,
+                   data_field->data + (i + row)*data_field->xres + col,
+                   width);
     }
     if (data_field->si_unit_xy)
         result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
@@ -802,7 +801,7 @@ gwy_data_field_area_extract(GwyDataField *data_field,
 gdouble
 gwy_data_field_get_dval(GwyDataField *a,
                         gdouble x, gdouble y,
-                        GwyInterpolationType interpolation)
+                        GwyInterpolationType interp)
 {
     gint ix, iy, ixp, iyp;
     gint floorx, floory;
@@ -812,10 +811,10 @@ gwy_data_field_get_dval(GwyDataField *a,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(a), 0.0);
 
-    if (G_UNLIKELY(interpolation == GWY_INTERPOLATION_NONE))
+    if (G_UNLIKELY(interp == GWY_INTERPOLATION_NONE))
         return 0.0;
 
-    switch (interpolation) {
+    switch (interp) {
         case GWY_INTERPOLATION_ROUND:
         /* floor() centers pixel value */
         floorx = floor(x);
@@ -869,26 +868,21 @@ gwy_data_field_get_dval(GwyDataField *a,
 
         /* interpolation in x direction */
         data = a->data + floorx-1 + a->xres*(floory-1);
-        memcpy(intline, data, 4*sizeof(gdouble));
-        va = gwy_interpolation_get_dval_of_equidists(restx, intline,
-                                                     interpolation);
-        memcpy(intline, data + a->xres, 4*sizeof(gdouble));
-        vb = gwy_interpolation_get_dval_of_equidists(restx, intline,
-                                                     interpolation);
-        memcpy(intline, data + 2*a->xres, 4*sizeof(gdouble));
-        vc = gwy_interpolation_get_dval_of_equidists(restx, intline,
-                                                     interpolation);
-        memcpy(intline, data + 3*a->xres, 4*sizeof(gdouble));
-        vd = gwy_interpolation_get_dval_of_equidists(restx, intline,
-                                                     interpolation);
+        gwy_assign(intline, data, 4);
+        va = gwy_interpolation_get_dval_of_equidists(restx, intline, interp);
+        gwy_assign(intline, data + a->xres, 4);
+        vb = gwy_interpolation_get_dval_of_equidists(restx, intline, interp);
+        gwy_assign(intline, data + 2*a->xres, 4);
+        vc = gwy_interpolation_get_dval_of_equidists(restx, intline, interp);
+        gwy_assign(intline, data + 3*a->xres, 4);
+        vd = gwy_interpolation_get_dval_of_equidists(restx, intline, interp);
 
         /*interpolation in y direction*/
         intline[0] = va;
         intline[1] = vb;
         intline[2] = vc;
         intline[3] = vd;
-        return gwy_interpolation_get_dval_of_equidists(resty, intline,
-                                                       interpolation);
+        return gwy_interpolation_get_dval_of_equidists(resty, intline, interp);
     }
 }
 
@@ -1165,7 +1159,7 @@ gwy_data_field_set_si_unit_xy(GwyDataField *data_field,
     if (data_field->si_unit_xy == si_unit)
         return;
 
-    gwy_object_unref(data_field->si_unit_xy);
+    GWY_OBJECT_UNREF(data_field->si_unit_xy);
     g_object_ref(si_unit);
     data_field->si_unit_xy = si_unit;
 }
@@ -1190,7 +1184,7 @@ gwy_data_field_set_si_unit_z(GwyDataField *data_field,
     if (data_field->si_unit_z == si_unit)
         return;
 
-    gwy_object_unref(data_field->si_unit_z);
+    GWY_OBJECT_UNREF(data_field->si_unit_z);
     g_object_ref(si_unit);
     data_field->si_unit_z = si_unit;
 }
@@ -2280,9 +2274,9 @@ gwy_data_field_get_row(GwyDataField *data_field,
 
     gwy_data_line_resample(data_line, data_field->xres, GWY_INTERPOLATION_NONE);
     data_line->real = data_field->xreal;
-    memcpy(data_line->data,
-           data_field->data + row*data_field->xres,
-           data_field->xres*sizeof(gdouble));
+    gwy_assign(data_line->data,
+               data_field->data + row*data_field->xres,
+               data_field->xres);
     gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
@@ -2342,9 +2336,9 @@ gwy_data_field_get_row_part(GwyDataField *data_field,
         gwy_data_line_resample(data_line, to - from, GWY_INTERPOLATION_NONE);
 
     data_line->real = data_field->xreal*(to - from)/data_field->xres;
-    memcpy(data_line->data,
-           data_field->data + row*data_field->xres + from,
-           (to - from)*sizeof(gdouble));
+    gwy_assign(data_line->data,
+               data_field->data + row*data_field->xres + from,
+               to - from);
     gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
@@ -2410,9 +2404,9 @@ gwy_data_field_set_row_part(GwyDataField *data_field,
     if (data_line->res != (to - from))
         gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_LINEAR);
 
-    memcpy(data_field->data + row*data_field->xres + from,
-           data_line->data,
-           (to-from)*sizeof(gdouble));
+    gwy_assign(data_field->data + row*data_field->xres + from,
+               data_line->data,
+               to - from);
     gwy_data_field_invalidate(data_field);
 }
 
@@ -2472,9 +2466,9 @@ gwy_data_field_set_row(GwyDataField *data_field,
     g_return_if_fail(row >= 0 && row < data_field->yres);
     g_return_if_fail(data_field->xres == data_line->res);
 
-    memcpy(data_field->data + row*data_field->xres,
-           data_line->data,
-           data_field->xres*sizeof(gdouble));
+    gwy_assign(data_field->data + row*data_field->xres,
+               data_line->data,
+               data_field->xres);
     gwy_data_field_invalidate(data_field);
 }
 
@@ -2707,7 +2701,7 @@ gwy_data_field_copy_units_to_data_line(GwyDataField *data_field,
     else if (data_field->si_unit_xy && !data_line->si_unit_x)
         data_line->si_unit_x = gwy_si_unit_duplicate(data_field->si_unit_xy);
     else if (!data_field->si_unit_xy && data_line->si_unit_x)
-        gwy_object_unref(data_line->si_unit_x);
+        GWY_OBJECT_UNREF(data_line->si_unit_x);
 
     if (data_field->si_unit_z && data_line->si_unit_y)
         gwy_serializable_clone(G_OBJECT(data_field->si_unit_z),
@@ -2715,7 +2709,7 @@ gwy_data_field_copy_units_to_data_line(GwyDataField *data_field,
     else if (data_field->si_unit_z && !data_line->si_unit_y)
         data_line->si_unit_y = gwy_si_unit_duplicate(data_field->si_unit_z);
     else if (!data_field->si_unit_z && data_line->si_unit_y)
-        gwy_object_unref(data_line->si_unit_y);
+        GWY_OBJECT_UNREF(data_line->si_unit_y);
 }
 
 /**
@@ -2738,7 +2732,7 @@ gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
     else if (data_line->si_unit_x && !data_field->si_unit_xy)
         data_field->si_unit_xy = gwy_si_unit_duplicate(data_line->si_unit_x);
     else if (!data_line->si_unit_x && data_field->si_unit_xy)
-        gwy_object_unref(data_field->si_unit_xy);
+        GWY_OBJECT_UNREF(data_field->si_unit_xy);
 
     if (data_line->si_unit_y && data_field->si_unit_z)
         gwy_serializable_clone(G_OBJECT(data_line->si_unit_y),
@@ -2746,7 +2740,7 @@ gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
     else if (data_line->si_unit_y && !data_field->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_duplicate(data_line->si_unit_y);
     else if (!data_line->si_unit_y && data_field->si_unit_z)
-        gwy_object_unref(data_field->si_unit_z);
+        GWY_OBJECT_UNREF(data_field->si_unit_z);
 }
 
 #undef gwy_data_field_invalidate

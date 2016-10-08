@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2012-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  Originally based on Yeti's implementation for Gwyddion 3 branch,
@@ -116,8 +116,8 @@ gwy_brick_finalize(GObject *object)
 {
     GwyBrick *brick = (GwyBrick*)object;
 
-    gwy_object_unref(brick->si_unit_x);
-    gwy_object_unref(brick->si_unit_y);
+    GWY_OBJECT_UNREF(brick->si_unit_x);
+    GWY_OBJECT_UNREF(brick->si_unit_y);
     g_free(brick->data);
 
     G_OBJECT_CLASS(gwy_brick_parent_class)->finalize(object);
@@ -479,11 +479,11 @@ gwy_brick_deserialize(const guchar *buffer,
                                             GWY_BRICK_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
-        gwy_object_unref(si_unit_z);
-        gwy_object_unref(si_unit_w);
-        gwy_object_unref(calibrations);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_w);
+        GWY_OBJECT_UNREF(calibrations);
 
         return NULL;
     }
@@ -491,11 +491,11 @@ gwy_brick_deserialize(const guchar *buffer,
         g_critical("Serialized %s size mismatch %u != %u",
                    GWY_BRICK_TYPE_NAME, datasize, xres*yres*zres);
         g_free(data);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
-        gwy_object_unref(si_unit_z);
-        gwy_object_unref(si_unit_w);
-        gwy_object_unref(calibrations);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_w);
+        GWY_OBJECT_UNREF(calibrations);
 
         return NULL;
     }
@@ -517,19 +517,19 @@ gwy_brick_deserialize(const guchar *buffer,
 
     brick->data = data;
     if (si_unit_x) {
-        gwy_object_unref(brick->si_unit_x);
+        GWY_OBJECT_UNREF(brick->si_unit_x);
         brick->si_unit_x = si_unit_x;
     }
     if (si_unit_y) {
-        gwy_object_unref(brick->si_unit_y);
+        GWY_OBJECT_UNREF(brick->si_unit_y);
         brick->si_unit_y = si_unit_y;
     }
     if (si_unit_z) {
-        gwy_object_unref(brick->si_unit_z);
+        GWY_OBJECT_UNREF(brick->si_unit_z);
         brick->si_unit_z = si_unit_z;
     }
     if (si_unit_w) {
-        gwy_object_unref(brick->si_unit_w);
+        GWY_OBJECT_UNREF(brick->si_unit_w);
         brick->si_unit_w = si_unit_w;
     }
     if (num_items > 0) {
@@ -539,7 +539,7 @@ gwy_brick_deserialize(const guchar *buffer,
     }
 
     for (i = 0; i < num_items; i++)
-        gwy_object_unref(calibrations[i]);
+        GWY_OBJECT_UNREF(calibrations[i]);
 
     return (GObject*)brick;
 }
@@ -552,7 +552,8 @@ gwy_brick_duplicate_real(GObject *object)
     g_return_val_if_fail(GWY_IS_BRICK(object), NULL);
     brick = GWY_BRICK(object);
     duplicate = gwy_brick_new_alike(brick, FALSE);
-    memcpy(duplicate->data, brick->data, (brick->xres * brick->yres * brick->zres)*sizeof(gdouble));
+    gwy_assign(duplicate->data, brick->data,
+               brick->xres * brick->yres * brick->zres);
 
     return (GObject*)duplicate;
 }
@@ -575,7 +576,8 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
         clone->xres = brick->xres;
         clone->yres = brick->yres;
         clone->zres = brick->zres;
-        clone->data = g_renew(gdouble, clone->data, clone->xres * clone->yres * clone->zres);
+        clone->data = g_renew(gdouble, clone->data,
+                              clone->xres * clone->yres * clone->zres);
     }
     clone->xreal = brick->xreal;
     clone->yreal = brick->yreal;
@@ -584,7 +586,8 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     clone->yoff = brick->yoff;
     clone->zoff = brick->zoff;
 
-    memcpy(clone->data, brick->data, (brick->xres * brick->yres * brick->zres)*sizeof(gdouble));
+    gwy_assign(clone->data, brick->data,
+               brick->xres * brick->yres * brick->zres);
 
     /* SI Units can be NULL */
     if (brick->si_unit_x && clone->si_unit_x)
@@ -593,7 +596,7 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     else if (brick->si_unit_x && !clone->si_unit_x)
         clone->si_unit_x = gwy_si_unit_duplicate(brick->si_unit_x);
     else if (!brick->si_unit_x && clone->si_unit_x)
-        gwy_object_unref(clone->si_unit_x);
+        GWY_OBJECT_UNREF(clone->si_unit_x);
 
     if (brick->si_unit_y && clone->si_unit_y)
         gwy_serializable_clone(G_OBJECT(brick->si_unit_y),
@@ -601,7 +604,7 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     else if (brick->si_unit_y && !clone->si_unit_y)
         clone->si_unit_y = gwy_si_unit_duplicate(brick->si_unit_y);
     else if (!brick->si_unit_y && clone->si_unit_y)
-        gwy_object_unref(clone->si_unit_y);
+        GWY_OBJECT_UNREF(clone->si_unit_y);
 
     if (brick->si_unit_z && clone->si_unit_z)
         gwy_serializable_clone(G_OBJECT(brick->si_unit_z),
@@ -609,7 +612,7 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     else if (brick->si_unit_z && !clone->si_unit_z)
         clone->si_unit_z = gwy_si_unit_duplicate(brick->si_unit_z);
     else if (!brick->si_unit_z && clone->si_unit_z)
-        gwy_object_unref(clone->si_unit_z);
+        GWY_OBJECT_UNREF(clone->si_unit_z);
 
     if (brick->si_unit_w && clone->si_unit_w)
         gwy_serializable_clone(G_OBJECT(brick->si_unit_w),
@@ -617,7 +620,7 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
     else if (brick->si_unit_w && !clone->si_unit_w)
         clone->si_unit_w = gwy_si_unit_duplicate(brick->si_unit_w);
     else if (!brick->si_unit_w && clone->si_unit_w)
-        gwy_object_unref(clone->si_unit_w);
+        GWY_OBJECT_UNREF(clone->si_unit_w);
 
     priv = brick->priv;
     clone_priv = clone->priv;
@@ -628,7 +631,7 @@ gwy_brick_clone_real(GObject *source, GObject *copy)
         clone_priv->zcalibration
                           = gwy_data_line_duplicate(priv->zcalibration);
     else if (!priv->zcalibration && clone_priv->zcalibration)
-        gwy_object_unref(clone_priv->zcalibration);
+        GWY_OBJECT_UNREF(clone_priv->zcalibration);
 }
 
 /**
@@ -1223,7 +1226,7 @@ gwy_brick_set_si_unit_x(GwyBrick *brick,
     if (brick->si_unit_x == si_unit)
         return;
 
-    gwy_object_unref(brick->si_unit_x);
+    GWY_OBJECT_UNREF(brick->si_unit_x);
     g_object_ref(si_unit);
     brick->si_unit_x = si_unit;
 }
@@ -1250,7 +1253,7 @@ gwy_brick_set_si_unit_y(GwyBrick *brick,
     if (brick->si_unit_y == si_unit)
         return;
 
-    gwy_object_unref(brick->si_unit_y);
+    GWY_OBJECT_UNREF(brick->si_unit_y);
     g_object_ref(si_unit);
     brick->si_unit_y = si_unit;
 }
@@ -1277,7 +1280,7 @@ gwy_brick_set_si_unit_z(GwyBrick *brick,
     if (brick->si_unit_z == si_unit)
         return;
 
-    gwy_object_unref(brick->si_unit_z);
+    GWY_OBJECT_UNREF(brick->si_unit_z);
     g_object_ref(si_unit);
     brick->si_unit_z = si_unit;
 }
@@ -1304,7 +1307,7 @@ gwy_brick_set_si_unit_w(GwyBrick *brick,
     if (brick->si_unit_w == si_unit)
         return;
 
-    gwy_object_unref(brick->si_unit_w);
+    GWY_OBJECT_UNREF(brick->si_unit_w);
     g_object_ref(si_unit);
     brick->si_unit_w = si_unit;
 }
@@ -3167,7 +3170,7 @@ gwy_brick_set_zcalibration(const GwyBrick *brick, GwyDataLine *calibration)
         g_object_ref(calibration);
 
     priv->zcalibration = calibration;
-    gwy_object_unref(oldcal);
+    GWY_OBJECT_UNREF(oldcal);
 }
 
 /************************** Documentation ****************************/

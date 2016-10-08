@@ -129,9 +129,9 @@ gwy_caldata_finalize(GObject *object)
 {
     GwyCalData *caldata = (GwyCalData*)object;
 
-    gwy_object_unref(caldata->si_unit_x);
-    gwy_object_unref(caldata->si_unit_y);
-    gwy_object_unref(caldata->si_unit_z);
+    GWY_OBJECT_UNREF(caldata->si_unit_x);
+    GWY_OBJECT_UNREF(caldata->si_unit_y);
+    GWY_OBJECT_UNREF(caldata->si_unit_z);
 
     if (caldata->err_m)
     _gwy_delaunay_mesh_free(caldata->err_m);
@@ -444,9 +444,9 @@ gwy_caldata_deserialize(const guchar *buffer,
         g_free(xunc);
         g_free(yunc);
         g_free(zunc);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
     if (fsize != (guint)ndata) {
@@ -462,9 +462,9 @@ gwy_caldata_deserialize(const guchar *buffer,
         g_free(xunc);
         g_free(yunc);
         g_free(zunc);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
-        gwy_object_unref(si_unit_z);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_z);
         return NULL;
     }
 
@@ -496,15 +496,15 @@ gwy_caldata_deserialize(const guchar *buffer,
     caldata->yunc = yunc;
     caldata->zunc = zunc;
     if (si_unit_x) {
-        gwy_object_unref(caldata->si_unit_x);
+        GWY_OBJECT_UNREF(caldata->si_unit_x);
         caldata->si_unit_x = si_unit_x;
     }
     if (si_unit_y) {
-        gwy_object_unref(caldata->si_unit_y);
+        GWY_OBJECT_UNREF(caldata->si_unit_y);
         caldata->si_unit_y = si_unit_y;
     }
     if (si_unit_z) {
-        gwy_object_unref(caldata->si_unit_z);
+        GWY_OBJECT_UNREF(caldata->si_unit_z);
         caldata->si_unit_z = si_unit_z;
     }
     return (GObject*)caldata;
@@ -599,7 +599,7 @@ gwy_caldata_set_si_unit_x(GwyCalData *caldata,
     if (caldata->si_unit_x == si_unit)
         return;
 
-    gwy_object_unref(caldata->si_unit_x);
+    GWY_OBJECT_UNREF(caldata->si_unit_x);
     g_object_ref(si_unit);
     caldata->si_unit_x = si_unit;
 }
@@ -626,7 +626,7 @@ gwy_caldata_set_si_unit_y(GwyCalData *caldata,
     if (caldata->si_unit_y == si_unit)
         return;
 
-    gwy_object_unref(caldata->si_unit_y);
+    GWY_OBJECT_UNREF(caldata->si_unit_y);
     g_object_ref(si_unit);
     caldata->si_unit_y = si_unit;
 }
@@ -653,7 +653,7 @@ gwy_caldata_set_si_unit_z(GwyCalData *caldata,
     if (caldata->si_unit_z == si_unit)
         return;
 
-    gwy_object_unref(caldata->si_unit_z);
+    GWY_OBJECT_UNREF(caldata->si_unit_z);
     g_object_ref(si_unit);
     caldata->si_unit_z = si_unit;
 }

@@ -447,10 +447,6 @@ gwy_data_line_check_compatibility(GwyDataLine *data_line1,
 }
 
 /* code ported from libgwy3 */
-
-#define gwy_assign(dest, source, n) \
-    memcpy((dest), (source), (n)*sizeof((dest)[0]))
-
 typedef void (*RowExtendFunc)(const gdouble *in,
                               gdouble *out,
                               guint pos,

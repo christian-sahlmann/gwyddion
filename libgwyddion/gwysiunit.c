@@ -1317,7 +1317,7 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         }
     }
     gwy_si_unit_canonicalize(result);
-    gwy_object_unref(op2);
+    GWY_OBJECT_UNREF(op2);
     g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
 
     return result;

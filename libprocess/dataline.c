@@ -101,8 +101,8 @@ gwy_data_line_finalize(GObject *object)
 {
     GwyDataLine *data_line = (GwyDataLine*)object;
 
-    gwy_object_unref(data_line->si_unit_x);
-    gwy_object_unref(data_line->si_unit_y);
+    GWY_OBJECT_UNREF(data_line->si_unit_x);
+    GWY_OBJECT_UNREF(data_line->si_unit_y);
     g_free(data_line->data);
 
     G_OBJECT_CLASS(gwy_data_line_parent_class)->finalize(object);
@@ -303,16 +303,16 @@ gwy_data_line_deserialize(const guchar *buffer,
                                             GWY_DATA_LINE_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
         return NULL;
     }
     if (fsize != (guint)res) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_LINE_TYPE_NAME, fsize, res);
         g_free(data);
-        gwy_object_unref(si_unit_x);
-        gwy_object_unref(si_unit_y);
+        GWY_OBJECT_UNREF(si_unit_x);
+        GWY_OBJECT_UNREF(si_unit_y);
         return NULL;
     }
 
@@ -323,11 +323,11 @@ gwy_data_line_deserialize(const guchar *buffer,
     data_line->off = off;
     data_line->data = data;
     if (si_unit_y) {
-        gwy_object_unref(data_line->si_unit_y);
+        GWY_OBJECT_UNREF(data_line->si_unit_y);
         data_line->si_unit_y = si_unit_y;
     }
     if (si_unit_x) {
-        gwy_object_unref(data_line->si_unit_x);
+        GWY_OBJECT_UNREF(data_line->si_unit_x);
         data_line->si_unit_x = si_unit_x;
     }
 
@@ -342,7 +342,7 @@ gwy_data_line_duplicate_real(GObject *object)
     g_return_val_if_fail(GWY_IS_DATA_LINE(object), NULL);
     data_line = GWY_DATA_LINE(object);
     duplicate = gwy_data_line_new_alike(data_line, FALSE);
-    memcpy(duplicate->data, data_line->data, data_line->res*sizeof(gdouble));
+    gwy_assign(duplicate->data, data_line->data, data_line->res);
 
     return (GObject*)duplicate;
 }
@@ -364,7 +364,7 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
     }
     clone->real = data_line->real;
     clone->off = data_line->off;
-    memcpy(clone->data, data_line->data, data_line->res*sizeof(gdouble));
+    gwy_assign(clone->data, data_line->data, data_line->res);
 
     /* SI Units can be NULL */
     if (data_line->si_unit_x && clone->si_unit_x)
@@ -373,7 +373,7 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
     else if (data_line->si_unit_x && !clone->si_unit_x)
         clone->si_unit_x = gwy_si_unit_duplicate(data_line->si_unit_x);
     else if (!data_line->si_unit_x && clone->si_unit_x)
-        gwy_object_unref(clone->si_unit_x);
+        GWY_OBJECT_UNREF(clone->si_unit_x);
 
     if (data_line->si_unit_y && clone->si_unit_y)
         gwy_serializable_clone(G_OBJECT(data_line->si_unit_y),
@@ -381,7 +381,7 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
     else if (data_line->si_unit_y && !clone->si_unit_y)
         clone->si_unit_y = gwy_si_unit_duplicate(data_line->si_unit_y);
     else if (!data_line->si_unit_y && clone->si_unit_y)
-        gwy_object_unref(clone->si_unit_y);
+        GWY_OBJECT_UNREF(clone->si_unit_y);
 }
 
 /**
@@ -486,7 +486,7 @@ gwy_data_line_part_extract(GwyDataLine *data_line,
         return gwy_data_line_duplicate(data_line);
 
     result = gwy_data_line_new(len, data_line->real*len/data_line->res, FALSE);
-    memcpy(result->data, data_line->data + from, len*sizeof(gdouble));
+    gwy_assign(result->data, data_line->data + from, len);
 
     if (data_line->si_unit_x)
         result->si_unit_x = gwy_si_unit_duplicate(data_line->si_unit_x);
@@ -512,7 +512,7 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
     g_return_if_fail(a->res == b->res);
 
-    memcpy(b->data, a->data, a->res*sizeof(gdouble));
+    gwy_assign(b->data, a->data, a->res);
 }
 
 /**
@@ -759,7 +759,7 @@ gwy_data_line_set_si_unit_x(GwyDataLine *data_line,
     if (data_line->si_unit_x == si_unit)
         return;
 
-    gwy_object_unref(data_line->si_unit_x);
+    GWY_OBJECT_UNREF(data_line->si_unit_x);
     g_object_ref(si_unit);
     data_line->si_unit_x = si_unit;
 }
@@ -784,7 +784,7 @@ gwy_data_line_set_si_unit_y(GwyDataLine *data_line,
     if (data_line->si_unit_y == si_unit)
         return;
 
-    gwy_object_unref(data_line->si_unit_y);
+    GWY_OBJECT_UNREF(data_line->si_unit_y);
     g_object_ref(si_unit);
     data_line->si_unit_y = si_unit;
 }

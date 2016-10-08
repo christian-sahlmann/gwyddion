@@ -790,7 +790,7 @@ gwy_resource_classes_finalize(void)
         GwyResourceClass *klass;
 
         klass = g_type_class_ref((GType)GPOINTER_TO_SIZE(all_resources->data));
-        gwy_object_unref(klass->inventory);
+        GWY_OBJECT_UNREF(klass->inventory);
     }
 
     g_slist_free(all_resources);

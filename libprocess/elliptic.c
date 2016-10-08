@@ -143,7 +143,7 @@ gwy_data_field_elliptic_area_extract(GwyDataField *data_field,
         if (G_UNLIKELY(to >= width))
             to = width-1;
         if (G_LIKELY(to >= from)) {
-            memcpy(data + count, d + from, (to - from + 1)*sizeof(gdouble));
+            gwy_assign(data + count, d + from, to - from + 1);
             count += to - from + 1;
         }
     }
@@ -206,7 +206,7 @@ gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
         if (G_UNLIKELY(to >= width))
             to = width-1;
         if (G_LIKELY(to >= from)) {
-            memcpy(d + from, data + count, (to - from + 1)*sizeof(gdouble));
+            gwy_assign(d + from, data + count, to - from + 1);
             count += to - from + 1;
         }
     }
@@ -364,8 +364,8 @@ gwy_data_field_circular_area_extract(GwyDataField *data_field,
         if (jto + col >= xres)
             jto = xres-1 - col;
         if (jto >= jfrom) {
-            memcpy(data + count, d + (row + i)*xres + col + jfrom,
-                   (jto - jfrom + 1)*sizeof(gdouble));
+            gwy_assign(data + count, d + (row + i)*xres + col + jfrom,
+                       jto - jfrom + 1);
             count += jto - jfrom + 1;
         }
     }
@@ -440,8 +440,8 @@ gwy_data_field_circular_area_extract_with_pos(GwyDataField *data_field,
         if (jto + col >= xres)
             jto = xres-1 - col;
         if (jto >= jfrom) {
-            memcpy(data + count, d + (row + i)*xres + col + jfrom,
-                   (jto - jfrom + 1)*sizeof(gdouble));
+            gwy_assign(data + count, d + (row + i)*xres + col + jfrom,
+                       jto - jfrom + 1);
             for (j = jfrom; j <= jto; j++) {
                 xpos[count] = j;
                 ypos[count] = i;
@@ -505,8 +505,8 @@ gwy_data_field_circular_area_unextract(GwyDataField *data_field,
         if (jto + col >= xres)
             jto = xres-1 - col;
         if (jto >= jfrom) {
-            memcpy(d + (row + i)*xres + col + jfrom, data + count,
-                   (jto - jfrom + 1)*sizeof(gdouble));
+            gwy_assign(d + (row + i)*xres + col + jfrom, data + count,
+                       jto - jfrom + 1);
             count += jto - jfrom + 1;
         }
     }

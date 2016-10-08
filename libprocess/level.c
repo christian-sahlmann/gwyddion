@@ -564,9 +564,9 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
             gwy_data_field_get_row(data_field, hlp, i);
             if (i >= row && i < row + height) {
                 if (exclude) {
-                    memcpy(ydata->data, hlp->data, col*sizeof(gdouble));
-                    memcpy(ydata->data + col, hlp->data + col + width,
-                           (xres - col - width)*sizeof(gdouble));
+                    gwy_assign(ydata->data, hlp->data, col);
+                    gwy_assign(ydata->data + col, hlp->data + col + width,
+                               xres - col - width);
                     gwy_math_fit_polynom(xres - width,
                                          xdata->data, ydata->data, degree,
                                          coefs);
@@ -593,9 +593,9 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
             gwy_data_field_get_column(data_field, hlp, i);
             if (i >= col && i < col + width) {
                 if (exclude) {
-                    memcpy(ydata->data, hlp->data, row*sizeof(gdouble));
-                    memcpy(ydata->data + row, hlp->data + row + height,
-                           (yres - row - height)*sizeof(gdouble));
+                    gwy_assign(ydata->data, hlp->data, row);
+                    gwy_assign(ydata->data + row, hlp->data + row + height,
+                               yres - row - height);
                     gwy_math_fit_polynom(yres - height,
                                          xdata->data, ydata->data, degree,
                                          coefs);
@@ -611,8 +611,8 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
         }
     }
     g_object_unref(hlp);
-    gwy_object_unref(xdata);
-    gwy_object_unref(ydata);
+    GWY_OBJECT_UNREF(xdata);
+    GWY_OBJECT_UNREF(ydata);
 }
 
 /**

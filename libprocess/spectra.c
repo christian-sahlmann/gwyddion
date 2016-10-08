@@ -180,11 +180,11 @@ gwy_spectra_finalize(GObject *object)
 
     gwy_debug("");
 
-    gwy_object_unref(spectra->si_unit_xy);
+    GWY_OBJECT_UNREF(spectra->si_unit_xy);
     for (i = 0; i < spectra->spectra->len; i++) {
         GwySpectrum *spec = &g_array_index(spectra->spectra, GwySpectrum, i);
 
-        gwy_object_unref(spec->ydata);
+        GWY_OBJECT_UNREF(spec->ydata);
     }
     g_array_free(spectra->spectra, TRUE);
     spectra->spectra = NULL;
@@ -468,14 +468,14 @@ gwy_spectra_deserialize(const guchar *buffer,
                                                 GWY_SPECTRA_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec)) {
             for (i = 0; i < ncurves; i++)
-                gwy_object_unref(curves[i]);
+                GWY_OBJECT_UNREF(curves[i]);
             g_free(curves);
             g_free(coords);
             g_free(selected);
             g_free(title);
             g_free(spec_xlabel);
             g_free(spec_ylabel);
-            gwy_object_unref(si_unit_xy);
+            GWY_OBJECT_UNREF(si_unit_xy);
 
             return NULL;
         }
@@ -487,14 +487,14 @@ gwy_spectra_deserialize(const guchar *buffer,
         g_critical("Serialized coordinate, data and selection array size "
                    "mismatch");
         for (i = 0; i < ncurves; i++)
-            gwy_object_unref(curves[i]);
+            GWY_OBJECT_UNREF(curves[i]);
         g_free(curves);
         g_free(coords);
         g_free(selected);
         g_free(title);
         g_free(spec_xlabel);
         g_free(spec_ylabel);
-        gwy_object_unref(si_unit_xy);
+        GWY_OBJECT_UNREF(si_unit_xy);
 
         return NULL;
     }
@@ -528,7 +528,7 @@ gwy_spectra_deserialize(const guchar *buffer,
     g_free(selected);
 
     if (si_unit_xy) {
-        gwy_object_unref(spectra->si_unit_xy);
+        GWY_OBJECT_UNREF(spectra->si_unit_xy);
         spectra->si_unit_xy = si_unit_xy;
     }
 
@@ -602,7 +602,7 @@ gwy_spectra_clone_real(GObject *source, GObject *copy)
     else if (spectra->si_unit_xy && !clone->si_unit_xy)
         clone->si_unit_xy = gwy_si_unit_duplicate(spectra->si_unit_xy);
     else if (!spectra->si_unit_xy && clone->si_unit_xy)
-        gwy_object_unref(clone->si_unit_xy);
+        GWY_OBJECT_UNREF(clone->si_unit_xy);
 }
 
 /**
@@ -663,7 +663,7 @@ gwy_spectra_set_si_unit_xy(GwySpectra *spectra,
     if (spectra->si_unit_xy == si_unit)
         return;
 
-    gwy_object_unref(spectra->si_unit_xy);
+    GWY_OBJECT_UNREF(spectra->si_unit_xy);
     g_object_ref(si_unit);
     spectra->si_unit_xy = si_unit;
 }
