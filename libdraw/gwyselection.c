@@ -560,8 +560,8 @@ gwy_selection_get_object_default(GwySelection *selection,
         return TRUE;
 
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-    memcpy(data, selection->objects->data + i*object_size*sizeof(gdouble),
-           object_size*sizeof(gdouble));
+    gwy_assign(data, selection->objects->data + i*object_size*sizeof(gdouble),
+               object_size);
     return TRUE;
 }
 
@@ -585,8 +585,8 @@ gwy_selection_set_object_default(GwySelection *selection,
     }
 
     selection->n = MAX(selection->n, i+1);
-    memcpy(selection->objects->data + i*object_size*sizeof(gdouble), data,
-           object_size*sizeof(gdouble));
+    gwy_assign((gdouble*)selection->objects->data + i*object_size, data,
+               object_size);
 
     g_signal_emit(selection, selection_signals[CHANGED], 0, i);
     return i;
@@ -616,8 +616,7 @@ gwy_selection_get_data_default(GwySelection *selection,
 
     if (data && selection->n) {
         object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-        memcpy(data, selection->objects->data,
-               selection->n*object_size*sizeof(gdouble));
+        gwy_assign(data, selection->objects->data, selection->n*object_size);
     }
 
     return selection->n;
@@ -639,8 +638,7 @@ gwy_selection_set_data_default(GwySelection *selection,
 
     if (nselected) {
         g_return_if_fail(data);
-        memcpy(selection->objects->data, data,
-               nselected*object_size*sizeof(gdouble));
+        memcpy((gdouble*)selection->objects->data, data, nselected*object_size);
     }
     selection->n = nselected;
     g_signal_emit(selection, selection_signals[CHANGED], 0, -1);

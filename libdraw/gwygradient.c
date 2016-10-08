@@ -132,8 +132,7 @@ gwy_gradient_release(GwyResource *resource)
     GwyGradient *gradient;
 
     gradient = GWY_GRADIENT(resource);
-    g_free(gradient->pixels);
-    gradient->pixels = NULL;
+    GWY_FREE(gradient->pixels);
 }
 
 /**
@@ -754,7 +753,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
     g_return_if_fail(points);
 
     g_array_set_size(gradient->points, npoints);
-    memcpy(gradient->points->data, points, npoints*sizeof(GwyGradientPoint));
+    gwy_assign(gradient->points->data, points, npoints);
     gwy_gradient_sanitize(gradient);
     gwy_gradient_changed(gradient);
 }
