@@ -236,9 +236,9 @@ gwy_tool_line_stats_finalize(GObject *object)
     gwy_container_set_enum_by_name(settings, direction_key,
                                    tool->args.direction);
 
-    gwy_object_unref(tool->line);
-    gwy_object_unref(tool->weights);
-    gwy_object_unref(tool->gmodel);
+    GWY_OBJECT_UNREF(tool->line);
+    GWY_OBJECT_UNREF(tool->weights);
+    GWY_OBJECT_UNREF(tool->gmodel);
 
     G_OBJECT_CLASS(gwy_tool_line_stats_parent_class)->finalize(object);
 }

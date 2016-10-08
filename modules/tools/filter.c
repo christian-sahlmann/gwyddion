@@ -626,10 +626,10 @@ gwy_tool_filter_apply(GwyToolFilter *tool)
     if (origfield) {
         apply_masking(dfield, origfield,
                       plain_tool->mask_field, tool->args.masking);
-        gwy_object_unref(origfield);
+        GWY_OBJECT_UNREF(origfield);
     }
 
-    gwy_object_unref(kernel);
+    GWY_OBJECT_UNREF(kernel);
     gwy_data_field_data_changed(dfield);
     gwy_plain_tool_log_add(plain_tool);
 }

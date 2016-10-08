@@ -219,11 +219,11 @@ gwy_tool_spectro_finalize(GObject *object)
                                       tool->args.average);
 
     gtk_tree_view_set_model(tool->treeview, NULL);
-    gwy_object_unref(tool->colorpixbuf);
-    gwy_object_unref(tool->model);
-    gwy_object_unref(tool->spectra);
+    GWY_OBJECT_UNREF(tool->colorpixbuf);
+    GWY_OBJECT_UNREF(tool->model);
+    GWY_OBJECT_UNREF(tool->spectra);
     gwy_debug("id: %u", (guint)tool->layer_object_chosen_id);
-    gwy_signal_handler_disconnect(plain_tool->layer,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->layer,
                                   tool->layer_object_chosen_id);
 
     G_OBJECT_CLASS(gwy_tool_spectro_parent_class)->finalize(object);
@@ -432,7 +432,7 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
     if (!ignore) {
         gwy_debug("disconect obj-chosen handler: %u",
                   (guint)tool->layer_object_chosen_id);
-        gwy_signal_handler_disconnect(plain_tool->layer,
+        GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->layer,
                                       tool->layer_object_chosen_id);
     }
 
@@ -513,7 +513,7 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
         gwy_null_store_set_n_rows(store, 0);
         tool->ignore_tree_selection = FALSE;
         gwy_tool_spectro_tree_sel_changed(selection, tool);
-        gwy_object_unref(tool->spectra);
+        GWY_OBJECT_UNREF(tool->spectra);
         if (plain_tool->selection)
             gwy_selection_clear(plain_tool->selection);
         return;
@@ -521,7 +521,7 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
 
     g_return_if_fail(GWY_IS_SPECTRA(spectra));
     g_object_ref(spectra);
-    gwy_object_unref(tool->spectra);
+    GWY_OBJECT_UNREF(tool->spectra);
     tool->spectra = spectra;
 
     g_object_set(tool->gmodel,
@@ -780,7 +780,7 @@ gwy_tool_spectro_show_averaged(GwyToolSpectro *tool,
     g_object_unref(gcmodel);
 
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
-    gwy_object_unref(tool->line);
+    GWY_OBJECT_UNREF(tool->line);
 }
 
 static void

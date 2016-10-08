@@ -150,7 +150,7 @@ gwy_tool_grain_measure_finalize(GObject *object)
                                     tool->args.expanded);
 
     g_free(tool->grains);
-    gwy_object_unref(tool->siunit);
+    GWY_OBJECT_UNREF(tool->siunit);
     if (tool->values) {
         for (i = 0; i < tool->values->len; i++)
             g_free(tool->values->pdata[i]);
@@ -411,8 +411,7 @@ gwy_tool_grain_measure_selection_changed(GwyPlainTool *plain_tool,
 static void
 gwy_tool_grain_measure_invalidate(GwyToolGrainMeasure *tool)
 {
-    g_free(tool->grains);
-    tool->grains = NULL;
+    GWY_FREE(tool->grains);
     tool->ngrains = 0;
     tool->gno = -1;
 }

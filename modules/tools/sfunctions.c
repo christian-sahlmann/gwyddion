@@ -282,11 +282,11 @@ gwy_tool_sfunctions_finalize(GObject *object)
     gwy_container_set_enum_by_name(settings, direction_key,
                                    tool->args.direction);
 
-    gwy_object_unref(tool->line);
-    gwy_object_unref(tool->gmodel);
-    gwy_object_unref(tool->xunc);
-    gwy_object_unref(tool->yunc);
-    gwy_object_unref(tool->zunc);
+    GWY_OBJECT_UNREF(tool->line);
+    GWY_OBJECT_UNREF(tool->gmodel);
+    GWY_OBJECT_UNREF(tool->xunc);
+    GWY_OBJECT_UNREF(tool->yunc);
+    GWY_OBJECT_UNREF(tool->zunc);
 
     G_OBJECT_CLASS(gwy_tool_sfunctions_parent_class)->finalize(object);
 }
@@ -798,7 +798,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                                lineres);
             tool->has_uline = TRUE;
         }
-        gwy_object_unref(mask_field);
+        GWY_OBJECT_UNREF(mask_field);
         break;
 
         case GWY_SF_CDH:
@@ -1174,8 +1174,8 @@ gwy_data_line_range_transform(GwyDataLine *dline, GwyDataLine *target,
     gint i, j;
 
     g_return_if_fail(tres < res);
-    memcpy(mindata, dline->data, res*sizeof(gdouble));
-    memcpy(maxdata, dline->data, res*sizeof(gdouble));
+    gwy_assign(mindata, dline->data, res);
+    gwy_assign(maxdata, dline->data, res);
 
     for (i = 1; i < tres; i++) {
         gdouble r = 0.0;

@@ -161,7 +161,7 @@ gwy_tool_path_level_finalize(GObject *object)
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
-        gwy_object_unref(tool->model);
+        GWY_OBJECT_UNREF(tool->model);
     }
 
     G_OBJECT_CLASS(gwy_tool_path_level_parent_class)->finalize(object);

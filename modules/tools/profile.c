@@ -315,13 +315,13 @@ gwy_tool_profile_finalize(GObject *object)
     gwy_container_set_boolean_by_name(settings, radial_profiles_key,
                                       tool->args.radial_profiles);
 
-    gwy_object_unref(tool->line);
+    GWY_OBJECT_UNREF(tool->line);
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
-        gwy_object_unref(tool->model);
+        GWY_OBJECT_UNREF(tool->model);
     }
-    gwy_object_unref(tool->colorpixbuf);
-    gwy_object_unref(tool->gmodel);
+    GWY_OBJECT_UNREF(tool->colorpixbuf);
+    GWY_OBJECT_UNREF(tool->gmodel);
     if (tool->pixel_format)
         gwy_si_unit_value_format_free(tool->pixel_format);
 

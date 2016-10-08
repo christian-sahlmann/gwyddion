@@ -819,7 +819,7 @@ gwy_tool_selection_manager_create_report(GwyToolSelectionManager *tool)
     }
 
     g_free(coords);
-    gwy_object_unref(movedselection);
+    GWY_OBJECT_UNREF(movedselection);
 
     return g_string_free(text, FALSE);
 }

@@ -676,22 +676,22 @@ gwy_tool_roughness_finalize(GObject *object)
                                     tool->args.expanded);
 
     g_free(tool->params);
-    gwy_object_unref(tool->store);
-    gwy_object_unref(tool->dataline);
-    gwy_object_unref(tool->slope_unit);
+    GWY_OBJECT_UNREF(tool->store);
+    GWY_OBJECT_UNREF(tool->dataline);
+    GWY_OBJECT_UNREF(tool->slope_unit);
     gwy_si_unit_value_format_free(tool->none_format);
 
-    gwy_object_unref(tool->profiles.texture);
-    gwy_object_unref(tool->profiles.waviness);
-    gwy_object_unref(tool->profiles.roughness);
-    gwy_object_unref(tool->profiles.adf);
-    gwy_object_unref(tool->profiles.brc);
-    gwy_object_unref(tool->profiles.pc);
-    gwy_object_unref(tool->profiles.extline);
-    gwy_object_unref(tool->profiles.iin);
-    gwy_object_unref(tool->profiles.tmp);
-    gwy_object_unref(tool->profiles.rout);
-    gwy_object_unref(tool->profiles.iout);
+    GWY_OBJECT_UNREF(tool->profiles.texture);
+    GWY_OBJECT_UNREF(tool->profiles.waviness);
+    GWY_OBJECT_UNREF(tool->profiles.roughness);
+    GWY_OBJECT_UNREF(tool->profiles.adf);
+    GWY_OBJECT_UNREF(tool->profiles.brc);
+    GWY_OBJECT_UNREF(tool->profiles.pc);
+    GWY_OBJECT_UNREF(tool->profiles.extline);
+    GWY_OBJECT_UNREF(tool->profiles.iin);
+    GWY_OBJECT_UNREF(tool->profiles.tmp);
+    GWY_OBJECT_UNREF(tool->profiles.rout);
+    GWY_OBJECT_UNREF(tool->profiles.iout);
 
     /* TODO: Free various graph models, here or elsewhere */
 
@@ -1010,8 +1010,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
                *vf->units ? " " : "", vf->units);
     g_object_set(renderer, "markup", buf, NULL);
 
-    if (tvf)
-        gwy_si_unit_value_format_free(tvf);
+    GWY_SI_VALUE_FORMAT_FREE(tvf);
 }
 
 static void
@@ -1536,7 +1535,7 @@ gwy_data_line_extend(GwyDataLine *dline,
     data = gwy_data_line_get_data(dline);
     edata = gwy_data_line_get_data(extline);
 
-    memcpy(edata, data, n*sizeof(gdouble));
+    gwy_assign(edata, data, n);
     /* 0 and 1 in extension data coordinates, not primary data */
     der0 = (2*data[n-1] - data[n-2] - data[n-3])/3;
     der1 = (2*data[0] - data[1] - data[2])/3;
@@ -2075,8 +2074,7 @@ gwy_tool_roughness_create_report(gpointer user_data,
 
     gwy_si_unit_value_format_free(vfxy);
     gwy_si_unit_value_format_free(vfz);
-    if (tvf)
-        gwy_si_unit_value_format_free(tvf);
+    GWY_SI_VALUE_FORMAT_FREE(tvf);
 
     retval = report->str;
     g_string_free(report, FALSE);

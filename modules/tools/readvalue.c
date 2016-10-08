@@ -193,11 +193,8 @@ gwy_tool_read_value_finalize(GObject *object)
     gwy_container_set_boolean_by_name(settings, show_selection_key,
                                       tool->args.show_selection);
 
-    if (tool->pixel_format)
-        gwy_si_unit_value_format_free(tool->pixel_format);
-    if (tool->angle_format)
-        gwy_si_unit_value_format_free(tool->angle_format);
-
+    GWY_SI_VALUE_FORMAT_FREE(tool->pixel_format);
+    GWY_SI_VALUE_FORMAT_FREE(tool->angle_format);
     G_OBJECT_CLASS(gwy_tool_read_value_parent_class)->finalize(object);
 }
 

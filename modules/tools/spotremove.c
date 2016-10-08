@@ -216,10 +216,10 @@ gwy_tool_spot_remover_finalize(GObject *object)
     tool = GWY_TOOL_SPOT_REMOVER(object);
     gwy_tool_spot_remover_save_args(tool);
 
-    gwy_signal_handler_disconnect(GWY_PLAIN_TOOL(object)->container,
+    GWY_SIGNAL_HANDLER_DISCONNECT(GWY_PLAIN_TOOL(object)->container,
                                   tool->palette_id);
-    gwy_object_unref(tool->data);
-    gwy_object_unref(tool->detail);
+    GWY_OBJECT_UNREF(tool->data);
+    GWY_OBJECT_UNREF(tool->detail);
 
     G_OBJECT_CLASS(gwy_tool_spot_remover_parent_class)->finalize(object);
 }
@@ -376,7 +376,7 @@ gwy_tool_spot_remover_data_switched(GwyTool *gwytool,
     ignore = (data_view == plain_tool->data_view);
 
     if (!ignore)
-        gwy_signal_handler_disconnect(plain_tool->container, tool->palette_id);
+        GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->container, tool->palette_id);
 
     GWY_TOOL_CLASS(gwy_tool_spot_remover_parent_class)->data_switched(gwytool,
                                                                      data_view);

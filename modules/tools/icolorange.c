@@ -172,7 +172,7 @@ gwy_tool_color_range_finalize(GObject *object)
     GwyToolColorRange *tool;
 
     tool = GWY_TOOL_COLOR_RANGE(object);
-    gwy_object_unref(tool->heightdist);
+    GWY_OBJECT_UNREF(tool->heightdist);
 
     G_OBJECT_CLASS(gwy_tool_color_range_parent_class)->finalize(object);
 }

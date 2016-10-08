@@ -161,7 +161,7 @@ gwy_tool_level3_finalize(GObject *object)
 
     if (tool->model) {
         gtk_tree_view_set_model(tool->treeview, NULL);
-        gwy_object_unref(tool->model);
+        GWY_OBJECT_UNREF(tool->model);
     }
     gwy_tool_level3_save_args(tool);
 
