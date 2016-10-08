@@ -1396,10 +1396,11 @@ gwy_graph_model_remove_curve(GwyGraphModel *gmodel,
  * @gmodel: A graph model.
  * @description: Curve description (label).
  *
+ * Finds a graph curve model in a graph model by its description.
+ *
  * Returns: The first curve that has description (label) given by @description
  *          (no reference is added).
  **/
-/* XXX: Malformed documentation. */
 GwyGraphCurveModel*
 gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
                                          const gchar *description)
@@ -1424,7 +1425,7 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
  * @gmodel: A graph model.
  * @cindex: Curve index in graph model.
  *
- * Gets a graph model curve by its index.
+ * Gets a graph curve model in a graph model by its index.
  *
  * Returns: The curve with index @cindex (no reference is added).
  **/
