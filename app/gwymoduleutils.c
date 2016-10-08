@@ -641,7 +641,7 @@ gwy_preview_surface_to_datafield(GwySurface *surface,
 
     if (want_densitymap) {
         gwy_data_field_copy(densitymap, dfield, FALSE);
-        gwy_object_unref(densitymap);
+        GWY_OBJECT_UNREF(densitymap);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), NULL);
     }
     else {

@@ -839,7 +839,7 @@ gwy_app_recent_file_list_free(void)
             gwy_app_recent_file_free(rf);
         } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
-    gwy_object_unref(gcontrols.store);
+    GWY_OBJECT_UNREF(gcontrols.store);
 
     if (gcontrols.glob) {
         g_string_free(gcontrols.glob, TRUE);
@@ -1118,7 +1118,7 @@ gwy_app_recent_file_new(gchar *filename_utf8,
 static void
 gwy_app_recent_file_free(GwyRecentFile *rf)
 {
-    gwy_object_unref(rf->pixbuf);
+    GWY_OBJECT_UNREF(rf->pixbuf);
     g_free(rf->file_utf8_lc);
     g_free(rf->file_utf8);
     g_free(rf->file_sys);
@@ -1139,7 +1139,7 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
 
     gwy_debug("<%s>", rf->thumb_sys);
     rf->thumb_state = FILE_STATE_FAILED;
-    gwy_object_unref(rf->pixbuf);
+    GWY_OBJECT_UNREF(rf->pixbuf);
 
     if (!rf->thumb_sys) {
         rf->pixbuf = gwy_app_recent_file_list_get_failed_pixbuf();
@@ -1511,8 +1511,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     }
     g_free(fnm);
 
-    gwy_object_unref(rf->pixbuf);
-    gwy_object_unref(pixbuf);
+    GWY_OBJECT_UNREF(rf->pixbuf);
+    GWY_OBJECT_UNREF(pixbuf);
     g_ptr_array_free(option_values, TRUE);
     g_ptr_array_free(option_keys, TRUE);
 }

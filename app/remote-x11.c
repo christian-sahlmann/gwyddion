@@ -148,8 +148,8 @@ gwy_remote_free(GwyRemote *remote)
     if (!remote)
         return;
 
-    gwy_object_unref(remote->display);
-    gwy_object_unref(remote->toolbox);
+    GWY_OBJECT_UNREF(remote->display);
+    GWY_OBJECT_UNREF(remote->toolbox);
     g_free(remote);
 }
 

@@ -130,8 +130,8 @@ gwy_app_file_chooser_finalize(GObject *object)
 {
     GwyAppFileChooser *chooser = GWY_APP_FILE_CHOOSER(object);
 
-    gwy_object_unref(chooser->filter);
-    gwy_object_unref(chooser->no_filter);
+    GWY_OBJECT_UNREF(chooser->filter);
+    GWY_OBJECT_UNREF(chooser->no_filter);
     if (chooser->pattern)
         g_pattern_spec_free(chooser->pattern);
     if (chooser->glob)

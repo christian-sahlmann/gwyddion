@@ -170,7 +170,7 @@ gwy_app_quit(void)
 
     gwy_app_data_browser_shut_down();
     gwy_app_main_window_save_position();
-    gwy_object_unref(current_tool);
+    GWY_OBJECT_UNREF(current_tool);
     /* XXX: EXIT-CLEAN-UP */
     gtk_widget_destroy(gwy_app_main_window);
     /* FIXME: sometimes fails with
@@ -2085,7 +2085,7 @@ gwy_app_switch_tool(const gchar *toolname)
         return;
     }
 
-    gwy_object_unref(current_tool);
+    GWY_OBJECT_UNREF(current_tool);
     newtool = (GwyTool*)g_object_new(type, NULL);
     current_tool = newtool;
     g_return_if_fail(GWY_IS_TOOL(newtool));

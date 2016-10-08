@@ -76,7 +76,7 @@ gwy_data_validation_failure_new(GwyDataError type,
 static void
 gwy_data_validation_failure_free(_GwyDataValidationFailure *failure)
 {
-    gwy_object_unref(failure->object);
+    GWY_OBJECT_UNREF(failure->object);
     g_free(failure->details);
     g_free(failure);
 }

@@ -81,7 +81,7 @@ gwy_app_settings_get(void)
 void
 gwy_app_settings_free(void)
 {
-    gwy_object_unref(gwy_settings);
+    GWY_OBJECT_UNREF(gwy_settings);
 }
 
 /**
@@ -204,7 +204,7 @@ gwy_app_settings_load(const gchar *filename,
                                                        + strlen(magic_header));
     g_free(buffer);
     if (!GWY_IS_CONTAINER(new_settings)) {
-        gwy_object_unref(new_settings);
+        GWY_OBJECT_UNREF(new_settings);
         g_set_error(error,
                     GWY_APP_SETTINGS_ERROR, GWY_APP_SETTINGS_ERROR_CORRUPT,
                     _("File is corrupted, deserialization failed."));

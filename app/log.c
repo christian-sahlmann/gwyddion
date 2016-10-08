@@ -762,7 +762,7 @@ log_changed(GwyStringList *slog, LogBrowser *browser)
 static void
 gwy_log_destroy(LogBrowser *browser)
 {
-    gwy_signal_handler_disconnect(browser->log, browser->changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(browser->log, browser->changed_id);
     g_object_set_data(G_OBJECT(browser->log), "log-browser", NULL);
     g_object_weak_unref(G_OBJECT(browser->log),
                         (GWeakNotify)&gwy_log_data_finalized,

@@ -148,7 +148,7 @@ gwy_gradient_editor_destroy(GtkObject *object)
         editor->gradient_id = 0;
         editor->gradient = NULL;
     }
-    gwy_object_unref(editor->preview_pixbuf);
+    GWY_OBJECT_UNREF(editor->preview_pixbuf);
 
     GTK_OBJECT_CLASS(gwy_gradient_editor_parent_class)->destroy(object);
 }
@@ -339,7 +339,7 @@ gwy_gradient_editor_preview_expose(GwyGradientEditor *editor)
     if (!editor->preview_pixbuf
         || width != gdk_pixbuf_get_width(editor->preview_pixbuf)
         || height != gdk_pixbuf_get_height(editor->preview_pixbuf)) {
-        gwy_object_unref(editor->preview_pixbuf);
+        GWY_OBJECT_UNREF(editor->preview_pixbuf);
         editor->preview_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                                 BITS_PER_SAMPLE, width, height);
     }

@@ -1936,7 +1936,7 @@ gwy_app_data_browser_copy_volume(GwyContainer *source,
     brick = gwy_brick_duplicate(brick);
     newid = gwy_app_data_browser_add_brick(brick, preview, dest, TRUE);
     g_object_unref(brick);
-    gwy_object_unref(preview);
+    GWY_OBJECT_UNREF(preview);
 
     gwy_app_sync_brick_items(source, dest, id, newid, FALSE,
                              GWY_BRICK_ITEM_PREVIEW,

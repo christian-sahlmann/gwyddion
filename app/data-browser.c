@@ -2456,7 +2456,7 @@ gwy_app_data_browser_render_visible(G_GNUC_UNUSED GtkTreeViewColumn *column,
 
     gtk_tree_model_get(model, iter, MODEL_WIDGET, &widget, -1);
     g_object_set(renderer, "active", widget != NULL, NULL);
-    gwy_object_unref(widget);
+    GWY_OBJECT_UNREF(widget);
 }
 
 static void
@@ -2497,8 +2497,8 @@ update_window_icon(GtkTreeModel *model, GtkTreeIter *iter)
             gtk_window_set_icon(GTK_WINDOW(window), pixbuf);
     }
 
-    gwy_object_unref(pixbuf);
-    gwy_object_unref(widget);
+    GWY_OBJECT_UNREF(pixbuf);
+    GWY_OBJECT_UNREF(widget);
 }
 
 /**************************************************************************
@@ -2974,7 +2974,7 @@ gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
                        -1);
     if (visible == (widget != NULL)) {
         g_object_unref(object);
-        gwy_object_unref(widget);
+        GWY_OBJECT_UNREF(widget);
         return FALSE;
     }
 
@@ -3624,7 +3624,7 @@ gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
                        -1);
     if (visible == (widget != NULL)) {
         g_object_unref(object);
-        gwy_object_unref(widget);
+        GWY_OBJECT_UNREF(widget);
         return FALSE;
     }
 
@@ -4361,7 +4361,7 @@ gwy_app_data_proxy_brick_set_visible(GwyAppDataProxy *proxy,
                        -1);
     if (visible == (widget != NULL)) {
         g_object_unref(object);
-        gwy_object_unref(widget);
+        GWY_OBJECT_UNREF(widget);
         return FALSE;
     }
 
@@ -4635,7 +4635,7 @@ replace_surface_preview(GwyContainer *container,
 
     g_return_if_fail(GWY_IS_SURFACE(surface));
     if (!widget) {
-        gwy_object_unref(surface);
+        GWY_OBJECT_UNREF(surface);
         return;
     }
 
@@ -4873,7 +4873,7 @@ gwy_app_data_proxy_surface_set_visible(GwyAppDataProxy *proxy,
                        -1);
     if (visible == (widget != NULL)) {
         g_object_unref(object);
-        gwy_object_unref(widget);
+        GWY_OBJECT_UNREF(widget);
         return FALSE;
     }
 
@@ -6572,7 +6572,7 @@ message_log_window_destroyed(gpointer data,
     GwyAppDataBrowser *browser = proxy->parent;
 
     proxy->message_window = NULL;
-    gwy_object_unref(proxy->message_textbuf);
+    GWY_OBJECT_UNREF(proxy->message_textbuf);
     if (proxy == browser->current) {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(browser->messages_button),
                                      FALSE);
@@ -7760,7 +7760,7 @@ gwy_app_data_clear_selections(GwyContainer *data,
     gwy_container_foreach(data, buf, &gwy_app_data_selection_gather, &list);
     for (l = list; l; l = g_slist_next(l)) {
         gwy_selection_clear(GWY_SELECTION(l->data));
-        gwy_object_unref(l->data);
+        GWY_OBJECT_UNREF(l->data);
     }
     g_slist_free(list);
 }

@@ -89,7 +89,7 @@ gwy_remote_setup(GtkWidget *toolbox)
 void
 gwy_remote_finalize(G_GNUC_UNUSED GtkWidget *toolbox)
 {
-    gwy_object_unref(uniqueapp);
+    GWY_OBJECT_UNREF(uniqueapp);
 }
 
 GwyRemote*

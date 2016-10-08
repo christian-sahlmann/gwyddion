@@ -319,9 +319,9 @@ gwy_toolbox_editor(void)
 
     free_toolbox_treestore(editor.toolbox_model);
     for (i = 0; i < GWY_APP_ACTION_NTYPES; i++)
-        gwy_object_unref(editor.function_model[i]);
-    gwy_object_unref(editor.icon_model_gwy);
-    gwy_object_unref(editor.icon_model_gtk);
+        GWY_OBJECT_UNREF(editor.function_model[i]);
+    GWY_OBJECT_UNREF(editor.icon_model_gwy);
+    GWY_OBJECT_UNREF(editor.icon_model_gtk);
     gwy_toolbox_spec_free(editor.spec);
 
     if (editor.do_save) {

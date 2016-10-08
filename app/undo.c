@@ -959,7 +959,7 @@ gwy_app_undo_list_free(GList *list)
                 gwy_debug("Item (%lu,%x) destroyed", level->id, item->key);
                 g_value_unset(&item->value);
             }
-            /* FIXME: gwy_object_unref(level->items[i].object); */
+            /* FIXME: GWY_OBJECT_UNREF(level->items[i].object); */
         }
         g_free(level->items);
         g_free(level);

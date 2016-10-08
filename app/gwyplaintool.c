@@ -116,14 +116,12 @@ gwy_plain_tool_finalize(GObject *object)
 
     plain_tool = GWY_PLAIN_TOOL(object);
     gwy_plain_tool_selection_disconnect(plain_tool);
-    gwy_object_unref(plain_tool->layer);
+    GWY_OBJECT_UNREF(plain_tool->layer);
     gwy_plain_tool_reconnect_container(plain_tool, NULL);
 
     g_free(plain_tool->selection_bname);
-    if (plain_tool->coord_format)
-        gwy_si_unit_value_format_free(plain_tool->coord_format);
-    if (plain_tool->value_format)
-        gwy_si_unit_value_format_free(plain_tool->value_format);
+    GWY_SI_VALUE_FORMAT_FREE(plain_tool->coord_format);
+    GWY_SI_VALUE_FORMAT_FREE(plain_tool->value_format);
 
     G_OBJECT_CLASS(gwy_plain_tool_parent_class)->finalize(object);
 }
@@ -222,7 +220,7 @@ gwy_plain_tool_data_switched(GwyTool *tool,
         gwy_plain_tool_selection_reconnect(plain_tool);
     }
     else {
-        gwy_object_unref(plain_tool->layer);
+        GWY_OBJECT_UNREF(plain_tool->layer);
         gwy_plain_tool_selection_changed(NULL, -1, plain_tool);
     }
 }
@@ -247,21 +245,21 @@ gwy_plain_tool_reconnect_container(GwyPlainTool *plain_tool,
     guint len;
 
     gwy_debug("%s %p", GWY_TOOL_GET_CLASS(plain_tool)->title, data_view);
-    gwy_signal_handler_disconnect(plain_tool->data_field, plain_tool->data_id);
-    gwy_signal_handler_disconnect(plain_tool->mask_field, plain_tool->mask_id);
-    gwy_signal_handler_disconnect(plain_tool->show_field, plain_tool->show_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->data_field, plain_tool->data_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->mask_field, plain_tool->mask_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->show_field, plain_tool->show_id);
 
-    gwy_signal_handler_disconnect(plain_tool->container,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->container,
                                   plain_tool->data_item_id);
-    gwy_signal_handler_disconnect(plain_tool->container,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->container,
                                   plain_tool->mask_item_id);
-    gwy_signal_handler_disconnect(plain_tool->container,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->container,
                                   plain_tool->show_item_id);
 
-    gwy_object_unref(plain_tool->data_field);
-    gwy_object_unref(plain_tool->mask_field);
-    gwy_object_unref(plain_tool->show_field);
-    gwy_object_unref(plain_tool->container);
+    GWY_OBJECT_UNREF(plain_tool->data_field);
+    GWY_OBJECT_UNREF(plain_tool->mask_field);
+    GWY_OBJECT_UNREF(plain_tool->show_field);
+    GWY_OBJECT_UNREF(plain_tool->container);
 
     plain_tool->id = -1;
 
@@ -336,8 +334,8 @@ gwy_plain_tool_data_item_changed(GwyContainer *container,
                                  GQuark quark,
                                  GwyPlainTool *plain_tool)
 {
-    gwy_signal_handler_disconnect(plain_tool->data_field, plain_tool->data_id);
-    gwy_object_unref(plain_tool->data_field);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->data_field, plain_tool->data_id);
+    GWY_OBJECT_UNREF(plain_tool->data_field);
 
     if (gwy_container_gis_object(container, quark, &plain_tool->data_field)) {
         g_object_ref(plain_tool->data_field);
@@ -358,8 +356,8 @@ gwy_plain_tool_mask_item_changed(GwyContainer *container,
                                  GQuark quark,
                                  GwyPlainTool *plain_tool)
 {
-    gwy_signal_handler_disconnect(plain_tool->mask_field, plain_tool->mask_id);
-    gwy_object_unref(plain_tool->mask_field);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->mask_field, plain_tool->mask_id);
+    GWY_OBJECT_UNREF(plain_tool->mask_field);
 
     if (gwy_container_gis_object(container, quark, &plain_tool->mask_field)) {
         g_object_ref(plain_tool->mask_field);
@@ -377,8 +375,8 @@ gwy_plain_tool_show_item_changed(GwyContainer *container,
                                  GQuark quark,
                                  GwyPlainTool *plain_tool)
 {
-    gwy_signal_handler_disconnect(plain_tool->show_field, plain_tool->show_id);
-    gwy_object_unref(plain_tool->show_field);
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->show_field, plain_tool->show_id);
+    GWY_OBJECT_UNREF(plain_tool->show_field);
 
     if (gwy_container_gis_object(container, quark, &plain_tool->show_field)) {
         g_object_ref(plain_tool->show_field);
@@ -396,11 +394,11 @@ gwy_plain_tool_selection_item_changed(GwyContainer *container,
                                       GQuark quark,
                                       GwyPlainTool *plain_tool)
 {
-    gwy_signal_handler_disconnect(plain_tool->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->selection,
                                   plain_tool->selection_cid);
-    gwy_signal_handler_disconnect(plain_tool->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->selection,
                                   plain_tool->selection_fid);
-    gwy_object_unref(plain_tool->selection);
+    GWY_OBJECT_UNREF(plain_tool->selection);
 
     if (gwy_container_gis_object(container, quark, &plain_tool->selection)) {
         g_object_ref(plain_tool->selection);
@@ -517,14 +515,8 @@ gwy_plain_tool_update_units(GwyPlainTool *plain_tool)
                                                 plain_tool->value_format);
     }
     else {
-        if (plain_tool->coord_format) {
-            gwy_si_unit_value_format_free(plain_tool->coord_format);
-            plain_tool->coord_format = NULL;
-        }
-        if (plain_tool->value_format) {
-            gwy_si_unit_value_format_free(plain_tool->value_format);
-            plain_tool->value_format = NULL;
-        }
+        GWY_SI_VALUE_FORMAT_FREE(plain_tool->coord_format);
+        GWY_SI_VALUE_FORMAT_FREE(plain_tool->value_format);
     }
 }
 
@@ -646,13 +638,13 @@ gwy_plain_tool_selection_disconnect(GwyPlainTool *plain_tool)
 {
     gwy_debug("");
 
-    gwy_signal_handler_disconnect(plain_tool->container,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->container,
                                   plain_tool->selection_item_id);
-    gwy_signal_handler_disconnect(plain_tool->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->selection,
                                   plain_tool->selection_cid);
-    gwy_signal_handler_disconnect(plain_tool->selection,
+    GWY_SIGNAL_HANDLER_DISCONNECT(plain_tool->selection,
                                   plain_tool->selection_fid);
-    gwy_object_unref(plain_tool->selection);
+    GWY_OBJECT_UNREF(plain_tool->selection);
 }
 
 static void
@@ -757,7 +749,7 @@ gwy_plain_tool_ensure_layer(GwyPlainTool *plain_tool,
     g_return_if_fail(GWY_IS_PLAIN_TOOL(plain_tool));
     g_return_if_fail(g_type_is_a(layer_type, GWY_TYPE_VECTOR_LAYER));
 
-    gwy_object_unref(plain_tool->layer);
+    GWY_OBJECT_UNREF(plain_tool->layer);
     plain_tool->layer = gwy_data_view_get_top_layer(plain_tool->data_view);
     if (!plain_tool->layer
         || G_TYPE_FROM_INSTANCE(plain_tool->layer) != layer_type) {
@@ -1228,9 +1220,9 @@ gwy_rect_selection_labels_fill(GwyRectSelectionLabels *rlabels,
     }
 
     if (selreal)
-        memcpy(selreal, sel, 4*sizeof(gdouble));
+        gwy_assign(selreal, sel, 4);
     if (selpix)
-        memcpy(selpix, isel, 4*sizeof(gint));
+        gwy_assign(selpix, isel, 4);
 
     sel[2] -= sel[0];
     sel[3] -= sel[1];

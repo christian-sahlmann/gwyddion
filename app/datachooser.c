@@ -132,7 +132,7 @@ gwy_data_chooser_finalize(GObject *object)
 static void
 proxy_free(Proxy *proxy)
 {
-    gwy_object_unref(proxy->thumb);
+    GWY_OBJECT_UNREF(proxy->thumb);
     g_free(proxy->name);
     g_free(proxy);
 }
@@ -167,8 +167,8 @@ gwy_data_chooser_destroy(GtkObject *object)
     if (model) {
         gwy_data_chooser_free_proxies(chooser->store);
         gtk_combo_box_set_model(combo, NULL);
-        gwy_object_unref(chooser->filter);
-        gwy_object_unref(chooser->store);
+        GWY_OBJECT_UNREF(chooser->filter);
+        GWY_OBJECT_UNREF(chooser->store);
     }
     if (chooser->watcher_id) {
         if (chooser->remove_watch)

@@ -364,7 +364,7 @@ gwy_meta_switch_data(MetadataBrowser *browser,
         store = gtk_list_store_new(1, G_TYPE_UINT);
     }
 
-    gwy_signal_handler_disconnect(browser->meta, browser->changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(browser->meta, browser->changed_id);
     if (browser->meta) {
         g_object_set_data(G_OBJECT(browser->meta), "metadata-browser", NULL);
         g_object_weak_unref(G_OBJECT(browser->meta),
@@ -658,7 +658,7 @@ gwy_meta_delete_item(MetadataBrowser *browser)
 static void
 gwy_meta_destroy(MetadataBrowser *browser)
 {
-    gwy_signal_handler_disconnect(browser->meta, browser->changed_id);
+    GWY_SIGNAL_HANDLER_DISCONNECT(browser->meta, browser->changed_id);
     g_object_set_data(G_OBJECT(browser->meta), "metadata-browser", NULL);
     g_object_weak_unref(G_OBJECT(browser->meta),
                         (GWeakNotify)&gwy_meta_data_finalized,
