@@ -58,6 +58,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkdrawingarea.h>
 
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libdraw/gwyrgba.h>
 
