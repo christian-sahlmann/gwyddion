@@ -51,6 +51,7 @@ typedef enum {
 
 typedef struct {
     LogisticMode mode;
+    gboolean cancelled;
     gboolean use_gaussians;
     gint ngaussians;
     gboolean use_sobel;
@@ -162,50 +163,55 @@ logistic_run(GwyContainer *data, GwyRunType run)
     logistic_load_args(gwy_app_settings_get(), &args);
     logistic_dialog(data, &args);
 
-    features = create_feature_vector(dfield, &args);
+    if (!args.cancelled) {
+        features = create_feature_vector(dfield, &args);
 
-    /*
-    xres = gwy_brick_get_xres(features);
-    yres = gwy_brick_get_yres(features);
-    preview = gwy_data_field_new_alike(dfield, FALSE);
-    gwy_brick_extract_plane(features, preview,
-                            0, 0, 0, xres, yres, -1, TRUE);
-    newid = gwy_app_data_browser_add_brick(features, preview, data, TRUE);
-    g_object_unref(preview);
-    */
+        /*
+        xres = gwy_brick_get_xres(features);
+        yres = gwy_brick_get_yres(features);
+        preview = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_brick_extract_plane(features, preview,
+                                0, 0, 0, xres, yres, -1, TRUE);
+        newid = gwy_app_data_browser_add_brick(features,
+                                               preview, data, TRUE);
+        g_object_unref(preview);
+        */
 
-    thetas = gwy_data_line_get_data(args.thetas);
-    if (args.mode == LOGISTIC_MODE_TRAIN) {
-        if (mfield) {
-            train_logistic(data,
-                           features, mfield, thetas, args.lambda);
-        }
-    }
-    else {
-        gwy_app_undo_qcheckpointv(data, 1, &quark);
+        thetas = gwy_data_line_get_data(args.thetas);
 
-        if (!mfield) {
-            mfield = gwy_data_field_new_alike(dfield, TRUE);
-            predict_mask(features, thetas, mfield);
-            gwy_container_set_object(data, quark, mfield);
-            g_object_unref(mfield);
+        if (args.mode == LOGISTIC_MODE_TRAIN) {
+            if (mfield) {
+                train_logistic(data,
+                               features, mfield, thetas, args.lambda);
+            }
         }
         else {
-            predict_mask(features, thetas, mfield);
-            gwy_data_field_data_changed(mfield);
+            gwy_app_undo_qcheckpointv(data, 1, &quark);
+
+            if (!mfield) {
+                mfield = gwy_data_field_new_alike(dfield, TRUE);
+                predict_mask(features, thetas, mfield);
+                gwy_container_set_object(data, quark, mfield);
+                g_object_unref(mfield);
+            }
+            else {
+                predict_mask(features, thetas, mfield);
+                gwy_data_field_data_changed(mfield);
+            }
+            /*
+            predicted = gwy_data_field_new_alike(dfield, FALSE);
+            predict(features, thetas, predicted);
+            newid = gwy_app_data_browser_add_data_field(predicted, data,
+                                                        TRUE);
+            g_object_unref(predicted);
+            */
         }
-        /*
-        predicted = gwy_data_field_new_alike(dfield, FALSE);
-        predict(features, thetas, predicted);
-        newid = gwy_app_data_browser_add_data_field(predicted, data,
-                                                    TRUE);
-        g_object_unref(predicted);
-        */
+        logistic_save_args(gwy_app_settings_get(), &args);
+        gwy_app_channel_log_add_proc(data, id, id);
+
+        g_object_unref(features);
+        g_object_unref(args.thetas);
     }
-    logistic_save_args(gwy_app_settings_get(), &args);
-    gwy_app_channel_log_add_proc(data, id, id);
-    g_object_unref(features);
-    g_object_unref(args.thetas);
 }
 
 static void
@@ -216,6 +222,7 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
     LogisticControls controls;
 
     controls.args = args;
+    args->cancelled = FALSE;
 
     dialog = gtk_dialog_new_with_buttons(_("Logistic Regression"),
                                          NULL, 0, NULL);
@@ -333,6 +340,7 @@ logistic_dialog(G_GNUC_UNUSED GwyContainer *data, LogisticArgs *args)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             logistic_values_update(&controls, args);
+            args->cancelled = TRUE;
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return;
