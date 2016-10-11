@@ -175,7 +175,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Leica CLSM image files (LIF)."),
     "Daniil Bratashov <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "Daniil Bratashov (dn2010), David Necas (Yeti)",
     "2016",
 };
@@ -241,7 +241,7 @@ lif_load(const gchar *filename,
     };
     GMarkupParseContext *context;
     XMLParserData *xmldata;
-    gint x, xres, xstep, y, yres, ystep, z, zres, zstep, offset;
+    gint x, xres, xstep, y, yres, ystep, z, zres, zstep, offset, res;
     gdouble xreal, yreal, zreal, xoffset, yoffset, zoffset;
     gdouble zscale = 1.0, wscale = 1.0;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
@@ -338,19 +338,36 @@ lif_load(const gchar *filename,
             continue;
         }
 
-        if ((element->dimensions->len != 2)
-                                   && (element->dimensions->len != 3)) {
-            gwy_debug("Dimensions = %d channels=%d (not loading)",
-                      element->dimensions->len,
-                      element->channels->len);
-
-            continue;
-        }
-
         gwy_debug("Dimensions = %d channels=%d",
                   element->dimensions->len,
                   element->channels->len);
         gwy_debug("memid=%s", element->memid);
+
+        /* check if we can load this type of data into
+         * Gwyddion structures */
+        res = 0;
+        if ((element->dimensions->len != 2)
+                                   && (element->dimensions->len != 3)) {
+            /* check for case ndim == 4 && res == 1 */
+
+            for (i = 0; i < element->dimensions->len; i++) {
+                dimension = &g_array_index(element->dimensions,
+                                           LIFDimension, i);
+                xres = dimension->res;
+                gwy_debug("dim[%d].res=%d", i, xres);
+                if (i == 2) {
+                    res = xres;
+                }
+            }
+            if ((element->dimensions->len == 4) && (res == 1)) {
+                gwy_debug("4D volume");
+            }
+            else {
+                gwy_debug("not loading");
+                continue;
+            }
+        }
+
         memblock = (LIFMemBlock *)g_hash_table_lookup(file->memblocks,
                                                       element->memid);
         if (!memblock) {
@@ -480,7 +497,9 @@ lif_load(const gchar *filename,
                 channelno++;
             }
         }
-        else if (element->dimensions->len == 3) { /* Volume */
+        else if ((element->dimensions->len == 3)
+             || ((element->dimensions->len == 4) && (res == 1))) {
+            /* Volume */
             for (j = 0; j < element->channels->len; j++) {
                 dimension = &g_array_index(element->dimensions,
                                            LIFDimension, 0);
@@ -500,8 +519,14 @@ lif_load(const gchar *filename,
                 siunity = gwy_si_unit_new_parse(dimension->unit,
                                                 &power10y);
 
-                dimension = &g_array_index(element->dimensions,
-                                           LIFDimension, 2);
+                if (element->dimensions->len == 3) {
+                    dimension = &g_array_index(element->dimensions,
+                                               LIFDimension, 2);
+                }
+                else {
+                    dimension = &g_array_index(element->dimensions,
+                                               LIFDimension, 3);
+                }
                 zres = dimension->res;
                 zreal = dimension->length;
                 zoffset = dimension->origin;
@@ -602,7 +627,8 @@ lif_load(const gchar *filename,
                     if (lutname) {
                         strkey = g_strdup_printf("/brick/%d/preview/palette",
                                                  volumeno);
-                        gwy_container_set_string_by_name(container, strkey,
+                        gwy_container_set_string_by_name(container,
+                                                         strkey,
                                                          lutname);
                         g_free(strkey);
                     }
