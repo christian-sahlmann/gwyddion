@@ -85,6 +85,7 @@ Modules:
   extension and back-correction according to the results.
 - Nanonis: Mask of invalid values is correctly flipped with the data now.
 - JPK: Support for single point spectroscopy was added.
+- TIFF-based file modules: Tiled TIFF images are supported now.
 
 Other:
 - Development: API documentation not being installed with gtk-doc 1.25+ was
