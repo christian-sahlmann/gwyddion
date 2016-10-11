@@ -348,8 +348,8 @@ lif_load(const gchar *filename,
         res = 0;
         if ((element->dimensions->len != 2)
                                    && (element->dimensions->len != 3)) {
-            /* check for case ndim == 4 && res == 1 */
 
+            /* check for case ndim == 4 && res == 1 */
             for (i = 0; i < element->dimensions->len; i++) {
                 dimension = &g_array_index(element->dimensions,
                                            LIFDimension, i);
