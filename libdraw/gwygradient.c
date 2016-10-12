@@ -753,7 +753,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
     g_return_if_fail(points);
 
     g_array_set_size(gradient->points, npoints);
-    gwy_assign(gradient->points->data, points, npoints);
+    gwy_assign((GwyGradientPoint*)gradient->points->data, points, npoints);
     gwy_gradient_sanitize(gradient);
     gwy_gradient_changed(gradient);
 }

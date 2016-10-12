@@ -560,7 +560,7 @@ gwy_selection_get_object_default(GwySelection *selection,
         return TRUE;
 
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-    gwy_assign(data, selection->objects->data + i*object_size*sizeof(gdouble),
+    gwy_assign(data, (gdouble*)selection->objects->data + i*object_size,
                object_size);
     return TRUE;
 }
