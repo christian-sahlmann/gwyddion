@@ -86,8 +86,8 @@ Modules:
 - Nanonis: Mask of invalid values is correctly flipped with the data now.
 - JPK: Support for single point spectroscopy was added.
 - TIFF-based file modules: Tiled TIFF images are supported now.
-- K-means: outliers threshold for calculation of cluster centers is added.
-- Leica: some kinds of high dimension data (tiles from tilescan) can also be
+- K-means: Outliers threshold for calculation of cluster centers is added.
+- Leica: Some kinds of high dimension data (tiles from tilescan) can also be
   imported as volume data.
 
 Other:
