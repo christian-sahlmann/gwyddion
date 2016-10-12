@@ -514,7 +514,7 @@ static const FitShapeParam pyramidx_params[] = {
    { "h",              0, 1, 0,                      },
    { "L",              1, 0, FIT_SHAPE_PARAM_ABSVAL, },
    { "a",              0, 0, FIT_SHAPE_PARAM_ABSVAL, },
-   { "α",              0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "φ",              0, 0, FIT_SHAPE_PARAM_ANGLE,  },
    { "b<sub>x</sub>", -1, 1, 0,                      },
    { "b<sub>y</sub>", -1, 1, 0,                      },
 };
