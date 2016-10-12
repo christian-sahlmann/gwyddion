@@ -324,14 +324,10 @@ kmeans_values_update(KMeansControls *controls,
     args->k = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->k));
     args->epsilon = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->epsilon));
     args->epsilon = pow(0.1, args->epsilon);
-    args->max_iterations
-        = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->max_iterations));
-    args->normalize
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
-    args->remove_outliers
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->remove_outliers));
-    args->outliers_threshold
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->outliers_threshold));
+    args->max_iterations = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->max_iterations));
+    args->normalize = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->normalize));
+    args->remove_outliers = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->remove_outliers));
+    args->outliers_threshold = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->outliers_threshold));
 }
 
 static void
@@ -507,122 +503,122 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
         gwy_app_wait_finish();
         goto fail;
     }
-    
+
     /* second try, outliers are not counted now */
     if (args->remove_outliers) {
         converged = FALSE;
-	    while (!converged && !cancelled) {
-	        if (!gwy_app_wait_set_fraction((gdouble)iterations/max_iterations)) {
-	            cancelled = TRUE;
-	            break;
-	        }
-	
-	        /* pixels belong to cluster with min distance */
-	        for (j = 0; j < yres; j++)
-	            for (i = 0; i < xres; i++) {
-	                *(data1 + j * xres + i) = 0;
-	                min = G_MAXDOUBLE;
-	                for (c = 0; c < k; c++) {
-	                    dist = 0;
-	                    for (l = 0; l < zres; l++) {
-	                        *(oldcenters + c * zres + l)
-	                                        = *(centers + c * zres + l);
-	                        dist
-	                        += (*(data + l * xres * yres + j * xres + i)
-	                                        - *(centers + c * zres + l))
-	                         * (*(data + l * xres * yres + j * xres + i)
-	                                       - *(centers + c * zres + l));
-	                    }
-	                    if (dist < min) {
-	                        min = dist;
-	                        *(data1 + j * xres + i) = c;
-	                    }
-	                }
-	            }
-	            
+        while (!converged && !cancelled) {
+            if (!gwy_app_wait_set_fraction((gdouble)iterations/max_iterations)) {
+                cancelled = TRUE;
+                break;
+            }
+
+            /* pixels belong to cluster with min distance */
+            for (j = 0; j < yres; j++)
+                for (i = 0; i < xres; i++) {
+                    *(data1 + j * xres + i) = 0;
+                    min = G_MAXDOUBLE;
+                    for (c = 0; c < k; c++) {
+                        dist = 0;
+                        for (l = 0; l < zres; l++) {
+                            *(oldcenters + c * zres + l)
+                                            = *(centers + c * zres + l);
+                            dist
+                            += (*(data + l * xres * yres + j * xres + i)
+                                            - *(centers + c * zres + l))
+                             * (*(data + l * xres * yres + j * xres + i)
+                                           - *(centers + c * zres + l));
+                        }
+                        if (dist < min) {
+                            min = dist;
+                            *(data1 + j * xres + i) = c;
+                        }
+                    }
+                }
+
             /* variance calculation */
             for (c = 0; c < k; c++) {
                 *(npix + c) = 0;
                 *(variance + c) = 0.0;
             }
-        
+
             for (i = 0; i < xres; i++) {
                 for (j = 0; j < yres; j++) {
                     c = (gint)(*(data1 + j * xres + i));
                     *(npix + c) += 1;
                     dist = 0;
                     for (l = 0; l < zres; l++) {
-						dist
-	                        += (*(data + l * xres * yres + j * xres + i)
-	                                        - *(centers + c * zres + l))
-	                         * (*(data + l * xres * yres + j * xres + i)
-	                                       - *(centers + c * zres + l));
-                    }            
+                        dist
+                            += (*(data + l * xres * yres + j * xres + i)
+                                            - *(centers + c * zres + l))
+                             * (*(data + l * xres * yres + j * xres + i)
+                                           - *(centers + c * zres + l));
+                    }
                     *(variance + c) += dist;
                 }
             }
-        
+
             for (c = 0; c < k; c++) {
                 if (*(npix + c) > 0) {
                     *(variance + c) /= *(npix+c);
                     *(variance + c) = sqrt(*(variance + c));
                 }
-            }	            
-	
-	        /* new center coordinates as average of pixels */
-	        for (c = 0; c < k; c++) {
-	            *(npix + c) = 0;
-	            for (l = 0; l < zres; l++) {
-	                *(sum + c * zres + l) = 0;
-	            }
-	        }
-	        for (i = 0; i < xres; i++) {
-	            for (j = 0; j < yres; j++) {
-	                c = (gint)(*(data1 + j * xres + i));
+            }
+
+            /* new center coordinates as average of pixels */
+            for (c = 0; c < k; c++) {
+                *(npix + c) = 0;
+                for (l = 0; l < zres; l++) {
+                    *(sum + c * zres + l) = 0;
+                }
+            }
+            for (i = 0; i < xres; i++) {
+                for (j = 0; j < yres; j++) {
+                    c = (gint)(*(data1 + j * xres + i));
                     dist = 0;
                     for (l = 0; l < zres; l++) {
-						dist
-	                        += (*(data + l * xres * yres + j * xres + i)
-	                                        - *(centers + c * zres + l))
-	                         * (*(data + l * xres * yres + j * xres + i)
-	                                       - *(centers + c * zres + l));
-                    } 	                
-	                if (sqrt(dist) < args->outliers_threshold * (*(variance + c))) {
-						*(npix + c) += 1;
-						for (l = 0; l < zres; l++) {
-							*(sum + c * zres + l)
-	                        += *(data + l * xres * yres + j * xres + i);
-						}
-					}
-	            }
-	        }
-	        for (c = 0; c < k; c++)
-	            for (l = 0; l < zres; l++) {
-	                *(centers + c * zres + l) = (*(npix + c) > 0) ?
-	                     *(sum + c * zres + l)/(gdouble)(*(npix + c)) : 0.0;
-	        }
-	
-	        converged = TRUE;
-	        for (c = 0; c < k; c++) {
-	            for (l = 0; l < zres; l++)
-	                if (fabs(*(oldcenters + c * zres + l)
-	                               - *(centers + c * zres + l)) > epsilon) {
-	                    converged = FALSE;
-	                    break;
-	                }
-	        }
-	        if (iterations == max_iterations) {
-	            converged = TRUE;
-	            break;
-	        }
-	        iterations++;
-	    }        
-    }    
+                        dist
+                            += (*(data + l * xres * yres + j * xres + i)
+                                            - *(centers + c * zres + l))
+                             * (*(data + l * xres * yres + j * xres + i)
+                                           - *(centers + c * zres + l));
+                    }
+                    if (sqrt(dist) < args->outliers_threshold * (*(variance + c))) {
+                        *(npix + c) += 1;
+                        for (l = 0; l < zres; l++) {
+                            *(sum + c * zres + l)
+                            += *(data + l * xres * yres + j * xres + i);
+                        }
+                    }
+                }
+            }
+            for (c = 0; c < k; c++)
+                for (l = 0; l < zres; l++) {
+                    *(centers + c * zres + l) = (*(npix + c) > 0) ?
+                         *(sum + c * zres + l)/(gdouble)(*(npix + c)) : 0.0;
+            }
+
+            converged = TRUE;
+            for (c = 0; c < k; c++) {
+                for (l = 0; l < zres; l++)
+                    if (fabs(*(oldcenters + c * zres + l)
+                                   - *(centers + c * zres + l)) > epsilon) {
+                        converged = FALSE;
+                        break;
+                    }
+            }
+            if (iterations == max_iterations) {
+                converged = TRUE;
+                break;
+            }
+            iterations++;
+        }
+    }
 
     gwy_app_wait_finish();
     if (cancelled)
         goto fail;
-        
+
     errormap = gwy_data_field_new_alike(dfield, TRUE);
     if (!normalize) {
         siunit = gwy_brick_get_si_unit_w(brick);
@@ -644,7 +640,7 @@ volume_kmeans_do(GwyContainer *container, KMeansArgs *args)
             }
             *(errordata + j * xres + i) = sqrt(dist);
         }
-    }        
+    }
 
     gwy_data_field_add(dfield, 1.0);
     newid = gwy_app_data_browser_add_data_field(dfield,
