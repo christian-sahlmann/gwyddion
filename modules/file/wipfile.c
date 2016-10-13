@@ -1322,7 +1322,7 @@ wip_read_bitmap(GNode *node)
     GwyDataField *dfield;
     GwySIUnit *siunitxy;
     gdouble xscale, yscale;
-    gint power10xy;
+    gint power10xy = 0;
     gboolean mirrorx, mirrory;
 
     header = g_new0(WIPBitmap, 1);
