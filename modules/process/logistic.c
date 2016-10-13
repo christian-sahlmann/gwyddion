@@ -148,7 +148,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *mfield;
     // GwyDataField *preview, *predicted;
     GwyBrick *features;
-    gint id;
+    gint id, nfeatures;
     // gint xres, yres, newid;
     LogisticArgs args;
     gdouble *thetas;
@@ -164,6 +164,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
     logistic_dialog(data, &args);
 
     if (!args.cancelled) {
+        nfeatures = logistic_nfeatures(&args);
         features = create_feature_vector(dfield, &args);
 
         /*
@@ -177,10 +178,12 @@ logistic_run(GwyContainer *data, GwyRunType run)
         g_object_unref(preview);
         */
 
-        thetas = gwy_data_line_get_data(args.thetas);
-
         if (args.mode == LOGISTIC_MODE_TRAIN) {
             if (mfield) {
+                g_object_unref(args.thetas);
+                args.thetas = gwy_data_line_new(nfeatures,
+                                                nfeatures, TRUE);
+                thetas = gwy_data_line_get_data(args.thetas);
                 train_logistic(data,
                                features, mfield, thetas, args.lambda);
             }
@@ -188,6 +191,7 @@ logistic_run(GwyContainer *data, GwyRunType run)
         else {
             gwy_app_undo_qcheckpointv(data, 1, &quark);
 
+            thetas = gwy_data_line_get_data(args.thetas);
             if (!mfield) {
                 mfield = gwy_data_field_new_alike(dfield, TRUE);
                 predict_mask(features, thetas, mfield);
@@ -617,7 +621,7 @@ GwyDataField *mfield, gdouble *thetas, gdouble lambda)
     maxiter = 2000;
     gwy_app_wait_start(gwy_app_find_window_for_channel(container, id),
                        _("Training..."));
-    while(!converged && !cancelled) {
+    while (!converged && !cancelled) {
         if (!gwy_app_wait_set_fraction((gdouble)iter/maxiter)) {
             cancelled = TRUE;
             break;
@@ -633,7 +637,7 @@ GwyDataField *mfield, gdouble *thetas, gdouble lambda)
             alpha *= 1.05;
         }
         else if (sum < 0) {
-            for (i =0; i < zres; i++) {
+            for (i = 0; i < zres; i++) {
                 grad[i] += oldgrad[i];
             }
             alpha /= 2.0;
@@ -1009,6 +1013,7 @@ logistic_load_args(GwyContainer *settings,
                                      &args->lambda);
 
     nfeatures = logistic_nfeatures(args);
+    args->thetas = gwy_data_line_new(nfeatures, nfeatures, TRUE);
     thetas = gwy_data_line_get_data(args->thetas);
     for (i = 0; i < nfeatures; i++) {
         *(thetas + i) = 0.0;
@@ -1078,8 +1083,6 @@ logistic_save_args(GwyContainer *settings,
 static void
 logistic_reset_args(LogisticArgs *args)
 {
-    gint nfeatures;
-
     args->mode = LOGISTIC_MODE_TRAIN;
     args->use_gaussians = TRUE;
     args->ngaussians = 4;
@@ -1087,11 +1090,6 @@ logistic_reset_args(LogisticArgs *args)
     args->use_laplasian = TRUE;
     args->use_hessian = TRUE;
     args->lambda = 1.0;
-    nfeatures = logistic_nfeatures(args);
-    if (args->thetas) {
-        g_object_unref(args->thetas);
-    }
-    args->thetas = gwy_data_line_new(nfeatures, nfeatures, TRUE);
 }
 
 static void
