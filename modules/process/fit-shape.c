@@ -4245,7 +4245,7 @@ pyramidx_func(gdouble x, gdouble y, const gdouble *param)
     y = x*sphi + y*cphi;
     x = t;
 
-    q = L*sqrt(1.0 + a*a);
+    q = 0.5*L*sqrt(1.0 + a*a);
     x /= q;
     y *= a/q;
     t = fabs(x) + fabs(y);
@@ -4261,28 +4261,38 @@ static gboolean
 pyramidx_init(const GwyXYZ *xyz, guint n, gdouble *param,
               FitShapeEstimateCache *estimcache)
 {
+    gboolean ok;
+
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_init(xyz, n,
-                                    param + 0, param + 1, param + 2,
-                                    param + 3, param + 4,
-                                    param + 5, param + 6,
-                                    estimcache);
+    ok = common_bump_feature_init(xyz, n,
+                                  param + 0, param + 1, param + 2,
+                                  param + 3, param + 4,
+                                  param + 5, param + 6,
+                                  estimcache);
+    param[4] *= 2.0;
+
+    return ok;
 }
 
 static gboolean
 pyramidx_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
                   FitShapeEstimateCache *estimcache)
 {
+    gboolean ok;
+
     /* XXX: The pyramid has minimum projection when oriented along x and y
      * axes.  But not very deep.  Can we use it to estimate phi? */
     param[7] = 0.0;
     param[8] = 0.0;
-    return common_bump_feature_estimate(xyz, n,
-                                        param + 0, param + 1, param + 2,
-                                        param + 3, param + 4,
-                                        param + 5, param + 6,
-                                        estimcache);
+    ok = common_bump_feature_estimate(xyz, n,
+                                      param + 0, param + 1, param + 2,
+                                      param + 3, param + 4,
+                                      param + 5, param + 6,
+                                      estimcache);
+    param[4] *= 2.0;
+
+    return ok;
 }
 
 /**************************************************************************
