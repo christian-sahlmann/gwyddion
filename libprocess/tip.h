@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2016 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GwyTipModelPreset GwyTipModelPreset;
+
+#ifndef GWY_DISABLE_DEPRECATED
 typedef void (*GwyTipModelFunc)(GwyDataField *tip,
                                 gdouble height,
                                 gdouble radius,
@@ -40,8 +43,6 @@ typedef void (*GwyTipGuessFunc)(GwyDataField *data,
                                 gint *xres,
                                 gint *yres);
 
-typedef struct _GwyTipModelPreset GwyTipModelPreset;
-
 struct _GwyTipModelPreset {
     const gchar *tip_name;
     const gchar *group_name;
@@ -49,17 +50,24 @@ struct _GwyTipModelPreset {
     GwyTipGuessFunc guess;
     gint nparams;
 };
+#endif
 
-
-/* XXX: remove presets, each tip type is quite different */
-gint                     gwy_tip_model_get_npresets         (void);
-const GwyTipModelPreset* gwy_tip_model_get_preset           (gint preset_id);
-const GwyTipModelPreset* gwy_tip_model_get_preset_by_name   (const gchar *name);
-gint                     gwy_tip_model_get_preset_id        (const GwyTipModelPreset* preset);
-const gchar*             gwy_tip_model_get_preset_tip_name  (const GwyTipModelPreset* preset);
-const gchar*             gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset);
-gint                     gwy_tip_model_get_preset_nparams   (const GwyTipModelPreset* preset);
-
+gint                     gwy_tip_model_get_npresets            (void);
+const GwyTipModelPreset* gwy_tip_model_get_preset              (gint preset_id);
+const GwyTipModelPreset* gwy_tip_model_get_preset_by_name      (const gchar *name);
+gint                     gwy_tip_model_get_preset_id           (const GwyTipModelPreset* preset);
+const gchar*             gwy_tip_model_get_preset_tip_name     (const GwyTipModelPreset* preset);
+const gchar*             gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* preset);
+gint                     gwy_tip_model_get_preset_nparams      (const GwyTipModelPreset* preset);
+const GwyTipParamType*   gwy_tip_model_get_preset_params       (const GwyTipModelPreset* preset);
+void                     gwy_tip_model_preset_create           (const GwyTipModelPreset* preset,
+                                                                GwyDataField *tip,
+                                                                const gdouble *params);
+void                     gwy_tip_model_preset_create_for_zrange(const GwyTipModelPreset* preset,
+                                                                GwyDataField *tip,
+                                                                gdouble zrange,
+                                                                gboolean square,
+                                                                const gdouble *params);
 
 GwyDataField*   gwy_tip_dilation(GwyDataField *tip,
                                  GwyDataField *surface,

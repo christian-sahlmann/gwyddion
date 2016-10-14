@@ -604,6 +604,41 @@ gwy_distance_transform_type_get_enum(void)
 }
 
 /**
+ * GwyTipType:
+ * @GWY_TIP_PYRAMID: N-sided pyramidal tip.
+ * @GWY_TIP_PYRAMIDE: Legacy name for %GWY_TIP_PYRAMID.
+ * @GWY_TIP_CONTACT: Four-sided pyramidal tip.
+ * @GWY_TIP_NONCONTACT: Three-sided pyramidal tip.
+ * @GWY_TIP_DELTA: Delta function (single-pixel tip).
+ * @GWY_TIP_PARABOLA: Parabolic tip.  (Since 2.45)
+ * @GWY_TIP_CONE: Conical tip.  (Since 2.45)
+ * @GWY_TIP_ELLPARABOLA: Elliptical parabola tip.  (Since 2.47)
+ *
+ * Type of tip shape presets.
+ **/
+
+/**
+ * GwyTipParamType:
+ * @GWY_TIP_PARAM_HEIGHT: Total tip height.  This is used only in the delta
+ *                        function tip; for all others it is implied.
+ * @GWY_TIP_PARAM_RADIUS: Radius of curvature of the tip apex.
+ * @GWY_TIP_PARAM_ROTATION: Rotation angle.
+ * @GWY_TIP_PARAM_NSIDES: Number of sides for pyramidal tips.
+ * @GWY_TIP_PARAM_SLOPE: Half-angle of the apex (complement of the side slope
+ *                       for straight sides).
+ * @GWY_TIP_PARAM_ANISOTROPY: Ratio between larger and smaller tip width in
+ *                            two orthotonal directions.
+ *
+ * Type of tip model preset parameter.
+ *
+ * This enum is used with the new tip preset functions
+ * gwy_tip_model_get_preset_params(), gwy_tip_model_preset_create_tip(),
+ * gwy_tip_model_preset_estimate_res().
+ *
+ * Since: 2.47
+ **/
+
+/**
  * GwyMinMaxFilterType:
  * @GWY_MIN_MAX_FILTER_MINIMUM: Minimum filter, i.e. minimum of the surrounding
  *                              values.

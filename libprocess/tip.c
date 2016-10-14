@@ -25,9 +25,24 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
+#include <libprocess/grains.h>
 #include <libprocess/morph_lib.h>
 
 /* INTERPOLATION: New (not applicable). */
+
+/* Update when new parameter type is added. */
+enum {
+    NPARAMTYPES = 6
+};
+
+typedef struct {
+    const gchar *tip_name;
+    const gchar *group_name;
+    GwyTipModelFunc func;
+    GwyTipGuessFunc guess;
+    gint nparams;
+    const GwyTipParamType *params;
+} GwyTipModelPresetReal;
 
 static void
 guess_symmetrical(GwyDataField *data,
@@ -37,11 +52,17 @@ guess_symmetrical(GwyDataField *data,
                   gint *xres,
                   gint *yres)
 {
-    gdouble xreal = (height + radius)*tan(angle);
-    gint xpix = gwy_data_field_rtoi(data, xreal);
+    gdouble xreal;
+    gint xpix;
 
+    /* radius*cos(angle) is the maximum lateral dimension of the spherical
+     * part of the tip – for sane angles it takes little height so we do
+     * not take that into accout; height*tan(angle) is the actual width from
+     * the sloped part. */
+    xreal = height*tan(angle) + radius*cos(angle);
+    xpix = gwy_data_field_rtoi(data, xreal);
     xpix = 2*xpix + 1;
-    xpix = CLAMP(xpix, 10, 1000);
+    xpix = CLAMP(xpix, 5, 1201);
 
     *xres = xpix;
     *yres = xpix;
@@ -92,10 +113,22 @@ parabola_guess(GwyDataField *data,
     gint xpix = gwy_data_field_rtoi(data, xreal);
 
     xpix = 2*xpix + 1;
-    xpix = CLAMP(xpix, 10, 1000);
+    xpix = CLAMP(xpix, 5, 1201);
 
     *xres = xpix;
     *yres = xpix;
+}
+
+static void
+ell_parabola_guess(GwyDataField *data,
+                   gdouble height,
+                   gdouble radius,
+                   gdouble *params,
+                   gint *xres,
+                   gint *yres)
+{
+    gdouble r1 = radius*sqrt(params[2]), r2 = radius/sqrt(params[2]);
+    parabola_guess(data, height, fmax(r1, r2), params, xres, yres);
 }
 
 static void
@@ -203,6 +236,7 @@ round_pyramid(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
     gwy_data_field_invalidate(tip);
 }
 
+/* params[0]...number of sides, params[1]...slope angle */
 static void
 pyramid(GwyDataField *tip,
         G_GNUC_UNUSED gdouble height,
@@ -210,7 +244,6 @@ pyramid(GwyDataField *tip,
         gdouble rotation,
         gdouble *params)
 {
-    /*params[0]..number of sides, params[1]..angle*/
     create_pyramid(tip, params[1], params[0], rotation);
     round_pyramid(tip, params[1], params[0], radius);
 }
@@ -254,7 +287,7 @@ parabola(GwyDataField *tip,
     scol = tip->xres/2;
     srow = tip->yres/2;
     x = gwy_data_field_jtor(tip, scol);
-    z0 = a*x*x;
+    z0 = 2.0*a*x*x;
 
     for (row = 0; row < tip->yres; row++) {
         y = gwy_data_field_jtor(tip, row - srow);
@@ -268,6 +301,38 @@ parabola(GwyDataField *tip,
     gwy_data_field_invalidate(tip);
 }
 
+/* params[2]...anisotropy */
+static void
+ell_parabola(GwyDataField *tip,
+             G_GNUC_UNUSED gdouble height,
+             gdouble radius,
+             gdouble rotation,
+             gdouble *params)
+{
+    gdouble a1 = 0.5/radius/sqrt(params[2]), a2 = 0.5/radius*sqrt(params[2]);
+    gint col, row;
+    gdouble scol, srow;
+    gdouble x, y, xx, yy, ca = cos(rotation), sa = sin(rotation);
+
+    scol = tip->xres/2;
+    srow = tip->yres/2;
+    x = gwy_data_field_jtor(tip, scol);
+
+    for (row = 0; row < tip->yres; row++) {
+        y = gwy_data_field_jtor(tip, row - srow);
+        for (col = 0; col < tip->xres; col++) {
+            x = gwy_data_field_itor(tip, col - scol);
+            xx = x*ca - y*sa;
+            yy = x*sa + y*ca;
+            tip->data[col + tip->xres*row] = -(a1*xx*xx + a2*yy*yy);
+        }
+    }
+
+    gwy_data_field_invalidate(tip);
+    gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
+}
+
+/* params[1]...slope angle */
 static void
 cone(GwyDataField *tip,
      G_GNUC_UNUSED gdouble height,
@@ -315,48 +380,84 @@ delta(GwyDataField *tip, gdouble height,
     gwy_data_field_invalidate(tip);
 }
 
-static const GwyTipModelPreset tip_presets[] = {
+static const GwyTipParamType pyramid_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+    GWY_TIP_PARAM_ROTATION,
+    GWY_TIP_PARAM_NSIDES,
+    GWY_TIP_PARAM_SLOPE,
+};
+
+static const GwyTipParamType contact_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+    GWY_TIP_PARAM_ROTATION,
+};
+
+static const GwyTipParamType noncontact_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+    GWY_TIP_PARAM_ROTATION,
+};
+
+static const GwyTipParamType delta_params[] = {
+    GWY_TIP_PARAM_HEIGHT,
+};
+
+static const GwyTipParamType parabola_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+};
+
+static const GwyTipParamType cone_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+    GWY_TIP_PARAM_SLOPE,
+};
+
+static const GwyTipParamType ell_parabola_params[] = {
+    GWY_TIP_PARAM_RADIUS,
+    GWY_TIP_PARAM_ROTATION,
+    GWY_TIP_PARAM_ANISOTROPY,
+};
+
+static const GwyTipModelPresetReal tip_presets[] = {
     {
         N_("Pyramid"),
         N_("Pyramidal"),
-        &pyramid,
-        &pyramid_guess,
-        0
+        &pyramid, &pyramid_guess,
+        G_N_ELEMENTS(pyramid_params), pyramid_params,
     },
     {
         N_("Contact"),
         N_("Pyramidal"),
-        &contact,
-        &contact_guess,
-        0
+        &contact, &contact_guess,
+        G_N_ELEMENTS(contact_params), contact_params,
     },
     {
         N_("Noncontact"),
         N_("Pyramidal"),
-        &noncontact,
-        &noncontact_guess,
-        0
+        &noncontact, &noncontact_guess,
+        G_N_ELEMENTS(noncontact_params), noncontact_params,
     },
     {
         N_("Delta function"),
         N_("Analytical"),
-        &delta,
-        &delta_guess,
-        0
+        &delta, &delta_guess,
+        G_N_ELEMENTS(delta_params), delta_params,
     },
     {
         N_("Parabola"),
         N_("Symmetric"),
-        &parabola,
-        &parabola_guess,
-        0
+        &parabola, &parabola_guess,
+        G_N_ELEMENTS(parabola_params), parabola_params,
     },
     {
         N_("Cone"),
         N_("Symmetric"),
-        &cone,
-        &cone_guess,
-        0
+        &cone, &cone_guess,
+        G_N_ELEMENTS(cone_params), cone_params,
+    },
+    {
+        N_("Ellptical parabola"),
+        N_("Asymmetric"),
+        &ell_parabola, &ell_parabola_guess,
+        G_N_ELEMENTS(ell_parabola_params), ell_parabola_params,
     },
 };
 
@@ -388,7 +489,7 @@ gwy_tip_model_get_preset(gint preset_id)
                          && preset_id < (gint)G_N_ELEMENTS(tip_presets),
                          NULL);
 
-    return tip_presets + preset_id;
+    return (const GwyTipModelPreset*)(tip_presets + preset_id);
 }
 
 /**
@@ -402,12 +503,14 @@ gwy_tip_model_get_preset(gint preset_id)
 const GwyTipModelPreset*
 gwy_tip_model_get_preset_by_name(const gchar *name)
 {
-    gsize i;
+    guint i;
 
+    g_return_val_if_fail(name, NULL);
     for (i = 0; i < G_N_ELEMENTS(tip_presets); i++) {
         if (gwy_strequal(name, tip_presets[i].tip_name))
-            return tip_presets + i;
+            return (GwyTipModelPreset*)(tip_presets + i);
     }
+
     return NULL;
 }
 
@@ -422,7 +525,8 @@ gwy_tip_model_get_preset_by_name(const gchar *name)
 gint
 gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
 {
-    return preset - tip_presets;
+    g_return_val_if_fail(preset, 0);
+    return (const GwyTipModelPresetReal*)preset - tip_presets;
 }
 
 /**
@@ -436,6 +540,7 @@ gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
 const gchar*
 gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
 {
+    g_return_val_if_fail(preset, NULL);
     return preset->tip_name;
 }
 
@@ -450,6 +555,7 @@ gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
 const gchar*
 gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
 {
+    g_return_val_if_fail(preset, NULL);
     return preset->group_name;
 }
 
@@ -459,12 +565,269 @@ gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
  *
  * Get number of tip preset parameters.
  *
+ * <warning>In versions prior to 2.47 the function alwas returned zero and thus
+ * was useless.  You had to know the what parameters each model had and always
+ * pass a maximum-nparams-sized array with only the interesting elements
+ * containing your parameters.  Since version 2.47 it returns the true number
+ * of parameters used in functions such as gwy_tip_model_preset_create() and
+ * gwy_tip_model_preset_create_for_zrange().  It does not return the number of
+ * parameters the old functions take.  They behave exactly as before.</warning>
+ *
  * Returns: Number of parameters.
  **/
 gint
 gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 {
+    g_return_val_if_fail(preset, 0);
     return preset->nparams;
+}
+
+/**
+ * gwy_tip_model_get_preset_params:
+ * @preset: Tip model preset.
+ *
+ * Gets the list of parameters of a tip model preset.
+ *
+ * All tip models have parameters from a predefined set given by the
+ * #GwyTipParamType enum.
+ *
+ * Note further items may be in principle added to the set in the future so
+ * you may want to avoid tip models that have parameters with an unknown
+ * (higher than known) id.
+ *
+ * Returns: List of all tip model parameter ids in ascending order.  The array
+ *          is owned by the library and must not be modified nor freed.
+ *
+ * Since: 2.47
+ **/
+const GwyTipParamType*
+gwy_tip_model_get_preset_params(const GwyTipModelPreset* preset)
+{
+    g_return_val_if_fail(preset, NULL);
+    return ((const GwyTipModelPresetReal*)preset)->params;
+}
+
+/* Take the real parameters the function actually has and fill the full-sized
+ * arrays (including ignored parameters) the functions want to take. */
+static void
+params_to_old_params(const GwyTipModelPreset *preset,
+                     const gdouble *params,
+                     gdouble *height, gdouble *radius, gdouble *rotation,
+                     gdouble *oldparams)
+{
+    const GwyTipModelPresetReal *rpreset = (const GwyTipModelPresetReal*)preset;
+    guint i;
+
+    *height = *radius = *rotation = 0.0;
+    gwy_clear(oldparams, NPARAMTYPES-3);
+
+    for (i = 0; i < rpreset->nparams; i++) {
+        GwyTipParamType paramid = rpreset->params[i];
+
+        if (paramid == GWY_TIP_PARAM_HEIGHT)
+            *height = params[i];
+        else if (paramid == GWY_TIP_PARAM_RADIUS)
+            *radius = params[i];
+        else if (paramid == GWY_TIP_PARAM_ROTATION)
+            *rotation = params[i];
+        else {
+            g_assert((guint)paramid < NPARAMTYPES);
+            oldparams[paramid-3] = params[i];
+        }
+    }
+}
+
+/**
+ * gwy_tip_model_preset_create:
+ * @preset: Tip model preset.
+ * @tip: Data field to fill with the tip model.
+ * @params: Parameters of the tip model.
+ *
+ * Fills a data field with a preset tip model.
+ *
+ * Both pixel and physical dimensions of the @tip data field are preserved by
+ * this function.  Ensure that before using this function the @tip data field
+ * has the same pixels as target data field you want to use the tip model with.
+ *
+ * The number of parameters is the true full number of parameters as reported
+ * by gwy_tip_model_get_preset_nparams() and gwy_tip_model_get_preset_params().
+ * And only those parameters are passed in @params.
+ *
+ * Since: 2.47
+ **/
+void
+gwy_tip_model_preset_create(const GwyTipModelPreset* preset,
+                            GwyDataField *tip,
+                            const gdouble *params)
+{
+    gdouble old_params[NPARAMTYPES - 3];
+    gdouble height, radius, rotation;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(tip));
+    g_return_if_fail(preset);
+
+    params_to_old_params(preset, params,
+                         &height, &radius, &rotation, old_params);
+    preset->func(tip, height, radius, rotation, old_params);
+}
+
+static gboolean
+check_tip_zrange(GwyDataField *tip, gdouble zrange,
+                 gdouble *zrange_leftright, gdouble *zrange_topbottom,
+                 guint *can_shrink_width, guint *can_shrink_height)
+{
+    GwyDataField *mask;
+    gdouble max = gwy_data_field_get_max(tip);
+    guint xres = tip->xres, yres = tip->yres, left, right, up, down;
+    gdouble hmax, vmax;
+
+    vmax = fmax(gwy_data_field_area_get_max(tip, NULL, 0, 0, xres, 1),
+                gwy_data_field_area_get_max(tip, NULL, 0, yres-1, xres, 1));
+    *zrange_topbottom = max - vmax;
+    hmax = fmax(gwy_data_field_area_get_max(tip, NULL, 0, 0, 1, yres),
+                gwy_data_field_area_get_max(tip, NULL, xres-1, 0, 1, yres));
+    *zrange_leftright = max - hmax;
+    *can_shrink_height = *can_shrink_width = 0;
+
+    if (!(fmax(*zrange_topbottom, *zrange_leftright) >= zrange))
+        return FALSE;
+
+    mask = gwy_data_field_duplicate(tip);
+    gwy_data_field_threshold(mask, max - zrange, 0.0, 1.0);
+    if (gwy_data_field_grains_autocrop(mask, TRUE, &left, &right, &up, &down)) {
+        /* There were some empty rows, i.e. rows with too small values. */
+        *can_shrink_width = left;
+        *can_shrink_height = up;
+    }
+    g_object_unref(mask);
+
+    return TRUE;
+}
+
+/**
+ * gwy_tip_model_preset_create_for_zrange:
+ * @preset: Tip model preset.
+ * @tip: Data field to fill with the tip model.
+ * @zrange: Range of height values in the data determining the required height
+ *          of the tip model.
+ * @square: %TRUE to enforce a square data field (with @xres and @yres equal).
+ * @params: Parameters of the tip model.
+ *
+ * Fills a data field with a preset tip model, resizing it to make it suitable
+ * for the given value range.
+ *
+ * The dimensions of a pixel in @tip is preserved by this function.  Ensure
+ * that before using this function the @tip data field has the same pixels as
+ * target data field you want to use the tip model with.
+ *
+ * However, its dimensions will generally be changed to ensure it is optimal
+ * for @zrange.  This means it is guaranteed the height difference between the
+ * apex and any border pixel in @tip is at least @zrange, while simultaneously
+ * the smallest such difference is not much larger than @zrange.
+ *
+ * The number of parameters is the true full number of parameters as reported
+ * by gwy_tip_model_get_preset_nparams() and gwy_tip_model_get_preset_params().
+ * And only those parameters are passed in @params.
+ *
+ * Since: 2.47
+ **/
+void
+gwy_tip_model_preset_create_for_zrange(const GwyTipModelPreset* preset,
+                                       GwyDataField *tip,
+                                       gdouble zrange,
+                                       gboolean square,
+                                       const gdouble *params)
+{
+    gdouble old_params[NPARAMTYPES - 3];
+    gdouble height, radius, rotation;
+    gdouble dx, dy, zrange_lr, zrange_tb;
+    guint xres_good, yres_good, redw, redh, iter;
+    gint xres, yres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(tip));
+    g_return_if_fail(preset);
+
+    dx = gwy_data_field_get_xmeasure(tip);
+    dy = gwy_data_field_get_ymeasure(tip);
+
+    /* Create tip according to the guess function.  The guess function only
+     * uses the dx and dy from the data field so we pass tip itself to it. */
+    params_to_old_params(preset, params,
+                         &height, &radius, &rotation, old_params);
+    preset->guess(tip, zrange, radius, old_params, &xres, &yres);
+    if (square)
+        xres = yres = MAX(xres, yres);
+
+    gwy_data_field_resample(tip, xres, yres, GWY_INTERPOLATION_NONE);
+    tip->xreal = xres*dx;
+    tip->yreal = yres*dy;
+    preset->func(tip, height, radius, rotation, old_params);
+
+    /* Enlarge the tip while it is too small. */
+    iter = 0;
+    while (!check_tip_zrange(tip, 1.1*zrange,
+                             &zrange_lr, &zrange_tb, &redw, &redh)) {
+        if (zrange_tb <= 1.1*zrange)
+            yres = (4*yres/3 + 1) | 1;
+        if (zrange_lr <= 1.1*zrange)
+            xres = (4*xres/3 + 1) | 1;
+        if (square)
+            xres = yres = MAX(xres, yres);
+
+        gwy_data_field_resample(tip, xres, yres, GWY_INTERPOLATION_NONE);
+        tip->xreal = xres*dx;
+        tip->yreal = yres*dy;
+        preset->func(tip, height, radius, rotation, old_params);
+
+        /* This means about 10 times larger tip than estimated. */
+        if (iter++ == 8) {
+            g_warning("Failed to guarantee zrange by enlagring tip model.");
+            break;
+        }
+    }
+    xres_good = xres;
+    yres_good = yres;
+
+    if (square)
+        redw = redh = MIN(redw, redh);
+    if (redw)
+        redw--;
+    if (redh)
+        redh--;
+
+    if (!MAX(redw, redh))
+        return;
+
+    /* The tip seems too large so try cropping it a bit. */
+    xres -= 2*redw;
+    yres -= 2*redh;
+    gwy_data_field_resample(tip, xres, yres, GWY_INTERPOLATION_NONE);
+    tip->xreal = xres*dx;
+    tip->yreal = yres*dy;
+    preset->func(tip, height, radius, rotation, old_params);
+    if (check_tip_zrange(tip, 1.01*zrange,
+                         &zrange_lr, &zrange_tb, &redw, &redh))
+        return;
+
+    /* It fails the check after size reduction so try two things: first adding
+     * just one pixel to each side, then just reverting to the last know good
+     * tip. */
+    xres += 2;
+    yres += 2;
+    gwy_data_field_resample(tip, xres, yres, GWY_INTERPOLATION_NONE);
+    tip->xreal = xres*dx;
+    tip->yreal = yres*dy;
+    preset->func(tip, height, radius, rotation, old_params);
+    if (check_tip_zrange(tip, 1.01*zrange,
+                         &zrange_lr, &zrange_tb, &redw, &redh))
+        return;
+
+    xres = xres_good;
+    yres = yres_good;
+    gwy_data_field_resample(tip, xres, yres, GWY_INTERPOLATION_NONE);
+    tip->xreal = xres*dx;
+    tip->yreal = yres*dy;
+    preset->func(tip, height, radius, rotation, old_params);
 }
 
 static gint**

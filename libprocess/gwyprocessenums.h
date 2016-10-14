@@ -146,14 +146,27 @@ typedef enum {
 } GwyWindowingType;
 
 typedef enum {
-    GWY_TIP_PYRAMID    = 0,
-    GWY_TIP_PYRAMIDE   = GWY_TIP_PYRAMID,
-    GWY_TIP_CONTACT    = 1,
-    GWY_TIP_NONCONTACT = 2,
-    GWY_TIP_DELTA      = 3,
-    GWY_TIP_PARABOLA   = 4,
-    GWY_TIP_CONE       = 5,
+    GWY_TIP_PYRAMID     = 0,
+    GWY_TIP_PYRAMIDE    = GWY_TIP_PYRAMID,
+    GWY_TIP_CONTACT     = 1,
+    GWY_TIP_NONCONTACT  = 2,
+    GWY_TIP_DELTA       = 3,
+    GWY_TIP_PARABOLA    = 4,
+    GWY_TIP_CONE        = 5,
+    GWY_TIP_ELLPARABOLA = 6,
 } GwyTipType;
+
+/* The first three are the direct arguments of the old functions and the rest
+ * are additional parameters, always passed in a full-sized array at fixed
+ * positions equal to type-3. */
+typedef enum {
+    GWY_TIP_PARAM_HEIGHT     = 0,
+    GWY_TIP_PARAM_RADIUS     = 1,
+    GWY_TIP_PARAM_ROTATION   = 2,
+    GWY_TIP_PARAM_NSIDES     = 3,
+    GWY_TIP_PARAM_SLOPE      = 4,
+    GWY_TIP_PARAM_ANISOTROPY = 5,
+} GwyTipParamType;
 
 typedef enum {
     GWY_CORRELATION_NORMAL  = 0,
