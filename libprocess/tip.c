@@ -416,6 +416,7 @@ static const GwyTipParamType ell_parabola_params[] = {
     GWY_TIP_PARAM_ANISOTROPY,
 };
 
+/* Must match the GwyTipTyp enum! */
 static const GwyTipModelPresetReal tip_presets[] = {
     {
         N_("Pyramid"),
@@ -742,11 +743,13 @@ gwy_tip_model_preset_create_for_zrange(const GwyTipModelPreset* preset,
     gdouble height, radius, rotation;
     gdouble dx, dy, zrange_lr, zrange_tb;
     guint xres_good, yres_good, redw, redh, iter;
+    gboolean is_delta;
     gint xres, yres;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(tip));
     g_return_if_fail(preset);
 
+    is_delta = (gwy_tip_model_get_preset_id(preset) == GWY_TIP_DELTA);
     dx = gwy_data_field_get_xmeasure(tip);
     dy = gwy_data_field_get_ymeasure(tip);
 
@@ -754,7 +757,10 @@ gwy_tip_model_preset_create_for_zrange(const GwyTipModelPreset* preset,
      * uses the dx and dy from the data field so we pass tip itself to it. */
     params_to_old_params(preset, params,
                          &height, &radius, &rotation, old_params);
-    preset->guess(tip, zrange, radius, old_params, &xres, &yres);
+    if (is_delta)
+        xres = yres = 3;
+    else
+        preset->guess(tip, zrange, radius, old_params, &xres, &yres);
     if (square)
         xres = yres = MAX(xres, yres);
 
@@ -762,6 +768,8 @@ gwy_tip_model_preset_create_for_zrange(const GwyTipModelPreset* preset,
     tip->xreal = xres*dx;
     tip->yreal = yres*dy;
     preset->func(tip, height, radius, rotation, old_params);
+    if (is_delta)
+        return;
 
     /* Enlarge the tip while it is too small. */
     iter = 0;
