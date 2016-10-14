@@ -19,7 +19,7 @@
  *  Boston, MA 02110-1301, USA.
  */
 #ifndef __GWY_FILE_GET_H__
-#define __GWY_GILE_GET_H__
+#define __GWY_FILE_GET_H__
 
 static inline guint64
 gwy_get_guint32as64_le(const guchar **ppv)
