@@ -105,6 +105,7 @@ typedef struct {
     gboolean decomma;
     gboolean inset_draw_ticks;
     gboolean inset_draw_label;
+    gboolean inset_draw_text_above;
     gdouble fmscale_gap;
     gdouble inset_xgap;
     gdouble inset_ygap;
@@ -162,7 +163,7 @@ static const ImgExportArgs img_export_defaults = {
     GWYRGBA_BLACK, GWYRGBA_WHITE, TRUE,
     TRUE, TRUE, FALSE, TRUE,
     "Helvetica", TRUE,
-    FALSE, TRUE, TRUE,
+    FALSE, TRUE, TRUE, FALSE,
     1.0, 1.0, 1.0, 0.0, 1.0,
     FALSE, 2,
     FALSE, 1200.0,
@@ -258,6 +259,7 @@ img_export_sanitize_args(ImgExportArgs *args)
     args->bg_color.a = 1.0;
     args->inset_draw_ticks = !!args->inset_draw_ticks;
     args->inset_draw_label = !!args->inset_draw_label;
+    args->inset_draw_text_above = !!args->inset_draw_text_above;
     args->units_in_title = !!args->units_in_title;
     args->sizes.font_size = CLAMP(args->sizes.font_size, 1.0, 1024.0);
     args->sizes.line_width = CLAMP(args->sizes.line_width, 0.0, 16.0);
@@ -536,6 +538,8 @@ gwy_img_export_preset_parse(const gchar *text,
             data.inset_draw_ticks = atoi(value);
         else if (gwy_strequal(key, "inset_draw_label"))
             data.inset_draw_label = atoi(value);
+        else if (gwy_strequal(key, "inset_draw_text_above"))
+            data.inset_draw_text_above = atoi(value);
         else if (gwy_strequal(key, "units_in_title"))
             data.units_in_title = atoi(value);
         else if (gwy_strequal(key, "sel_number_objects"))

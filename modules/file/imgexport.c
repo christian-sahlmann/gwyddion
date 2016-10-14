@@ -217,6 +217,7 @@ typedef struct {
     GtkWidget *inset_length_auto;
     GtkWidget *inset_draw_ticks;
     GtkWidget *inset_draw_label;
+    GtkWidget *inset_draw_text_above;
 
     /* Values */
     GtkWidget *table_value;
@@ -1250,16 +1251,25 @@ measure_inset(const ImgExportArgs *args, ImgExportSizes *sizes,
     if (pos == INSET_POS_TOP_LEFT
         || pos == INSET_POS_TOP_CENTER
         || pos == INSET_POS_TOP_RIGHT)
-        rect->y = lw + fs*args->inset_ygap;
+        if (args->inset_draw_text_above)
+            rect->y = lw + fs*args->inset_ygap + rect->h;
+        else
+            rect->y = lw + fs*args->inset_ygap;
     else
-        rect->y = vsize - lw - rect->h - fs*args->inset_ygap;
+        if (args->inset_draw_text_above)
+            if (args->inset_draw_ticks)
+                rect->y = vsize - lw - tl - fs*args->inset_ygap;
+            else
+                rect->y = vsize - lw - fs*args->inset_ygap;
+        else
+            rect->y = vsize - lw - rect->h - fs*args->inset_ygap;
 
     if (pos == INSET_POS_TOP_LEFT || pos == INSET_POS_BOTTOM_LEFT)
-        rect->x = 2.0*lw + fs*args->inset_xgap;
+        rect->x = 2.0 * lw + fs*args->inset_xgap;
     else if (pos == INSET_POS_TOP_RIGHT || pos == INSET_POS_BOTTOM_RIGHT)
-        rect->x = hsize - 2.0*lw - rect->w - fs*args->inset_xgap;
+        rect->x = hsize - 2.0 * lw - rect->w - fs*args->inset_xgap;
     else
-        rect->x = hsize/2 - 0.5*rect->w;
+        rect->x = hsize / 2 - 0.5 * rect->w;
 }
 
 static void
@@ -1985,6 +1995,9 @@ draw_inset(const ImgExportArgs *args,
     if (args->inset_draw_label) {
         cairo_save(cr);
         format_layout(layout, &logical, s, "%s", args->inset_length);
+        if (args->inset_draw_text_above) {
+            y = -y - logical.height/pangoscale;
+        }
         cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, y);
         draw_text_with_outline(cr, layout, colour, outcolour, olw);
         cairo_restore(cr);
@@ -3236,6 +3249,7 @@ update_lateral_sensitivity(ImgExportControls *controls)
     gtk_widget_set_sensitive(controls->inset_length_auto, insetsens);
     gtk_widget_set_sensitive(controls->inset_draw_ticks, insetsens);
     gtk_widget_set_sensitive(controls->inset_draw_label, insetsens);
+    gtk_widget_set_sensitive(controls->inset_draw_text_above, insetsens);
     for (i = 0; i < G_N_ELEMENTS(controls->inset_pos_label); i++)
         gtk_widget_set_sensitive(controls->inset_pos_label[i], insetsens);
     gwy_table_hscale_set_sensitive(controls->inset_xgap, insetsens*hgapsens);
@@ -3327,6 +3341,17 @@ inset_draw_label_changed(ImgExportControls *controls,
     ImgExportArgs *args = controls->args;
 
     args->inset_draw_label = gtk_toggle_button_get_active(button);
+    if (args->xytype == IMGEXPORT_LATERAL_INSET)
+        update_preview(controls);
+}
+
+static void
+inset_draw_text_above_changed(ImgExportControls *controls,
+                              GtkToggleButton *button)
+{
+    ImgExportArgs *args = controls->args;
+
+    args->inset_draw_text_above = gtk_toggle_button_get_active(button);
     if (args->xytype == IMGEXPORT_LATERAL_INSET)
         update_preview(controls);
 }
@@ -3437,7 +3462,7 @@ create_lateral_controls(ImgExportControls *controls)
     GtkWidget *table, *label;
     gint row = 0;
 
-    table = controls->table_lateral = gtk_table_new(16, 4, FALSE);
+    table = controls->table_lateral = gtk_table_new(18, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -3574,6 +3599,17 @@ create_lateral_controls(ImgExportControls *controls)
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls->inset_draw_label, "toggled",
                              G_CALLBACK(inset_draw_label_changed), controls);
+    row++;
+
+    controls->inset_draw_text_above
+        = gtk_check_button_new_with_mnemonic(_("Draw text _above scalebar"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_text_above),
+                                 args->inset_draw_text_above);
+    gtk_table_attach(GTK_TABLE(table), controls->inset_draw_text_above,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls->inset_draw_text_above, "toggled",
+                             G_CALLBACK(inset_draw_text_above_changed),
+                             controls);
     row++;
 
     update_lateral_sensitivity(controls);
@@ -4239,6 +4275,8 @@ reset_to_preset(ImgExportControls *controls,
                                  src->inset_draw_ticks);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_label),
                                  src->inset_draw_label);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inset_draw_text_above),
+                                 src->inset_draw_text_above);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_frame),
                                  src->draw_frame);
@@ -6497,6 +6535,7 @@ static const gchar font_key[]                  = "/module/pixmap/font";
 static const gchar font_size_key[]             = "/module/pixmap/font_size";
 static const gchar inset_color_key[]           = "/module/pixmap/inset_color";
 static const gchar inset_draw_label_key[]      = "/module/pixmap/inset_draw_label";
+static const gchar inset_draw_text_above_key[] = "/module/pixmap/inset_draw_text_above";
 static const gchar inset_draw_ticks_key[]      = "/module/pixmap/inset_draw_ticks";
 static const gchar inset_length_key[]          = "/module/pixmap/inset_length";
 static const gchar inset_outline_color_key[]   = "/module/pixmap/inset_outline_color";
@@ -6618,6 +6657,8 @@ img_export_load_args(GwyContainer *container,
                                       &args->inset_draw_ticks);
     gwy_container_gis_boolean_by_name(container, inset_draw_label_key,
                                       &args->inset_draw_label);
+    gwy_container_gis_boolean_by_name(container, inset_draw_text_above_key,
+                                      &args->inset_draw_text_above);
     gwy_container_gis_boolean_by_name(container, units_in_title_key,
                                       &args->units_in_title);
     gwy_container_gis_string_by_name(container, selection_key,
@@ -6710,6 +6751,8 @@ img_export_save_args(GwyContainer *container,
                                       args->inset_draw_ticks);
     gwy_container_set_boolean_by_name(container, inset_draw_label_key,
                                       args->inset_draw_label);
+    gwy_container_set_boolean_by_name(container, inset_draw_text_above_key,
+                                      args->inset_draw_text_above);
     gwy_container_set_boolean_by_name(container, units_in_title_key,
                                       args->units_in_title);
     gwy_container_set_string_by_name(container, selection_key,
