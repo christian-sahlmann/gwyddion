@@ -178,7 +178,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports nearly raw raster data (NRRD) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -215,6 +215,12 @@ nrrdfile_detect(const GwyFileDetectInfo *fileinfo,
         return 100;
 
     return 0;
+}
+
+static inline gboolean
+nrrd_encoding_is_compressed(NRRDEncoding encoding)
+{
+    return encoding == NRRD_ENCODING_GZIP || encoding == NRRD_ENCODING_BZIP2;
 }
 
 static GwyContainer*
@@ -371,8 +377,7 @@ nrrdfile_load(const gchar *filename,
     if ((value = g_hash_table_lookup(fields, "byteskip")))
         byteskip = atol(value);
 
-    if (lineskip && (encoding == NRRD_ENCODING_GZIP
-                     || encoding == NRRD_ENCODING_BZIP2)) {
+    if (lineskip && nrrd_encoding_is_compressed(encoding)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Non-zero lineskip is supported only for uncompressed "
                       "files."));
@@ -406,11 +411,11 @@ nrrdfile_load(const gchar *filename,
             goto fail;
 
         buffers_to_free = g_slist_append(buffers_to_free, data_buffer);
-        if (encoding == NRRD_ENCODING_GZIP || NRRD_ENCODING_BZIP2)
+        if (nrrd_encoding_is_compressed(encoding))
             encoding = NRRD_ENCODING_RAW;
     }
     else {
-        if (encoding == NRRD_ENCODING_GZIP || encoding == NRRD_ENCODING_BZIP2) {
+        if (nrrd_encoding_is_compressed(encoding)) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("Compression is supported only for detached files."));

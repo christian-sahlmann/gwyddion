@@ -405,6 +405,9 @@ render_column(GtkCellLayout *column,
                 g_object_get(gcmodel, "point-type", &v, NULL);
             else if (id == COLUMN_LINE_STYLE)
                 g_object_get(gcmodel, "line-style", &v, NULL);
+            else {
+                g_return_if_reached();   /* This is here to shut up clang. */
+            }
 
             combomodel = g_object_get_qdata(G_OBJECT(column), quark_model);
             if (find_enum_row(combomodel, &comboiter, v)) {

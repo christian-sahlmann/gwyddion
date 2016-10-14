@@ -154,8 +154,6 @@ static void          deposit_synth_load_args   (GwyContainer *container,
 static void          deposit_synth_save_args   (GwyContainer *container,
                                             const DepositSynthArgs *args,
                                             const GwyDimensionArgs *dimsargs);
-static inline gboolean gwy_data_field_inside(GwyDataField *data_field, gint i, gint j);
-
 
 static const DepositSynthArgs deposit_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -886,12 +884,6 @@ preview(DepositSynthControls *controls)
     gwy_data_field_data_changed(controls->out);
 
     GWY_OBJECT_UNREF(surface);
-}
-
-static inline gboolean
-gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
-{
-    return i >= 0 && j >= 0 && i < data_field->xres && j < data_field->yres;
 }
 
 static void

@@ -555,8 +555,9 @@ data_start(X3PFile *x3pfile, GError **error)
 
     s = (gchar*)g_hash_table_lookup(x3pfile->hash,
                                     "/ISO5436_2/Record1/FeatureType");
-    if ((x3pfile->feature_type
-         = gwy_string_to_enum(s, features, G_N_ELEMENTS(features))) == -1) {
+    x3pfile->feature_type = gwy_string_to_enum(s, features,
+                                               G_N_ELEMENTS(features));
+    if (x3pfile->feature_type == (X3PFeatureType)-1) {
         err_UNSUPPORTED(error, "/ISO5436_2/Record1/FeatureType");
         return FALSE;
     }

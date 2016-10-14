@@ -1111,18 +1111,6 @@ find_score_maximum(GwyDataField *correlation_score,
     *max_col = maxi - (*max_row)*gwy_data_field_get_xres(correlation_score);
 }
 
-static inline gboolean
-gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
-{
-    if (i >= 0
-        && j >= 0
-        && i < gwy_data_field_get_xres(data_field)
-        && j < gwy_data_field_get_yres(data_field))
-        return TRUE;
-    else
-        return FALSE;
-}
-
 static void
 assign_edge(gint edgepos, gint pos1, gint pos2, gint *w1, gint *w2)
 {

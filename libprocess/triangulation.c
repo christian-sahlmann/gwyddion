@@ -2116,14 +2116,6 @@ fail:
     return ok;
 }
 
-static inline gdouble
-edist2_xyz_xy(const GwyXYZ *p, const GwyXY *q)
-{
-    gdouble dx = p->x - q->x, dy = p->y - q->y;
-
-    return dx*dx + dy*dy;
-}
-
 /* If TRUE is returned, then a neighbour on the other side was found and the
  * triangle has become clockwise.  If TRUE is returned, then @opposite is
  * unchanged and the triangle is kept counter-clockwise. */

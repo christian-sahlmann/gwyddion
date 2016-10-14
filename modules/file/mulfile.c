@@ -450,9 +450,9 @@ mul_read_image(GwyContainer *container,
              ymin = label->spare_48, ymax = label->spare_49;
 
         q = q_height;
-        gwy_data_field_set_xreal(field, MAX(fabs(xmax - xmin), 1)*q_voltage);
+        gwy_data_field_set_xreal(field, MAX(abs(xmax - xmin), 1)*q_voltage);
         gwy_data_field_set_xoffset(field, xmin*q_voltage);
-        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_current);
+        gwy_data_field_set_yreal(field, MAX(abs(ymax - ymin), 1)*q_current);
         gwy_data_field_set_yoffset(field, ymin*q_voltage);
         /* No xy units, to reduce confusion as we cannot make the different. */
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
@@ -464,7 +464,7 @@ mul_read_image(GwyContainer *container,
         gint ymin = label->spare_48, ymax = label->spare_49;
 
         q = q_height;
-        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_voltage);
+        gwy_data_field_set_yreal(field, MAX(abs(ymax - ymin), 1)*q_voltage);
         gwy_data_field_set_yoffset(field, ymin*q_voltage);
         /* No xy units, to reduce confusion as we cannot make the different. */
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
@@ -473,7 +473,7 @@ mul_read_image(GwyContainer *container,
         gint ymin = label->spare_48, ymax = label->spare_49;
 
         q = q_height;
-        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_current);
+        gwy_data_field_set_yreal(field, MAX(abs(ymax - ymin), 1)*q_current);
         gwy_data_field_set_yoffset(field, ymin*q_current);
         /* No xy units, to reduce confusion as we cannot make the different. */
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");

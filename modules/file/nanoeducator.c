@@ -1085,9 +1085,9 @@ make_iv_spectrum(gint res, gdouble xy_step,
     gint j;
     gint16 v;
 
-    dline = gwy_data_line_new(res, xy_step
-                            * fabs(GINT16_FROM_LE(d16[2*(res - 1)])
-                                 - GINT16_FROM_LE(d16[0])),
+    dline = gwy_data_line_new(res,
+                              xy_step * abs(GINT16_FROM_LE(d16[2*(res - 1)])
+                                            - GINT16_FROM_LE(d16[0])),
                               FALSE);
     siunitx = gwy_si_unit_new("V");
     siunity = gwy_si_unit_new("A");

@@ -211,7 +211,7 @@ gwy_raw_file_preset_data_sanitize(GwyRawFilePresetData *data)
         data->revsample = FALSE;
     }
     else {
-        data->builtin = MIN(data->builtin, 24);
+        data->size = MIN(data->size, 24);
         data->byteswap = 0;
     }
 }

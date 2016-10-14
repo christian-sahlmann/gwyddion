@@ -2901,7 +2901,7 @@ gwy_3d_fmscaletex(gint height,
 
         cairo_translate(cr, 0, -(x-bot)*scale);
 
-        for (x = x;x <= max; x += tickdist) {
+        while (x <= max) {
             cairo_move_to(cr, 0, 0);
             cairo_rel_line_to(cr, tick, 0);
             cairo_stroke(cr);
@@ -2910,6 +2910,7 @@ gwy_3d_fmscaletex(gint height,
                                  prec, x/format->magnitude);
             gwy_3d_pango_cairo_show_layout_vcentered(cr, layout);
             cairo_translate(cr, 0, -tickdist*scale);
+            x += tickdist;
         };
     };
 

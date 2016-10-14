@@ -741,8 +741,6 @@ gwy_tool_mask_editor_mode_changed(GwyToolMaskEditor *tool)
 {
     tool->args.mode = gwy_radio_buttons_get_current(tool->mode);
     gwy_radio_buttons_set_current(tool->style, MASK_EDIT_STYLE_SHAPES);
-    if (tool->args.mode == -1)
-        g_warning("Mode set to -1!");
 }
 
 static void

@@ -500,13 +500,13 @@ gwy_curve_button_press(GtkWidget *widget,
     for (i = 0, distance = G_MAXUINT; i < c->num_channels; i++) {
         channel = &c->channel_data[i];
         for (j = 0, distance2 = G_MAXUINT; j < channel->num_points; j++) {
-           if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
-                distance2 = abs(x - (guint)channel->points[j].x);
+           if ((guint)abs(x - (gint)channel->points[j].x) < distance2) {
+                distance2 = abs(x - (gint)channel->points[j].x);
                 closest_point = j;
             }
         }
-        if ((guint)abs(y-(guint)channel->points[closest_point].y) < distance) {
-            distance = abs(y - (guint)channel->points[closest_point].y);
+        if ((guint)abs(y - (gint)channel->points[closest_point].y) < distance) {
+            distance = abs(y - (gint)channel->points[closest_point].y);
             closest_channel = i;
         }
     }
@@ -516,7 +516,7 @@ gwy_curve_button_press(GtkWidget *widget,
     /* determine closest control point to pointer */
     for (i = 0, distance = G_MAXUINT; i < channel->num_ctlpoints; ++i) {
         cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
-        if ((guint) abs(x - cx) < distance) {
+        if ((guint)abs(x - cx) < distance) {
             distance = abs(x - cx);
             closest_point = i;
         }
@@ -648,13 +648,13 @@ gwy_curve_motion_notify(GwyCurve *c)
     for (i = 0, distance = G_MAXUINT; i < c->num_channels; i++) {
         channel = &c->channel_data[i];
         for (j = 0, distance2 = G_MAXUINT; j < channel->num_points; j++) {
-           if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
-                distance2 = abs(x - (guint)channel->points[j].x);
+           if ((guint)abs(x - (gint)channel->points[j].x) < distance2) {
+                distance2 = abs(x - (gint)channel->points[j].x);
                 closest_point = j;
             }
         }
-        if ((guint)abs(y-(guint)channel->points[closest_point].y) < distance) {
-            distance = abs(y - (guint)channel->points[closest_point].y);
+        if ((guint)abs(y - (gint)channel->points[closest_point].y) < distance) {
+            distance = abs(y - (gint)channel->points[closest_point].y);
             closest_channel = i;
         }
     }
@@ -664,7 +664,7 @@ gwy_curve_motion_notify(GwyCurve *c)
     /* determine closest control point to pointer */
     for (i = 0, distance = G_MAXUINT; i < channel->num_ctlpoints; ++i) {
         cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
-        if ((guint) abs(x - cx) < distance) {
+        if ((guint)abs(x - cx) < distance) {
             distance = abs(x - cx);
             closest_point = i;
         }

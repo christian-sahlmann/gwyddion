@@ -961,7 +961,9 @@ gwy_grain_value_tree_model_new(gboolean show_id)
 
         if (group != lastgroup) {
             gtk_tree_store_insert_after(store, &siter, NULL,
-                                        lastgroup != -1 ? &siter : NULL);
+                                        lastgroup != (GwyGrainValueGroup)-1
+                                        ? &siter
+                                        : NULL);
             gtk_tree_store_set(store, &siter,
                                GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, group,
                                -1);

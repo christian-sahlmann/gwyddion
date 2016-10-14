@@ -101,6 +101,7 @@ typedef struct {
     const gchar* chan;    /* Measured Channel */
     const gchar* param; /* Parameter varied */
     ScanDirection scandir;
+    Feedback feedback;
     gint min_raw;
     gint max_raw;
     gdouble min_phys;
@@ -162,7 +163,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -663,11 +664,11 @@ omicron_read_spectro_header(gchar **buffer,
     NEXT_LINE(buffer, line, FALSE, error);
     gwy_debug("Feedback: %s", line);
     if (gwy_strequal(line, "On"))
-        channel->scandir = FEEDBACK_ON;
+        channel->feedback = FEEDBACK_ON;
     else if (gwy_strequal(line, "Off"))
-        channel->scandir = FEEDBACK_OFF;
+        channel->feedback = FEEDBACK_OFF;
     else
-        channel->scandir = FEEDBACK_UNKNOWN;
+        channel->feedback = FEEDBACK_UNKNOWN;
 
     /* Filename */
     NEXT_LINE(buffer, line, FALSE, error);

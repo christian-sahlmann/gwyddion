@@ -4189,7 +4189,7 @@ reset_to_preset(ImgExportControls *controls,
 
     if (controls->mode)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mode),
-                                     src->mode == 16);
+                                     src->mode == IMGEXPORT_MODE_GREY16);
 
     if (controls->pxwidth)
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->pxwidth),

@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwygraphbasics.h>
@@ -478,7 +479,7 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
         ymax = y_data_to_pixel(specs, selection_areadata[3]);
         gdk_draw_rectangle(drawable, gc, TRUE,
                            MIN(xmin, xmax), MIN(ymin, ymax),
-                           fabs(xmax - xmin), fabs(ymax - ymin));
+                           abs(xmax - xmin), abs(ymax - ymin));
     }
 }
 /**
@@ -516,7 +517,7 @@ gwy_graph_draw_selection_xareas(GdkDrawable *drawable, GdkGC *gc,
         ymax = specs->height;
         gdk_draw_rectangle(drawable, gc, TRUE,
                            MIN(xmin, xmax), MIN(ymin, ymax),
-                           fabs(xmax - xmin), fabs(ymax - ymin));
+                           abs(xmax - xmin), abs(ymax - ymin));
     }
 }
 
@@ -556,7 +557,7 @@ gwy_graph_draw_selection_yareas(GdkDrawable *drawable,
         ymax = y_data_to_pixel(specs, selection_areadata[1]);
         gdk_draw_rectangle(drawable, gc, TRUE,
                            MIN(xmin, xmax), MIN(ymin, ymax),
-                           fabs(xmax - xmin), fabs(ymax - ymin));
+                           abs(xmax - xmin), abs(ymax - ymin));
     }
 }
 

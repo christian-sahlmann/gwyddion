@@ -109,7 +109,7 @@ static void       save_args           (GwyContainer *container,
                                        PeaksArgs *args);
 
 static const PeaksArgs peaks_defaults = {
-    0, 5, GWY_PEAK_ORDER_ABSCISSA, GWY_PEAK_BACKGROUND_MMSTEP,
+    0, 5, GWY_PEAK_BACKGROUND_MMSTEP, GWY_PEAK_ORDER_ABSCISSA,
 };
 
 static GwyModuleInfo module_info = {

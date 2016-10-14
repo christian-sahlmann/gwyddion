@@ -313,14 +313,13 @@ burleigh_load_v21(IMGFile *imgfile,
     imgfile->bias_volts = gwy_get_gfloat_le(&p);
     imgfile->tunneling_current = gwy_get_gfloat_le(&p);
 
-    /* Use negated positive conditions to catch NaNs */
-    if (!((imgfile->xrange = fabs(imgfile->xrange)) > 0)) {
+    if (!(imgfile->xrange > 0)) {
         g_warning("Real x size is 0.0, fixing to 1.0");
-        imgfile->xrange = 1.0;
+        imgfile->xrange = 1;
     }
-    if (!((imgfile->yrange = fabs(imgfile->yrange)) > 0)) {
+    if (!(imgfile->yrange > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
-        imgfile->yrange = 1.0;
+        imgfile->yrange = 1;
     }
 
     return (const gint16*)(buffer + HEADER_SIZE_V21);

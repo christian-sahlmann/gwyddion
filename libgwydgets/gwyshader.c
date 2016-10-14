@@ -804,11 +804,11 @@ gwy_shader_motion_notify(GtkWidget *widget,
     y = event->y;
 
     if (event->is_hint
-        || (event->window != shader->event_window))
+        || (event->window != shader->event_window)) {
         gdk_window_get_pointer(shader->event_window, &x, &y, &mods);
-
-    if (mods & GDK_BUTTON1_MASK)
-        gwy_shader_update_mouse(shader, x, y);
+        if (mods & GDK_BUTTON1_MASK)
+            gwy_shader_update_mouse(shader, x, y);
+    }
 
     return FALSE;
 }

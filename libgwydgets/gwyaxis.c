@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <pango/pango.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -1191,7 +1192,7 @@ gwy_axis_entry(GwySciText *sci_text, GwyAxis *axis)
 static gdouble
 gwy_axis_dbl_raise(gdouble x, gint y)
 {
-    gint i = (int)fabs(y);
+    gint i = abs(y);
     gdouble val = 1.0;
 
     while (--i >= 0)

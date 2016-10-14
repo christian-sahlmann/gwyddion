@@ -437,7 +437,7 @@ toolbox_start_item(GwyAppToolboxBuilder *builder,
     g_signal_connect_swapped(button, "destroy",
                              G_CALLBACK(toolbox_action_free), a);
 
-    if (action.sens != -1)
+    if (action.sens != (GwyMenuSensFlags)-1)
         gwy_app_sensitivity_add_widget(button, action.sens);
 
     builder->pos++;

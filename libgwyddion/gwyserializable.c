@@ -372,6 +372,7 @@ gwy_serializable_clone(GObject *source,
  * This function is not very fast, but neither assumes any memory alignment
  * nor alocates any temporary buffers.
  **/
+G_GNUC_UNUSED
 static inline void
 gwy_byteswapped_append(guint8 *source,
                        GByteArray *dest,

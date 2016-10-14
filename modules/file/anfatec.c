@@ -168,15 +168,15 @@ anfatec_find_parameterfile(const gchar *filename)
             /* Try to add .txt, both lower- and uppercase */
             strcpy(paramfile + len-removed, ".txt");
             gwy_debug("Looking for %s", paramfile);
-            if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
-                            || G_FILE_TEST_IS_SYMLINK)) {
+            if (g_file_test(paramfile,
+                            G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
                 gwy_debug("Found.");
                 return paramfile;
             }
             gwy_debug("Looking for %s", paramfile);
             strcpy(paramfile + len-removed, ".TXT");
-            if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
-                            || G_FILE_TEST_IS_SYMLINK)) {
+            if (g_file_test(paramfile,
+                            G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
                 gwy_debug("Found.");
                 return paramfile;
             }

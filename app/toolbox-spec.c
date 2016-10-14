@@ -174,7 +174,8 @@ toolbox_ui_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                 && (tmptype = gwy_toolbox_find_action_type(attval)) != -1)
                 type = tmptype;
             else if (gwy_strequal(attname, "run")
-                     && (tmpmode = gwy_toolbox_find_mode(attval)) != -1)
+                     && (tmpmode = gwy_toolbox_find_mode(attval))
+                        != (GwyRunType)-1)
                 mode = tmpmode;
             else if (gwy_strequal(attname, "function"))
                 function = attval;

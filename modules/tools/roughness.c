@@ -745,7 +745,7 @@ gwy_tool_roughness_init_params(GwyToolRoughness *tool)
 
     for (i = j = 0; i < G_N_ELEMENTS(parameters); i++) {
         pinfo = parameters + i;
-        if (pinfo->param == -1) {
+        if (pinfo->param == (GwyRoughnessParameter)-1) {
             if (!i)
                 gtk_tree_store_insert_after(tool->store, &siter, NULL, NULL);
             else
@@ -944,7 +944,7 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gboolean header;
 
     gtk_tree_model_get(model, iter, 0, &pinfo, -1);
-    header = (pinfo->param == -1);
+    header = (pinfo->param == (GwyRoughnessParameter)-1);
     g_object_set(renderer,
                  "ellipsize", header ? PANGO_ELLIPSIZE_NONE : PANGO_ELLIPSIZE_END ,
                  "weight", header ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
@@ -967,7 +967,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gchar buf[64];
 
     gtk_tree_model_get(model, iter, 0, &pinfo, -1);
-    if (pinfo->param == -1 || !tool->have_data) {
+    if (pinfo->param == (GwyRoughnessParameter)-1 || !tool->have_data) {
         g_object_set(renderer, "text", "", NULL);
         return;
     }
@@ -1076,7 +1076,7 @@ gwy_tool_roughness_param_view_new(GwyToolRoughness *tool)
             const GwyRoughnessParameterInfo *pinfo;
 
             gtk_tree_model_get(model, &iter, 0, &pinfo, -1);
-            if (pinfo->param == -1
+            if (pinfo->param == (GwyRoughnessParameter)-1
                 && (tool->args.expanded & (1 << pinfo->set))) {
                 GtkTreePath *path;
 
@@ -1989,7 +1989,7 @@ gwy_tool_roughness_create_report(gpointer user_data,
         gint l;
         gchar *sym;
 
-        if (pinfo->param == -1)
+        if (pinfo->param == (GwyRoughnessParameter)-1)
             continue;
 
         l = g_utf8_strlen(gettext(pinfo->name), -1);
@@ -2015,7 +2015,7 @@ gwy_tool_roughness_create_report(gpointer user_data,
         gint pad_name, pad_sym;
         gchar *sym;
 
-        if (pinfo->param == -1) {
+        if (pinfo->param == (GwyRoughnessParameter)-1) {
             g_string_append_printf(report, "\n%s\n", gettext(pinfo->name));
             continue;
         }
