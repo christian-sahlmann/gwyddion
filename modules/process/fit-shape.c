@@ -368,6 +368,7 @@ DECLARE_SHAPE_FUNC(cylinder);
 DECLARE_SHAPE_FUNC(gaussian);
 DECLARE_SHAPE_FUNC(lorentzian);
 DECLARE_SHAPE_FUNC(pyramidx);
+DECLARE_SHAPE_FUNC(parbump);
 
 DECLARE_SECONDARY(sphere, R);
 DECLARE_SECONDARY(cylinder, R);
@@ -521,6 +522,20 @@ static const FitShapeParam pyramidx_params[] = {
 
 #define pyramidx_secondary NULL
 
+static const FitShapeParam parbump_params[] = {
+   { "x<sub>0</sub>",     1, 0, 0,                      },
+   { "y<sub>0</sub>",     1, 0, 0,                      },
+   { "z<sub>0</sub>",     0, 1, 0,                      },
+   { "h",                 0, 1, 0,                      },
+   { "C<sub>mean</sub>", -1, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "a",                 0, 0, FIT_SHAPE_PARAM_ABSVAL, },
+   { "φ",                 0, 0, FIT_SHAPE_PARAM_ANGLE,  },
+   { "b<sub>x</sub>",    -1, 1, 0,                      },
+   { "b<sub>y</sub>",    -1, 1, 0,                      },
+};
+
+#define parbump_secondary NULL
+
 static const FitShapeFunc functions[] = {
     { N_("Grating (simple)"),  FALSE, SHAPE_FUNC_ITEM(grating),    },
     { N_("Grating (3-level)"), FALSE, SHAPE_FUNC_ITEM(grating3),   },
@@ -531,6 +546,7 @@ static const FitShapeFunc functions[] = {
     { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
     { N_("Lorentzian"),        FALSE, SHAPE_FUNC_ITEM(lorentzian), },
     { N_("Pyramid (diamond)"), FALSE, SHAPE_FUNC_ITEM(pyramidx),   },
+    { N_("Parabolic bump"),    FALSE, SHAPE_FUNC_ITEM(parbump),   },
 };
 
 /* NB: The default must not require same units because then we could not fall
@@ -546,7 +562,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fits predefined geometrical shapes to data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2016",
 };
@@ -4293,6 +4309,87 @@ pyramidx_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
     param[4] *= 2.0;
 
     return ok;
+}
+
+/**************************************************************************
+ *
+ * Parabolic bump
+ *
+ **************************************************************************/
+
+static gdouble
+parbump_func(gdouble x, gdouble y, const gdouble *param)
+{
+    DEFINE_PHI_CACHE(phi);
+
+    gdouble xc = param[0];
+    gdouble yc = param[1];
+    gdouble z0 = param[2];
+    gdouble h = param[3];
+    gdouble C = fabs(param[4]);
+    gdouble a = fabs(param[5]);
+    gdouble phi = param[6];
+    gdouble bx = param[7];
+    gdouble by = param[8];
+    gdouble t, val, cphi, sphi;
+
+    x -= xc;
+    y -= yc;
+    z0 += bx*x + by*y;
+
+    if (G_UNLIKELY(!C || !a))
+        return z0;
+
+    HANDLE_PHI_CACHE(phi);
+    t = x*cphi - y*sphi;
+    y = x*sphi + y*cphi;
+    x = t;
+
+    t = fabs(h) - 0.5*C*(x*x*a + y*y/a);
+    if (h >= 0.0)
+        val = (t > 0.0 ? z0 + t : z0);
+    else
+        val = (t > 0.0 ? z0 - t : z0);
+
+    return val;
+}
+
+static gboolean
+parbump_init(const GwyXYZ *xyz, guint n, gdouble *param,
+              FitShapeEstimateCache *estimcache)
+{
+    gdouble w;
+    gboolean ok;
+
+    param[7] = 0.0;
+    param[8] = 0.0;
+    ok = common_bump_feature_init(xyz, n,
+                                  param + 0, param + 1, param + 2,
+                                  param + 3, &w,
+                                  param + 5, param + 6,
+                                  estimcache);
+    param[4] = 2.0*param[3]/(w*w);
+
+    return ok && w >= 0.0;
+}
+
+static gboolean
+parbump_estimate(const GwyXYZ *xyz, guint n, gdouble *param,
+                  FitShapeEstimateCache *estimcache)
+{
+    gdouble w;
+    gboolean ok;
+
+    param[7] = 0.0;
+    param[8] = 0.0;
+    ok = common_bump_feature_estimate(xyz, n,
+                                      param + 0, param + 1, param + 2,
+                                      param + 3, &w,
+                                      param + 5, param + 6,
+                                      estimcache);
+    param[4] = 2.0*param[3]/(w*w);
+
+    return ok && w >= 0.0;
 }
 
 /**************************************************************************
