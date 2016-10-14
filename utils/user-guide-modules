@@ -25,6 +25,7 @@ calcoefs_simple	caldata
 calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
 codevfile	managing-files
+coerce	synthetic	coerce
 col_synth	synthetic	columnar-synthesis
 convolution_filter	filters	convolution-filter
 correct_affine	edit-extended	correct-affine
@@ -34,8 +35,10 @@ crosscor	multidata	cross-correlation
 csmfile	managing-files
 curvature	leveling-and-background	curvature
 cwt	wavelet-transform	cwt
+dektakxml	managing-files
 deposit_synth	synthetic
 diff_synth	synthetic	diffusion-synthesis
+dimensionfile	managing-files
 distance	basic-operations	distance
 dm3file	managing-files
 dmefile	managing-files
@@ -62,8 +65,8 @@ fft	fourier-transform
 fft_profile	fourier-transform
 fft_synth	synthetic	spectral-synthesis
 filter	filters	basic-filters
-fit_2d	leveling-and-background	fit-sphere
 fitsfile	managing-files
+fit-shape	xyz-data-processing	fit-shape
 flatten_base	leveling-and-background	flatten-base
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
@@ -90,7 +93,6 @@ graph_filter	graph-processing
 graph_fit	graph-processing	graph-fit
 graph_level	graph-processing	graph-level
 graph_peaks	graph-processing	graph-peaks
-graph_stats	graph-processing
 gsffile	gsf
 gwyfile	managing-files
 gxyzffile	managing-files
@@ -123,6 +125,7 @@ line	selections
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthesis
 local_contrast	presentations	local-contrast
+logistic	grain-analysis	grain-logistic
 magellan	managing-files
 mapvue	managing-files
 mark_disconn	editing-correction	mark-disconnected
@@ -262,6 +265,7 @@ wsxmfile	managing-files
 xydenoise	edit-extended	xy-denoise
 xyzexport	managing-files
 xyzize	basic-operations	xyzize
+xyz_level	xyz-data-processing	xyz-level
 xyz_raster	xyz-data-processing	xyz-rasterize
 zeiss	managing-files
 zemax	managing-files
