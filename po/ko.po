@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-04-26 11:07+0200\n"
+"POT-Creation-Date: 2016-10-14 11:46+0200\n"
 "PO-Revision-Date: 2015-04-20 09:48+0200\n"
 "Last-Translator: Jeong Jiseong <stopstar@gist.ac.kr>\n"
 "Language-Team: Korean_gwyddion\n"
@@ -82,15 +82,15 @@ msgstr "스택이 실행되지 않습니다. "
 msgid "Unresolved identifiers"
 msgstr "미해결된 "
 
-#: libgwyddion/gwyfdcurvepreset.c:784
+#: libgwyddion/gwyfdcurvepreset.c:787
 msgid "vdW: semisphere"
 msgstr "vdW: 반 구 "
 
-#: libgwyddion/gwyfdcurvepreset.c:799
+#: libgwyddion/gwyfdcurvepreset.c:801
 msgid "vdW: pyramide"
 msgstr "vdW: 각뿔(피라미드)"
 
-#: libgwyddion/gwyfdcurvepreset.c:812
+#: libgwyddion/gwyfdcurvepreset.c:813
 msgid "vdW: truncated pyramid"
 msgstr "vdW: 단절 "
 
@@ -98,127 +98,137 @@ msgstr "vdW: 단절 "
 msgid "vdW: sphere"
 msgstr "vdW: sphere"
 
-#: libgwyddion/gwyfdcurvepreset.c:838
+#: libgwyddion/gwyfdcurvepreset.c:837
 msgid "vdW: offset sphere"
 msgstr "vdW: offset 구"
 
-#: libgwyddion/gwyfdcurvepreset.c:851
+#: libgwyddion/gwyfdcurvepreset.c:849
 msgid "vdW: two spheres"
 msgstr "vdW: 두개의 "
 
-#: libgwyddion/gwyfdcurvepreset.c:864
+#: libgwyddion/gwyfdcurvepreset.c:861
 msgid "vdW: cone"
 msgstr "vdW: cone"
 
-#: libgwyddion/gwyfdcurvepreset.c:877
+#: libgwyddion/gwyfdcurvepreset.c:873
 msgid "vdW: cylinder"
 msgstr "vdW: cylinder"
 
-#: libgwyddion/gwyfdcurvepreset.c:890
+#: libgwyddion/gwyfdcurvepreset.c:885
 msgid "vdW: paraboloid"
 msgstr "vdW: 포물면"
 
-#: libgwyddion/gwyfdcurvepreset.c:903
+#: libgwyddion/gwyfdcurvepreset.c:897
 msgid "contact: Hertz (paraboloid)"
 msgstr "Hertz 방식 접촉  ()"
 
 #: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:730
-#: app/data-browser-aux.c:1315 app/data-browser-aux.c:1395
-#: app/data-browser-aux.c:1459 app/data-browser.c:2298 app/data-browser.c:2906
-#: app/data-browser.c:3728 app/data-browser.c:3878 app/data-browser.c:4162
-#: app/data-browser.c:4528 app/data-browser.c:4615 app/data-browser.c:4987
+#: app/data-browser-aux.c:1336 app/data-browser-aux.c:1416
+#: app/data-browser-aux.c:1480 app/data-browser.c:2280 app/data-browser.c:2887
+#: app/data-browser.c:3707 app/data-browser.c:3857 app/data-browser.c:4139
+#: app/data-browser.c:4504 app/data-browser.c:4590 app/data-browser.c:5016
 #: app/resource-editor.c:366 modules/process/convolution_filter.c:691
 msgid "Untitled"
 msgstr "제목 없음"
 
-#: libgwyddion/gwynlfitpreset.c:1498 libprocess/gwyprocessenums.c:101
+#: libgwyddion/gwynlfit.c:373
+msgid "Initial residua evaluation..."
+msgstr ""
+
+#: libgwyddion/gwynlfit.c:422 modules/process/fit-shape.c:1858
+#, fuzzy
+msgid "Fitting..."
+msgstr "FFT 필터링"
+
+#: libgwyddion/gwynlfitpreset.c:1442 libprocess/gwyprocessenums.c:101
+#: modules/process/fit-shape.c:531
 msgid "Gaussian"
 msgstr "가우시안 타입"
 
-#: libgwyddion/gwynlfitpreset.c:1514
+#: libgwyddion/gwynlfitpreset.c:1457
 msgid "Gaussian (PSDF)"
 msgstr "가우시안 타입 (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1528
+#: libgwyddion/gwynlfitpreset.c:1470
 msgid "Gaussian (ACF)"
 msgstr "가우시안 타입 (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1542
+#: libgwyddion/gwynlfitpreset.c:1483
 msgid "Gaussian (HHCF)"
 msgstr "가우시안 타입 (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1556
+#: libgwyddion/gwynlfitpreset.c:1496
 msgid "Gaussian (RPSDF)"
 msgstr "가우시안 타입 (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1570
+#: libgwyddion/gwynlfitpreset.c:1509
 #, fuzzy
 msgid "Two Gaussians (PSDF)"
 msgstr "가우시안 타입 (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1586 modules/xyz/xyz_drift.c:841
+#: libgwyddion/gwynlfitpreset.c:1524 modules/xyz/xyz_drift.c:841
 #: modules/xyz/xyz_drift.c:846 modules/xyz/xyz_drift.c:1819
 msgid "Exponential"
 msgstr "지수타입"
 
-#: libgwyddion/gwynlfitpreset.c:1599
+#: libgwyddion/gwynlfitpreset.c:1536
 msgid "Exponential (PSDF)"
 msgstr "지수타입 (PSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1613
+#: libgwyddion/gwynlfitpreset.c:1549
 msgid "Exponential (ACF)"
 msgstr "지수타입 (ACF)"
 
-#: libgwyddion/gwynlfitpreset.c:1626
+#: libgwyddion/gwynlfitpreset.c:1561
 msgid "Exponential (HHCF)"
 msgstr "지수타입 (HHCF)"
 
-#: libgwyddion/gwynlfitpreset.c:1640
+#: libgwyddion/gwynlfitpreset.c:1574
 msgid "Exponential (RPSDF)"
 msgstr "지수타입 (RPSDF)"
 
-#: libgwyddion/gwynlfitpreset.c:1655
+#: libgwyddion/gwynlfitpreset.c:1588
 msgid "Polynomial (order 0)"
 msgstr "다항식 (0차)"
 
-#: libgwyddion/gwynlfitpreset.c:1667 modules/xyz/xyz_drift.c:1805
+#: libgwyddion/gwynlfitpreset.c:1599 modules/xyz/xyz_drift.c:1805
 msgid "Polynomial (order 1)"
 msgstr "다항식 (1차)"
 
-#: libgwyddion/gwynlfitpreset.c:1679
+#: libgwyddion/gwynlfitpreset.c:1610
 msgid "Polynomial (order 2)"
 msgstr "다항식 (2차)"
 
-#: libgwyddion/gwynlfitpreset.c:1692
+#: libgwyddion/gwynlfitpreset.c:1622
 msgid "Polynomial (order 3)"
 msgstr "다항식 (3차)"
 
-#: libgwyddion/gwynlfitpreset.c:1706
+#: libgwyddion/gwynlfitpreset.c:1635
 msgid "Square wave"
 msgstr "사각파형 "
 
-#: libgwyddion/gwynlfitpreset.c:1723
+#: libgwyddion/gwynlfitpreset.c:1651
 msgid "Parabolic step"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1740
+#: libgwyddion/gwynlfitpreset.c:1667
 msgid "Smooth slanted step"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1758
+#: libgwyddion/gwynlfitpreset.c:1684
 msgid "Smooth bent step"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1775
+#: libgwyddion/gwynlfitpreset.c:1700
 #, fuzzy
 msgid "Power"
 msgstr "거듭제곱"
 
-#: libgwyddion/gwynlfitpreset.c:1788
+#: libgwyddion/gwynlfitpreset.c:1712 modules/process/fit-shape.c:532
 msgid "Lorentzian"
 msgstr "로렌츠 "
 
-#: libgwyddion/gwynlfitpreset.c:1803
+#: libgwyddion/gwynlfitpreset.c:1726
 msgid "Sinc"
 msgstr "Sinc"
 
@@ -396,11 +406,11 @@ msgstr ""
 msgid "Mean radius"
 msgstr ""
 
-#: libprocess/gwygrainvalue.c:349 modules/tools/readvalue.c:330
+#: libprocess/gwygrainvalue.c:349 modules/tools/readvalue.c:319
 msgid "Inclination θ"
 msgstr ""
 
-#: libprocess/gwygrainvalue.c:358 modules/tools/readvalue.c:340
+#: libprocess/gwygrainvalue.c:358 modules/tools/readvalue.c:329
 msgid "Inclination φ"
 msgstr ""
 
@@ -416,11 +426,11 @@ msgstr ""
 msgid "Curvature center z value"
 msgstr ""
 
-#: libprocess/gwygrainvalue.c:394 modules/tools/readvalue.c:355
+#: libprocess/gwygrainvalue.c:394 modules/tools/readvalue.c:344
 msgid "Curvature 1"
 msgstr ""
 
-#: libprocess/gwygrainvalue.c:403 modules/tools/readvalue.c:365
+#: libprocess/gwygrainvalue.c:403 modules/tools/readvalue.c:354
 msgid "Curvature 2"
 msgstr ""
 
@@ -448,15 +458,15 @@ msgstr ""
 msgid "Id"
 msgstr "아이디"
 
-#: libprocess/gwygrainvalue.c:1121 modules/graph/graph_peaks.c:167
-#: modules/process/extract_path.c:390 modules/process/wave_synth.c:482
-#: modules/tools/readvalue.c:262
+#: libprocess/gwygrainvalue.c:1121 modules/graph/graph_peaks.c:156
+#: modules/process/extract_path.c:391 modules/process/wave_synth.c:482
+#: modules/tools/readvalue.c:251
 msgid "Position"
 msgstr "위치"
 
-#: libprocess/gwygrainvalue.c:1122 app/meta.c:409 modules/file/imgexport.c:4323
+#: libprocess/gwygrainvalue.c:1122 app/meta.c:411 modules/file/imgexport.c:4583
 #: modules/process/curvature.c:762 modules/tools/level3.c:468
-#: modules/tools/readvalue.c:297
+#: modules/tools/readvalue.c:286
 msgid "Value"
 msgstr "값"
 
@@ -464,7 +474,7 @@ msgstr "값"
 msgid "Area"
 msgstr "면적"
 
-#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5595 app/toolbox.c:118
+#: libprocess/gwygrainvalue.c:1124 app/data-browser.c:5624 app/toolbox.c:110
 msgid "Volume"
 msgstr "부피"
 
@@ -575,13 +585,13 @@ msgid "Scale and space adaptive"
 msgstr ""
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3529
+#: libprocess/gwyprocessenums.c:207 modules/file/imgexport.c:3751
 #: modules/xyz/xyz_raster.c:640
 #, fuzzy
 msgid "Round"
 msgstr "둥근"
 
-#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3530
+#: libprocess/gwyprocessenums.c:208 modules/file/imgexport.c:3752
 #: modules/xyz/xyz_raster.c:641
 msgid "Linear"
 msgstr "선형적인"
@@ -694,11 +704,11 @@ msgstr ""
 msgid "distance|Euclidean"
 msgstr ""
 
-#: libprocess/morph_lib.c:169 libprocess/tip.c:674
+#: libprocess/morph_lib.c:169 libprocess/tip.c:672
 msgid "Dilation..."
 msgstr ""
 
-#: libprocess/morph_lib.c:235 libprocess/tip.c:807
+#: libprocess/morph_lib.c:235 libprocess/tip.c:793
 msgid "Erosion..."
 msgstr ""
 
@@ -706,23 +716,23 @@ msgstr ""
 msgid "Certainty map..."
 msgstr ""
 
-#: libprocess/morph_lib.c:406 libprocess/morph_lib.c:554
+#: libprocess/morph_lib.c:406 libprocess/morph_lib.c:553
 #, c-format
 msgid "Iterating estimate (iteration %d)..."
 msgstr ""
 
-#: libprocess/morph_lib.c:415 libprocess/morph_lib.c:577
+#: libprocess/morph_lib.c:415 libprocess/morph_lib.c:574
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libprocess/morph_lib.c:515
+#: libprocess/morph_lib.c:514
 msgid "Searching for local maxima..."
 msgstr ""
 
-#: libprocess/morph_lib.c:537
+#: libprocess/morph_lib.c:536
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
@@ -767,20 +777,20 @@ msgstr ""
 msgid "Cone"
 msgstr ""
 
-#: libprocess/tip.c:992 libprocess/tip.c:1020 libprocess/tip.c:1069
-#: libprocess/tip.c:1096
+#: libprocess/tip.c:968 libprocess/tip.c:996 libprocess/tip.c:1045
+#: libprocess/tip.c:1072
 msgid "Converting fields"
 msgstr ""
 
-#: libprocess/tip.c:1002
+#: libprocess/tip.c:978
 msgid "Starting partial estimation"
 msgstr ""
 
-#: libprocess/tip.c:1079
+#: libprocess/tip.c:1055
 msgid "Starting full estimation"
 msgstr ""
 
-#: libprocess/triangulation.c:2082 modules/process/calcoefs_view.c:793
+#: libprocess/triangulation.c:2085 modules/process/calcoefs_view.c:793
 #: modules/process/lat_synth.c:1134
 msgid "Triangulating..."
 msgstr ""
@@ -809,7 +819,8 @@ msgstr ""
 msgid "Hide full controls"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4494
+#: libgwydgets/gwy3dwindow.c:709 modules/file/imgexport.c:4754
+#: modules/process/fit-shape.c:736
 msgid "adjective|Basic"
 msgstr ""
 
@@ -830,7 +841,7 @@ msgstr ""
 #: libgwydgets/gwy3dwindow.c:828 libgwydgets/gwy3dwindow.c:834
 #: libgwydgets/gwy3dwindow.c:1032 libgwydgets/gwy3dwindow.c:1040
 #: modules/process/facet_analysis.c:375 modules/process/indent_analyze.c:460
-#: modules/process/rotate.c:278 modules/process/shade.c:237
+#: modules/process/rotate.c:264 modules/process/shade.c:237
 #: modules/process/shade.c:245 modules/process/tilt.c:211
 #: modules/process/tilt.c:223 modules/process/tip_model.c:231
 #: modules/process/tip_model.c:237 modules/process/unrotate.c:334
@@ -914,41 +925,42 @@ msgid "L_ight θ:"
 msgstr "조명(I) θ:"
 
 #: libgwydgets/gwy3dwindow.c:1070 libgwydgets/gwy3dwindow.c:1240
-#: modules/file/hdrimage.cc:2213 modules/file/imgexport.c:4458
-#: modules/file/pixmap.c:789 modules/file/rawfile.c:424
-#: modules/process/angle_dist.c:172 modules/process/bdep_synth.c:341
-#: modules/process/calcoefs_new.c:352 modules/process/calibrate.c:391
-#: modules/process/col_synth.c:377 modules/process/correct_affine.c:301
-#: modules/process/curvature.c:615 modules/process/cwt.c:135
-#: modules/process/deposit_synth.c:351 modules/process/diff_synth.c:411
-#: modules/process/domain_synth.c:354 modules/process/drift.c:245
-#: modules/process/dwt.c:166 modules/process/dwtanisotropy.c:184
-#: modules/process/edge.c:638 modules/process/extend.c:192
-#: modules/process/facet-level.c:193 modules/process/facet_analysis.c:271
-#: modules/process/fbm_synth.c:303 modules/process/fft.c:336
-#: modules/process/fft_filter_2d.c:417 modules/process/fft_synth.c:341
-#: modules/process/fractal.c:231 modules/process/grain_edge.c:213
-#: modules/process/grain_mark.c:247 modules/process/grain_wshed.c:167
-#: modules/process/hough.c:179 modules/process/lat_synth.c:523
-#: modules/process/latsim.c:158 modules/process/level.c:245
-#: modules/process/linematch.c:804 modules/process/lno_synth.c:433
-#: modules/process/local_contrast.c:130 modules/process/mark_disconn.c:208
+#: app/toolbox-editor.c:215 modules/file/hdrimage.cc:2213
+#: modules/file/imgexport.c:4718 modules/file/pixmap.c:789
+#: modules/file/rawfile.c:424 modules/process/angle_dist.c:172
+#: modules/process/bdep_synth.c:341 modules/process/calcoefs_new.c:352
+#: modules/process/calibrate.c:391 modules/process/col_synth.c:382
+#: modules/process/correct_affine.c:301 modules/process/curvature.c:615
+#: modules/process/cwt.c:135 modules/process/deposit_synth.c:349
+#: modules/process/diff_synth.c:411 modules/process/domain_synth.c:354
+#: modules/process/drift.c:245 modules/process/dwt.c:166
+#: modules/process/dwtanisotropy.c:184 modules/process/edge.c:638
+#: modules/process/extend.c:192 modules/process/facet-level.c:193
+#: modules/process/facet_analysis.c:271 modules/process/fbm_synth.c:303
+#: modules/process/fft.c:336 modules/process/fft_filter_2d.c:417
+#: modules/process/fft_synth.c:341 modules/process/fractal.c:231
+#: modules/process/grain_edge.c:213 modules/process/grain_mark.c:247
+#: modules/process/grain_wshed.c:167 modules/process/hough.c:179
+#: modules/process/lat_synth.c:523 modules/process/latsim.c:159
+#: modules/process/level.c:245 modules/process/linematch.c:804
+#: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
+#: modules/process/logistic.c:234 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
-#: modules/process/pid.c:199 modules/process/polydistort.c:209
+#: modules/process/pid.c:199 modules/process/polydistort.c:210
 #: modules/process/polylevel.c:373 modules/process/psdf_logphi.c:249
-#: modules/process/rank.c:158 modules/process/rotate.c:258
-#: modules/process/scale.c:196 modules/process/scars.c:448
+#: modules/process/rank.c:158 modules/process/rotate.c:243
+#: modules/process/scale.c:196 modules/process/scars.c:298
 #: modules/process/semsim.c:211 modules/process/shade.c:208
 #: modules/process/slope_dist.c:276 modules/process/sphere-revolve.c:218
-#: modules/process/straighten_path.c:248 modules/process/tilt.c:161
+#: modules/process/straighten_path.c:249 modules/process/tilt.c:161
 #: modules/process/tip_model.c:166 modules/process/unrotate.c:220
 #: modules/process/volumize_layers.c:221 modules/process/wave_synth.c:349
 #: modules/process/wpour_mark.c:278 modules/volume/volume_calibrate.c:370
-#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:146
+#: modules/volume/volume_extract.c:331 modules/volume/volume_kmeans.c:153
 #: modules/volume/volume_kmedians.c:147 modules/volume/volume_linestat.c:292
-#: modules/volume/volume_slice.c:291
+#: modules/volume/volume_slice.c:292
 msgid "_Reset"
 msgstr "초기화(R)"
 
@@ -968,7 +980,7 @@ msgstr "Z 최소값"
 msgid "Maximum z value"
 msgstr "Z 최대값"
 
-#: libgwydgets/gwy3dwindow.c:1168 modules/file/imgexport.c:3574
+#: libgwydgets/gwy3dwindow.c:1168 modules/file/imgexport.c:3796
 msgid "_Label:"
 msgstr "라벨(L):"
 
@@ -1029,27 +1041,27 @@ msgstr "라벨 설정"
 msgid "Label Text"
 msgstr "라벨 텍스트"
 
-#: libgwydgets/gwydatawindow.c:894
+#: libgwydgets/gwydatawindow.c:891
 #, fuzzy
 msgid "_Unset Color Gradient"
 msgstr "색상 변화표 선택"
 
 #. TRANSLATORS: Countable (more false colour gradients).
-#: libgwydgets/gwydatawindow.c:902
+#: libgwydgets/gwydatawindow.c:899
 #, fuzzy
 msgid "_More..."
 msgstr "더보기..."
 
-#: libgwydgets/gwydatawindow.c:931 libgwydgets/gwyoptionmenus.c:828
+#: libgwydgets/gwydatawindow.c:928 libgwydgets/gwyoptionmenus.c:828
 msgid "Choose Color Gradient"
 msgstr "색상 변화표 선택"
 
-#: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:423
+#: libgwydgets/gwydgetenums.c:46 modules/process/neural.c:420
 msgid "Hidden"
 msgstr "숨김"
 
 #: libgwydgets/gwydgetenums.c:47 libgwydgets/gwygraphwindowmeasuredialog.c:572
-#: modules/file/imgexport.c:455 modules/tools/selectionmanager.c:265
+#: modules/file/imgexport.c:474 modules/tools/selectionmanager.c:274
 msgid "Points"
 msgstr "점"
 
@@ -1107,7 +1119,7 @@ msgstr "점 크기(P):"
 msgid "_Line type:"
 msgstr "선 종류(L):"
 
-#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:2857
+#: libgwydgets/gwygraphareadialog.c:181 modules/file/imgexport.c:3133
 msgid "Line t_hickness:"
 msgstr "선 굵기(H):"
 
@@ -1196,23 +1208,23 @@ msgstr "선 종류|실선"
 msgid "line-style|Dash"
 msgstr "선 종류|점선"
 
-#: libgwydgets/gwygraphcurves.c:448
+#: libgwydgets/gwygraphcurves.c:451
 msgid "Description"
 msgstr "설명"
 
-#: libgwydgets/gwygraphcurves.c:460
+#: libgwydgets/gwygraphcurves.c:463
 msgid "Mode"
 msgstr "모드"
 
-#: libgwydgets/gwygraphcurves.c:478
+#: libgwydgets/gwygraphcurves.c:481
 msgid "Color"
 msgstr "색상"
 
-#: libgwydgets/gwygraphcurves.c:491
+#: libgwydgets/gwygraphcurves.c:494
 msgid "Point Type"
 msgstr "점 종류"
 
-#: libgwydgets/gwygraphcurves.c:513
+#: libgwydgets/gwygraphcurves.c:516
 msgid "Line Style"
 msgstr "선 종류"
 
@@ -1224,12 +1236,16 @@ msgstr "외곽선 두께:"
 msgid "_Reversed layout"
 msgstr "반전된 레이아웃(R)"
 
-#: libgwydgets/gwygraphwindow.c:163 app/toolbox.c:118
+#: libgwydgets/gwygraphmodel.c:2178
+msgid "Abscissa"
+msgstr ""
+
+#: libgwydgets/gwygraphwindow.c:163 app/toolbox-editor.c:1002 app/toolbox.c:108
 msgid "Graph"
 msgstr "그래프"
 
 #: libgwydgets/gwygraphwindow.c:170 modules/file/hdrimage.cc:472
-#: modules/process/fit_2d.c:722
+#: modules/process/fit-shape.c:932
 msgid "Data"
 msgstr "데이터"
 
@@ -1272,7 +1288,7 @@ msgid "Length"
 msgstr "길이"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:398
-#: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1026
+#: libgwydgets/gwygraphwindowmeasuredialog.c:588 app/gwyplaintool.c:1018
 #: modules/process/lat_synth.c:703 modules/process/obj_synth.c:566
 #: modules/process/pat_synth.c:846 modules/process/pat_synth.c:1148
 #: modules/process/pat_synth.c:1483
@@ -1289,10 +1305,11 @@ msgstr "곡선:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:553
 #: modules/process/linematch.c:828 modules/process/semsim.c:249
+#: modules/xyz/xyz_level.c:254
 msgid "Method:"
 msgstr "방법:"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:275
+#: libgwydgets/gwygraphwindowmeasuredialog.c:592 modules/process/crosscor.c:354
 msgid "Angle"
 msgstr "각ㄱ도"
 
@@ -1301,10 +1318,10 @@ msgstr "각ㄱ도"
 msgid "Preferred"
 msgstr "선호 방법"
 
-#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:408
-#: modules/file/imgexport.c:3879 modules/file/imgexport.c:4305
+#: libgwydgets/gwyoptionmenus.c:470 app/meta.c:410
+#: modules/file/imgexport.c:4120 modules/file/imgexport.c:4565
 #: modules/file/rawfile.c:995 modules/process/convolution_filter.c:538
-#: modules/process/neural.c:421 modules/tools/selectionmanager.c:336
+#: modules/process/neural.c:418 modules/tools/selectionmanager.c:345
 msgid "Name"
 msgstr "이름"
 
@@ -1449,7 +1466,7 @@ msgid ""
 "tarball."
 msgstr ""
 
-#: app/about.c:160
+#: app/about.c:160 modules/process/logistic.c:270
 msgid "Features"
 msgstr "특징"
 
@@ -1501,7 +1518,7 @@ msgstr "원격제어"
 msgid "Python Scripting Interface"
 msgstr ""
 
-#: app/app.c:300
+#: app/app.c:301
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1512,193 +1529,193 @@ msgstr ""
 "%s\n"
 "정말로 종료하시겠습니까?"
 
-#: app/app.c:439
+#: app/app.c:440
 msgid "Mask _Color..."
 msgstr "마스크 색상(C)..."
 
-#: app/app.c:455 app/app.c:1724
+#: app/app.c:456 app/app.c:1725
 msgid "Zoom _1:1"
 msgstr "1:1 크기로 보기(1)"
 
-#: app/app.c:459 app/app.c:1728 app/app.c:1998
+#: app/app.c:460 app/app.c:1729 app/app.c:1957
 msgid "Metadata _Browser..."
 msgstr "메타데이터 탐색기(B)..."
 
-#: app/app.c:464 app/app.c:1733 app/app.c:2003
+#: app/app.c:465 app/app.c:1734 app/app.c:1962
 msgid "View _Log..."
 msgstr "로그 보기(L)..."
 
-#: app/app.c:648
+#: app/app.c:649
 msgid "Pi_xelwise Square"
 msgstr "픽셀방식의 정사각형"
 
-#: app/app.c:658
+#: app/app.c:659
 msgid "_Physically Square"
 msgstr "물리적 정사각형(P)"
 
-#: app/app.c:835
+#: app/app.c:836
 msgid "verb|Save"
 msgstr "동사|저장하기"
 
-#: app/app.c:838 app/app.c:842
+#: app/app.c:839 app/app.c:843
 msgid "Save 3D view to an image"
 msgstr "3D 뷰를 이미지로 저장"
 
-#: app/app.c:848
+#: app/app.c:849
 msgid "Set as Default"
 msgstr "기본값으로 설정"
 
-#: app/app.c:850
+#: app/app.c:851
 msgid "Set the current view setup as the default"
 msgstr "현재 뷰 설정을 기본값으로 설정"
 
-#: app/app.c:939
+#: app/app.c:940
 msgid "_Show mask"
 msgstr "마스크 보기(S)"
 
-#: app/app.c:1105
+#: app/app.c:1106
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "3D 뷰를 `%s'로 저장하기를 실패하였습니다."
 
-#: app/app.c:1149
+#: app/app.c:1150
 msgid "Export 3D View"
 msgstr "3D 뷰 내보내기"
 
-#: app/app.c:1456
+#: app/app.c:1457
 msgid "_Change Preview"
 msgstr "미리보기 바꾸기(C)"
 
-#: app/app.c:1582
+#: app/app.c:1583
 msgid "Change Volume Data Preview"
 msgstr "볼륨 데이터 미로보기 바꾸기"
 
-#: app/app.c:1592
+#: app/app.c:1593
 msgid "Preview quantity:"
 msgstr "미리보기 개수:"
 
-#: app/app.c:1602 modules/process/extend.c:267 modules/tools/linestats.c:165
+#: app/app.c:1603 modules/process/extend.c:267 modules/tools/linestats.c:165
 #: modules/volume/volume_linestat.c:142
 msgid "Mean"
 msgstr "평균"
 
-#: app/app.c:1603 modules/process/polydistort.c:254 modules/tools/filter.c:240
+#: app/app.c:1604 modules/process/polydistort.c:255 modules/tools/filter.c:240
 #: modules/tools/icolorange.c:424 modules/tools/linestats.c:167
 #: modules/volume/volume_linestat.c:144
 msgid "Minimum"
 msgstr "최소"
 
-#: app/app.c:1604 modules/process/col_synth.c:165 modules/tools/filter.c:241
+#: app/app.c:1605 modules/process/col_synth.c:167 modules/tools/filter.c:241
 #: modules/tools/icolorange.c:435 modules/tools/linestats.c:168
 #: modules/volume/volume_linestat.c:145
 msgid "Maximum"
 msgstr "최대"
 
-#: app/app.c:1605
+#: app/app.c:1606
 msgid "Min. position"
 msgstr "최소 위치"
 
-#: app/app.c:1606
+#: app/app.c:1607
 msgid "Max. position"
 msgstr "최대 위치"
 
-#: app/app.c:1607 modules/process/bdep_synth.c:134
-#: modules/process/col_synth.c:166 modules/process/scars.c:496
-#: modules/process/scars.c:503 modules/process/threshold.c:339
+#: app/app.c:1608 modules/process/bdep_synth.c:134
+#: modules/process/col_synth.c:168 modules/process/scars.c:346
+#: modules/process/scars.c:353 modules/process/threshold.c:341
 msgid "RMS"
 msgstr ""
 
-#: app/app.c:1608 modules/file/asciiexport.c:187 modules/file/gxyzffile.c:393
+#: app/app.c:1609 modules/file/asciiexport.c:187 modules/file/gxyzffile.c:393
 #: modules/file/xyzexport.c:233 modules/file/xyzexport.c:302
 msgid "Channel:"
 msgstr "채널:"
 
-#: app/app.c:1609
+#: app/app.c:1610
 msgid "Section:"
 msgstr "부분:"
 
-#: app/app.c:1860
+#: app/app.c:1861
 #, fuzzy
 msgid "_Update Preview"
 msgstr "미리보기 바꾸기(C)"
 
-#: app/app.c:1866
+#: app/app.c:1867
 #, fuzzy
 msgid "_Density Map"
 msgstr "점 종류(T):"
 
-#: app/data-browser-aux.c:1352
+#: app/data-browser-aux.c:1373
 #, c-format
 msgid "Unknown channel %d"
 msgstr "알 수 없는 채널 %d"
 
-#: app/data-browser-aux.c:1435
+#: app/data-browser-aux.c:1456
 #, c-format
 msgid "Unknown volume %d"
 msgstr "알 수 없는 볼륨 %d"
 
-#: app/data-browser-aux.c:1499
+#: app/data-browser-aux.c:1520
 #, fuzzy, c-format
 msgid "Unknown XYZ %d"
 msgstr "알 수 없는 볼륨 %d"
 
-#: app/data-browser-aux.c:2858
+#: app/data-browser-aux.c:2795
 #, c-format
 msgid "Z levels: %d, Z unit: %s"
 msgstr ""
 
-#: app/data-browser-aux.c:2884
+#: app/data-browser-aux.c:2821
 #, fuzzy, c-format
 msgid "Points: %d"
 msgstr "점"
 
-#: app/data-browser.c:5430
+#: app/data-browser.c:5459
 msgid "Extract to a new file"
 msgstr "새 파일로 확장"
 
-#: app/data-browser.c:5437
+#: app/data-browser.c:5466
 msgid "Duplicate"
 msgstr "사본 만들기"
 
-#: app/data-browser.c:5444
+#: app/data-browser.c:5473
 msgid "Delete"
 msgstr "제거하기"
 
-#: app/data-browser.c:5503
+#: app/data-browser.c:5532
 msgid "Data Browser"
 msgstr "데이터 탐색기"
 
-#: app/data-browser.c:5528
+#: app/data-browser.c:5557
 #, fuzzy
 msgid "Show file messages"
 msgstr "라벨 보기(L)"
 
-#: app/data-browser.c:5540
+#: app/data-browser.c:5569
 msgid "Close file"
 msgstr "파일 닫기"
 
-#: app/data-browser.c:5553
+#: app/data-browser.c:5582
 msgid "Channels"
 msgstr "채널"
 
-#: app/data-browser.c:5567 modules/volume/volume_extract.c:444
+#: app/data-browser.c:5596 modules/volume/volume_extract.c:444
 msgid "Graphs"
 msgstr "그래프"
 
-#: app/data-browser.c:5581
+#: app/data-browser.c:5610
 msgid "Spectra"
 msgstr "스펙트럼"
 
-#: app/data-browser.c:5609
+#: app/data-browser.c:5638
 msgid "XYZ"
 msgstr ""
 
-#: app/data-browser.c:6581
+#: app/data-browser.c:6612
 #, c-format
 msgid "Messages for %s"
 msgstr ""
 
-#: app/data-browser.c:6585
+#: app/data-browser.c:6616
 msgid "Messages for Untitled"
 msgstr ""
 
@@ -1720,8 +1737,8 @@ msgid ""
 "is incomplete due to the lack of documentation, testing files and/or people "
 "willing to help with the testing.\n"
 "\n"
-"If you want to help to improve the import please contact the author of "
-"module %s-%s:\n"
+"If you can help to improve the import please contact the author of module %s-"
+"%s:\n"
 "\n"
 "%s"
 msgstr ""
@@ -1749,7 +1766,7 @@ msgstr "파일 병합"
 msgid "Open File"
 msgstr "파일 열기"
 
-#: app/file.c:521 app/gwymoduleutils.c:193
+#: app/file.c:521 app/gwymoduleutils.c:192
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "`%s' 저장을 실패하였습니다. "
@@ -1990,17 +2007,17 @@ msgstr "헤더 파일 %u에 키 값이 비어있습니다. "
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
 
-#: app/gwymoduleutils.c:198 app/settings.c:131 app/settings.c:142
-#: modules/file/err.h:62
+#: app/gwymoduleutils.c:197 app/settings.c:131 app/settings.c:142
+#: app/toolbox-spec.c:536 modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
 msgstr "%s 파일에 작성할 수 없습니다. "
 
-#: app/gwyplaintool.c:574
+#: app/gwyplaintool.c:566
 msgid "<big><b>Missing layer module.</b></big>"
 msgstr "<big><b>레이어 모듈을 .</b></big>"
 
-#: app/gwyplaintool.c:580
+#: app/gwyplaintool.c:572
 #, c-format
 msgid ""
 "This tool requires layer of type %s to work, which does not seem to be "
@@ -2009,23 +2026,23 @@ msgstr ""
 "이 도구를 사용하기 위해서는 %s 종류의 레이어가 필요합니다만 현재 설치가 되어 "
 "있지 않은 것 같습니다.  설치환경을 다시 확인 바랍니다. "
 
-#: app/gwyplaintool.c:796
+#: app/gwyplaintool.c:788
 msgid "Clear selected objects"
 msgstr "선택된 대상 지우기"
 
 #. TRANSLATORS: Origin of the selected rectangle.
-#: app/gwyplaintool.c:1008
+#: app/gwyplaintool.c:1000
 msgid "Origin"
 msgstr "원점"
 
-#: app/gwyplaintool.c:1019 modules/file/rawfile.c:997
+#: app/gwyplaintool.c:1011 modules/file/rawfile.c:997
 #: modules/process/convolution_filter.c:349
-#: modules/process/convolution_filter.c:553 modules/process/neural.c:422
+#: modules/process/convolution_filter.c:553 modules/process/neural.c:419
 #: modules/process/obj_synth.c:535 modules/process/pat_synth.c:1449
 msgid "Size"
 msgstr "크기"
 
-#: app/gwyplaintool.c:1022
+#: app/gwyplaintool.c:1014
 msgid "Width"
 msgstr "폭"
 
@@ -2062,7 +2079,7 @@ msgstr "현재-언어-코드|en"
 msgid "Log of %s (%s)"
 msgstr "%s (%s)의 로그"
 
-#: app/log.c:590 app/meta.c:224
+#: app/log.c:590 app/meta.c:224 modules/tools/selectionmanager.c:399
 msgid "_Export"
 msgstr "내보내기(E)"
 
@@ -2074,7 +2091,7 @@ msgstr "지우기(R)"
 msgid "_Close"
 msgstr "닫기(C)"
 
-#: app/log.c:617 modules/file/imgexport.c:3887 modules/file/rawfile.c:996
+#: app/log.c:617 modules/file/imgexport.c:4128 modules/file/rawfile.c:996
 msgid "Type"
 msgstr "종류"
 
@@ -2082,8 +2099,8 @@ msgstr "종류"
 msgid "Function"
 msgstr "기능"
 
-#: app/log.c:619 modules/file/imgexport.c:2824 modules/process/neural.c:613
-#: modules/tools/stats.c:426
+#: app/log.c:619 modules/file/imgexport.c:3100 modules/process/fit-shape.c:740
+#: modules/process/neural.c:610 modules/tools/stats.c:425
 msgid "Parameters"
 msgstr "변수"
 
@@ -2095,19 +2112,19 @@ msgstr "시간"
 msgid "Export Log"
 msgstr "로그 내보내기"
 
-#: app/menu.c:556 app/toolbox.c:651
+#: app/menu.c:556 app/toolbox.c:581
 msgid "_Data Process"
 msgstr "데이터 프로세스(D)"
 
-#: app/menu.c:598 app/toolbox.c:654
+#: app/menu.c:598 app/toolbox.c:584
 msgid "_Graph"
 msgstr "그래프(G)"
 
-#: app/menu.c:641 app/toolbox.c:657
+#: app/menu.c:641 app/toolbox.c:587
 msgid "_Volume Data"
 msgstr "3차원 데이터(V)"
 
-#: app/menu.c:684 app/toolbox.c:660
+#: app/menu.c:684 app/toolbox.c:590
 #, fuzzy
 msgid "_XYZ Data"
 msgstr "데이터"
@@ -2136,21 +2153,21 @@ msgstr "문서 작성 내역(D)"
 msgid "_New"
 msgstr "새로 만들기(N)"
 
-#: app/meta.c:235 modules/file/imgexport.c:4370 modules/file/rawfile.c:1058
-#: modules/process/neural.c:714
+#: app/meta.c:235 modules/file/imgexport.c:4630 modules/file/rawfile.c:1058
+#: modules/process/neural.c:711 modules/tools/selectionmanager.c:405
 msgid "_Delete"
 msgstr "삭제하기(D)"
 
-#: app/meta.c:292
+#: app/meta.c:294
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "%s (%s)의 메타데이터 "
 
-#: app/meta.c:617
+#: app/meta.c:619
 msgid "New item"
 msgstr "새 아이템"
 
-#: app/meta.c:735
+#: app/meta.c:737
 msgid "Save Metadata"
 msgstr "메타데이터 저장하기"
 
@@ -2174,7 +2191,7 @@ msgstr "선택된 아이템 삭제하기"
 msgid "Set selected item as default"
 msgstr "선택된 아이템을 기본값으로 설정"
 
-#: app/settings.c:124 modules/file/err.h:55
+#: app/settings.c:124 app/toolbox-spec.c:528 modules/file/err.h:55
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr "작성하기 위해 파일 %s를 열수 없습니다. "
@@ -2196,17 +2213,17 @@ msgstr ""
 msgid "File is corrupted, deserialization failed."
 msgstr ""
 
-#: app/settings.c:260
+#: app/settings.c:264
 #, c-format
 msgid "Cannot create user config directory %s: %s"
 msgstr ""
 
-#: app/settings.c:273
+#: app/settings.c:277
 #, c-format
 msgid "Cannot create user ui directory %s: %s"
 msgstr ""
 
-#: app/settings.c:290
+#: app/settings.c:294
 #, c-format
 msgid "Cannot create user module directory %s: %s"
 msgstr ""
@@ -2621,128 +2638,269 @@ msgstr "다음 팁(N)"
 msgid "_Show tips at startup"
 msgstr ""
 
-#: app/toolbox.c:118
-msgid "View"
-msgstr "보기"
+#: app/toolbox-editor.c:212
+#, fuzzy
+msgid "Toolbox Editor"
+msgstr "편집기"
 
-#: app/toolbox.c:118
-msgid "Data Process"
-msgstr "데이터 프로세스"
+#: app/toolbox-editor.c:257
+#, fuzzy
+msgid "_New Item"
+msgstr "새 아이템"
 
-#: app/toolbox.c:118
-msgid "Tools"
-msgstr "도구"
+#: app/toolbox-editor.c:262
+#, fuzzy
+msgid "_New Group"
+msgstr "그래프 자르기"
 
-#: app/toolbox.c:174
-msgid "Display a 3D view of data"
-msgstr "데이터를 3D 뷰로 보여주기"
-
-#: app/toolbox.c:181
-msgid "Zoom in"
-msgstr "확대"
-
-#: app/toolbox.c:185
-msgid "Zoom 1:1"
-msgstr "1:1 보기"
-
-#: app/toolbox.c:189
-msgid "Zoom out"
-msgstr "축소"
-
-#: app/toolbox.c:645
-msgid "_File"
-msgstr "파일(F)"
-
-#: app/toolbox.c:647
+#: app/toolbox-editor.c:268 app/toolbox.c:577
 msgid "_Edit"
 msgstr "편집(E)"
 
-#: app/toolbox.c:663
+#: app/toolbox-editor.c:273 modules/process/fft_filter_2d.c:499
+#: modules/tools/maskedit.c:548 modules/volume/volume_zcal.c:173
+msgid "_Remove"
+msgstr "제거(R)"
+
+#: app/toolbox-editor.c:278
+msgid "Move _Up"
+msgstr ""
+
+#: app/toolbox-editor.c:283
+msgid "Move _Down"
+msgstr ""
+
+#: app/toolbox-editor.c:292 modules/file/hdrimage.cc:2304
+#: modules/file/imgexport.c:3084 modules/file/pixmap.c:872
+#: modules/file/rawfile.c:658 modules/process/crosscor.c:252
+#: modules/process/dimensions.h:473 modules/process/tip_blind.c:333
+msgid "_Width:"
+msgstr ""
+
+#: app/toolbox-editor.c:774
+msgid "Toolbox Group"
+msgstr ""
+
+#: app/toolbox-editor.c:791 modules/file/rawgraph.c:267
+msgid "_Title:"
+msgstr ""
+
+#: app/toolbox-editor.c:805
+msgid "_Id:"
+msgstr ""
+
+#: app/toolbox-editor.c:818
+msgid "_Suggest"
+msgstr ""
+
+#: app/toolbox-editor.c:824
+msgid "Trans_latable title"
+msgstr ""
+
+#: app/toolbox-editor.c:874
+msgid "Group id is not a valid identifier"
+msgstr ""
+
+#: app/toolbox-editor.c:882
+msgid "Group id is not unique"
+msgstr ""
+
+#: app/toolbox-editor.c:971
+msgid "Toolbox Item"
+msgstr ""
+
+#: app/toolbox-editor.c:992 modules/process/coerce.c:331
+#: modules/tools/filter.c:284
+msgid "_Type:"
+msgstr ""
+
+#: app/toolbox-editor.c:999
+msgid "Placeholder"
+msgstr ""
+
+#: app/toolbox-editor.c:1000
+msgid "Builtin"
+msgstr ""
+
+#: app/toolbox-editor.c:1001 app/toolbox.c:107
+msgid "Data Process"
+msgstr "데이터 프로세스"
+
+#: app/toolbox-editor.c:1003
+#, fuzzy
+msgid "Volume Data"
+msgstr "3차원 데이터(V)"
+
+#: app/toolbox-editor.c:1004
+#, fuzzy
+msgid "XYZ Data"
+msgstr "데이터"
+
+#: app/toolbox-editor.c:1005
+#, fuzzy
+msgid "Tool"
+msgstr "도구"
+
+#: app/toolbox-editor.c:1012
+#, fuzzy
+msgid "_Mode:"
+msgstr "모드:"
+
+#: app/toolbox-editor.c:1019 app/toolbox-editor.c:1038
+#, fuzzy
+msgid "Default"
+msgstr "기본값으로 설정"
+
+#: app/toolbox-editor.c:1020
+#, fuzzy
+msgid "Interactive"
+msgstr "교차점"
+
+#: app/toolbox-editor.c:1021
+#, fuzzy
+msgid "Non-interactive"
+msgstr "음성의"
+
+#: app/toolbox-editor.c:1029
+msgid "Use _icon from:"
+msgstr ""
+
+#: app/toolbox-editor.c:1063
+#, fuzzy
+msgid "Functions"
+msgstr "기능"
+
+#: app/toolbox-spec.c:618
+msgid "placeholder"
+msgstr ""
+
+#: app/toolbox-spec.c:626
+#, fuzzy
+msgid "remaining tools"
+msgstr "그리기 도구(D)"
+
+#: app/toolbox-spec.c:710
+msgid "All tools not placed explicitly go here."
+msgstr ""
+
+#: app/toolbox.c:106
+msgid "View"
+msgstr "보기"
+
+#: app/toolbox.c:109
+msgid "Tools"
+msgstr "도구"
+
+#: app/toolbox.c:575
+msgid "_File"
+msgstr "파일(F)"
+
+#: app/toolbox.c:593
 msgid "_Info"
 msgstr "정보(I)"
 
-#: app/toolbox.c:698
+#: app/toolbox.c:663
+msgid "Display a 3D view of data"
+msgstr "데이터를 3D 뷰로 보여주기"
+
+#: app/toolbox.c:667
+msgid "Zoom in"
+msgstr "확대"
+
+#: app/toolbox.c:671
+msgid "Zoom out"
+msgstr "축소"
+
+#: app/toolbox.c:675
+msgid "Zoom 1:1"
+msgstr "1:1 보기"
+
+#: app/toolbox.c:722
 msgid "/Show _Data Browser"
 msgstr "/데이터 브라우저 보기(D)"
 
-#: app/toolbox.c:706
+#: app/toolbox.c:730
 msgid "/Module _Browser"
 msgstr "/모듈 브라우저(B)"
 
-#: app/toolbox.c:714
+#: app/toolbox.c:738
 msgid "/Program _Messages"
 msgstr ""
 
-#: app/toolbox.c:729
+#: app/toolbox.c:753
 msgid "/_User Guide"
 msgstr "/사용자 메뉴얼(U)"
 
-#: app/toolbox.c:737
+#: app/toolbox.c:761
 msgid "/_Tip of the Day"
 msgstr "/오늘의 팁(T)"
 
-#: app/toolbox.c:745
+#: app/toolbox.c:769
 msgid "/_About Gwyddion"
 msgstr "/Gwyddion 정보(A)"
 
-#: app/toolbox.c:782
+#: app/toolbox.c:806
 msgid "/_Open..."
 msgstr "/열기(O)..."
 
-#: app/toolbox.c:790
+#: app/toolbox.c:814
 msgid "/_Merge..."
 msgstr "/병합(M)..."
 
-#: app/toolbox.c:798
+#: app/toolbox.c:822
 msgid "/Open _Recent"
 msgstr "/최근 파일 열기(R)"
 
-#: app/toolbox.c:806
+#: app/toolbox.c:830
 msgid "/_Save"
 msgstr "/저장(S)"
 
-#: app/toolbox.c:814
+#: app/toolbox.c:838
 msgid "/Save _As..."
 msgstr "/다른 이름으로 저장(A)..."
 
-#: app/toolbox.c:822
+#: app/toolbox.c:846
 #, fuzzy
 msgid "/_Close"
 msgstr "닫기(C)"
 
-#: app/toolbox.c:830
+#: app/toolbox.c:854
 msgid "/Remo_ve All Logs"
 msgstr "/로그 기록 모두 삭제(V)"
 
-#: app/toolbox.c:846
+#: app/toolbox.c:870
 msgid "/_Quit"
 msgstr "/끝내기(Q)"
 
-#: app/toolbox.c:886
+#: app/toolbox.c:910
 msgid "/_Undo"
 msgstr "/실행 취소(U)"
 
-#: app/toolbox.c:894
+#: app/toolbox.c:918
 msgid "/_Redo"
 msgstr "/다시 실행(R)"
 
-#: app/toolbox.c:910
+#: app/toolbox.c:934
 msgid "/Default Mask _Color..."
 msgstr "/초기 마스크 색상(C) ..."
 
-#: app/toolbox.c:918
+#: app/toolbox.c:942
 msgid "/Color _Gradients..."
 msgstr "/색상 변화표(G)..."
 
-#: app/toolbox.c:926
+#: app/toolbox.c:950
 msgid "/G_L Materials..."
 msgstr "/GL 색상표(L)"
 
-#: app/toolbox.c:934
+#: app/toolbox.c:958
+msgid "/_Toolbox..."
+msgstr ""
+
+#: app/toolbox.c:966
 msgid "/_Keyboard Shortcuts"
 msgstr "/키보드 단축키(K)"
 
-#: app/toolbox.c:942
+#: app/toolbox.c:974
 msgid "/_Logging Enabled"
 msgstr "/로그 기록 활성화(L)"
 
@@ -2750,25 +2908,25 @@ msgstr "/로그 기록 활성화(L)"
 msgid "Program Messages"
 msgstr ""
 
-#: app/toolbox.c:1312
+#: app/toolbox.c:1320
 msgid "Change Default Mask Color"
 msgstr "기본 마스크 색상 변경하기"
 
-#: app/toolbox.c:1340
+#: app/toolbox.c:1348
 msgid "OpenGL 3D graphics not available"
 msgstr "OpenGL 3D 그래픽이 사용불가합니다."
 
-#: app/toolbox.c:1345
+#: app/toolbox.c:1353
 msgid "OpenGL was disabled with a command-line option."
 msgstr ""
 
-#: app/toolbox.c:1353
+#: app/toolbox.c:1361
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
 msgstr ""
 
-#: app/toolbox.c:1360
+#: app/toolbox.c:1368
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr ""
 
@@ -2844,7 +3002,7 @@ msgstr ""
 msgid "Secondary data item has no primary data"
 msgstr ""
 
-#: app/wait.c:94
+#: app/wait.c:106
 msgid "Please wait"
 msgstr ""
 
@@ -2925,11 +3083,11 @@ msgstr ""
 msgid "Comment is not nul-terminated."
 msgstr ""
 
-#: modules/file/ambfile.c:81
+#: modules/file/ambfile.c:84
 msgid "Imports Ambios AMB data files."
 msgstr ""
 
-#: modules/file/ambfile.c:94
+#: modules/file/ambfile.c:97
 msgid "Ambios amb files (.amb)"
 msgstr ""
 
@@ -2961,11 +3119,11 @@ msgstr ""
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr ""
 
-#: modules/file/apedaxfile.c:257
+#: modules/file/apedaxfile.c:259
 msgid "Imports A.P.E. Research DAX data files."
 msgstr ""
 
-#: modules/file/apedaxfile.c:272
+#: modules/file/apedaxfile.c:274
 msgid "A.P.E. Research DAX Files (.dax) and APDT File (.apdt)"
 msgstr ""
 
@@ -2997,22 +3155,22 @@ msgstr "높이:"
 msgid "Value units:"
 msgstr "값 단위:"
 
-#: modules/file/asciiexport.c:264 modules/graph/graph_export_ascii.c:112
+#: modules/file/asciiexport.c:264 modules/graph/graph_export_ascii.c:111
 msgid "Export Text"
 msgstr "텍스트 내보내기"
 
 #: modules/file/asciiexport.c:275 modules/file/gxyzffile.c:402
-#: modules/file/imgexport.c:3922 modules/file/rawfile.c:758
-#: modules/file/xyzexport.c:311 modules/process/calibrate.c:607
-#: modules/process/coerce.c:364 modules/process/col_synth.c:501
-#: modules/process/correct_affine.c:470 modules/process/extend.c:259
-#: modules/process/fft_filter_1d.c:261 modules/process/grain_dist.c:306
-#: modules/process/grain_edge.c:255 modules/process/grain_mark.c:338
-#: modules/process/grain_wshed.c:252 modules/process/linematch.c:852
-#: modules/process/mark_disconn.c:279 modules/process/slope_dist.c:367
-#: modules/process/tip_blind.c:357 modules/process/wpour_mark.c:354
-#: modules/tools/spotremove.c:322 modules/tools/stats.c:403
-#: modules/xyz/xyz_raster.c:628
+#: modules/file/imgexport.c:3536 modules/file/imgexport.c:4163
+#: modules/file/rawfile.c:758 modules/file/xyzexport.c:311
+#: modules/process/calibrate.c:607 modules/process/coerce.c:364
+#: modules/process/col_synth.c:506 modules/process/correct_affine.c:470
+#: modules/process/extend.c:259 modules/process/fft_filter_1d.c:261
+#: modules/process/grain_dist.c:306 modules/process/grain_edge.c:255
+#: modules/process/grain_mark.c:338 modules/process/grain_wshed.c:252
+#: modules/process/linematch.c:852 modules/process/mark_disconn.c:279
+#: modules/process/slope_dist.c:367 modules/process/tip_blind.c:357
+#: modules/process/wpour_mark.c:354 modules/tools/spotremove.c:322
+#: modules/tools/stats.c:402 modules/xyz/xyz_raster.c:628
 msgid "Options"
 msgstr "옵션"
 
@@ -3093,7 +3251,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr ""
 
 #: modules/file/burleigh_exp.c:226 modules/file/burleigh_exp.c:267
-#: modules/file/nanoscope.c:1605 modules/file/omicron.c:415
+#: modules/file/nanoscope.c:1605 modules/file/omicron.c:416
 #: modules/file/shimadzu.c:468
 msgid "Missing colon in header line."
 msgstr ""
@@ -3140,6 +3298,36 @@ msgstr ""
 
 #: modules/file/csmfile.c:96
 msgid "Benyuan CSM files (.csm)"
+msgstr ""
+
+#: modules/file/dektakxml.c:138
+#, fuzzy
+msgid "Imports Dektak XML data files."
+msgstr "텍스트 파일로 그래프 데이터 내보내기"
+
+#: modules/file/dektakxml.c:151
+msgid "Dektak XML data files (.xml)"
+msgstr ""
+
+#: modules/file/dektakxml.c:228 modules/file/lextfile.c:260
+#: modules/file/nanoscan.c:267 modules/file/ometiff.c:265
+#, c-format
+msgid "XML parsing failed: %s"
+msgstr ""
+
+#: modules/file/dektakxml.c:400 modules/file/lextfile.c:163
+#: modules/file/nanoscan.c:672 modules/file/ometiff.c:445
+#, c-format
+msgid "Top-level element is not ‘%s’."
+msgstr ""
+
+#: modules/file/dimensionfile.c:71
+#, fuzzy
+msgid "Imports old Veeco Dimension 3100D files."
+msgstr "텍스트 파일로 그래프 데이터 내보내기"
+
+#: modules/file/dimensionfile.c:84
+msgid "Dimension 3100D files (.001, .002, ...)"
 msgstr ""
 
 #: modules/file/dm3file.c:274
@@ -3240,8 +3428,8 @@ msgstr ""
 msgid "Scan size header field overlaps with data."
 msgstr ""
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:774
-#: modules/file/nrrdfile.c:819
+#: modules/file/err.h:48 modules/file/nrrdfile.c:779
+#: modules/file/nrrdfile.c:824
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr ""
@@ -3451,54 +3639,55 @@ msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
 msgstr ""
 
-#: modules/file/gwytiff.h:325
+#: modules/file/gwytiff.h:332
 #, c-format
 msgid "BigTIFF reserved fields are %u and %u instead of 8 and 0."
 msgstr ""
 
-#: modules/file/gwytiff.h:342 modules/file/gwytiff.h:359
+#: modules/file/gwytiff.h:349 modules/file/gwytiff.h:366
 #, c-format
 msgid "TIFF directory %lu ended unexpectedly."
 msgstr ""
 
-#: modules/file/gwytiff.h:477
+#: modules/file/gwytiff.h:484
 #, c-format
 msgid "BigTIFF data type %u was found in a classic TIFF."
 msgstr ""
 
-#: modules/file/gwytiff.h:494
+#: modules/file/gwytiff.h:501
 msgid "Invalid tag data positions were found."
 msgstr ""
 
-#: modules/file/gwytiff.h:867 modules/file/gwytiff.h:874
-#: modules/file/gwytiff.h:983 modules/file/gwytiff.h:1000
+#: modules/file/gwytiff.h:874 modules/file/gwytiff.h:889
+#: modules/file/gwytiff.h:1012 modules/file/gwytiff.h:1019
 #, c-format
 msgid "Required tag %u was not found."
 msgstr ""
 
-#: modules/file/gwytiff.h:899
+#: modules/file/gwytiff.h:942 modules/file/gwytiff.h:986
+#: modules/file/keyence.c:449 modules/file/matfile.c:276
+#: modules/file/matfile.c:298 modules/file/omicronflat.c:1962
+#: modules/file/princetonspe.c:339 modules/file/psia.c:352
+#: modules/file/zemax.c:168
+msgid "File is truncated."
+msgstr ""
+
+#: modules/file/gwytiff.h:1044
 msgid "Non-uniform bits per sample are unsupported."
 msgstr ""
 
-#: modules/file/gwytiff.h:926
+#: modules/file/gwytiff.h:1071
 #, c-format
 msgid "Compression type %u is not supported."
 msgstr ""
 
-#: modules/file/gwytiff.h:932
+#: modules/file/gwytiff.h:1077
 #, c-format
 msgid "Planar configuration %u is not supported."
 msgstr ""
 
-#: modules/file/gwytiff.h:956
+#: modules/file/gwytiff.h:1101
 msgid "Unsupported sample format"
-msgstr ""
-
-#: modules/file/gwytiff.h:1032 modules/file/keyence.c:449
-#: modules/file/matfile.c:276 modules/file/matfile.c:298
-#: modules/file/omicronflat.c:1962 modules/file/princetonspe.c:339
-#: modules/file/psia.c:352 modules/file/zemax.c:168
-msgid "File is truncated."
 msgstr ""
 
 #: modules/file/gwyzip.h:159
@@ -3660,11 +3849,11 @@ msgstr ""
 msgid "Representable"
 msgstr ""
 
-#: modules/file/hdrimage.cc:480 modules/tools/stats.c:200
+#: modules/file/hdrimage.cc:480 modules/tools/stats.c:203
 msgid "Minimum:"
 msgstr ""
 
-#: modules/file/hdrimage.cc:496 modules/tools/stats.c:201
+#: modules/file/hdrimage.cc:496 modules/tools/stats.c:204
 msgid "Maximum:"
 msgstr ""
 
@@ -3683,12 +3872,12 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr ""
 
 #: modules/file/hdrimage.cc:1433 modules/file/hdrimage.cc:1442
-#: modules/file/imgexport.c:4941 modules/file/imgexport.c:4952
+#: modules/file/imgexport.c:5207 modules/file/imgexport.c:5218
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr ""
 
-#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:5016
+#: modules/file/hdrimage.cc:1451 modules/file/imgexport.c:5282
 msgid "libpng error occured"
 msgstr ""
 
@@ -3723,18 +3912,11 @@ msgstr ""
 msgid "Pages:"
 msgstr ""
 
-#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:2750
+#: modules/file/hdrimage.cc:2290 modules/file/imgexport.c:3026
 #: modules/file/pixmap.c:862 modules/file/rawfile.c:649
 #: modules/process/dimensions.h:467 modules/xyz/xyz_drift.c:774
 #: modules/xyz/xyz_raster.c:566
 msgid "Physical Dimensions"
-msgstr ""
-
-#: modules/file/hdrimage.cc:2304 modules/file/imgexport.c:2808
-#: modules/file/pixmap.c:872 modules/file/rawfile.c:658
-#: modules/process/crosscor.c:221 modules/process/dimensions.h:473
-#: modules/process/tip_blind.c:333
-msgid "_Width:"
 msgstr ""
 
 #: modules/file/hdrimage.cc:2330 modules/file/hdrimage.cc:2395
@@ -3751,7 +3933,7 @@ msgid "verb|Change"
 msgstr ""
 
 #: modules/file/hdrimage.cc:2345 modules/file/pixmap.c:907
-#: modules/file/rawfile.c:694 modules/process/crosscor.c:232
+#: modules/file/rawfile.c:694 modules/process/crosscor.c:263
 #: modules/process/dimensions.h:477
 msgid "H_eight:"
 msgstr ""
@@ -3853,121 +4035,134 @@ msgstr ""
 msgid "Cannot read channel labels."
 msgstr ""
 
-#: modules/file/imgexport.c:371 modules/file/pixmap.c:178
+#: modules/file/imgexport.c:391 modules/file/pixmap.c:178
 msgid "Portable Network Graphics (.png)"
 msgstr ""
 
-#: modules/file/imgexport.c:377 modules/file/pixmap.c:182
+#: modules/file/imgexport.c:397 modules/file/pixmap.c:182
 msgid "JPEG (.jpeg,.jpg)"
 msgstr ""
 
-#: modules/file/imgexport.c:385 modules/file/pixmap.c:202
-msgid "Graphics Interchange Format GIF (.gif)"
-msgstr ""
-
-#: modules/file/imgexport.c:392 modules/file/pixmap.c:186
+#: modules/file/imgexport.c:403 modules/file/pixmap.c:186
 msgid "TIFF (.tiff,.tif)"
 msgstr ""
 
-#: modules/file/imgexport.c:398 modules/file/pixmap.c:190
+#: modules/file/imgexport.c:409 modules/file/pixmap.c:190
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr ""
 
-#: modules/file/imgexport.c:404 modules/file/pixmap.c:194
+#: modules/file/imgexport.c:415 modules/file/pixmap.c:194
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr ""
 
-#: modules/file/imgexport.c:410 modules/file/pixmap.c:198
+#: modules/file/imgexport.c:421 modules/file/pixmap.c:198
 msgid "TARGA (.tga,.targa)"
 msgstr ""
 
-#: modules/file/imgexport.c:417
+#: modules/file/imgexport.c:428
+msgid "WebP (.webp)"
+msgstr ""
+
+#: modules/file/imgexport.c:436
 msgid "Portable document format (.pdf)"
 msgstr ""
 
-#: modules/file/imgexport.c:425
+#: modules/file/imgexport.c:444
 msgid "Encapsulated PostScript (.eps)"
 msgstr ""
 
-#: modules/file/imgexport.c:433
+#: modules/file/imgexport.c:452
 msgid "Scalable Vector Graphics (.svg)"
 msgstr ""
 
-#: modules/file/imgexport.c:443 modules/tools/selectionmanager.c:260
+#: modules/file/imgexport.c:462 modules/tools/selectionmanager.c:269
 msgid "Horiz./vert. lines"
 msgstr ""
 
-#: modules/file/imgexport.c:447 modules/tools/selectionmanager.c:261
+#: modules/file/imgexport.c:466 modules/tools/selectionmanager.c:270
 msgid "Ellipses"
 msgstr ""
 
-#: modules/file/imgexport.c:451 modules/tools/selectionmanager.c:263
+#: modules/file/imgexport.c:470 modules/tools/selectionmanager.c:272
 msgid "Lines"
 msgstr ""
 
-#: modules/file/imgexport.c:459 modules/tools/selectionmanager.c:266
+#: modules/file/imgexport.c:478 modules/tools/selectionmanager.c:275
 msgid "Rectangles"
 msgstr ""
 
-#: modules/file/imgexport.c:463 modules/process/lat_synth.c:521
-#: modules/process/lat_synth.c:593 modules/tools/selectionmanager.c:262
+#: modules/file/imgexport.c:482 modules/process/lat_synth.c:521
+#: modules/process/lat_synth.c:593 modules/tools/selectionmanager.c:271
 msgid "Lattice"
 msgstr ""
 
-#: modules/file/imgexport.c:467
+#: modules/file/imgexport.c:486
 msgid "Path"
 msgstr ""
 
-#: modules/file/imgexport.c:473 modules/file/imgexport.c:479
+#: modules/file/imgexport.c:492 modules/file/imgexport.c:498
 msgid "ruler|_None"
 msgstr ""
 
-#: modules/file/imgexport.c:474
+#: modules/file/imgexport.c:493
 msgid "_Rulers"
 msgstr ""
 
-#: modules/file/imgexport.c:475
+#: modules/file/imgexport.c:494
 msgid "_Inset scale bar"
 msgstr ""
 
-#: modules/file/imgexport.c:480
+#: modules/file/imgexport.c:499
 msgid "_False color ruler"
 msgstr ""
 
-#: modules/file/imgexport.c:484
+#: modules/file/imgexport.c:503
 msgid "title|None"
 msgstr ""
 
-#: modules/file/imgexport.c:485
+#: modules/file/imgexport.c:504
 msgid "At the top"
 msgstr ""
 
-#: modules/file/imgexport.c:486
+#: modules/file/imgexport.c:505
 msgid "Along the right edge"
 msgstr ""
 
-#: modules/file/imgexport.c:492
+#: modules/file/imgexport.c:511
 msgid ""
-"Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, PPM, "
-"BMP, TARGA, GIF) images. Export to some formats relies on GDK and other "
+"Renders data into vector (SVG, PDF, EPS) and pixmap (PNG, JPEG, TIFF, WebP, "
+"PPM, BMP, TARGA) images. Export to some formats relies on GDK and other "
 "libraries thus may be installation-dependent."
 msgstr ""
 
-#: modules/file/imgexport.c:2760
+#: modules/file/imgexport.c:2914
+#, fuzzy
+msgid "Select Color"
+msgstr "곡선 색상 설정"
+
+#: modules/file/imgexport.c:2985
+msgid "Black"
+msgstr ""
+
+#: modules/file/imgexport.c:2993
+msgid "White"
+msgstr ""
+
+#: modules/file/imgexport.c:3036
 #, fuzzy
 msgid "Pi_xel size:"
 msgstr "점 크기(P):"
 
-#: modules/file/imgexport.c:2769
+#: modules/file/imgexport.c:3045
 msgid "Pixels per _inch:"
 msgstr ""
 
-#: modules/file/imgexport.c:2796
+#: modules/file/imgexport.c:3072
 msgid "_Zoom:"
 msgstr ""
 
-#: modules/file/imgexport.c:2815 modules/process/bdep_synth.c:430
-#: modules/process/col_synth.c:471 modules/process/diff_synth.c:508
+#: modules/file/imgexport.c:3091 modules/process/bdep_synth.c:430
+#: modules/process/col_synth.c:476 modules/process/diff_synth.c:508
 #: modules/process/domain_synth.c:510 modules/process/grain_mark.c:285
 #: modules/process/lat_synth.c:709 modules/process/obj_synth.c:572
 #: modules/process/pat_synth.c:852 modules/process/pat_synth.c:1154
@@ -3975,259 +4170,274 @@ msgstr ""
 msgid "_Height:"
 msgstr ""
 
-#: modules/file/imgexport.c:2828
+#: modules/file/imgexport.c:3104
 msgid "_Font:"
 msgstr ""
 
-#: modules/file/imgexport.c:2847
+#: modules/file/imgexport.c:3123
 msgid "_Font size:"
 msgstr ""
 
-#: modules/file/imgexport.c:2867
+#: modules/file/imgexport.c:3143
 #, fuzzy
 msgid "O_utline thickness:"
 msgstr "선 굵기(H):"
 
-#: modules/file/imgexport.c:2877
+#: modules/file/imgexport.c:3153
 #, fuzzy
 msgid "_Border width:"
 msgstr "새 너비(W):"
 
-#: modules/file/imgexport.c:2887
+#: modules/file/imgexport.c:3163
 #, fuzzy
 msgid "_Tick length:"
 msgstr "최소 길이(L)"
 
-#: modules/file/imgexport.c:2895
+#: modules/file/imgexport.c:3171
 msgid "Tie sizes to _data pixels"
 msgstr ""
 
-#: modules/file/imgexport.c:2905 modules/file/rawfile.c:843
+#: modules/file/imgexport.c:3181 modules/file/rawfile.c:843
 msgid "_Decimal separator is comma"
 msgstr ""
 
-#: modules/file/imgexport.c:3026
+#: modules/file/imgexport.c:3193
 #, fuzzy
-msgid "Select Color"
-msgstr "곡선 색상 설정"
+msgid "Colors"
+msgstr "색상"
 
-#: modules/file/imgexport.c:3218
-msgid "Black"
+#: modules/file/imgexport.c:3198
+msgid "_Line and text color:"
 msgstr ""
 
-#: modules/file/imgexport.c:3226
-msgid "White"
+#: modules/file/imgexport.c:3204
+msgid "_Transparent background"
 msgstr ""
 
-#: modules/file/imgexport.c:3260 modules/process/lno_synth.c:1053
+#: modules/file/imgexport.c:3215
+#, fuzzy
+msgid "_Background color:"
+msgstr "그리기 색상(O):"
+
+#: modules/file/imgexport.c:3445
+#, fuzzy
+msgid "Lateral scale"
+msgstr "GL 재료"
+
+#: modules/file/imgexport.c:3458 modules/process/lno_synth.c:1053
 msgid "_Length:"
 msgstr ""
 
-#: modules/file/imgexport.c:3276
+#: modules/file/imgexport.c:3474
 msgid "_Auto"
 msgstr ""
 
-#: modules/file/imgexport.c:3283
-msgid "Placement:"
+#: modules/file/imgexport.c:3482 modules/process/pat_synth.c:469
+msgid "Placement"
 msgstr ""
 
-#: modules/file/imgexport.c:3288
+#: modules/file/imgexport.c:3486
 msgid "left"
 msgstr ""
 
-#: modules/file/imgexport.c:3292
+#: modules/file/imgexport.c:3490
 msgid "center"
 msgstr ""
 
-#: modules/file/imgexport.c:3296
+#: modules/file/imgexport.c:3494
 msgid "right"
 msgstr ""
 
-#: modules/file/imgexport.c:3301
+#: modules/file/imgexport.c:3499
 msgid "top"
 msgstr ""
 
-#: modules/file/imgexport.c:3313
+#: modules/file/imgexport.c:3511
 msgid "bottom"
 msgstr ""
 
-#: modules/file/imgexport.c:3325 modules/file/imgexport.c:3612
+#: modules/file/imgexport.c:3523 modules/file/imgexport.c:3834
 #, fuzzy
 msgid "Hori_zontal gap:"
 msgstr "수평의"
 
-#: modules/file/imgexport.c:3331 modules/file/imgexport.c:3592
+#: modules/file/imgexport.c:3529 modules/file/imgexport.c:3814
 #, fuzzy
 msgid "_Vertical gap:"
 msgstr "수직방향(V)"
 
-#: modules/file/imgexport.c:3338 modules/file/imgexport.c:3903
+#: modules/file/imgexport.c:3542 modules/file/imgexport.c:4144
 #, fuzzy
 msgid "Colo_r:"
 msgstr "색상"
 
-#: modules/file/imgexport.c:3343 modules/file/imgexport.c:3908
+#: modules/file/imgexport.c:3547 modules/file/imgexport.c:4149
 msgid "Out_line color:"
 msgstr ""
 
-#: modules/file/imgexport.c:3347 modules/file/imgexport.c:3914
+#: modules/file/imgexport.c:3551 modules/file/imgexport.c:4155
 msgid "O_pacity:"
 msgstr ""
 
-#: modules/file/imgexport.c:3356
+#: modules/file/imgexport.c:3560
 msgid "Draw _ticks"
 msgstr ""
 
-#: modules/file/imgexport.c:3366
+#: modules/file/imgexport.c:3570
 msgid "Draw _label"
 msgstr ""
 
-#: modules/file/imgexport.c:3511
+#: modules/file/imgexport.c:3733
 msgid "Image"
 msgstr ""
 
-#: modules/file/imgexport.c:3515 modules/process/calcoefs_view.c:473
+#: modules/file/imgexport.c:3737 modules/process/calcoefs_view.c:473
 #: modules/process/correct_affine.c:488 modules/process/drift.c:297
 #: modules/process/dwt.c:206 modules/process/dwtanisotropy.c:202
 #: modules/process/fft_filter_1d.c:294 modules/process/fft_profile.c:292
 #: modules/process/fractal.c:253 modules/process/nanoindent_adjust.c:229
-#: modules/process/polydistort.c:246 modules/process/rotate.c:287
-#: modules/process/scale.c:253 modules/process/straighten_path.c:270
-#: modules/process/unrotate.c:277 modules/tools/linestats.c:416
-#: modules/tools/profile.c:559 modules/tools/roughness.c:868
-#: modules/tools/sfunctions.c:457 modules/xyz/xyz_raster.c:632
+#: modules/process/polydistort.c:247 modules/process/rotate.c:274
+#: modules/process/scale.c:253 modules/process/straighten_path.c:271
+#: modules/process/unrotate.c:277 modules/tools/linestats.c:400
+#: modules/tools/profile.c:555 modules/tools/roughness.c:864
+#: modules/tools/sfunctions.c:461 modules/xyz/xyz_raster.c:632
 msgid "_Interpolation type:"
 msgstr ""
 
-#: modules/file/imgexport.c:3545
+#: modules/file/imgexport.c:3767
 #, fuzzy
 msgid "Draw _frame"
 msgstr "Grain number"
 
-#: modules/file/imgexport.c:3554
+#: modules/file/imgexport.c:3776
 msgid "Draw _mask"
 msgstr ""
 
-#: modules/file/imgexport.c:3564
+#: modules/file/imgexport.c:3786
 msgid "Draw mask _legend"
 msgstr ""
 
-#: modules/file/imgexport.c:3599
+#: modules/file/imgexport.c:3821
 msgid "Value Scale"
 msgstr ""
 
-#: modules/file/imgexport.c:3620
+#: modules/file/imgexport.c:3842
 #, fuzzy
 msgid "Fi_xed precision:"
 msgstr "정밀도(P):"
 
-#: modules/file/imgexport.c:3633 modules/file/imgexport.c:4333
+#: modules/file/imgexport.c:3858
+#, fuzzy
+msgid "Fixed _kilo threshold:"
+msgstr "Soft threshold(S):"
+
+#: modules/file/imgexport.c:3874 modules/file/imgexport.c:4593
 #, fuzzy
 msgid "Title"
 msgstr "제목 없음"
 
-#: modules/file/imgexport.c:3637
+#: modules/file/imgexport.c:3878
 #, fuzzy
 msgid "Posi_tion:"
 msgstr "위치"
 
-#: modules/file/imgexport.c:3653
+#: modules/file/imgexport.c:3894
 msgid "_Gap:"
 msgstr ""
 
-#: modules/file/imgexport.c:3660
+#: modules/file/imgexport.c:3901
 msgid "Put _units to title"
 msgstr ""
 
-#: modules/file/imgexport.c:3844
+#: modules/file/imgexport.c:4085
 msgid "Draw _selection"
 msgstr ""
 
-#: modules/file/imgexport.c:3895 modules/tools/selectionmanager.c:352
+#: modules/file/imgexport.c:4136 modules/tools/selectionmanager.c:361
 msgid "Objects"
 msgstr ""
 
-#: modules/file/imgexport.c:4313
+#: modules/file/imgexport.c:4573
 #, fuzzy
 msgid "Lateral"
 msgstr "GL 재료"
 
-#: modules/file/imgexport.c:4352 modules/file/rawfile.c:1040
-#: modules/process/calcoefs_load.c:219 modules/process/neural.c:696
+#: modules/file/imgexport.c:4612 modules/file/rawfile.c:1040
+#: modules/process/calcoefs_load.c:230 modules/process/neural.c:693
 msgid "verb|_Load"
 msgstr ""
 
-#: modules/file/imgexport.c:4358 modules/file/rawfile.c:1046
-#: modules/process/neural.c:702
+#: modules/file/imgexport.c:4618 modules/file/rawfile.c:1046
+#: modules/process/neural.c:699
 msgid "verb|_Store"
 msgstr ""
 
-#: modules/file/imgexport.c:4364 modules/file/rawfile.c:1052
-#: modules/process/neural.c:708
+#: modules/file/imgexport.c:4624 modules/file/rawfile.c:1052
+#: modules/process/neural.c:705
 msgid "_Rename"
 msgstr ""
 
-#: modules/file/imgexport.c:4384 modules/file/rawfile.c:1071
+#: modules/file/imgexport.c:4644 modules/file/rawfile.c:1071
 msgid "Preset _name:"
 msgstr ""
 
-#: modules/file/imgexport.c:4455
+#: modules/file/imgexport.c:4715
 #, c-format
 msgid "Export %s"
 msgstr ""
 
-#: modules/file/imgexport.c:4476
+#: modules/file/imgexport.c:4736
 msgid "Export as 1_6 bit grayscale"
 msgstr ""
 
-#: modules/file/imgexport.c:4499
+#: modules/file/imgexport.c:4759
 msgid "Lateral Scale"
 msgstr ""
 
-#: modules/file/imgexport.c:4504
+#: modules/file/imgexport.c:4764
 #, fuzzy
 msgid "Values"
 msgstr "값"
 
-#: modules/file/imgexport.c:4509
+#: modules/file/imgexport.c:4769
 #, fuzzy
 msgid "Selection"
 msgstr "부분:"
 
-#: modules/file/imgexport.c:4514 modules/file/rawfile.c:462
+#: modules/file/imgexport.c:4774 modules/file/rawfile.c:462
 #: modules/process/convolution_filter.c:275
 msgid "Presets"
 msgstr ""
 
-#: modules/file/imgexport.c:5267
+#: modules/file/imgexport.c:5534
 #, c-format
 msgid "Cairo error occurred: %s"
 msgstr ""
 
-#: modules/file/imgexport.c:5291
+#: modules/file/imgexport.c:5558
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr ""
 
-#: modules/file/imgexport.c:5569
+#: modules/file/imgexport.c:5836
 msgid "Image is too large to be stored as TARGA."
 msgstr ""
 
-#: modules/file/imgexport.c:6099 modules/file/imgexport.c:6128
+#: modules/file/imgexport.c:6415 modules/file/imgexport.c:6444
 #, fuzzy
 msgid "Draw _numbers"
 msgstr "Grain number"
 
-#: modules/file/imgexport.c:6111 modules/file/imgexport.c:6159
+#: modules/file/imgexport.c:6427 modules/file/imgexport.c:6475
 msgid "_End marker length:"
 msgstr ""
 
-#: modules/file/imgexport.c:6140
+#: modules/file/imgexport.c:6456
 #, fuzzy
 msgid "Marker _radius:"
 msgstr "곡률 반경 1"
 
-#: modules/file/imgexportpreset.h:162 modules/process/maskops.c:150
+#: modules/file/imgexportpreset.h:169 modules/process/maskops.c:150
 msgid "Mask"
 msgstr ""
 
@@ -4282,14 +4492,14 @@ msgstr ""
 
 #: modules/file/iso28600.c:755 modules/file/iso28600.c:867
 #: modules/file/sdfile.c:846 modules/file/sdfile.c:863
-#: modules/file/spip-asc.c:230 modules/file/witec-asc.c:223
+#: modules/file/spip-asc.c:239 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:215
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
 msgstr ""
 
 #: modules/file/iso28600.c:764 modules/file/iso28600.c:876
-#: modules/file/spip-asc.c:237 modules/file/witec-asc.c:230
+#: modules/file/spip-asc.c:246 modules/file/witec-asc.c:230
 #: modules/file/wsffile.c:222
 #, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
@@ -4316,27 +4526,45 @@ msgstr ""
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr ""
 
-#: modules/file/jpkscan.c:125
+#: modules/file/jpkscan.c:228
 msgid "Imports JPK image scans."
 msgstr ""
 
-#: modules/file/jpkscan.c:138
+#: modules/file/jpkscan.c:241
 msgid "JPK image scans (.jpk, .jpk-qi-image)"
 msgstr ""
 
-#: modules/file/jpkscan.c:145
+#: modules/file/jpkscan.c:248
 msgid "JPK force curves (.jpk-force, .jpk-force-map, .jpk-qi-data)"
 msgstr ""
 
-#: modules/file/jpkscan.c:211
+#: modules/file/jpkscan.c:314
 msgid "File does not contain grid dimensions."
 msgstr ""
 
-#: modules/file/jpkscan.c:570 modules/file/nanoobserver.c:193
+#: modules/file/jpkscan.c:659 modules/file/nanoobserver.c:193
 #: modules/file/nanoscantech.c:205 modules/file/opengps.c:209
 #: modules/file/sensofarx.c:183 modules/file/spmxfile.c:166
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr ""
+
+#: modules/file/jpkscan.c:738
+msgid "Non-uniform point and/or segment numbering is not supported."
+msgstr ""
+
+#: modules/file/jpkscan.c:747
+msgid "Non-uniform channel lists are not supported."
+msgstr ""
+
+#: modules/file/jpkscan.c:755
+#, c-format
+msgid "Data file %s was found instead of expected %s."
+msgstr ""
+
+#: modules/file/jpkscan.c:1496
+#, fuzzy
+msgid "Cannot find any height channel."
+msgstr "도움말을 표시할 수 없습니다. "
 
 #: modules/file/jspmfile.c:188
 msgid "Imports JEOL JSPM data files."
@@ -4389,18 +4617,6 @@ msgstr ""
 
 #: modules/file/lextfile.c:93
 msgid "Olympus LEXT OLS4000 (.lext)"
-msgstr ""
-
-#: modules/file/lextfile.c:163 modules/file/nanoscan.c:672
-#: modules/file/ometiff.c:445
-#, c-format
-msgid "Top-level element is not ‘%s’."
-msgstr ""
-
-#: modules/file/lextfile.c:260 modules/file/nanoscan.c:267
-#: modules/file/ometiff.c:265
-#, c-format
-msgid "XML parsing failed: %s"
 msgstr ""
 
 #: modules/file/magellan.c:61
@@ -4609,7 +4825,7 @@ msgid "Parameter header is truncated"
 msgstr ""
 
 #: modules/file/nanoeducator.c:932 modules/process/curvature.c:454
-#: modules/tools/profile.c:1111
+#: modules/tools/profile.c:1107
 #, c-format
 msgid "Profile %d"
 msgstr ""
@@ -4658,34 +4874,34 @@ msgstr ""
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr ""
 
-#: modules/file/nanonis.c:110
+#: modules/file/nanonis.c:111
 msgid "Imports Nanonis SXM data files."
 msgstr ""
 
-#: modules/file/nanonis.c:130
+#: modules/file/nanonis.c:131
 msgid "Nanonis SXM files (.sxm)"
 msgstr ""
 
-#: modules/file/nanonis.c:229 modules/file/omicron.c:519
+#: modules/file/nanonis.c:230 modules/file/omicron.c:520
 #: modules/file/unisoku.c:278
 msgid "File header ended unexpectedly."
 msgstr ""
 
-#: modules/file/nanonis.c:250
+#: modules/file/nanonis.c:251
 msgid "Garbage was found in place of tag header line."
 msgstr ""
 
-#: modules/file/nanonis.c:316
+#: modules/file/nanonis.c:317
 #, c-format
 msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr ""
 
-#: modules/file/nanonis.c:338
+#: modules/file/nanonis.c:339
 #, c-format
 msgid "DATA_INFO line contains fewer than %d fields."
 msgstr ""
 
-#: modules/file/nanonis.c:517
+#: modules/file/nanonis.c:524
 msgid "Missing data start marker \\x1a\\x04."
 msgstr ""
 
@@ -4753,7 +4969,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr ""
 
-#: modules/file/nanoscope.c:1539 modules/file/nrrdfile.c:1081
+#: modules/file/nanoscope.c:1539 modules/file/nrrdfile.c:1086
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr ""
@@ -4908,67 +5124,67 @@ msgstr ""
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr ""
 
-#: modules/file/nrrdfile.c:328
+#: modules/file/nrrdfile.c:334
 msgid "Detached header does not refer to any data file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:356
+#: modules/file/nrrdfile.c:362
 msgid "Only two- and three-dimensional data are supported."
 msgstr ""
 
-#: modules/file/nrrdfile.c:377
+#: modules/file/nrrdfile.c:382
 msgid "Non-zero lineskip is supported only for uncompressed files."
 msgstr ""
 
-#: modules/file/nrrdfile.c:416
+#: modules/file/nrrdfile.c:421
 msgid "Compression is supported only for detached files."
 msgstr ""
 
-#: modules/file/nrrdfile.c:740
+#: modules/file/nrrdfile.c:745
 msgid "Split detached data files are not supported."
 msgstr ""
 
-#: modules/file/nrrdfile.c:786
+#: modules/file/nrrdfile.c:791
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr ""
 
-#: modules/file/nrrdfile.c:831
+#: modules/file/nrrdfile.c:836
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr ""
 
-#: modules/file/nrrdfile.c:963
+#: modules/file/nrrdfile.c:968
 #, c-format
 msgid "Hex data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1076
+#: modules/file/nrrdfile.c:1081
 #, c-format
 msgid "Text data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1130
+#: modules/file/nrrdfile.c:1135
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1141
+#: modules/file/nrrdfile.c:1146
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1184
+#: modules/file/nrrdfile.c:1189
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1589
+#: modules/file/nrrdfile.c:1594
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1600
+#: modules/file/nrrdfile.c:1605
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr ""
 
-#: modules/file/nrrdfile.c:1609
+#: modules/file/nrrdfile.c:1614
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr ""
@@ -5071,19 +5287,19 @@ msgstr ""
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 msgstr ""
 
-#: modules/file/omicron.c:163
+#: modules/file/omicron.c:164
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr ""
 
-#: modules/file/omicron.c:176
+#: modules/file/omicron.c:177
 msgid "Omicron files (.par + data)"
 msgstr ""
 
-#: modules/file/omicron.c:421
+#: modules/file/omicron.c:422
 msgid "Header line starts with a colon."
 msgstr ""
 
-#: modules/file/omicron.c:528
+#: modules/file/omicron.c:529
 msgid "Channel information ended unexpectedly."
 msgstr ""
 
@@ -5160,8 +5376,8 @@ msgid "File main.xml contains multiple data elements."
 msgstr ""
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:574 modules/file/opengps.c:582
-#: modules/file/opengps.c:590
+#: modules/file/opengps.c:575 modules/file/opengps.c:583
+#: modules/file/opengps.c:591
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr ""
@@ -5196,6 +5412,10 @@ msgstr ""
 
 #: modules/file/pixmap.c:168
 msgid "Alpha"
+msgstr ""
+
+#: modules/file/pixmap.c:202
+msgid "Graphics Interchange Format GIF (.gif)"
 msgstr ""
 
 #: modules/file/pixmap.c:206
@@ -5427,17 +5647,17 @@ msgstr ""
 
 #: modules/file/rawfile.c:567 modules/process/arithmetic.c:234
 #: modules/process/calcoefs_view.c:320 modules/process/coerce.c:250
-#: modules/process/convolution_filter.c:236 modules/process/deposit_synth.c:639
+#: modules/process/convolution_filter.c:236 modules/process/deposit_synth.c:637
 #: modules/process/drift.c:242 modules/process/edge.c:635
 #: modules/process/entropy.c:178 modules/process/fft_filter_1d.c:183
 #: modules/process/grain_edge.c:210 modules/process/grain_filter.c:313
 #: modules/process/grain_mark.c:244 modules/process/grain_wshed.c:164
 #: modules/process/mark_disconn.c:205 modules/process/mark_with.c:195
-#: modules/process/polydistort.c:204 modules/process/scars.c:445
-#: modules/process/slope_dist.c:273 modules/process/straighten_path.c:197
+#: modules/process/polydistort.c:205 modules/process/scars.c:295
+#: modules/process/slope_dist.c:273 modules/process/straighten_path.c:198
 #: modules/process/synth.h:509 modules/process/tip_model.c:163
-#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:457
-#: modules/tools/sfunctions.c:523 modules/tools/stats.c:460
+#: modules/process/wpour_mark.c:273 modules/tools/linestats.c:454
+#: modules/tools/sfunctions.c:527 modules/tools/stats.c:459
 #: modules/volume/volume_extract.c:328 modules/volume/volume_linestat.c:287
 #: modules/xyz/xyz_drift.c:618 modules/xyz/xyz_raster.c:443
 msgid "_Update"
@@ -5581,7 +5801,7 @@ msgid ""
 "The contents of `%s' does not match format: %s."
 msgstr ""
 
-#: modules/file/rawfile.c:1690 modules/process/neural.c:1594
+#: modules/file/rawfile.c:1690 modules/process/neural.c:1580
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr ""
@@ -5636,10 +5856,6 @@ msgstr ""
 
 #: modules/file/rawgraph.c:242
 msgid "Import Graph Data"
-msgstr ""
-
-#: modules/file/rawgraph.c:267
-msgid "_Title:"
 msgstr ""
 
 #: modules/file/rawgraph.c:274
@@ -5939,47 +6155,47 @@ msgstr ""
 msgid "IonScope SICM files (.img)"
 msgstr ""
 
-#: modules/file/sis.c:461
+#: modules/file/sis.c:462
 msgid "Imports SIS (Surface Imaging Systems) data files."
 msgstr ""
 
-#: modules/file/sis.c:474
+#: modules/file/sis.c:475
 msgid "SIS files (.sis)"
 msgstr ""
 
-#: modules/file/sis.c:811
+#: modules/file/sis.c:812
 msgid "Block not a document block."
 msgstr ""
 
-#: modules/file/sis.c:820
+#: modules/file/sis.c:821
 msgid "Too short document info."
 msgstr ""
 
-#: modules/file/sis.c:841
+#: modules/file/sis.c:842
 msgid "Too short parameter info."
 msgstr ""
 
-#: modules/file/sis.c:948
+#: modules/file/sis.c:949
 msgid "Unexpected image block."
 msgstr ""
 
-#: modules/file/sis.c:981 modules/file/sis.c:1012
+#: modules/file/sis.c:982 modules/file/sis.c:1013
 msgid "End of file reached in image block."
 msgstr ""
 
-#: modules/file/sis.c:1026
+#: modules/file/sis.c:1027
 msgid "End of file reached in channel block."
 msgstr ""
 
-#: modules/file/sis.c:1050
+#: modules/file/sis.c:1051
 msgid "End of file reached when another channel was expected."
 msgstr ""
 
-#: modules/file/spip-asc.c:82
+#: modules/file/spip-asc.c:91
 msgid "Imports SPIP ASC files."
 msgstr ""
 
-#: modules/file/spip-asc.c:95
+#: modules/file/spip-asc.c:104
 msgid "SPIP ASCII files (.asc)"
 msgstr ""
 
@@ -6276,11 +6492,12 @@ msgstr "내보내기(E)"
 
 #: modules/file/xyzexport.c:340 modules/process/curvature.c:704
 #: modules/process/entropy.c:214 modules/process/facet-level.c:207
-#: modules/process/level.c:259 modules/process/linematch.c:906
-#: modules/process/neural.c:596 modules/process/polylevel.c:491
-#: modules/process/slope_dist.c:418 modules/tools/filter.c:300
-#: modules/tools/profile.c:595 modules/tools/sfunctions.c:505
-#: modules/tools/stats.c:390
+#: modules/process/fit-shape.c:1007 modules/process/level.c:259
+#: modules/process/linematch.c:906 modules/process/neural.c:593
+#: modules/process/polylevel.c:491 modules/process/slope_dist.c:418
+#: modules/tools/filter.c:300 modules/tools/linestats.c:436
+#: modules/tools/profile.c:591 modules/tools/sfunctions.c:509
+#: modules/tools/stats.c:389
 msgid "Masking Mode"
 msgstr "마스킹 모드"
 
@@ -6345,43 +6562,43 @@ msgid "Fit Graph"
 msgstr ""
 
 #: modules/graph/graph_cd.c:212 modules/graph/graph_fdfit.c:251
-#: modules/graph/graph_fit.c:270 modules/process/fit_2d.c:240
-#: modules/volume/volume_fdfit.c:300
+#: modules/graph/graph_fit.c:270 modules/process/fit-shape.c:668
+#: modules/volume/volume_fdfit.c:299
 msgid "verb|_Fit"
 msgstr ""
 
-#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:160
+#: modules/graph/graph_cd.c:262 modules/graph/graph_cut.c:166
 #: modules/graph/graph_fdfit.c:306 modules/graph/graph_fit.c:325
-#: modules/graph/graph_peaks.c:210
+#: modules/graph/graph_peaks.c:199
 msgid "_Graph curve:"
 msgstr ""
 
 #: modules/graph/graph_cd.c:276 modules/graph/graph_fdfit.c:320
-#: modules/graph/graph_fit.c:339 modules/volume/volume_fdfit.c:406
+#: modules/graph/graph_fit.c:339 modules/volume/volume_fdfit.c:405
 msgid "F_unction:"
 msgstr ""
 
 #: modules/graph/graph_cd.c:305 modules/graph/graph_fdfit.c:361
 #: modules/graph/graph_fit.c:375 modules/process/curvature.c:745
-#: modules/volume/volume_fdfit.c:447
+#: modules/process/fit-shape.c:1056 modules/volume/volume_fdfit.c:446
 msgid "Parameter"
 msgstr ""
 
 #: modules/graph/graph_cd.c:307 modules/graph/graph_fdfit.c:363
-#: modules/graph/graph_fit.c:377 modules/process/fit_2d.c:330
-#: modules/volume/volume_fdfit.c:449
+#: modules/graph/graph_fit.c:377 modules/process/fit-shape.c:1058
+#: modules/volume/volume_fdfit.c:448
 msgid "Error"
 msgstr ""
 
-#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:190
+#: modules/graph/graph_cd.c:319 modules/graph/graph_cut.c:196
 #: modules/graph/graph_fdfit.c:415 modules/graph/graph_fit.c:433
-#: modules/volume/volume_fdfit.c:501 modules/volume/volume_linestat.c:389
+#: modules/volume/volume_fdfit.c:500 modules/volume/volume_linestat.c:389
 msgid "Range:"
 msgstr ""
 
-#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:201
+#: modules/graph/graph_cd.c:330 modules/graph/graph_cut.c:207
 #: modules/graph/graph_fdfit.c:426 modules/graph/graph_fit.c:444
-#: modules/volume/volume_fdfit.c:512 modules/volume/volume_linestat.c:400
+#: modules/volume/volume_fdfit.c:511 modules/volume/volume_linestat.c:400
 msgid "range|to"
 msgstr ""
 
@@ -6390,87 +6607,92 @@ msgid "_Draw whole circle"
 msgstr ""
 
 #: modules/graph/graph_cd.c:382 modules/graph/graph_fdfit.c:491
-#: modules/graph/graph_fit.c:531 modules/process/fit_2d.c:976
-#: modules/volume/volume_fdfit.c:574
+#: modules/graph/graph_fit.c:531 modules/process/fit-shape.c:797
+#: modules/volume/volume_fdfit.c:573
 msgid "Save Fit Report"
 msgstr ""
 
 #: modules/graph/graph_cd.c:529 modules/graph/graph_cd.c:1107
 #: modules/graph/graph_fdfit.c:709 modules/graph/graph_fit.c:763
-#: modules/volume/volume_fdfit.c:908
+#: modules/volume/volume_fdfit.c:907
 msgid "Fit"
 msgstr ""
 
 #: modules/graph/graph_cd.c:555 modules/graph/graph_fdfit.c:749
-#: modules/graph/graph_fit.c:803 modules/volume/volume_fdfit.c:979
-#: modules/volume/volume_fdfit.c:1086
+#: modules/graph/graph_fit.c:803 modules/volume/volume_fdfit.c:978
+#: modules/volume/volume_fdfit.c:1085
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr ""
 
 #: modules/graph/graph_cd.c:710 modules/graph/graph_fdfit.c:798
 #: modules/graph/graph_fit.c:852 modules/process/entropy.c:554
-#: modules/process/fit_2d.c:387 modules/tools/grainmeasure.c:217
-#: modules/tools/readvalue.c:645 modules/tools/readvalue.c:646
-#: modules/tools/readvalue.c:647 modules/tools/readvalue.c:648
-#: modules/tools/roughness.c:979 modules/tools/stats.c:709
-#: modules/tools/stats.c:722 modules/tools/stats.c:723
-#: modules/volume/volume_fdfit.c:1135 modules/xyz/xyz_drift.c:1099
-#: modules/xyz/xyz_drift.c:1117 modules/xyz/xyz_drift.c:1134
+#: modules/tools/grainmeasure.c:217 modules/tools/readvalue.c:634
+#: modules/tools/readvalue.c:635 modules/tools/readvalue.c:636
+#: modules/tools/readvalue.c:637 modules/tools/roughness.c:975
+#: modules/tools/stats.c:727 modules/tools/stats.c:740
+#: modules/tools/stats.c:741 modules/volume/volume_fdfit.c:1134
+#: modules/xyz/xyz_drift.c:1099 modules/xyz/xyz_drift.c:1117
+#: modules/xyz/xyz_drift.c:1134
 msgid "N.A."
 msgstr ""
 
-#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1358
-#: modules/graph/graph_fit.c:1495 modules/volume/volume_fdfit.c:1721
+#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1363
+#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4333
+#: modules/volume/volume_fdfit.c:1720
 msgid "===== Fit Results ====="
 msgstr ""
 
-#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1362
-#: modules/graph/graph_fit.c:1499 modules/volume/volume_fdfit.c:1725
+#: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1367
+#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4335
+#: modules/volume/volume_fdfit.c:1724
 #, c-format
 msgid "Data:             %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1365
-#: modules/graph/graph_fit.c:1502 modules/volume/volume_fdfit.c:1728
+#: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1370
+#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4337
+#: modules/volume/volume_fdfit.c:1727
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1369
-#: modules/graph/graph_fit.c:1506 modules/volume/volume_fdfit.c:1732
+#: modules/graph/graph_cd.c:1004 modules/graph/graph_fdfit.c:1374
+#: modules/graph/graph_fit.c:1511 modules/volume/volume_fdfit.c:1731
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1375
-#: modules/graph/graph_fit.c:1512 modules/volume/volume_fdfit.c:1738
+#: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1380
+#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4339
+#: modules/volume/volume_fdfit.c:1737
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1378
-#: modules/graph/graph_fit.c:1515 modules/volume/volume_fdfit.c:1741
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1383
+#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4341
+#: modules/volume/volume_fdfit.c:1740
 msgid "Results\n"
 msgstr ""
 
-#: modules/graph/graph_cut.c:84
+#: modules/graph/graph_cut.c:88
 msgid "Cut graph"
 msgstr "그래프 자르기"
 
-#: modules/graph/graph_cut.c:98
+#: modules/graph/graph_cut.c:102
 #, fuzzy
 msgid "/_Cut..."
 msgstr "/그래프 자르기(C)..."
 
-#: modules/graph/graph_cut.c:101
+#: modules/graph/graph_cut.c:105
 msgid "Extract part of graph into new one"
 msgstr ""
 
-#: modules/graph/graph_cut.c:140
+#: modules/graph/graph_cut.c:146
 msgid "Cut Graph"
 msgstr "그래프 자르기"
 
-#: modules/graph/graph_cut.c:173
+#: modules/graph/graph_cut.c:180
 msgid "Cut _all curves"
 msgstr ""
 
@@ -6496,23 +6718,23 @@ msgstr ""
 msgid "DOS Spectrum for \"%s\""
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:53
+#: modules/graph/graph_export_ascii.c:55
 msgid "Plain text"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:54
+#: modules/graph/graph_export_ascii.c:56
 msgid "Gnuplot friendly"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:55
+#: modules/graph/graph_export_ascii.c:57
 msgid "Comma separated values"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:56
+#: modules/graph/graph_export_ascii.c:58
 msgid "Origin friendly"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:57
+#: modules/graph/graph_export_ascii.c:59
 msgid "Igor Pro text wave"
 msgstr ""
 
@@ -6528,21 +6750,30 @@ msgstr "/텍스트로 내보내기(T)..."
 msgid "Export graph data to a text file"
 msgstr "텍스트 파일로 그래프 데이터 내보내기"
 
-#: modules/graph/graph_export_ascii.c:128
+#: modules/graph/graph_export_ascii.c:127
 msgid "POSIX _number format"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:134
+#: modules/graph/graph_export_ascii.c:133
+msgid "Single _merged abscissa"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:139
 msgid "Export _labels"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:140
+#: modules/graph/graph_export_ascii.c:145
 msgid "Export _units"
 msgstr ""
 
-#: modules/graph/graph_export_ascii.c:146
+#: modules/graph/graph_export_ascii.c:151
 msgid "Export _metadata"
 msgstr ""
+
+#: modules/graph/graph_export_ascii.c:194
+#, fuzzy
+msgid "Export to Text File"
+msgstr "텍스트 내보내기"
 
 #: modules/graph/graph_export_bitmap.c:36
 msgid "Export graph into bitmap"
@@ -6591,43 +6822,44 @@ msgstr "/FD 곡선 맞춤(F)"
 msgid "Fit a force-distance curve"
 msgstr "힘-거리 곡선 맞추기"
 
-#: modules/graph/graph_fdfit.c:248 modules/volume/volume_fdfit.c:297
+#: modules/graph/graph_fdfit.c:248 modules/volume/volume_fdfit.c:296
 msgid "Fit FD Curve"
 msgstr "FD 곡선 맞춤"
 
 #: modules/graph/graph_fdfit.c:255 modules/graph/graph_fit.c:274
-#: modules/process/fit_2d.c:242 modules/process/measure_lattice.c:257
-#: modules/volume/volume_fdfit.c:304
+#: modules/process/fit-shape.c:672 modules/process/measure_lattice.c:257
+#: modules/volume/volume_fdfit.c:303
 msgid "verb|_Estimate"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:257 modules/graph/graph_fit.c:276
-#: modules/process/fit_2d.c:244 modules/volume/volume_fdfit.c:306
+#: modules/volume/volume_fdfit.c:305
 msgid "_Plot Inits"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:359 modules/graph/graph_fit.c:373
-#: modules/process/fit_2d.c:338 modules/volume/volume_fdfit.c:445
+#: modules/process/fit-shape.c:1054 modules/volume/volume_fdfit.c:444
 msgid "Fix"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:365 modules/graph/graph_fit.c:379
-#: modules/process/fit_2d.c:321 modules/volume/volume_fdfit.c:451
+#: modules/volume/volume_fdfit.c:450
 msgid "Initial"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:376 modules/graph/graph_fit.c:394
-#: modules/process/fit_2d.c:424 modules/volume/volume_fdfit.c:462
+#: modules/volume/volume_fdfit.c:461
 msgid "χ<sup>2</sup> result:"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
-#: modules/process/fit_2d.c:407 modules/volume/volume_fdfit.c:478
+#: modules/process/fit-shape.c:744 modules/process/fit-shape.c:4386
+#: modules/volume/volume_fdfit.c:477
 msgid "Correlation Matrix"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:447 modules/graph/graph_fit.c:485
-#: modules/process/wpour_mark.c:410 modules/volume/volume_fdfit.c:533
+#: modules/process/wpour_mark.c:410 modules/volume/volume_fdfit.c:532
 msgid "Instant:"
 msgstr ""
 
@@ -6637,22 +6869,22 @@ msgid "esti_mate"
 msgstr "팁 추정 효과 가리기"
 
 #: modules/graph/graph_fdfit.c:457 modules/graph/graph_fit.c:495
-#: modules/volume/volume_fdfit.c:543
+#: modules/volume/volume_fdfit.c:542
 msgid "p_lot"
 msgstr ""
 
 #: modules/graph/graph_fdfit.c:708 modules/graph/graph_fit.c:762
-#: modules/volume/volume_fdfit.c:907
+#: modules/volume/volume_fdfit.c:906
 msgid "Estimate"
 msgstr ""
 
-#: modules/graph/graph_fdfit.c:1404 modules/graph/graph_fit.c:1541
+#: modules/graph/graph_fdfit.c:1410 modules/graph/graph_fit.c:1547
 #: modules/volume/volume_fdfit.c:1768
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr ""
 
-#: modules/graph/graph_fdfit.c:1407 modules/graph/graph_fit.c:1544
+#: modules/graph/graph_fdfit.c:1413 modules/graph/graph_fit.c:1550
 #: modules/volume/volume_fdfit.c:1771
 msgid "Correlation matrix\n"
 msgstr ""
@@ -6705,66 +6937,66 @@ msgstr "/평평하게 만들기(L)"
 msgid "Level graph curves"
 msgstr "그래프 곡선의 높이 레벨 맞추기"
 
-#: modules/graph/graph_peaks.c:129
+#: modules/graph/graph_peaks.c:118
 #, fuzzy
 msgid "Finds peaks on graph curves."
 msgstr "그래프 곡선의 높이 레벨 맞추기"
 
-#: modules/graph/graph_peaks.c:143
+#: modules/graph/graph_peaks.c:132
 msgid "/Find _Peaks..."
 msgstr ""
 
-#: modules/graph/graph_peaks.c:146
+#: modules/graph/graph_peaks.c:135
 #, fuzzy
 msgid "Find graph curve peaks"
 msgstr "그래프 곡선의 높이 레벨 맞추기"
 
-#: modules/graph/graph_peaks.c:168
+#: modules/graph/graph_peaks.c:157
 msgid "Prominence"
 msgstr ""
 
-#: modules/graph/graph_peaks.c:172
+#: modules/graph/graph_peaks.c:161
 #, fuzzy
 msgid "Zero"
 msgstr "0값으로 설정"
 
-#: modules/graph/graph_peaks.c:173
+#: modules/graph/graph_peaks.c:162
 msgid "Bilateral minimum"
 msgstr ""
 
-#: modules/graph/graph_peaks.c:189
+#: modules/graph/graph_peaks.c:178
 #, fuzzy
 msgid "Graph Peaks"
 msgstr "그래프"
 
-#: modules/graph/graph_peaks.c:223
+#: modules/graph/graph_peaks.c:212
 msgid "_Background type:"
 msgstr ""
 
-#: modules/graph/graph_peaks.c:238
+#: modules/graph/graph_peaks.c:227
 msgid "Order peaks _by:"
 msgstr ""
 
-#: modules/graph/graph_peaks.c:253
+#: modules/graph/graph_peaks.c:242
 #, fuzzy
 msgid "Number of _peaks:"
 msgstr "클러스터 개수"
 
-#: modules/graph/graph_peaks.c:274 modules/process/curvature.c:773
-#: modules/process/grain_stat.c:345 modules/process/measure_lattice.c:396
-#: modules/process/polylevel.c:607 modules/tools/distance.c:264
-#: modules/tools/roughness.c:822 modules/tools/stats.c:451
+#: modules/graph/graph_peaks.c:263 modules/process/curvature.c:773
+#: modules/process/grain_stat.c:360 modules/process/measure_lattice.c:396
+#: modules/process/polylevel.c:607 modules/tools/distance.c:259
+#: modules/tools/roughness.c:818 modules/tools/stats.c:450
 msgid "Save table to a file"
 msgstr "표를 파일로 저장"
 
-#: modules/graph/graph_peaks.c:278 modules/process/curvature.c:778
-#: modules/process/grain_stat.c:350 modules/process/measure_lattice.c:400
-#: modules/process/polylevel.c:617 modules/tools/distance.c:269
-#: modules/tools/roughness.c:827 modules/tools/stats.c:456
+#: modules/graph/graph_peaks.c:267 modules/process/curvature.c:778
+#: modules/process/grain_stat.c:365 modules/process/measure_lattice.c:400
+#: modules/process/polylevel.c:617 modules/tools/distance.c:264
+#: modules/tools/roughness.c:823 modules/tools/stats.c:455
 msgid "Copy table to clipboard"
 msgstr "표를 클립보드로 복사"
 
-#: modules/graph/graph_peaks.c:665
+#: modules/graph/graph_peaks.c:654
 #, fuzzy
 msgid "Save Peak Parameters"
 msgstr "변수"
@@ -7010,73 +7242,73 @@ msgstr ""
 msgid "Select the sample area below"
 msgstr ""
 
-#: modules/process/basicops.c:56
+#: modules/process/basicops.c:53
 msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
 msgstr ""
 
-#: modules/process/basicops.c:71
+#: modules/process/basicops.c:68
 msgid "/_Basic Operations/_Invert Value"
 msgstr "/기본 기능(B)/값 반전(I)"
 
-#: modules/process/basicops.c:75
+#: modules/process/basicops.c:72
 msgid "Invert values about mean"
 msgstr ""
 
-#: modules/process/basicops.c:78
+#: modules/process/basicops.c:75
 msgid "/_Basic Operations/Flip _Horizontally"
 msgstr "/기본 기능(B)/y축 대칭 변환(H)"
 
-#: modules/process/basicops.c:82
+#: modules/process/basicops.c:79
 msgid "Flip data horizontally"
 msgstr "데이터 y축 대칭 변환"
 
-#: modules/process/basicops.c:85
+#: modules/process/basicops.c:82
 msgid "/_Basic Operations/Flip _Vertically"
 msgstr "/기본 기능(B)/x축 대칭 변환(V)"
 
-#: modules/process/basicops.c:89
+#: modules/process/basicops.c:86
 msgid "Flip data vertically"
 msgstr "데이터 x축 대칭 변환"
 
-#: modules/process/basicops.c:92
+#: modules/process/basicops.c:89
 msgid "/_Basic Operations/Flip _Both"
 msgstr "/기본 기능(B)/원점 대칭 변환(B)"
 
-#: modules/process/basicops.c:96
+#: modules/process/basicops.c:93
 msgid "Flip data both horizontally and vertically"
 msgstr "데이터 원점 대칭 변환시키기  "
 
-#: modules/process/basicops.c:99
+#: modules/process/basicops.c:96
 msgid "/_Basic Operations/Rotate C_lockwise"
 msgstr "/기본 기능(B)/시계 방향 회전(L)"
 
-#: modules/process/basicops.c:103
+#: modules/process/basicops.c:100
 msgid "Rotate data 90 degrees clockwise"
 msgstr "데이터 시계 방향으로 90도 회전 "
 
-#: modules/process/basicops.c:106
+#: modules/process/basicops.c:103
 msgid "/_Basic Operations/Rotate _Counterclockwise"
 msgstr "/기본 기능(B)/시계 반대 방향 회전(C)"
 
-#: modules/process/basicops.c:110
+#: modules/process/basicops.c:107
 msgid "Rotate data 90 degrees counterclockwise"
 msgstr "데이터 시계 반대 방향으로 90도 회전 "
 
-#: modules/process/basicops.c:113
+#: modules/process/basicops.c:110
 msgid "/_Basic Operations/S_quare Samples"
 msgstr "/기본 기능(B)/1:1 데이터로 샘플 변환(Q)"
 
-#: modules/process/basicops.c:117
+#: modules/process/basicops.c:114
 msgid "Resample data with non-1:1 aspect ratio to square samples"
 msgstr "1:1 비율 갖도록 데이터 재샘플링"
 
-#: modules/process/basicops.c:121
+#: modules/process/basicops.c:118
 msgid "/_Basic Operations/_Null Offsets"
 msgstr "/기본 기능(B)/Null Offsets(N)"
 
-#: modules/process/basicops.c:125
+#: modules/process/basicops.c:122
 msgid "Null horizontal offsets, moving the origin to the upper left corner"
 msgstr ""
 
@@ -7093,27 +7325,27 @@ msgid "Generate surface by ballistic deposition"
 msgstr ""
 
 #: modules/process/bdep_synth.c:239 modules/process/bdep_synth.c:596
-#: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:274
-#: modules/process/col_synth.c:717 modules/process/crosscor.c:599
-#: modules/process/crosscor.c:624 modules/process/deposit_synth.c:270
-#: modules/process/deposit_synth.c:861 modules/process/diff_synth.c:304
+#: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:278
+#: modules/process/col_synth.c:723 modules/process/crosscor.c:820
+#: modules/process/crosscor.c:883 modules/process/deposit_synth.c:268
+#: modules/process/deposit_synth.c:859 modules/process/diff_synth.c:304
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
 #: modules/process/lat_synth.c:453 modules/process/mark_disconn.c:148
-#: modules/process/mark_disconn.c:373 modules/process/maskcor.c:331
-#: modules/process/mcrop.c:321 modules/process/merge.c:1078
-#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1286
+#: modules/process/mark_disconn.c:373 modules/process/maskcor.c:330
+#: modules/process/mcrop.c:315 modules/process/merge.c:1072
+#: modules/process/nanoindent_adjust.c:323 modules/process/neural.c:1272
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
-#: modules/process/tipops.c:320 modules/process/xydenoise.c:217
-#: modules/volume/volume_kmeans.c:364 modules/volume/volume_kmedians.c:365
+#: modules/process/tipops.c:320 modules/process/xydenoise.c:213
+#: modules/volume/volume_kmeans.c:403 modules/volume/volume_kmedians.c:365
 #: modules/xyz/xyz_raster.c:1028 modules/xyz/xyz_raster.c:1044
 msgid "Initializing..."
 msgstr ""
 
-#: modules/process/bdep_synth.c:275 modules/process/col_synth.c:312
-#: modules/process/deposit_synth.c:308 modules/process/deposit_synth.c:320
-#: modules/process/deposit_synth.c:533 modules/process/deposit_synth.c:546
+#: modules/process/bdep_synth.c:275 modules/process/col_synth.c:316
+#: modules/process/deposit_synth.c:306 modules/process/deposit_synth.c:318
+#: modules/process/deposit_synth.c:531 modules/process/deposit_synth.c:544
 #: modules/process/diff_synth.c:342 modules/process/domain_synth.c:319
 #: modules/process/domain_synth.c:327 modules/process/fbm_synth.c:278
 #: modules/process/fft_synth.c:314 modules/process/lat_synth.c:491
@@ -7123,7 +7355,7 @@ msgstr ""
 msgid "Generated"
 msgstr ""
 
-#: modules/process/bdep_synth.c:299 modules/process/col_synth.c:336
+#: modules/process/bdep_synth.c:299 modules/process/col_synth.c:341
 #: modules/process/diff_synth.c:366
 #, fuzzy
 msgid "Mean deposited thickness"
@@ -7134,13 +7366,13 @@ msgstr "외곽선 두께:"
 msgid "Ballistic Deposition"
 msgstr "팁 추정 효과 가리기"
 
-#: modules/process/bdep_synth.c:384 modules/process/col_synth.c:420
+#: modules/process/bdep_synth.c:384 modules/process/col_synth.c:425
 #: modules/process/diff_synth.c:454 modules/process/domain_synth.c:407
 msgid "Progressive preview"
 msgstr ""
 
-#: modules/process/bdep_synth.c:407 modules/process/col_synth.c:443
-#: modules/process/deposit_synth.c:414 modules/process/diff_synth.c:477
+#: modules/process/bdep_synth.c:407 modules/process/col_synth.c:448
+#: modules/process/deposit_synth.c:412 modules/process/diff_synth.c:477
 #: modules/process/domain_synth.c:430 modules/process/fbm_synth.c:360
 #: modules/process/fft_synth.c:398 modules/process/lat_synth.c:582
 #: modules/process/lno_synth.c:490 modules/process/noise_synth.c:394
@@ -7149,8 +7381,8 @@ msgstr ""
 msgid "Dimensions"
 msgstr ""
 
-#: modules/process/bdep_synth.c:416 modules/process/col_synth.c:452
-#: modules/process/deposit_synth.c:424 modules/process/diff_synth.c:486
+#: modules/process/bdep_synth.c:416 modules/process/col_synth.c:457
+#: modules/process/deposit_synth.c:422 modules/process/diff_synth.c:486
 #: modules/process/domain_synth.c:438 modules/process/fbm_synth.c:371
 #: modules/process/fft_synth.c:409 modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:405 modules/process/obj_synth.c:506
@@ -7158,7 +7390,7 @@ msgstr ""
 msgid "Generator"
 msgstr ""
 
-#: modules/process/bdep_synth.c:422 modules/process/col_synth.c:458
+#: modules/process/bdep_synth.c:422 modules/process/col_synth.c:463
 #: modules/process/diff_synth.c:492 modules/process/lno_synth.c:1041
 #: modules/process/obj_synth.c:517
 msgid "Co_verage:"
@@ -7172,17 +7404,17 @@ msgstr ""
 msgid "_Like Current Channel"
 msgstr ""
 
-#: modules/process/bdep_synth.c:453 modules/process/col_synth.c:526
+#: modules/process/bdep_synth.c:453 modules/process/col_synth.c:531
 #: modules/process/diff_synth.c:562
 msgid "Evolution"
 msgstr ""
 
-#: modules/process/bdep_synth.c:456 modules/process/col_synth.c:529
+#: modules/process/bdep_synth.c:456 modules/process/col_synth.c:534
 #: modules/process/diff_synth.c:565
 msgid "Plot graphs:"
 msgstr "그래프 그리기:"
 
-#: modules/process/bdep_synth.c:654 modules/process/col_synth.c:823
+#: modules/process/bdep_synth.c:654 modules/process/col_synth.c:829
 #: modules/process/diff_synth.c:782
 msgid "Depositing particles..."
 msgstr ""
@@ -7199,60 +7431,60 @@ msgstr "/켈리브레이션(I)/텍스트파일로부터 불러오기(L)..."
 msgid "Load calibration data from text file."
 msgstr ""
 
-#: modules/process/calcoefs_load.c:152
+#: modules/process/calcoefs_load.c:159
 #, c-format
 msgid "Error loading file: %s\n"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:180 modules/process/calcoefs_new.c:317
+#: modules/process/calcoefs_load.c:191 modules/process/calcoefs_new.c:317
 #, c-format
 msgid "Cannot save preset: %s"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:212
+#: modules/process/calcoefs_load.c:223
 msgid "Load Calibration Data"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:232 modules/process/calcoefs_new.c:571
+#: modules/process/calcoefs_load.c:243 modules/process/calcoefs_new.c:571
 #: modules/process/calcoefs_simple.c:475
 msgid "Calibration name:"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:244 modules/volume/volume_extract.c:433
+#: modules/process/calcoefs_load.c:254 modules/volume/volume_extract.c:433
 #: modules/volume/volume_extract.c:514
 msgid "No data loaded"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:296 modules/process/calcoefs_new.c:666
+#: modules/process/calcoefs_load.c:307 modules/process/calcoefs_new.c:666
 #: modules/process/calcoefs_simple.c:539
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:299 modules/process/calcoefs_new.c:669
+#: modules/process/calcoefs_load.c:310 modules/process/calcoefs_new.c:669
 #: modules/process/calcoefs_simple.c:541
 msgid "Overwrite"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:301 modules/process/calcoefs_new.c:671
+#: modules/process/calcoefs_load.c:312 modules/process/calcoefs_new.c:671
 #: modules/process/calcoefs_simple.c:542
 msgid "Append"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:338
+#: modules/process/calcoefs_load.c:349
 msgid "Load calibration data"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:353 modules/volume/volume_extract.c:1073
+#: modules/process/calcoefs_load.c:364 modules/volume/volume_extract.c:1073
 #, c-format
 msgid "Error loading file '%s'"
 msgstr ""
 
-#: modules/process/calcoefs_load.c:412
+#: modules/process/calcoefs_load.c:423
 msgid "Error: not enough points."
 msgstr ""
 
-#: modules/process/calcoefs_load.c:439
+#: modules/process/calcoefs_load.c:450
 #, c-format
 msgid "Loaded %d data points"
 msgstr ""
@@ -7351,12 +7583,14 @@ msgid "Detail"
 msgstr ""
 
 #: modules/process/calcoefs_simple.c:371 modules/process/calcoefs_view.c:491
-#: modules/process/calibrate.c:496 modules/volume/volume_calibrate.c:478
+#: modules/process/calibrate.c:496 modules/process/crosscor.c:289
+#: modules/volume/volume_calibrate.c:478
 msgid "_X offset:"
 msgstr ""
 
 #: modules/process/calcoefs_simple.c:398 modules/process/calcoefs_view.c:517
-#: modules/process/calibrate.c:509 modules/volume/volume_calibrate.c:491
+#: modules/process/calibrate.c:509 modules/process/crosscor.c:300
+#: modules/volume/volume_calibrate.c:491
 msgid "_Y offset:"
 msgstr ""
 
@@ -7399,8 +7633,9 @@ msgstr[0] ""
 msgid "Search canceled"
 msgstr ""
 
-#: modules/process/calcoefs_simple.c:638 modules/process/maskcor.c:333
-#: modules/process/mcrop.c:323 modules/process/merge.c:1080
+#: modules/process/calcoefs_simple.c:638 modules/process/crosscor.c:863
+#: modules/process/maskcor.c:332 modules/process/mcrop.c:317
+#: modules/process/merge.c:1074
 msgid "Correlating..."
 msgstr ""
 
@@ -7476,11 +7711,11 @@ msgid "Crop to actual data"
 msgstr ""
 
 #: modules/process/calcoefs_view.c:567 modules/process/coerce.c:369
-#: modules/process/deposit_synth.c:643 modules/process/edge.c:705
+#: modules/process/deposit_synth.c:641 modules/process/edge.c:705
 #: modules/process/fft_filter_1d.c:299 modules/process/grain_edge.c:290
 #: modules/process/grain_filter.c:347 modules/process/grain_mark.c:372
-#: modules/process/mark_with.c:318 modules/process/polydistort.c:315
-#: modules/process/scars.c:536 modules/process/slope_dist.c:407
+#: modules/process/mark_with.c:318 modules/process/polydistort.c:316
+#: modules/process/scars.c:386 modules/process/slope_dist.c:407
 #: modules/process/synth.h:513 modules/volume/volume_extract.c:424
 #: modules/volume/volume_extract.c:505 modules/volume/volume_linestat.c:422
 msgid "I_nstant updates"
@@ -7490,7 +7725,7 @@ msgstr ""
 msgid "Shown part has zero range."
 msgstr ""
 
-#: modules/process/calcoefs_view.c:689
+#: modules/process/calcoefs_view.c:690
 #, c-format
 msgid "Shown range (%.*f - %.*f) %s"
 msgstr ""
@@ -7523,27 +7758,27 @@ msgstr ""
 msgid "Building mesh..."
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1120 modules/tools/profile.c:1822
+#: modules/process/calcoefs_view.c:1120 modules/tools/profile.c:1818
 msgid "X correction"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1121 modules/tools/profile.c:1823
+#: modules/process/calcoefs_view.c:1121 modules/tools/profile.c:1819
 msgid "Y correction"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1122 modules/tools/profile.c:1824
+#: modules/process/calcoefs_view.c:1122 modules/tools/profile.c:1820
 msgid "Z correction"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1123 modules/tools/profile.c:1825
+#: modules/process/calcoefs_view.c:1123 modules/tools/profile.c:1821
 msgid "X uncertainty"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1124 modules/tools/profile.c:1826
+#: modules/process/calcoefs_view.c:1124 modules/tools/profile.c:1822
 msgid "Y uncertainty"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:1125 modules/tools/profile.c:1827
+#: modules/process/calcoefs_view.c:1125 modules/tools/profile.c:1823
 msgid "Z uncertainty"
 msgstr ""
 
@@ -7706,10 +7941,6 @@ msgstr ""
 msgid "Same area"
 msgstr "표면 면적"
 
-#: modules/process/coerce.c:331 modules/tools/filter.c:284
-msgid "_Type:"
-msgstr ""
-
 #: modules/process/coerce.c:339
 #, fuzzy
 msgid "Number of _levels:"
@@ -7720,55 +7951,65 @@ msgstr "클러스터 개수"
 msgid "Data processing:"
 msgstr "데이터 프로세스"
 
-#: modules/process/col_synth.c:167
+#: modules/process/col_synth.c:169
 msgid "Number of maxima"
 msgstr ""
 
-#: modules/process/col_synth.c:186
+#: modules/process/col_synth.c:170 modules/tools/linestats.c:178
+#: modules/volume/volume_linestat.c:154
+msgid "Skew"
+msgstr ""
+
+#: modules/process/col_synth.c:171 modules/tools/linestats.c:179
+#: modules/tools/roughness.c:386 modules/volume/volume_linestat.c:155
+msgid "Kurtosis"
+msgstr ""
+
+#: modules/process/col_synth.c:190
 msgid "Generates columnar surfaces by a simple growth algorithm."
 msgstr ""
 
-#: modules/process/col_synth.c:200
+#: modules/process/col_synth.c:204
 msgid "/S_ynthetic/_Columnar..."
 msgstr ""
 
-#: modules/process/col_synth.c:204
+#: modules/process/col_synth.c:208
 msgid "Generate columnar surface"
 msgstr ""
 
-#: modules/process/col_synth.c:375
+#: modules/process/col_synth.c:380
 msgid "Grow Columnar Surface"
 msgstr ""
 
-#: modules/process/col_synth.c:465
+#: modules/process/col_synth.c:470
 msgid "Particle Size"
 msgstr ""
 
-#: modules/process/col_synth.c:483
+#: modules/process/col_synth.c:488
 msgid "Incidence"
 msgstr ""
 
-#: modules/process/col_synth.c:488
+#: modules/process/col_synth.c:493
 msgid "Inclination"
 msgstr ""
 
-#: modules/process/col_synth.c:494 modules/process/crosscor.c:713
+#: modules/process/col_synth.c:499 modules/process/crosscor.c:1089
 msgid "Direction"
 msgstr ""
 
-#: modules/process/col_synth.c:506
+#: modules/process/col_synth.c:511
 msgid "Relaxation type:"
 msgstr ""
 
-#: modules/process/col_synth.c:513
+#: modules/process/col_synth.c:518
 msgid "_Melting:"
 msgstr ""
 
-#: modules/process/col_synth.c:597
+#: modules/process/col_synth.c:602
 msgid "Weak"
 msgstr ""
 
-#: modules/process/col_synth.c:598
+#: modules/process/col_synth.c:603
 msgid "Strong"
 msgstr ""
 
@@ -7930,105 +8171,144 @@ msgstr ""
 msgid "Re_fine"
 msgstr ""
 
-#: modules/process/crosscor.c:126
+#: modules/process/crosscor.c:157
 msgid "Calculates cross-correlation of two data fields."
 msgstr ""
 
-#: modules/process/crosscor.c:140
+#: modules/process/crosscor.c:171
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr ""
 
-#: modules/process/crosscor.c:144
+#: modules/process/crosscor.c:175
 msgid "Cross-correlate two data fields"
 msgstr ""
 
-#: modules/process/crosscor.c:183
+#: modules/process/crosscor.c:214
 msgid "Cross-Correlation"
 msgstr ""
 
-#: modules/process/crosscor.c:207
+#: modules/process/crosscor.c:238
 msgid "Co_rrelate with:"
 msgstr ""
 
-#: modules/process/crosscor.c:213
+#: modules/process/crosscor.c:244
 msgid "Search size"
 msgstr ""
 
-#: modules/process/crosscor.c:242
+#: modules/process/crosscor.c:272
+msgid "Global offset of 2nd channel"
+msgstr ""
+
+#: modules/process/crosscor.c:277
+msgid "_Guess"
+msgstr ""
+
+#: modules/process/crosscor.c:311
 msgid "Window size"
 msgstr ""
 
-#: modules/process/crosscor.c:250
+#: modules/process/crosscor.c:319
 msgid "W_idth:"
 msgstr ""
 
-#: modules/process/crosscor.c:260
+#: modules/process/crosscor.c:329
 msgid "Hei_ght:"
 msgstr ""
 
-#: modules/process/crosscor.c:271
+#: modules/process/crosscor.c:342 modules/process/fft.c:405
+#: modules/process/psdf_logphi.c:268
+msgid "_Windowing type:"
+msgstr ""
+
+#: modules/process/crosscor.c:350
 msgid "All"
 msgstr ""
 
-#: modules/process/crosscor.c:272
+#: modules/process/crosscor.c:351
 msgid "Absolute"
 msgstr ""
 
-#: modules/process/crosscor.c:273
+#: modules/process/crosscor.c:352
 msgid "X Distance"
 msgstr ""
 
-#: modules/process/crosscor.c:274
+#: modules/process/crosscor.c:353
 msgid "Y Distance"
 msgstr ""
 
-#: modules/process/crosscor.c:276 modules/process/crosscor.c:727
+#: modules/process/crosscor.c:355 modules/process/crosscor.c:1103
 msgid "Score"
 msgstr ""
 
-#: modules/process/crosscor.c:278 modules/process/fft.c:395
-#: modules/process/maskcor.c:176
+#: modules/process/crosscor.c:357 modules/process/fft.c:395
+#: modules/process/fit-shape.c:964 modules/process/maskcor.c:176
 msgid "Output _type:"
 msgstr ""
 
-#: modules/process/crosscor.c:284
+#: modules/process/crosscor.c:363
 msgid "Add _low score results mask"
 msgstr ""
 
-#: modules/process/crosscor.c:295 modules/process/grain_wshed.c:223
+#: modules/process/crosscor.c:374 modules/process/grain_wshed.c:223
 #: modules/process/maskcor.c:188
 msgid "T_hreshold:"
 msgstr ""
 
-#: modules/process/crosscor.c:302
+#: modules/process/crosscor.c:381
 msgid "Multichannel cross-corelation"
 msgstr ""
 
-#: modules/process/crosscor.c:321
+#: modules/process/crosscor.c:400
 msgid "Second _source data:"
 msgstr ""
 
-#: modules/process/crosscor.c:338
+#: modules/process/crosscor.c:417
 msgid "Correlate with:"
 msgstr ""
 
-#: modules/process/crosscor.c:606
+#: modules/process/crosscor.c:424
+#, fuzzy
+msgid "Postprocess:"
+msgstr "데이터 프로세스"
+
+#: modules/process/crosscor.c:431
+msgid "Apply Ga_ussian filter of width: "
+msgstr ""
+
+#: modules/process/crosscor.c:451
+msgid "Extend results to borders"
+msgstr ""
+
+#: modules/process/crosscor.c:461
+msgid "Create corrected data from 2nd channel"
+msgstr ""
+
+#: modules/process/crosscor.c:861
 msgid "Correlating first set..."
 msgstr ""
 
-#: modules/process/crosscor.c:632
+#: modules/process/crosscor.c:893
 msgid "Correlating second set..."
 msgstr ""
 
-#: modules/process/crosscor.c:673
+#: modules/process/crosscor.c:957
+msgid "Borders extension..."
+msgstr ""
+
+#: modules/process/crosscor.c:1025
+#, fuzzy
+msgid "Corrected 2nd channel"
+msgstr "채널"
+
+#: modules/process/crosscor.c:1049
 msgid "X difference"
 msgstr ""
 
-#: modules/process/crosscor.c:687
+#: modules/process/crosscor.c:1063
 msgid "Y difference"
 msgstr ""
 
-#: modules/process/crosscor.c:700
+#: modules/process/crosscor.c:1076
 msgid "Absolute difference"
 msgstr ""
 
@@ -8089,10 +8369,10 @@ msgstr "그래프 그리기(P)"
 #: modules/process/curvature.c:685 modules/process/drift.c:337
 #: modules/process/fft_profile.c:310 modules/process/fractal.c:328
 #: modules/process/grain_cross.c:253 modules/process/linematch.c:885
-#: modules/process/slope_dist.c:349 modules/tools/linestats.c:434
-#: modules/tools/profile.c:577 modules/tools/roughness.c:876
-#: modules/tools/sfunctions.c:475 modules/tools/spectro.c:382
-#: modules/volume/volume_slice.c:397
+#: modules/process/slope_dist.c:349 modules/tools/linestats.c:418
+#: modules/tools/profile.c:573 modules/tools/roughness.c:872
+#: modules/tools/sfunctions.c:479 modules/tools/spectro.c:382
+#: modules/volume/volume_slice.c:398
 #, fuzzy
 msgid "Target _graph:"
 msgstr "그래프 그리기(G)"
@@ -8100,10 +8380,10 @@ msgstr "그래프 그리기(G)"
 #: modules/process/curvature.c:691 modules/process/drift.c:343
 #: modules/process/fft_profile.c:316 modules/process/fractal.c:334
 #: modules/process/grain_cross.c:259 modules/process/linematch.c:892
-#: modules/process/slope_dist.c:355 modules/tools/linestats.c:440
-#: modules/tools/profile.c:583 modules/tools/roughness.c:882
-#: modules/tools/sfunctions.c:481 modules/tools/spectro.c:388
-#: modules/volume/volume_slice.c:405
+#: modules/process/slope_dist.c:355 modules/tools/linestats.c:424
+#: modules/tools/profile.c:579 modules/tools/roughness.c:878
+#: modules/tools/sfunctions.c:485 modules/tools/spectro.c:388
+#: modules/volume/volume_slice.c:406
 #, fuzzy
 msgid "New graph"
 msgstr "그래프 자르기"
@@ -8141,87 +8421,87 @@ msgstr ""
 msgid "_Wavelet type:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:172
+#: modules/process/deposit_synth.c:170
 msgid "Generates particles using simple dynamical model"
 msgstr ""
 
-#: modules/process/deposit_synth.c:186
+#: modules/process/deposit_synth.c:184
 msgid "/S_ynthetic/_Particles..."
 msgstr ""
 
-#: modules/process/deposit_synth.c:190
+#: modules/process/deposit_synth.c:188
 msgid "Generate particles using dynamical model"
 msgstr ""
 
-#: modules/process/deposit_synth.c:290 modules/process/deposit_synth.c:869
+#: modules/process/deposit_synth.c:288 modules/process/deposit_synth.c:867
 #, c-format
 msgid ""
 "Not all the particles could be deposited (%u),\n"
 "try more revise steps."
 msgstr ""
 
-#: modules/process/deposit_synth.c:349
+#: modules/process/deposit_synth.c:347
 msgid "Particle Generation"
 msgstr ""
 
-#: modules/process/deposit_synth.c:429
+#: modules/process/deposit_synth.c:427
 msgid "Particle r_adius:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:440
+#: modules/process/deposit_synth.c:438
 msgid "Distribution _width:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:451
+#: modules/process/deposit_synth.c:449
 msgid "Surface _coverage:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:460
+#: modules/process/deposit_synth.c:458
 msgid "_Relax steps:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:661 modules/process/synth.h:548
+#: modules/process/deposit_synth.c:659 modules/process/synth.h:548
 msgid "R_andom seed:"
 msgstr ""
 
-#: modules/process/deposit_synth.c:667 modules/process/synth.h:554
+#: modules/process/deposit_synth.c:665 modules/process/synth.h:554
 msgid "seed|_New"
 msgstr ""
 
-#: modules/process/deposit_synth.c:678
+#: modules/process/deposit_synth.c:676
 msgid "Randomize"
 msgstr ""
 
-#: modules/process/deposit_synth.c:862 modules/process/domain_synth.c:919
+#: modules/process/deposit_synth.c:860 modules/process/domain_synth.c:919
 msgid "Running computation..."
 msgstr ""
 
-#: modules/process/deposit_synth.c:867
+#: modules/process/deposit_synth.c:865
 #, c-format
 msgid "%d particles were deposited"
 msgstr ""
 
-#: modules/process/deposit_synth.c:1101
+#: modules/process/deposit_synth.c:1093
 msgid "Initial particle set..."
 msgstr ""
 
-#: modules/process/deposit_synth.c:1260
+#: modules/process/deposit_synth.c:1252
 msgid "Running revise..."
 msgstr ""
 
-#: modules/process/deposit_synth.c:1388
+#: modules/process/deposit_synth.c:1380
 msgid "Error: too many particles."
 msgstr ""
 
-#: modules/process/deposit_synth.c:1390
+#: modules/process/deposit_synth.c:1382
 msgid "Error: no particles."
 msgstr ""
 
-#: modules/process/deposit_synth.c:1392
+#: modules/process/deposit_synth.c:1384
 msgid "Error: particles too large."
 msgstr ""
 
-#: modules/process/deposit_synth.c:1394
+#: modules/process/deposit_synth.c:1386
 msgid "Error: particles too small."
 msgstr ""
 
@@ -8351,13 +8631,13 @@ msgid "_Monte Carlo time step:"
 msgstr ""
 
 #: modules/process/domain_synth.c:504 modules/process/fft_filter_2d.c:586
-#: modules/volume/volume_slice.c:363
+#: modules/volume/volume_slice.c:364
 msgid "Output Options"
 msgstr ""
 
 #: modules/process/domain_synth.c:523 modules/process/fft_filter_2d.c:591
 #: modules/process/mask_edt.c:377 modules/process/slope_dist.c:323
-#: modules/volume/volume_linestat.c:432 modules/volume/volume_slice.c:383
+#: modules/volume/volume_linestat.c:432 modules/volume/volume_slice.c:384
 msgid "Output type:"
 msgstr ""
 
@@ -8398,8 +8678,8 @@ msgstr ""
 msgid "Plot drift _graph"
 msgstr ""
 
-#: modules/process/drift.c:356 modules/process/fit_2d.c:298
-#: modules/process/neural.c:551 modules/process/polydistort.c:274
+#: modules/process/drift.c:356 modules/process/fit-shape.c:969
+#: modules/process/neural.c:548 modules/process/polydistort.c:275
 msgid "Preview:"
 msgstr ""
 
@@ -8410,7 +8690,7 @@ msgstr ""
 #: modules/process/drift.c:374 modules/process/facet_analysis.c:407
 #: modules/process/grain_edge.c:285 modules/process/grain_filter.c:357
 #: modules/process/grain_mark.c:367 modules/process/grain_wshed.c:267
-#: modules/process/mark_disconn.c:310 modules/process/scars.c:531
+#: modules/process/mark_disconn.c:310 modules/process/scars.c:381
 #: modules/process/wpour_mark.c:369
 msgid "_Mask color:"
 msgstr ""
@@ -8682,11 +8962,11 @@ msgstr "/통계(S)/각도 분포(G)..."
 msgid "_Zoom graph around estimate"
 msgstr ""
 
-#: modules/process/entropy.c:259 modules/tools/stats.c:212
+#: modules/process/entropy.c:259 modules/tools/stats.c:215
 msgid "Entropy:"
 msgstr ""
 
-#: modules/process/entropy.c:270 modules/tools/stats.c:213
+#: modules/process/entropy.c:270 modules/tools/stats.c:216
 msgid "Entropy deficit:"
 msgstr ""
 
@@ -8743,22 +9023,22 @@ msgstr ""
 msgid "Extend _symetrically"
 msgstr ""
 
-#: modules/process/extend.c:268 modules/process/polydistort.c:255
+#: modules/process/extend.c:268 modules/process/polydistort.c:256
 #: modules/xyz/xyz_raster.c:658
 msgid "exterior|Border"
 msgstr ""
 
-#: modules/process/extend.c:270 modules/process/polydistort.c:257
+#: modules/process/extend.c:270 modules/process/polydistort.c:258
 #: modules/xyz/xyz_raster.c:660
 msgid "exterior|Mirror"
 msgstr ""
 
-#: modules/process/extend.c:272 modules/process/polydistort.c:259
+#: modules/process/extend.c:272 modules/process/polydistort.c:260
 #: modules/xyz/xyz_raster.c:662
 msgid "exterior|Periodic"
 msgstr ""
 
-#: modules/process/extend.c:275 modules/process/polydistort.c:262
+#: modules/process/extend.c:275 modules/process/polydistort.c:263
 #: modules/xyz/xyz_raster.c:650
 msgid "_Exterior type:"
 msgstr ""
@@ -8767,54 +9047,54 @@ msgstr ""
 msgid "Keep lateral offsets"
 msgstr ""
 
-#: modules/process/extract_path.c:86
+#: modules/process/extract_path.c:87
 msgid "Extracts coordinates and tangents along a path selection."
 msgstr ""
 
-#: modules/process/extract_path.c:100
+#: modules/process/extract_path.c:101
 msgid "/_Distortion/Extract _Path Selection..."
 msgstr ""
 
-#: modules/process/extract_path.c:104
+#: modules/process/extract_path.c:105
 msgid "Extract path selection data"
 msgstr ""
 
-#: modules/process/extract_path.c:158
+#: modules/process/extract_path.c:159
 #, fuzzy
 msgid "Extract Path Selection"
 msgstr "새 파일로 확장"
 
-#: modules/process/extract_path.c:175
+#: modules/process/extract_path.c:176
 #, fuzzy
 msgid "Number of path points:"
 msgstr "클러스터 개수"
 
-#: modules/process/extract_path.c:182
+#: modules/process/extract_path.c:183
 msgid "There is no path selection."
 msgstr ""
 
-#: modules/process/extract_path.c:188 modules/volume/volume_extract.c:390
+#: modules/process/extract_path.c:189 modules/volume/volume_extract.c:390
 msgid "X position"
 msgstr "X 위치"
 
-#: modules/process/extract_path.c:192 modules/volume/volume_extract.c:397
+#: modules/process/extract_path.c:193 modules/volume/volume_extract.c:397
 msgid "Y position"
 msgstr "Y 위치"
 
-#: modules/process/extract_path.c:196
+#: modules/process/extract_path.c:197
 msgid "X tangent"
 msgstr ""
 
-#: modules/process/extract_path.c:200
+#: modules/process/extract_path.c:201
 msgid "Y tangent"
 msgstr ""
 
-#: modules/process/extract_path.c:391 modules/process/extract_path.c:403
+#: modules/process/extract_path.c:392 modules/process/extract_path.c:404
 #: modules/process/pat_synth.c:1432 modules/tools/distance.c:146
 msgid "Distance"
 msgstr ""
 
-#: modules/process/extract_path.c:402
+#: modules/process/extract_path.c:403
 #, fuzzy
 msgid "Tangent"
 msgstr "범위"
@@ -9015,10 +9295,6 @@ msgstr ""
 msgid "_Inverse transform"
 msgstr ""
 
-#: modules/process/fft.c:405 modules/process/psdf_logphi.c:268
-msgid "_Windowing type:"
-msgstr ""
-
 #: modules/process/fft.c:411
 msgid "Subtract mean _value beforehand"
 msgstr ""
@@ -9091,8 +9367,9 @@ msgstr "이차원 FFT  필터링"
 msgid "Filtered Data"
 msgstr "필터링된 데이터"
 
-#: modules/process/fft_filter_2d.c:305 modules/process/fit_2d.c:724
-#: modules/process/neural.c:563
+#: modules/process/fft_filter_2d.c:305 modules/process/fit-shape.c:869
+#: modules/process/fit-shape.c:918 modules/process/fit-shape.c:934
+#: modules/process/fit-shape.c:938 modules/process/neural.c:560
 msgid "Difference"
 msgstr "차이"
 
@@ -9148,11 +9425,6 @@ msgstr "필터 마스크"
 #: modules/process/fft_filter_2d.c:490
 msgid "_Undo"
 msgstr "실행 취소(U)"
-
-#: modules/process/fft_filter_2d.c:499 modules/tools/maskedit.c:548
-#: modules/volume/volume_zcal.c:173
-msgid "_Remove"
-msgstr "제거(R)"
 
 #: modules/process/fft_filter_2d.c:507 modules/tools/maskedit.c:556
 msgid "_Fill"
@@ -9220,8 +9492,7 @@ msgid "PSDF Section"
 msgstr ""
 
 #: modules/process/fft_profile.c:266 modules/process/grain_dist.c:336
-#: modules/tools/linestats.c:391 modules/tools/profile.c:521
-#: modules/tools/sfunctions.c:432
+#: modules/tools/profile.c:517 modules/tools/sfunctions.c:436
 msgid "_Fix res.:"
 msgstr ""
 
@@ -9274,140 +9545,116 @@ msgstr ""
 msgid "Enable _power multiplier"
 msgstr ""
 
-#: modules/process/fit_2d.c:167
-msgid "2D fitting"
+#: modules/process/fit-shape.c:525
+msgid "Grating (simple)"
 msgstr ""
 
-#: modules/process/fit_2d.c:181
-msgid "/_Level/_Fit Sphere..."
+#: modules/process/fit-shape.c:526
+msgid "Grating (3-level)"
+msgstr ""
+
+#: modules/process/fit-shape.c:527 modules/process/pat_synth.c:215
+msgid "Holes"
+msgstr ""
+
+#: modules/process/fit-shape.c:528
+msgid "Ring"
+msgstr ""
+
+#: modules/process/fit-shape.c:529
+msgid "Sphere"
+msgstr ""
+
+#: modules/process/fit-shape.c:530
+msgid "Cylinder (lying)"
+msgstr ""
+
+#: modules/process/fit-shape.c:533
+msgid "Pyramid (diamond)"
+msgstr ""
+
+#: modules/process/fit-shape.c:547
+msgid "Fits predefined geometrical shapes to data."
+msgstr ""
+
+#: modules/process/fit-shape.c:561
+#, fuzzy
+msgid "/_Level/_Fit Shape..."
 msgstr "/평평하게 만들기(L)/구면 맞추기(F)"
 
-#: modules/process/fit_2d.c:185
-msgid "Fit by sphere"
+#: modules/process/fit-shape.c:565 modules/process/fit-shape.c:572
+msgid "Fit geometrical shapes"
 msgstr ""
 
-#: modules/process/fit_2d.c:239
-msgid "Fit Sphere"
+#: modules/process/fit-shape.c:568
+#, fuzzy
+msgid "/_Fit Shape..."
+msgstr "/평평하게 만들기(L)/구면 맞추기(F)"
+
+#: modules/process/fit-shape.c:665
+#, fuzzy
+msgid "Fit Shape"
+msgstr "모양:"
+
+#: modules/process/fit-shape.c:670
+msgid "verb|_Quick Fit"
 msgstr ""
 
-#: modules/process/fit_2d.c:280
-msgid "Fitting Parameters"
+#: modules/process/fit-shape.c:748 modules/process/fit-shape.c:4411
+#, fuzzy
+msgid "Derived Quantities"
+msgstr "그레인 개수"
+
+#: modules/process/fit-shape.c:753 modules/process/fit-shape.c:4381
+#, fuzzy
+msgid "Mean square difference:"
+msgstr "이미지 차이점(G)"
+
+#: modules/process/fit-shape.c:855 modules/process/fit-shape.c:901
+#: modules/process/fit-shape.c:933 modules/process/fit-shape.c:937
+msgid "Fitted shape"
 msgstr ""
 
-#: modules/process/fit_2d.c:285
-msgid "Function type:"
+#: modules/process/fit-shape.c:939 modules/process/mark_disconn.c:189
+#: modules/process/scars.c:281
+msgid "Both"
+msgstr "모두"
+
+#: modules/process/fit-shape.c:956
+#, fuzzy
+msgid "_Function type:"
+msgstr "기능"
+
+#: modules/process/fit-shape.c:984
+msgid "Show differences with _adapted color map"
 msgstr ""
 
-#: modules/process/fit_2d.c:325 modules/process/fractal.c:308
-#: modules/process/mark_with.c:390 modules/process/neural.c:562
-msgid "Result"
+#: modules/process/fit-shape.c:1021
+msgid "Calculate differences for e_xcluded pixels"
 msgstr ""
 
-#: modules/process/fit_2d.c:334
-msgid "Unit"
+#: modules/process/fit-shape.c:1068
+msgid "_Recalculate Image"
 msgstr ""
 
-#: modules/process/fit_2d.c:528 modules/process/fit_2d.c:1050
-#: modules/process/fit_2d.c:1137
-msgid "Radius"
+#: modules/process/fit-shape.c:1075
+msgid "Revert to _Previous Values"
 msgstr ""
 
-#: modules/process/fit_2d.c:529 modules/process/fit_2d.c:1052
-#: modules/process/fit_2d.c:1139
-msgid "X center"
+#: modules/process/fit-shape.c:2075
+msgid "Parameter estimation failed"
 msgstr ""
 
-#: modules/process/fit_2d.c:530 modules/process/fit_2d.c:1054
-#: modules/process/fit_2d.c:1141
-msgid "Y center"
+#: modules/process/fit-shape.c:2078
+msgid "Fit failed"
 msgstr ""
 
-#: modules/process/fit_2d.c:531 modules/process/fit_2d.c:1056
-#: modules/process/fit_2d.c:1143
-msgid "Z center"
+#: modules/process/fit-shape.c:2080
+msgid "Fit was interruped"
 msgstr ""
 
-#: modules/process/fit_2d.c:634
-#, c-format
-msgid "%s: Radius cannot be null or negative."
-msgstr ""
-
-#: modules/process/fit_2d.c:713
-msgid "Fitted sphere"
-msgstr ""
-
-#: modules/process/fit_2d.c:723
-msgid "Fit result"
-msgstr ""
-
-#: modules/process/fit_2d.c:736
-msgid "Sphere (up)"
-msgstr ""
-
-#: modules/process/fit_2d.c:737
-msgid "Sphere (down)"
-msgstr ""
-
-#: modules/process/fit_2d.c:1012
-msgid "Fit results"
-msgstr ""
-
-#: modules/process/fit_2d.c:1024
-msgid "<b>Data:</b>"
-msgstr ""
-
-#: modules/process/fit_2d.c:1032
-msgid "<b>Function:</b>"
-msgstr ""
-
-#: modules/process/fit_2d.c:1039
-msgid "<b>Results</b>"
-msgstr ""
-
-#: modules/process/fit_2d.c:1078
-msgid "Residual sum:"
-msgstr ""
-
-#: modules/process/fit_2d.c:1086
-msgid "<b>Correlation Matrix</b>"
-msgstr ""
-
-#: modules/process/fit_2d.c:1121
-msgid ""
-"\n"
-"===== Fit Results =====\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1125
-#, c-format
-msgid "Data: %s\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1128
-msgid "Fitted function: sphere (orientation up)\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1130
-msgid "Fitted function: sphere (orientation down)\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1132
-msgid ""
-"\n"
-"Results\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1155
-#, c-format
-msgid ""
-"\n"
-"Residual sum:   %g\n"
-msgstr ""
-
-#: modules/process/fit_2d.c:1157
-msgid ""
-"\n"
-"Correlation matrix\n"
+#: modules/process/fit-shape.c:4367
+msgid "(fixed)"
 msgstr ""
 
 #: modules/process/flatten_base.c:44
@@ -9502,6 +9749,11 @@ msgstr ""
 #: modules/process/fractal.c:298 modules/process/fractal.c:590
 #: modules/process/fractal.c:614
 msgid "maximum"
+msgstr ""
+
+#: modules/process/fractal.c:308 modules/process/mark_with.c:390
+#: modules/process/neural.c:559
+msgid "Result"
 msgstr ""
 
 #: modules/process/fractal.c:550
@@ -9754,7 +10006,7 @@ msgstr ""
 msgid "Data channel:"
 msgstr ""
 
-#: modules/process/grain_stat.c:223 modules/process/grain_stat.c:324
+#: modules/process/grain_stat.c:223 modules/process/grain_stat.c:339
 msgid "Grain Statistics"
 msgstr ""
 
@@ -9762,35 +10014,35 @@ msgstr ""
 msgid "Number of grains:"
 msgstr ""
 
-#: modules/process/grain_stat.c:248
+#: modules/process/grain_stat.c:251
 msgid "Total projected area (abs.):"
 msgstr ""
 
-#: modules/process/grain_stat.c:252
+#: modules/process/grain_stat.c:255
 msgid "Total projected area (rel.):"
 msgstr ""
 
-#: modules/process/grain_stat.c:261
+#: modules/process/grain_stat.c:266
 msgid "Mean grain area:"
 msgstr ""
 
-#: modules/process/grain_stat.c:270
+#: modules/process/grain_stat.c:277
 msgid "Mean grain size:"
 msgstr ""
 
-#: modules/process/grain_stat.c:282
+#: modules/process/grain_stat.c:291
 msgid "Total grain volume (zero):"
 msgstr ""
 
-#: modules/process/grain_stat.c:291
+#: modules/process/grain_stat.c:302
 msgid "Total grain volume (minimum):"
 msgstr ""
 
-#: modules/process/grain_stat.c:300
+#: modules/process/grain_stat.c:313
 msgid "Total grain volume (laplacian):"
 msgstr ""
 
-#: modules/process/grain_stat.c:309
+#: modules/process/grain_stat.c:324
 msgid "Total projected boundary length:"
 msgstr ""
 
@@ -10356,27 +10608,27 @@ msgstr ""
 msgid "Simulate topography artifacts in lateral force channels"
 msgstr ""
 
-#: modules/process/latsim.c:135
+#: modules/process/latsim.c:136
 msgid "Fw lateral force "
 msgstr ""
 
-#: modules/process/latsim.c:144
+#: modules/process/latsim.c:145
 msgid "Rev lateral force"
 msgstr ""
 
-#: modules/process/latsim.c:157
+#: modules/process/latsim.c:158
 msgid "Lateral force simulation"
 msgstr ""
 
-#: modules/process/latsim.c:174
+#: modules/process/latsim.c:175
 msgid "_Friction coef.:"
 msgstr ""
 
-#: modules/process/latsim.c:180
+#: modules/process/latsim.c:181
 msgid "_Normal force:"
 msgstr ""
 
-#: modules/process/latsim.c:186
+#: modules/process/latsim.c:187
 msgid "_Adhesion force:"
 msgstr ""
 
@@ -10406,7 +10658,7 @@ msgstr ""
 msgid "/_Level/Fix _Zero"
 msgstr "/평평하게 만들기(L)/0으로 고정하기(Z)"
 
-#: modules/process/level.c:106
+#: modules/process/level.c:106 modules/xyz/xyz_level.c:111
 msgid "Shift minimum data value to zero"
 msgstr ""
 
@@ -10414,7 +10666,7 @@ msgstr ""
 msgid "/_Level/Zero _Mean Value"
 msgstr "/평평하게 만들기(L)/평균값을 0으로 맞추기(M)"
 
-#: modules/process/level.c:113
+#: modules/process/level.c:113 modules/xyz/xyz_level.c:118
 msgid "Shift mean data value to zero"
 msgstr ""
 
@@ -10645,6 +10897,63 @@ msgstr ""
 msgid "Blending _depth:"
 msgstr ""
 
+#: modules/process/logistic.c:122
+msgid "Trains logistic regression to mark grains."
+msgstr ""
+
+#: modules/process/logistic.c:136
+msgid "/_Grains/Logistic _Regression..."
+msgstr ""
+
+#: modules/process/logistic.c:140
+msgid "Mark grains with logistic regression"
+msgstr ""
+
+#: modules/process/logistic.c:231
+msgid "Logistic Regression"
+msgstr ""
+
+#: modules/process/logistic.c:254
+msgid "_Use trained regression"
+msgstr ""
+
+#: modules/process/logistic.c:256
+msgid "_Train logistic regression"
+msgstr ""
+
+#: modules/process/logistic.c:275
+#, fuzzy
+msgid "_Gaussian blur"
+msgstr "가우시안 타입"
+
+#: modules/process/logistic.c:288
+#, fuzzy
+msgid "_Number of Gaussians:"
+msgstr "클러스터 개수"
+
+#: modules/process/logistic.c:296
+#, fuzzy
+msgid "_Sobel derivatives"
+msgstr "높이 분포"
+
+#: modules/process/logistic.c:307
+msgid "_Laplacian"
+msgstr ""
+
+#: modules/process/logistic.c:318
+#, fuzzy
+msgid "_Hessian"
+msgstr "가우시안 타입"
+
+#: modules/process/logistic.c:331
+#, fuzzy
+msgid "_Regularization parameter:"
+msgstr "변수"
+
+#: modules/process/logistic.c:623 modules/process/neural.c:1101
+msgid "Training..."
+msgstr ""
+
 #: modules/process/mark_disconn.c:104
 msgid "Creates mask of values disconnected to the rest."
 msgstr ""
@@ -10659,18 +10968,14 @@ msgid "Mark data disconnected from other values"
 msgstr ""
 
 #: modules/process/mark_disconn.c:187 modules/process/obj_synth.c:419
-#: modules/process/scars.c:429
+#: modules/process/scars.c:279
 msgid "Positive"
 msgstr "양성의"
 
 #: modules/process/mark_disconn.c:188 modules/process/obj_synth.c:420
-#: modules/process/scars.c:430
+#: modules/process/scars.c:280
 msgid "Negative"
 msgstr "음성의"
-
-#: modules/process/mark_disconn.c:189 modules/process/scars.c:431
-msgid "Both"
-msgstr "모두"
 
 #: modules/process/mark_disconn.c:201
 msgid "Mark Disconnected"
@@ -10939,7 +11244,7 @@ msgstr ""
 msgid "Correlation maxima"
 msgstr ""
 
-#: modules/process/maskcor.c:174 modules/process/maskcor.c:364
+#: modules/process/maskcor.c:174 modules/process/maskcor.c:356
 msgid "Correlation score"
 msgstr ""
 
@@ -11242,153 +11547,149 @@ msgstr ""
 msgid "Immersed detail data"
 msgstr ""
 
-#: modules/process/neural.c:207
+#: modules/process/neural.c:204
 msgid "Neural network SPM data processing"
 msgstr ""
 
-#: modules/process/neural.c:233
+#: modules/process/neural.c:230
 msgid "/M_ultidata/Neural Network _Training..."
 msgstr ""
 
-#: modules/process/neural.c:237
+#: modules/process/neural.c:234
 msgid "Train a neural network for image processing"
 msgstr ""
 
-#: modules/process/neural.c:241
+#: modules/process/neural.c:238
 msgid "/M_ultidata/Apply _Neural Network..."
 msgstr ""
 
-#: modules/process/neural.c:245
+#: modules/process/neural.c:242
 msgid "Process data using a trained neural network"
 msgstr ""
 
 #. TRANSLATORS: Unnamed neural network that is/was in training.
-#: modules/process/neural.c:394
+#: modules/process/neural.c:391
 msgid "In training"
 msgstr ""
 
-#: modules/process/neural.c:478
+#: modules/process/neural.c:475
 msgid "Neural Network Training"
 msgstr ""
 
-#: modules/process/neural.c:497
+#: modules/process/neural.c:494
 msgid "Training error"
 msgstr ""
 
-#: modules/process/neural.c:498
+#: modules/process/neural.c:495
 msgid "error"
 msgstr ""
 
-#: modules/process/neural.c:506
+#: modules/process/neural.c:503
 msgid "NN training error"
 msgstr ""
 
-#: modules/process/neural.c:519
+#: modules/process/neural.c:516
 msgid "Training"
 msgstr ""
 
-#: modules/process/neural.c:523
+#: modules/process/neural.c:520
 msgid "_Model:"
 msgstr ""
 
-#: modules/process/neural.c:533
+#: modules/process/neural.c:530
 msgid "_Signal:"
 msgstr ""
 
-#: modules/process/neural.c:544
+#: modules/process/neural.c:541
 msgid "Training ste_ps:"
 msgstr ""
 
-#: modules/process/neural.c:560
+#: modules/process/neural.c:557
 msgid "Model"
 msgstr ""
 
-#: modules/process/neural.c:561
+#: modules/process/neural.c:558
 msgid "Signal"
 msgstr ""
 
-#: modules/process/neural.c:578
+#: modules/process/neural.c:575
 msgid "verb|_Train"
 msgstr ""
 
-#: modules/process/neural.c:583
+#: modules/process/neural.c:580
 msgid "Re_initialize"
 msgstr ""
 
-#: modules/process/neural.c:616
+#: modules/process/neural.c:613
 msgid "Network"
 msgstr ""
 
-#: modules/process/neural.c:622
+#: modules/process/neural.c:619
 msgid "Window _width:"
 msgstr ""
 
-#: modules/process/neural.c:630
+#: modules/process/neural.c:627
 msgid "Window h_eight:"
 msgstr ""
 
-#: modules/process/neural.c:638
+#: modules/process/neural.c:635
 msgid "_Hidden nodes:"
 msgstr ""
 
-#: modules/process/neural.c:646
+#: modules/process/neural.c:643
 msgid "Result Units"
 msgstr ""
 
-#: modules/process/neural.c:653
+#: modules/process/neural.c:650
 msgid "Power of source _XY:"
 msgstr ""
 
-#: modules/process/neural.c:661
+#: modules/process/neural.c:658
 msgid "Power of source _Z:"
 msgstr ""
 
-#: modules/process/neural.c:669
+#: modules/process/neural.c:666
 msgid "_Fixed units:"
 msgstr ""
 
-#: modules/process/neural.c:679
+#: modules/process/neural.c:676
 msgid "Networks"
 msgstr ""
 
-#: modules/process/neural.c:726
+#: modules/process/neural.c:723
 msgid "Network _name:"
 msgstr ""
 
-#: modules/process/neural.c:778
+#: modules/process/neural.c:775
 msgid "Apply Neural Network"
 msgstr ""
 
-#: modules/process/neural.c:801
+#: modules/process/neural.c:798
 msgid "_Scale proportionally to input"
 msgstr ""
 
-#: modules/process/neural.c:932
+#: modules/process/neural.c:929
 msgid "Model and signal are not compatible."
 msgstr ""
 
-#: modules/process/neural.c:940
+#: modules/process/neural.c:937
 msgid "A field dimension is too small for chosen window size."
 msgstr ""
 
-#: modules/process/neural.c:1115
-msgid "Training..."
-msgstr ""
-
-#: modules/process/neural.c:1197 modules/process/neural.c:1363
+#: modules/process/neural.c:1183 modules/process/neural.c:1349
 msgid "Evaluating..."
 msgstr ""
 
-#: modules/process/neural.c:1323
+#: modules/process/neural.c:1309
 msgid "Training was canceled."
 msgstr ""
 
-#: modules/process/neural.c:1333
+#: modules/process/neural.c:1319
 #, c-format
 msgid "Mean difference: %.*f %s"
 msgstr ""
 
-#: modules/process/neural.c:1385
+#: modules/process/neural.c:1371
 msgid "Evaluated signal"
 msgstr ""
 
@@ -11521,10 +11822,6 @@ msgstr ""
 msgid "Mark data farther than 3σ from mean value"
 msgstr ""
 
-#: modules/process/pat_synth.c:215
-msgid "Holes"
-msgstr ""
-
 #: modules/process/pat_synth.c:221
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
 msgstr ""
@@ -11543,10 +11840,6 @@ msgstr ""
 
 #: modules/process/pat_synth.c:458
 msgid "_Pattern:"
-msgstr ""
-
-#: modules/process/pat_synth.c:469
-msgid "Placement"
 msgstr ""
 
 #: modules/process/pat_synth.c:812
@@ -11650,39 +11943,39 @@ msgstr ""
 msgid "Computation diverged, try to change parameters"
 msgstr ""
 
-#: modules/process/polydistort.c:133
+#: modules/process/polydistort.c:134
 msgid "Applies polynomial distortion in the horizontal plane."
 msgstr ""
 
-#: modules/process/polydistort.c:147
+#: modules/process/polydistort.c:148
 msgid "/_Distortion/Pol_ynomial..."
 msgstr ""
 
-#: modules/process/polydistort.c:151
+#: modules/process/polydistort.c:152
 msgid "Applies polynomial distortion in the horizontal plane"
 msgstr ""
 
-#: modules/process/polydistort.c:201
+#: modules/process/polydistort.c:202
 msgid "Distort by Polynomial"
 msgstr ""
 
-#: modules/process/polydistort.c:281
+#: modules/process/polydistort.c:282
 msgid "Ori_ginal"
 msgstr ""
 
-#: modules/process/polydistort.c:282
+#: modules/process/polydistort.c:283
 msgid "_Transformed"
 msgstr ""
 
-#: modules/process/polydistort.c:288
+#: modules/process/polydistort.c:289
 msgid "X Coefficients"
 msgstr ""
 
-#: modules/process/polydistort.c:302
+#: modules/process/polydistort.c:303
 msgid "Y Coefficients"
 msgstr ""
 
-#: modules/process/polydistort.c:498
+#: modules/process/polydistort.c:499
 msgid "Distorted"
 msgstr ""
 
@@ -11734,7 +12027,8 @@ msgstr "최대 다항식 차수(M):"
 msgid "Polynomial Coefficients"
 msgstr "다항식 계수"
 
-#: modules/process/polylevel.c:934 modules/tools/distance.c:599
+#: modules/process/polylevel.c:934 modules/tools/distance.c:594
+#: modules/tools/selectionmanager.c:720
 msgid "Save Table"
 msgstr "표 저장하기"
 
@@ -11843,33 +12137,58 @@ msgstr "필터 종류(F):"
 msgid "Rank transform..."
 msgstr ""
 
-#: modules/process/rotate.c:81
+#: modules/process/rotate.c:96
 msgid "Rotates data by arbitrary angle."
 msgstr ""
 
-#: modules/process/rotate.c:95
+#: modules/process/rotate.c:110
 msgid "/_Basic Operations/Rotate by _Angle..."
 msgstr "/기본 기능(B)/각도로 회전시키기(A)"
 
-#: modules/process/rotate.c:99
+#: modules/process/rotate.c:114
 msgid "Rotate by arbitrary angle"
 msgstr "임의 각도로 회전시키기"
 
-#: modules/process/rotate.c:204
+#: modules/process/rotate.c:192
 msgid "Rotated Data"
 msgstr "데이터 회전시키기"
 
-#: modules/process/rotate.c:257
+#: modules/process/rotate.c:242
 msgid "Rotate"
 msgstr "회전시키기"
 
-#: modules/process/rotate.c:278
+#: modules/process/rotate.c:264
 msgid "Rotate by _angle:"
 msgstr "각도로 회전시키기(A)"
 
-#: modules/process/rotate.c:292
-msgid "E_xpand result to fit complete data"
+#: modules/process/rotate.c:280
+#, fuzzy
+msgid "Show _grid"
+msgstr "축 보기(A)"
+
+#: modules/process/rotate.c:290
+#, fuzzy
+msgid "Create _mask over exterior"
+msgstr "새 아이템 생성"
+
+#: modules/process/rotate.c:300
+#, fuzzy
+msgid "Result size:"
+msgstr "점 크기(P):"
+
+#: modules/process/rotate.c:309
+#, fuzzy
+msgid "_Same as original"
+msgstr "원점에 맞추기(S)"
+
+#: modules/process/rotate.c:311
+#, fuzzy
+msgid "_Expanded to complete data"
 msgstr "완성 데이터에 맞춰 결과값 확장"
+
+#: modules/process/rotate.c:313
+msgid "C_ut to valid data"
+msgstr ""
 
 #: modules/process/scale.c:93
 msgid "Scales data by arbitrary factor."
@@ -11907,50 +12226,50 @@ msgstr "새 너비(W):"
 msgid "New _height:"
 msgstr "새 높이(H)"
 
-#: modules/process/scars.c:112
+#: modules/process/scars.c:113
 #, fuzzy
 msgid "Marks and/or removes scars (horizontal linear artifacts)."
 msgstr "상처 표시 또는 제거 (horizontal linear artefacts)."
 
-#: modules/process/scars.c:126
+#: modules/process/scars.c:127
 msgid "/_Correct Data/M_ark Scars..."
 msgstr ""
 
-#: modules/process/scars.c:130
+#: modules/process/scars.c:131
 msgid "Mark horizontal scars (strokes)"
 msgstr ""
 
-#: modules/process/scars.c:133
+#: modules/process/scars.c:134
 msgid "/_Correct Data/Remove _Scars"
 msgstr ""
 
-#: modules/process/scars.c:137
+#: modules/process/scars.c:138
 msgid "Correct horizontal scars (strokes)"
 msgstr ""
 
-#: modules/process/scars.c:443
+#: modules/process/scars.c:293
 msgid "Mark Scars"
 msgstr "튄 자국 표시"
 
-#: modules/process/scars.c:481
+#: modules/process/scars.c:331
 msgid "Maximum _width:"
 msgstr "최대 너비(W)"
 
-#: modules/process/scars.c:488
+#: modules/process/scars.c:338
 msgid "Minimum _length:"
 msgstr "최소 길이(L)"
 
-#: modules/process/scars.c:495
+#: modules/process/scars.c:345
 #, fuzzy
 msgid "_Hard threshold:"
 msgstr "Hard threshold(H):"
 
-#: modules/process/scars.c:503
+#: modules/process/scars.c:353
 #, fuzzy
 msgid "_Soft threshold:"
 msgstr "Soft threshold(S):"
 
-#: modules/process/scars.c:511
+#: modules/process/scars.c:361
 msgid "Scars type:"
 msgstr ""
 
@@ -12079,11 +12398,11 @@ msgstr "/평평하게 만들기/호 회전시키기(A)..."
 msgid "Level data by arc revolution"
 msgstr ""
 
-#: modules/process/sphere-revolve.c:208 modules/tools/sfunctions.c:360
+#: modules/process/sphere-revolve.c:208 modules/tools/sfunctions.c:364
 msgid "_Horizontal direction"
 msgstr "수평 방향(H)"
 
-#: modules/process/sphere-revolve.c:209 modules/tools/sfunctions.c:361
+#: modules/process/sphere-revolve.c:209 modules/tools/sfunctions.c:365
 msgid "_Vertical direction"
 msgstr "수직 방향(V)"
 
@@ -12095,46 +12414,46 @@ msgstr "양쪽 방향(B)"
 msgid "Revolve Arc"
 msgstr "호 회전시키기"
 
-#: modules/process/straighten_path.c:125
+#: modules/process/straighten_path.c:126
 msgid "Extracts a straightened part of image along a curve."
 msgstr ""
 
-#: modules/process/straighten_path.c:139
+#: modules/process/straighten_path.c:140
 msgid "/_Distortion/Straighten _Path..."
 msgstr ""
 
-#: modules/process/straighten_path.c:143
+#: modules/process/straighten_path.c:144
 msgid "Straighten along a path"
 msgstr ""
 
-#: modules/process/straighten_path.c:193
+#: modules/process/straighten_path.c:194
 msgid "Straighten Path"
 msgstr ""
 
-#: modules/process/straighten_path.c:253
+#: modules/process/straighten_path.c:254
 msgid "Res_tore"
 msgstr ""
 
-#: modules/process/straighten_path.c:258
+#: modules/process/straighten_path.c:259
 msgid "Re_verse"
 msgstr ""
 
-#: modules/process/straighten_path.c:277 modules/tools/pathlevel.c:256
-#: modules/tools/profile.c:511 modules/tools/roughness.c:858
+#: modules/process/straighten_path.c:278 modules/tools/pathlevel.c:256
+#: modules/tools/profile.c:507 modules/tools/roughness.c:854
 msgid "_Thickness:"
 msgstr ""
 
-#: modules/process/straighten_path.c:285
+#: modules/process/straighten_path.c:286
 #, fuzzy
 msgid "_Slackness:"
 msgstr "선 굵기(H):"
 
-#: modules/process/straighten_path.c:291
+#: modules/process/straighten_path.c:292
 #, fuzzy
 msgid "C_losed curve"
 msgstr "파일 닫기"
 
-#: modules/process/straighten_path.c:378
+#: modules/process/straighten_path.c:379
 msgid "Straightened"
 msgstr ""
 
@@ -12216,42 +12535,42 @@ msgstr "/기본 기능(B)/범위 제한(M)..."
 msgid "Limit data range"
 msgstr "데이터 범위 제한"
 
-#: modules/process/threshold.c:245
+#: modules/process/threshold.c:246
 msgid "Limit Range"
 msgstr "범위제한"
 
-#: modules/process/threshold.c:280
+#: modules/process/threshold.c:281
 msgid "Specify _thresholds"
 msgstr "역치값 설정(T)"
 
-#: modules/process/threshold.c:282
+#: modules/process/threshold.c:283
 msgid "Use _display range"
 msgstr "디스플레이 범위 사용"
 
-#: modules/process/threshold.c:284
+#: modules/process/threshold.c:285
 #, fuzzy
 msgid "Cut off outlier_s"
 msgstr "잘라내기 기준점(S)"
 
-#: modules/process/threshold.c:293
+#: modules/process/threshold.c:294
 msgid "_Lower:"
 msgstr "이하(L):"
 
-#: modules/process/threshold.c:299
+#: modules/process/threshold.c:300
 msgid "_Upper:"
 msgstr "이상(U):"
 
-#: modules/process/threshold.c:304
+#: modules/process/threshold.c:305
 msgid "Set to _Full Range"
 msgstr "전체 범위로 설정(F)"
 
 #. TRANSLATORS: This is a range: 123 to 456.
-#: modules/process/threshold.c:317
+#: modules/process/threshold.c:318
 #, c-format
 msgid "%.*f to %.*f"
 msgstr "%.*f 부터 %.*f 까지"
 
-#: modules/process/threshold.c:339
+#: modules/process/threshold.c:341
 msgid "F_arther than:"
 msgstr "최소 값(A):"
 
@@ -12271,11 +12590,11 @@ msgstr "특정 값만큼 기울이기"
 msgid "Tilt"
 msgstr "기울이기"
 
-#: modules/process/tilt.c:185 modules/volume/volume_slice.c:443
+#: modules/process/tilt.c:185 modules/volume/volume_slice.c:444
 msgid "_X:"
 msgstr "X(X):"
 
-#: modules/process/tilt.c:194 modules/volume/volume_slice.c:463
+#: modules/process/tilt.c:194 modules/volume/volume_slice.c:464
 msgid "_Y:"
 msgstr "Y(Y):"
 
@@ -12570,8 +12889,8 @@ msgstr ""
 msgid "Waves"
 msgstr ""
 
-#: modules/process/wave_synth.c:422 modules/tools/linestats.c:336
-#: modules/tools/sfunctions.c:390 modules/volume/volume_linestat.c:369
+#: modules/process/wave_synth.c:422 modules/tools/linestats.c:337
+#: modules/tools/sfunctions.c:394 modules/volume/volume_linestat.c:369
 msgid "_Quantity:"
 msgstr ""
 
@@ -12704,39 +13023,39 @@ msgstr ""
 msgid "Preprocess and mark"
 msgstr ""
 
-#: modules/process/xydenoise.c:61
+#: modules/process/xydenoise.c:57
 msgid "Denoises measurement on basis of two orthogonal scans."
 msgstr ""
 
-#: modules/process/xydenoise.c:75
+#: modules/process/xydenoise.c:71
 msgid "/M_ultidata/_XY denoise..."
 msgstr ""
 
-#: modules/process/xydenoise.c:79
+#: modules/process/xydenoise.c:75
 msgid "Denoises horizontal/vertical measurement."
 msgstr ""
 
-#: modules/process/xydenoise.c:106
+#: modules/process/xydenoise.c:102
 msgid "XY Denoising"
 msgstr ""
 
-#: modules/process/xydenoise.c:128
+#: modules/process/xydenoise.c:124
 msgid "Second direction:"
 msgstr ""
 
-#: modules/process/xydenoise.c:236
+#: modules/process/xydenoise.c:232
 msgid "Computing forward FFTs..."
 msgstr ""
 
-#: modules/process/xydenoise.c:252
+#: modules/process/xydenoise.c:248
 msgid "Computing image..."
 msgstr ""
 
-#: modules/process/xydenoise.c:264
+#: modules/process/xydenoise.c:260
 msgid "Computing backward FFT..."
 msgstr ""
 
-#: modules/process/xydenoise.c:276
+#: modules/process/xydenoise.c:272
 msgid "Denoised"
 msgstr ""
 
@@ -12837,7 +13156,7 @@ msgid "Measure distances and directions between points"
 msgstr ""
 
 #. TRANSLATORS: Number is verb here.
-#: modules/tools/distance.c:255 modules/tools/profile.c:536
+#: modules/tools/distance.c:250 modules/tools/profile.c:532
 #, fuzzy
 msgid "_Number lines"
 msgstr "클러스터 개수"
@@ -12886,7 +13205,7 @@ msgstr ""
 msgid "Measure individual grains (continuous parts of mask)"
 msgstr ""
 
-#: modules/tools/grainremover.c:99 modules/tools/selectionmanager.c:119
+#: modules/tools/grainremover.c:99 modules/tools/selectionmanager.c:128
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
@@ -13005,7 +13324,7 @@ msgstr ""
 msgid "Level data by fitting a plane through three points"
 msgstr ""
 
-#: modules/tools/level3.c:239 modules/tools/readvalue.c:386
+#: modules/tools/level3.c:239 modules/tools/readvalue.c:375
 msgid "_Averaging radius:"
 msgstr ""
 
@@ -13017,7 +13336,7 @@ msgstr ""
 msgid "Set plane to _zero"
 msgstr "평면을 0으로 설정"
 
-#: modules/tools/linestats.c:137
+#: modules/tools/linestats.c:139
 msgid ""
 "Row/column statistical function tool, mean values, medians, maxima, minima, "
 "RMS, ..., of rows or columns."
@@ -13043,15 +13362,6 @@ msgstr "Rz"
 msgid "Rt"
 msgstr "Rt"
 
-#: modules/tools/linestats.c:178 modules/volume/volume_linestat.c:154
-msgid "Skew"
-msgstr ""
-
-#: modules/tools/linestats.c:179 modules/tools/roughness.c:386
-#: modules/volume/volume_linestat.c:155
-msgid "Kurtosis"
-msgstr ""
-
 #: modules/tools/linestats.c:204
 msgid "Row/Column Statistics"
 msgstr ""
@@ -13060,25 +13370,25 @@ msgstr ""
 msgid "Calculate row/column statistical functions"
 msgstr ""
 
-#: modules/tools/linestats.c:306
+#: modules/tools/linestats.c:307
 msgid "Ro_ws"
 msgstr ""
 
-#: modules/tools/linestats.c:307
+#: modules/tools/linestats.c:308
 msgid "Co_lumns"
 msgstr ""
 
-#: modules/tools/linestats.c:353
+#: modules/tools/linestats.c:354
 msgid "Average:"
 msgstr "평균:"
 
-#: modules/tools/linestats.c:362 modules/tools/profile.c:468
-#: modules/tools/sfunctions.c:403 modules/tools/spectro.c:343
+#: modules/tools/linestats.c:363 modules/tools/profile.c:464
+#: modules/tools/sfunctions.c:407 modules/tools/spectro.c:343
 msgid "<b>Options</b>"
 msgstr ""
 
-#: modules/tools/linestats.c:378 modules/tools/sfunctions.c:419
-#: modules/tools/stats.c:409
+#: modules/tools/linestats.c:379 modules/tools/sfunctions.c:423
+#: modules/tools/stats.c:408
 msgid "_Instant updates"
 msgstr ""
 
@@ -13214,7 +13524,7 @@ msgstr ""
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr ""
 
-#: modules/tools/profile.c:276 modules/tools/profile.c:634
+#: modules/tools/profile.c:276 modules/tools/profile.c:630
 msgid "Profiles"
 msgstr ""
 
@@ -13222,71 +13532,71 @@ msgstr ""
 msgid "Extract profiles"
 msgstr ""
 
-#: modules/tools/profile.c:484
+#: modules/tools/profile.c:480
 msgid "_Radial profiles"
 msgstr ""
 
-#: modules/tools/profile.c:497
+#: modules/tools/profile.c:493
 msgid "Symmetrize _All"
 msgstr ""
 
-#: modules/tools/profile.c:502
+#: modules/tools/profile.c:498
 msgid "S_ymmetrize"
 msgstr ""
 
-#: modules/tools/profile.c:546
+#: modules/tools/profile.c:542
 msgid "_Separate profiles"
 msgstr ""
 
-#: modules/tools/profile.c:611
+#: modules/tools/profile.c:607
 msgid "_Calibration data:"
 msgstr ""
 
-#: modules/tools/profile.c:624
+#: modules/tools/profile.c:620
 msgid "_Show profile"
 msgstr ""
 
-#: modules/tools/profile.c:891
+#: modules/tools/profile.c:887
 #, c-format
 msgid "X error %d"
 msgstr "X 에러 %d"
 
-#: modules/tools/profile.c:895
+#: modules/tools/profile.c:891
 #, c-format
 msgid "Y error %d"
 msgstr "Y 에러  %d"
 
-#: modules/tools/profile.c:899
+#: modules/tools/profile.c:895
 #, c-format
 msgid "Z error %d"
 msgstr "Z 에러 %d"
 
-#: modules/tools/profile.c:903
+#: modules/tools/profile.c:899
 #, c-format
 msgid "X uncertainty %d"
 msgstr ""
 
-#: modules/tools/profile.c:907
+#: modules/tools/profile.c:903
 #, c-format
 msgid "Y uncertainty %d"
 msgstr ""
 
-#: modules/tools/profile.c:911
+#: modules/tools/profile.c:907
 #, c-format
 msgid "Z uncertainty %d"
 msgstr ""
 
-#: modules/tools/profile.c:916
+#: modules/tools/profile.c:912
 #, c-format
 msgid "Zunc up bound %d"
 msgstr ""
 
-#: modules/tools/profile.c:921
+#: modules/tools/profile.c:917
 #, c-format
 msgid "Zunc low bound %d"
 msgstr ""
 
-#: modules/tools/profile.c:1821
+#: modules/tools/profile.c:1817
 msgid "calib-data|None"
 msgstr ""
 
@@ -13302,23 +13612,23 @@ msgstr "값 읽기"
 msgid "Read value under mouse cursor"
 msgstr "마우스 커서 아래 값 읽기"
 
-#: modules/tools/readvalue.c:315
+#: modules/tools/readvalue.c:304
 msgid "Set _Zero"
 msgstr "0값으로 설정"
 
-#: modules/tools/readvalue.c:318
+#: modules/tools/readvalue.c:307
 msgid "Shift plane z=0 to pass through the selected point"
 msgstr ""
 
-#: modules/tools/readvalue.c:326
+#: modules/tools/readvalue.c:315
 msgid "Facet"
 msgstr ""
 
-#: modules/tools/readvalue.c:351
+#: modules/tools/readvalue.c:340
 msgid "Curvatures"
 msgstr ""
 
-#: modules/tools/readvalue.c:393
+#: modules/tools/readvalue.c:382
 msgid "Show _selection"
 msgstr ""
 
@@ -13418,8 +13728,8 @@ msgstr ""
 msgid "Calculate surface profile parameters."
 msgstr ""
 
-#: modules/tools/roughness.c:648 modules/tools/roughness.c:777
-#: modules/tools/roughness.c:1457
+#: modules/tools/roughness.c:648 modules/tools/roughness.c:773
+#: modules/tools/roughness.c:1452
 msgid "Roughness"
 msgstr ""
 
@@ -13427,93 +13737,102 @@ msgstr ""
 msgid "Calculate roughness parameters"
 msgstr ""
 
-#: modules/tools/roughness.c:775 modules/tools/roughness.c:1455
+#: modules/tools/roughness.c:771 modules/tools/roughness.c:1450
 msgid "Texture"
 msgstr ""
 
-#: modules/tools/roughness.c:776 modules/tools/roughness.c:1456
+#: modules/tools/roughness.c:772 modules/tools/roughness.c:1451
 msgid "Waviness"
 msgstr ""
 
-#: modules/tools/roughness.c:778
+#: modules/tools/roughness.c:774
 msgid "ADF"
 msgstr ""
 
-#: modules/tools/roughness.c:779
+#: modules/tools/roughness.c:775
 msgid "BRC"
 msgstr ""
 
-#: modules/tools/roughness.c:780 modules/tools/roughness.c:1460
+#: modules/tools/roughness.c:776 modules/tools/roughness.c:1455
 msgid "Peak Count"
 msgstr ""
 
-#: modules/tools/roughness.c:842 modules/xyz/xyz_drift.c:1090
+#: modules/tools/roughness.c:838 modules/xyz/xyz_drift.c:1090
 msgid "_Graph:"
 msgstr ""
 
-#: modules/tools/roughness.c:849
+#: modules/tools/roughness.c:845
 msgid "C_ut-off:"
 msgstr ""
 
-#: modules/tools/roughness.c:1329
+#: modules/tools/roughness.c:1324
 msgid "No profile selected."
 msgstr ""
 
-#: modules/tools/roughness.c:1458
+#: modules/tools/roughness.c:1453
 msgid "Amplitude Distribution Function"
 msgstr ""
 
-#: modules/tools/roughness.c:1459
+#: modules/tools/roughness.c:1454
 msgid "The Bearing Ratio Curve"
 msgstr ""
 
-#: modules/tools/roughness.c:1494
+#: modules/tools/roughness.c:1489
 msgid "Surface Profiles"
 msgstr ""
 
-#: modules/tools/roughness.c:1882
+#: modules/tools/roughness.c:1877
 msgid "Save Roughness Parameters"
 msgstr ""
 
-#: modules/tools/roughness.c:1939
+#: modules/tools/roughness.c:1934
 msgid "Roughness Parameters"
 msgstr ""
 
-#: modules/tools/roughness.c:1945
+#: modules/tools/roughness.c:1940
 #, c-format
 msgid "File:              %s\n"
 msgstr ""
 
-#: modules/tools/roughness.c:1949
+#: modules/tools/roughness.c:1944
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr ""
 
-#: modules/tools/roughness.c:1980
+#: modules/tools/roughness.c:1975
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
 "                   (%s, %s) to (%s, %s) %s\n"
 msgstr ""
 
-#: modules/tools/selectionmanager.c:165
+#: modules/tools/selectionmanager.c:174
 msgid "Selection Manager"
 msgstr ""
 
-#: modules/tools/selectionmanager.c:166
-msgid "Display and copy selections"
+#: modules/tools/selectionmanager.c:175
+msgid "Display, copy and export selections"
 msgstr ""
 
-#: modules/tools/selectionmanager.c:264
+#: modules/tools/selectionmanager.c:273
 msgid "Spline path"
 msgstr ""
 
-#: modules/tools/selectionmanager.c:362
+#: modules/tools/selectionmanager.c:368
+#, fuzzy
+msgid "Manage chosen selection"
+msgstr "마우스 선택영역 확대"
+
+#: modules/tools/selectionmanager.c:376
 msgid "_Distribute"
 msgstr ""
 
-#: modules/tools/selectionmanager.c:371
+#: modules/tools/selectionmanager.c:382
 msgid "to _all files"
+msgstr ""
+
+#: modules/tools/selectionmanager.c:393
+msgid "_Copy"
 msgstr ""
 
 #: modules/tools/sfunctions.c:174
@@ -13579,7 +13898,7 @@ msgstr ""
 msgid "Calculate 1D statistical functions"
 msgstr ""
 
-#: modules/tools/sfunctions.c:493
+#: modules/tools/sfunctions.c:497
 msgid "_Separate uncertainty"
 msgstr ""
 
@@ -13641,89 +13960,89 @@ msgstr ""
 msgid "No area in the zoom selected."
 msgstr ""
 
-#: modules/tools/stats.c:202
+#: modules/tools/stats.c:205
 msgid "Average value:"
 msgstr ""
 
-#: modules/tools/stats.c:203
+#: modules/tools/stats.c:206
 msgid "Median:"
 msgstr ""
 
-#: modules/tools/stats.c:204
+#: modules/tools/stats.c:207
 msgid "Ra (Sa):"
 msgstr ""
 
-#: modules/tools/stats.c:205
+#: modules/tools/stats.c:208
 msgid "Rms (Sq):"
 msgstr ""
 
-#: modules/tools/stats.c:206
+#: modules/tools/stats.c:209
 msgid "Rms (grain-wise):"
 msgstr ""
 
-#: modules/tools/stats.c:207
+#: modules/tools/stats.c:210
 msgid "Skew:"
 msgstr ""
 
-#: modules/tools/stats.c:208
+#: modules/tools/stats.c:211
 msgid "Kurtosis:"
 msgstr ""
 
-#: modules/tools/stats.c:209
+#: modules/tools/stats.c:212
 msgid "Surface area:"
 msgstr ""
 
-#: modules/tools/stats.c:210
+#: modules/tools/stats.c:213
 msgid "Projected area:"
 msgstr ""
 
-#: modules/tools/stats.c:211
+#: modules/tools/stats.c:214
 msgid "Variation:"
 msgstr ""
 
-#: modules/tools/stats.c:214
+#: modules/tools/stats.c:217
 msgid "Inclination θ:"
 msgstr ""
 
-#: modules/tools/stats.c:215
+#: modules/tools/stats.c:218
 msgid "Inclination φ:"
 msgstr ""
 
-#: modules/tools/stats.c:221
+#: modules/tools/stats.c:224
 msgid "Statistics tool."
 msgstr ""
 
-#: modules/tools/stats.c:258 modules/tools/stats.c:1081
+#: modules/tools/stats.c:261 modules/tools/stats.c:1095
 msgid "Statistical Quantities"
 msgstr ""
 
-#: modules/tools/stats.c:259
+#: modules/tools/stats.c:262
 msgid "Statistical quantities"
 msgstr ""
 
-#: modules/tools/stats.c:984
+#: modules/tools/stats.c:1002
 msgid "Save Statistical Quantities"
 msgstr ""
 
-#: modules/tools/stats.c:1086
+#: modules/tools/stats.c:1100
 #, c-format
 msgid "File:         %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:1090
+#: modules/tools/stats.c:1104
 #, c-format
 msgid "Data channel: %s\n"
 msgstr ""
 
-#: modules/tools/stats.c:1108
+#: modules/tools/stats.c:1122
 msgid "Yes"
 msgstr "네"
 
-#: modules/tools/stats.c:1108
+#: modules/tools/stats.c:1122
 msgid "No"
 msgstr "아니오"
 
-#: modules/tools/stats.c:1118
+#: modules/tools/stats.c:1132
 #, c-format
 msgid ""
 "Selected area: %s × %s at (%s, %s) px\n"
@@ -13890,17 +14209,17 @@ msgstr ""
 msgid "Z cross-section at Z = %g %s (#%d)"
 msgstr ""
 
-#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1263
+#: modules/volume/volume_extract.c:749 modules/volume/volume_slice.c:1264
 #, c-format
 msgid "X graph at y: %d z: %d"
 msgstr ""
 
-#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1272
+#: modules/volume/volume_extract.c:752 modules/volume/volume_slice.c:1273
 #, c-format
 msgid "Y graph at x: %d z: %d"
 msgstr ""
 
-#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1254
+#: modules/volume/volume_extract.c:755 modules/volume/volume_slice.c:1255
 #, c-format
 msgid "Z graph at x: %d y: %d"
 msgstr ""
@@ -13922,27 +14241,27 @@ msgstr ""
 msgid "Building wireframe model..."
 msgstr ""
 
-#: modules/volume/volume_fdfit.c:200
+#: modules/volume/volume_fdfit.c:199
 msgid "Evaluate volume force-distance data"
 msgstr "Volume force-distance 데이터 평가"
 
-#: modules/volume/volume_fdfit.c:214
+#: modules/volume/volume_fdfit.c:213
 msgid "/_Evaluate FD data..."
 msgstr "/FD 데이터 평가(E)..."
 
-#: modules/volume/volume_fdfit.c:218
+#: modules/volume/volume_fdfit.c:217
 msgid "Evaluate force-distance volume data"
 msgstr "Force-distance volume 데이터 평가"
 
-#: modules/volume/volume_fdfit.c:369
+#: modules/volume/volume_fdfit.c:368
 msgid "Curve _X position:"
 msgstr ""
 
-#: modules/volume/volume_fdfit.c:387
+#: modules/volume/volume_fdfit.c:386
 msgid "Curve _Y position:"
 msgstr ""
 
-#: modules/volume/volume_fdfit.c:536
+#: modules/volume/volume_fdfit.c:535
 msgid "e_stimate"
 msgstr ""
 
@@ -13958,59 +14277,69 @@ msgstr "/값 반전(I)"
 msgid "Invert value in volume data"
 msgstr "3차원 데이터 값 반전"
 
-#: modules/volume/volume_kmeans.c:87
+#: modules/volume/volume_kmeans.c:94
 msgid "Calculates K-means clustering on volume data."
 msgstr "3차원 데이터 K-평균 클러스터링 계산"
 
-#: modules/volume/volume_kmeans.c:101
+#: modules/volume/volume_kmeans.c:108
 msgid "/_K-means clustering..."
 msgstr "/K-평균 클러스터링(K)..."
 
-#: modules/volume/volume_kmeans.c:105
+#: modules/volume/volume_kmeans.c:112
 msgid "Calculate K-means clustering on volume data"
 msgstr "3차원 데이터 K-평균 클러스터링 계산"
 
-#: modules/volume/volume_kmeans.c:144
+#: modules/volume/volume_kmeans.c:151
 msgid "K-means"
 msgstr "K-평균"
 
-#: modules/volume/volume_kmeans.c:163 modules/volume/volume_kmedians.c:164
+#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:164
 msgid "_Number of clusters:"
 msgstr "클러스터 개수"
 
-#: modules/volume/volume_kmeans.c:170 modules/volume/volume_kmedians.c:171
+#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:171
 msgid "Convergence _precision digits:"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:177 modules/volume/volume_kmedians.c:178
+#: modules/volume/volume_kmeans.c:184 modules/volume/volume_kmedians.c:178
 msgid "_Max. iterations:"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:182 modules/volume/volume_kmedians.c:183
+#: modules/volume/volume_kmeans.c:189 modules/volume/volume_kmedians.c:183
 msgid "_Normalize"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:391
+#: modules/volume/volume_kmeans.c:195
+#, fuzzy
+msgid "_Remove outliers"
+msgstr "점 제거하기"
+
+#: modules/volume/volume_kmeans.c:208
+#, fuzzy
+msgid "Outliers _threshold:"
+msgstr "Hard threshold(H):"
+
+#: modules/volume/volume_kmeans.c:431
 #, fuzzy
 msgid "K-means iteration..."
 msgstr "/K-평균 클러스터링(K)..."
 
-#: modules/volume/volume_kmeans.c:494
+#: modules/volume/volume_kmeans.c:651
 #, fuzzy, c-format
 msgid "K-means cluster of %s"
 msgstr "%s의 K-평균 "
 
-#: modules/volume/volume_kmeans.c:503
+#: modules/volume/volume_kmeans.c:660
 #, c-format
 msgid "K-means error of %s"
 msgstr "%s의 K-평균 "
 
-#: modules/volume/volume_kmeans.c:513 modules/volume/volume_kmedians.c:514
+#: modules/volume/volume_kmeans.c:670 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr ""
 
-#: modules/volume/volume_kmeans.c:545
+#: modules/volume/volume_kmeans.c:702
 #, c-format
 msgid "K-means center %d"
 msgstr "K-평균 중심 %d"
@@ -14081,78 +14410,78 @@ msgstr "미리보기가 불가능합니다. "
 msgid "Summarize Volume Profiles"
 msgstr ""
 
-#: modules/volume/volume_slice.c:195
+#: modules/volume/volume_slice.c:196
 #, fuzzy
 msgid "Extracts image planes and line graphs from volume data."
 msgstr "3차원 데이터 K-평균 클러스터링 계산"
 
-#: modules/volume/volume_slice.c:209
+#: modules/volume/volume_slice.c:210
 msgid "/Cut and _Slice..."
 msgstr ""
 
-#: modules/volume/volume_slice.c:213
+#: modules/volume/volume_slice.c:214
 msgid "Extract image planes and line graphs"
 msgstr ""
 
-#: modules/volume/volume_slice.c:265
+#: modules/volume/volume_slice.c:266
 #, fuzzy
 msgid "Image slice"
 msgstr "이미지 차이점"
 
-#: modules/volume/volume_slice.c:266
+#: modules/volume/volume_slice.c:267
 #, fuzzy
 msgid "Line graph"
 msgstr "그래프 자르기"
 
-#: modules/volume/volume_slice.c:289
+#: modules/volume/volume_slice.c:290
 #, fuzzy
 msgid "Slice Volume Data"
 msgstr "3차원 데이터(V)"
 
-#: modules/volume/volume_slice.c:368
+#: modules/volume/volume_slice.c:369
 msgid "_Base plane:"
 msgstr ""
 
-#: modules/volume/volume_slice.c:419
+#: modules/volume/volume_slice.c:420
 msgid "Extract _multiple items"
 msgstr ""
 
-#: modules/volume/volume_slice.c:436
+#: modules/volume/volume_slice.c:437
 #, fuzzy
 msgid "Positions"
 msgstr "위치"
 
-#: modules/volume/volume_slice.c:483
+#: modules/volume/volume_slice.c:484
 #, fuzzy
 msgid "_Z:"
 msgstr "X(X):"
 
-#: modules/volume/volume_slice.c:1155
+#: modules/volume/volume_slice.c:1156
 #, c-format
 msgid "Z slice at %.*f%s%s (#%d)"
 msgstr ""
 
-#: modules/volume/volume_slice.c:1166
+#: modules/volume/volume_slice.c:1167
 #, c-format
 msgid "Y slice at %.*f%s%s (#%d)"
 msgstr ""
 
-#: modules/volume/volume_slice.c:1177
+#: modules/volume/volume_slice.c:1178
 #, c-format
 msgid "X slice at %.*f%s%s (#%d)"
 msgstr ""
 
-#: modules/volume/volume_slice.c:1306
+#: modules/volume/volume_slice.c:1307
 #, fuzzy
 msgid "Volume Z graphs"
 msgstr "3차원 데이터"
 
-#: modules/volume/volume_slice.c:1313
+#: modules/volume/volume_slice.c:1314
 #, fuzzy
 msgid "Volume X graphs"
 msgstr "3차원 데이터"
 
-#: modules/volume/volume_slice.c:1320
+#: modules/volume/volume_slice.c:1321
 #, fuzzy
 msgid "Volume Y graphs"
 msgstr "3차원 데이터"
@@ -14368,6 +14697,47 @@ msgstr ""
 
 #: modules/xyz/xyz_drift.c:2269 modules/xyz/xyz_raster.c:1012
 msgid "Physical dimensions are invalid."
+msgstr ""
+
+#: modules/xyz/xyz_level.c:93
+msgid "Simple XYZ data leveling."
+msgstr ""
+
+#: modules/xyz/xyz_level.c:107
+#, fuzzy
+msgid "/Fix _Zero"
+msgstr "/평평하게 만들기(L)/0으로 고정하기(Z)"
+
+#: modules/xyz/xyz_level.c:114
+#, fuzzy
+msgid "/Zero _Mean Value"
+msgstr "/평평하게 만들기(L)/평균값을 0으로 맞추기(M)"
+
+#: modules/xyz/xyz_level.c:121
+#, fuzzy
+msgid "/Plane _Level..."
+msgstr "평면으로 평평하게 만들기"
+
+#: modules/xyz/xyz_level.c:125
+msgid "Level data by mean plane correction"
+msgstr ""
+
+#: modules/xyz/xyz_level.c:224
+msgid "Plane subtraction"
+msgstr ""
+
+#: modules/xyz/xyz_level.c:225
+#, fuzzy
+msgid "Rotation"
+msgstr "회전시키기"
+
+#: modules/xyz/xyz_level.c:236
+#, fuzzy
+msgid "Level XYZ Data"
+msgstr "데이터"
+
+#: modules/xyz/xyz_level.c:272
+msgid "Update X and Y of _all compatible data"
 msgstr ""
 
 #: modules/xyz/xyz_raster.c:197

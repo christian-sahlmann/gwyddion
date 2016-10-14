@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2016-10-11 02:14+0200\n"
+"POT-Creation-Date: 2016-10-14 11:46+0200\n"
 "PO-Revision-Date: 2016-10-11 20:28+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: None, I suppose\n"
@@ -914,7 +914,7 @@ msgstr "L_ight θ:"
 #: modules/process/bdep_synth.c:341 modules/process/calcoefs_new.c:352
 #: modules/process/calibrate.c:391 modules/process/col_synth.c:382
 #: modules/process/correct_affine.c:301 modules/process/curvature.c:615
-#: modules/process/cwt.c:135 modules/process/deposit_synth.c:351
+#: modules/process/cwt.c:135 modules/process/deposit_synth.c:349
 #: modules/process/diff_synth.c:411 modules/process/domain_synth.c:354
 #: modules/process/drift.c:245 modules/process/dwt.c:166
 #: modules/process/dwtanisotropy.c:184 modules/process/edge.c:638
@@ -927,7 +927,7 @@ msgstr "L_ight θ:"
 #: modules/process/lat_synth.c:523 modules/process/latsim.c:159
 #: modules/process/level.c:245 modules/process/linematch.c:804
 #: modules/process/lno_synth.c:433 modules/process/local_contrast.c:130
-#: modules/process/logistic.c:230 modules/process/mark_disconn.c:208
+#: modules/process/logistic.c:234 modules/process/mark_disconn.c:208
 #: modules/process/mask_distribute.c:152 modules/process/measure_lattice.c:256
 #: modules/process/median-bg.c:180 modules/process/noise_synth.c:336
 #: modules/process/obj_synth.c:438 modules/process/pat_synth.c:385
@@ -1187,23 +1187,23 @@ msgstr "Solid"
 msgid "line-style|Dash"
 msgstr "Dash"
 
-#: libgwydgets/gwygraphcurves.c:448
+#: libgwydgets/gwygraphcurves.c:451
 msgid "Description"
 msgstr "Description"
 
-#: libgwydgets/gwygraphcurves.c:460
+#: libgwydgets/gwygraphcurves.c:463
 msgid "Mode"
 msgstr "Mode"
 
-#: libgwydgets/gwygraphcurves.c:478
+#: libgwydgets/gwygraphcurves.c:481
 msgid "Color"
 msgstr "Colour"
 
-#: libgwydgets/gwygraphcurves.c:491
+#: libgwydgets/gwygraphcurves.c:494
 msgid "Point Type"
 msgstr "Point Type"
 
-#: libgwydgets/gwygraphcurves.c:513
+#: libgwydgets/gwygraphcurves.c:516
 msgid "Line Style"
 msgstr "Line Style"
 
@@ -1450,7 +1450,7 @@ msgstr ""
 "version. For full licence text see file COPYING included in the source "
 "tarball."
 
-#: app/about.c:160 modules/process/logistic.c:266
+#: app/about.c:160 modules/process/logistic.c:270
 msgid "Features"
 msgstr "Features"
 
@@ -2002,7 +2002,7 @@ msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr "Header has suddenly ended at line %u; end of header marker is missing"
 
 #: app/gwymoduleutils.c:197 app/settings.c:131 app/settings.c:142
-#: app/toolbox-spec.c:535 modules/file/err.h:62
+#: app/toolbox-spec.c:536 modules/file/err.h:62
 #, c-format
 msgid "Cannot write to file: %s."
 msgstr "Cannot write to file: %s."
@@ -2188,7 +2188,7 @@ msgstr "Delete selected item"
 msgid "Set selected item as default"
 msgstr "Set selected item as default"
 
-#: app/settings.c:124 app/toolbox-spec.c:527 modules/file/err.h:55
+#: app/settings.c:124 app/toolbox-spec.c:528 modules/file/err.h:55
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr "Cannot open file for writing: %s."
@@ -2867,15 +2867,15 @@ msgstr "Use _icon from:"
 msgid "Functions"
 msgstr "Functions"
 
-#: app/toolbox-spec.c:617
+#: app/toolbox-spec.c:618
 msgid "placeholder"
 msgstr "placeholder"
 
-#: app/toolbox-spec.c:625
+#: app/toolbox-spec.c:626
 msgid "remaining tools"
 msgstr "remaining tools"
 
-#: app/toolbox-spec.c:709
+#: app/toolbox-spec.c:710
 msgid "All tools not placed explicitly go here."
 msgstr "All tools not placed explicitly go here."
 
@@ -3348,7 +3348,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh exported data (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:226 modules/file/burleigh_exp.c:267
-#: modules/file/nanoscope.c:1605 modules/file/omicron.c:415
+#: modules/file/nanoscope.c:1605 modules/file/omicron.c:416
 #: modules/file/shimadzu.c:468
 msgid "Missing colon in header line."
 msgstr "Missing colon in header line."
@@ -3523,8 +3523,8 @@ msgstr "ECS files (.img)"
 msgid "Scan size header field overlaps with data."
 msgstr "Scan size header field overlaps with data."
 
-#: modules/file/err.h:48 modules/file/nrrdfile.c:774
-#: modules/file/nrrdfile.c:819
+#: modules/file/err.h:48 modules/file/nrrdfile.c:779
+#: modules/file/nrrdfile.c:824
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Cannot read from file: %s."
@@ -4966,7 +4966,7 @@ msgstr "Imports Nanonis SXM data files."
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Nanonis SXM files (.sxm)"
 
-#: modules/file/nanonis.c:230 modules/file/omicron.c:519
+#: modules/file/nanonis.c:230 modules/file/omicron.c:520
 #: modules/file/unisoku.c:278
 msgid "File header ended unexpectedly."
 msgstr "File header ended unexpectedly."
@@ -5061,7 +5061,7 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Cannot parse ‘Scan size’ field."
 
-#: modules/file/nanoscope.c:1539 modules/file/nrrdfile.c:1081
+#: modules/file/nanoscope.c:1539 modules/file/nrrdfile.c:1086
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Rubbish after data sample #%u."
@@ -5212,68 +5212,68 @@ msgstr "Imports and exports nearly raw raster data (NRRD) files."
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Nearly raw raster data (NRRD) files (.nrrd)"
 
-#: modules/file/nrrdfile.c:328
+#: modules/file/nrrdfile.c:334
 msgid "Detached header does not refer to any data file."
 msgstr "Detached header does not refer to any data file."
 
-#: modules/file/nrrdfile.c:356
+#: modules/file/nrrdfile.c:362
 msgid "Only two- and three-dimensional data are supported."
 msgstr "Only two- and three-dimensional data are supported."
 
-#: modules/file/nrrdfile.c:377
+#: modules/file/nrrdfile.c:382
 msgid "Non-zero lineskip is supported only for uncompressed files."
 msgstr "Non-zero lineskip is supported only for uncompressed files."
 
-#: modules/file/nrrdfile.c:416
+#: modules/file/nrrdfile.c:421
 msgid "Compression is supported only for detached files."
 msgstr "Compression is supported only for detached files."
 
-#: modules/file/nrrdfile.c:740
+#: modules/file/nrrdfile.c:745
 msgid "Split detached data files are not supported."
 msgstr "Split detached data files are not supported."
 
-#: modules/file/nrrdfile.c:786
+#: modules/file/nrrdfile.c:791
 msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 msgstr "Cannot decompress gzip-encoded data.  Zlib support was not built in."
 
-#: modules/file/nrrdfile.c:831
+#: modules/file/nrrdfile.c:836
 msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 
-#: modules/file/nrrdfile.c:963
+#: modules/file/nrrdfile.c:968
 #, c-format
 msgid "Hex data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr "Hex data contain fewer values (%u) than corresponds to the sizes (%u)."
 
-#: modules/file/nrrdfile.c:1076
+#: modules/file/nrrdfile.c:1081
 #, c-format
 msgid "Text data contain fewer values (%u) than corresponds to the sizes (%u)."
 msgstr ""
 "Text data contain fewer values (%u) than corresponds to the sizes (%u)."
 
-#: modules/file/nrrdfile.c:1130
+#: modules/file/nrrdfile.c:1135
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr "Field byteskip cannot be -1 for text encodings."
 
-#: modules/file/nrrdfile.c:1141
+#: modules/file/nrrdfile.c:1146
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr "Field lineskip specifies more lines than there are in the file."
 
-#: modules/file/nrrdfile.c:1184
+#: modules/file/nrrdfile.c:1189
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr "Field byteskip specifies more bytes than there are in the file."
 
-#: modules/file/nrrdfile.c:1589
+#: modules/file/nrrdfile.c:1594
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr "Items of per-axis header field %s are not quoted."
 
-#: modules/file/nrrdfile.c:1600
+#: modules/file/nrrdfile.c:1605
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr "Per-axis header field %s contains too many items."
 
-#: modules/file/nrrdfile.c:1609
+#: modules/file/nrrdfile.c:1614
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr "Per-axis header field %s contains too few items."
@@ -5377,19 +5377,19 @@ msgstr ""
 msgid "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 msgstr "TIFF directory %u is assigned to multiple conflicting ZTC coordinates."
 
-#: modules/file/omicron.c:163
+#: modules/file/omicron.c:164
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 
-#: modules/file/omicron.c:176
+#: modules/file/omicron.c:177
 msgid "Omicron files (.par + data)"
 msgstr "Omicron files (.par + data)"
 
-#: modules/file/omicron.c:421
+#: modules/file/omicron.c:422
 msgid "Header line starts with a colon."
 msgstr "Header line starts with a colon."
 
-#: modules/file/omicron.c:528
+#: modules/file/omicron.c:529
 msgid "Channel information ended unexpectedly."
 msgstr "Channel information has ended unexpectedly."
 
@@ -5466,8 +5466,8 @@ msgid "File main.xml contains multiple data elements."
 msgstr "File main.xml contains multiple data elements."
 
 #. TRANSLATORS: type and axis are symbols such as I, CX, ...
-#: modules/file/opengps.c:574 modules/file/opengps.c:582
-#: modules/file/opengps.c:590
+#: modules/file/opengps.c:575 modules/file/opengps.c:583
+#: modules/file/opengps.c:591
 #, c-format
 msgid "Only type %s is supported for axis %s."
 msgstr "Only type %s is supported for axis %s."
@@ -5743,7 +5743,7 @@ msgstr "Data Format"
 
 #: modules/file/rawfile.c:567 modules/process/arithmetic.c:234
 #: modules/process/calcoefs_view.c:320 modules/process/coerce.c:250
-#: modules/process/convolution_filter.c:236 modules/process/deposit_synth.c:639
+#: modules/process/convolution_filter.c:236 modules/process/deposit_synth.c:637
 #: modules/process/drift.c:242 modules/process/edge.c:635
 #: modules/process/entropy.c:178 modules/process/fft_filter_1d.c:183
 #: modules/process/grain_edge.c:210 modules/process/grain_filter.c:313
@@ -6731,20 +6731,20 @@ msgid "N.A."
 msgstr "N.A."
 
 #: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1363
-#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4323
+#: modules/graph/graph_fit.c:1500 modules/process/fit-shape.c:4333
 #: modules/volume/volume_fdfit.c:1720
 msgid "===== Fit Results ====="
 msgstr "===== Fit Results ====="
 
 #: modules/graph/graph_cd.c:997 modules/graph/graph_fdfit.c:1367
-#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4325
+#: modules/graph/graph_fit.c:1504 modules/process/fit-shape.c:4335
 #: modules/volume/volume_fdfit.c:1724
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Data:             %s\n"
 
 #: modules/graph/graph_cd.c:1000 modules/graph/graph_fdfit.c:1370
-#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4327
+#: modules/graph/graph_fit.c:1507 modules/process/fit-shape.c:4337
 #: modules/volume/volume_fdfit.c:1727
 #, c-format
 msgid "Number of points: %d of %d\n"
@@ -6757,14 +6757,14 @@ msgid "X range:          %.*f to %.*f %s\n"
 msgstr "X-range:          %.*f to %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1010 modules/graph/graph_fdfit.c:1380
-#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4329
+#: modules/graph/graph_fit.c:1517 modules/process/fit-shape.c:4339
 #: modules/volume/volume_fdfit.c:1737
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Fitted function:  %s\n"
 
 #: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1383
-#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4331
+#: modules/graph/graph_fit.c:1520 modules/process/fit-shape.c:4341
 #: modules/volume/volume_fdfit.c:1740
 msgid "Results\n"
 msgstr "Results\n"
@@ -6942,7 +6942,7 @@ msgid "χ<sup>2</sup> result:"
 msgstr "χ<sup>2</sup> result:"
 
 #: modules/graph/graph_fdfit.c:392 modules/graph/graph_fit.c:410
-#: modules/process/fit-shape.c:744 modules/process/fit-shape.c:4376
+#: modules/process/fit-shape.c:744 modules/process/fit-shape.c:4386
 #: modules/volume/volume_fdfit.c:477
 msgid "Correlation Matrix"
 msgstr "Correlation Matrix"
@@ -7416,8 +7416,8 @@ msgstr "Generate surface by ballistic deposition"
 #: modules/process/bdep_synth.c:239 modules/process/bdep_synth.c:596
 #: modules/process/calcoefs_simple.c:636 modules/process/col_synth.c:278
 #: modules/process/col_synth.c:723 modules/process/crosscor.c:820
-#: modules/process/crosscor.c:883 modules/process/deposit_synth.c:270
-#: modules/process/deposit_synth.c:861 modules/process/diff_synth.c:304
+#: modules/process/crosscor.c:883 modules/process/deposit_synth.c:268
+#: modules/process/deposit_synth.c:859 modules/process/diff_synth.c:304
 #: modules/process/diff_synth.c:705 modules/process/domain_synth.c:255
 #: modules/process/domain_synth.c:745 modules/process/grain_wshed.c:429
 #: modules/process/lat_synth.c:453 modules/process/mark_disconn.c:148
@@ -7427,14 +7427,14 @@ msgstr "Generate surface by ballistic deposition"
 #: modules/process/pid.c:338 modules/process/superresolution.c:416
 #: modules/process/superresolution.c:505 modules/process/tip_blind.c:781
 #: modules/process/tipops.c:320 modules/process/xydenoise.c:213
-#: modules/volume/volume_kmeans.c:407 modules/volume/volume_kmedians.c:365
+#: modules/volume/volume_kmeans.c:403 modules/volume/volume_kmedians.c:365
 #: modules/xyz/xyz_raster.c:1028 modules/xyz/xyz_raster.c:1044
 msgid "Initializing..."
 msgstr "Initialising..."
 
 #: modules/process/bdep_synth.c:275 modules/process/col_synth.c:316
-#: modules/process/deposit_synth.c:308 modules/process/deposit_synth.c:320
-#: modules/process/deposit_synth.c:533 modules/process/deposit_synth.c:546
+#: modules/process/deposit_synth.c:306 modules/process/deposit_synth.c:318
+#: modules/process/deposit_synth.c:531 modules/process/deposit_synth.c:544
 #: modules/process/diff_synth.c:342 modules/process/domain_synth.c:319
 #: modules/process/domain_synth.c:327 modules/process/fbm_synth.c:278
 #: modules/process/fft_synth.c:314 modules/process/lat_synth.c:491
@@ -7459,7 +7459,7 @@ msgid "Progressive preview"
 msgstr "Progressive preview"
 
 #: modules/process/bdep_synth.c:407 modules/process/col_synth.c:448
-#: modules/process/deposit_synth.c:414 modules/process/diff_synth.c:477
+#: modules/process/deposit_synth.c:412 modules/process/diff_synth.c:477
 #: modules/process/domain_synth.c:430 modules/process/fbm_synth.c:360
 #: modules/process/fft_synth.c:398 modules/process/lat_synth.c:582
 #: modules/process/lno_synth.c:490 modules/process/noise_synth.c:394
@@ -7469,7 +7469,7 @@ msgid "Dimensions"
 msgstr "Dimensions"
 
 #: modules/process/bdep_synth.c:416 modules/process/col_synth.c:457
-#: modules/process/deposit_synth.c:424 modules/process/diff_synth.c:486
+#: modules/process/deposit_synth.c:422 modules/process/diff_synth.c:486
 #: modules/process/domain_synth.c:438 modules/process/fbm_synth.c:371
 #: modules/process/fft_synth.c:409 modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:405 modules/process/obj_synth.c:506
@@ -7796,7 +7796,7 @@ msgid "Crop to actual data"
 msgstr "Crop to actual data"
 
 #: modules/process/calcoefs_view.c:567 modules/process/coerce.c:369
-#: modules/process/deposit_synth.c:643 modules/process/edge.c:705
+#: modules/process/deposit_synth.c:641 modules/process/edge.c:705
 #: modules/process/fft_filter_1d.c:299 modules/process/grain_edge.c:290
 #: modules/process/grain_filter.c:347 modules/process/grain_mark.c:372
 #: modules/process/mark_with.c:318 modules/process/polydistort.c:316
@@ -8499,19 +8499,19 @@ msgstr "2D CWT"
 msgid "_Wavelet type:"
 msgstr "_Wavelet type:"
 
-#: modules/process/deposit_synth.c:172
+#: modules/process/deposit_synth.c:170
 msgid "Generates particles using simple dynamical model"
 msgstr "Generates particles using a simple dynamical model"
 
-#: modules/process/deposit_synth.c:186
+#: modules/process/deposit_synth.c:184
 msgid "/S_ynthetic/_Particles..."
 msgstr "/S_ynthetic/_Particles..."
 
-#: modules/process/deposit_synth.c:190
+#: modules/process/deposit_synth.c:188
 msgid "Generate particles using dynamical model"
 msgstr "Generate particles using dynamical model"
 
-#: modules/process/deposit_synth.c:290 modules/process/deposit_synth.c:869
+#: modules/process/deposit_synth.c:288 modules/process/deposit_synth.c:867
 #, c-format
 msgid ""
 "Not all the particles could be deposited (%u),\n"
@@ -8520,68 +8520,68 @@ msgstr ""
 "Not all the particles could be deposited (%u),\n"
 "try more revise steps."
 
-#: modules/process/deposit_synth.c:349
+#: modules/process/deposit_synth.c:347
 msgid "Particle Generation"
 msgstr "Particle Generation"
 
-#: modules/process/deposit_synth.c:429
+#: modules/process/deposit_synth.c:427
 msgid "Particle r_adius:"
 msgstr "Particle r_adius:"
 
-#: modules/process/deposit_synth.c:440
+#: modules/process/deposit_synth.c:438
 msgid "Distribution _width:"
 msgstr "Distribution _width:"
 
-#: modules/process/deposit_synth.c:451
+#: modules/process/deposit_synth.c:449
 msgid "Surface _coverage:"
 msgstr "Surface _coverage:"
 
-#: modules/process/deposit_synth.c:460
+#: modules/process/deposit_synth.c:458
 msgid "_Relax steps:"
 msgstr "_Relaxation steps:"
 
-#: modules/process/deposit_synth.c:661 modules/process/synth.h:548
+#: modules/process/deposit_synth.c:659 modules/process/synth.h:548
 msgid "R_andom seed:"
 msgstr "R_andom seed:"
 
-#: modules/process/deposit_synth.c:667 modules/process/synth.h:554
+#: modules/process/deposit_synth.c:665 modules/process/synth.h:554
 msgid "seed|_New"
 msgstr "_New"
 
-#: modules/process/deposit_synth.c:678
+#: modules/process/deposit_synth.c:676
 msgid "Randomize"
 msgstr "Randomise"
 
-#: modules/process/deposit_synth.c:862 modules/process/domain_synth.c:919
+#: modules/process/deposit_synth.c:860 modules/process/domain_synth.c:919
 msgid "Running computation..."
 msgstr "Running computation..."
 
-#: modules/process/deposit_synth.c:867
+#: modules/process/deposit_synth.c:865
 #, c-format
 msgid "%d particles were deposited"
 msgstr "%d particles were deposited"
 
-#: modules/process/deposit_synth.c:1101
+#: modules/process/deposit_synth.c:1093
 msgid "Initial particle set..."
 msgstr "Initial particle set..."
 
-#: modules/process/deposit_synth.c:1260
+#: modules/process/deposit_synth.c:1252
 msgid "Running revise..."
 msgstr "Running revise..."
 
-#: modules/process/deposit_synth.c:1388
+#: modules/process/deposit_synth.c:1380
 msgid "Error: too many particles."
 msgstr "Error: too many particles."
 
-#: modules/process/deposit_synth.c:1390
+#: modules/process/deposit_synth.c:1382
 msgid "Error: no particles."
 msgstr "Error: no particles."
 
-#: modules/process/deposit_synth.c:1392
+#: modules/process/deposit_synth.c:1384
 msgid "Error: particles too large."
 msgstr "Error: particles are too large."
 
-#: modules/process/deposit_synth.c:1394
+#: modules/process/deposit_synth.c:1386
 msgid "Error: particles too small."
 msgstr "Error: particles are too small."
 
@@ -9675,11 +9675,11 @@ msgstr "Fit Shape"
 msgid "verb|_Quick Fit"
 msgstr "_Quick Fit"
 
-#: modules/process/fit-shape.c:748 modules/process/fit-shape.c:4401
+#: modules/process/fit-shape.c:748 modules/process/fit-shape.c:4411
 msgid "Derived Quantities"
 msgstr "Derived Quantities"
 
-#: modules/process/fit-shape.c:753 modules/process/fit-shape.c:4371
+#: modules/process/fit-shape.c:753 modules/process/fit-shape.c:4381
 msgid "Mean square difference:"
 msgstr "Mean square difference:"
 
@@ -9725,7 +9725,7 @@ msgstr "Fit failed"
 msgid "Fit was interruped"
 msgstr "Fit was interruped"
 
-#: modules/process/fit-shape.c:4357
+#: modules/process/fit-shape.c:4367
 msgid "(fixed)"
 msgstr "(fixed)"
 
@@ -10983,43 +10983,43 @@ msgstr "/_Grains/Logistic _Regression..."
 msgid "Mark grains with logistic regression"
 msgstr "Mark grains with logistic regression"
 
-#: modules/process/logistic.c:227
+#: modules/process/logistic.c:231
 msgid "Logistic Regression"
 msgstr "Logistic Regression"
 
-#: modules/process/logistic.c:250
+#: modules/process/logistic.c:254
 msgid "_Use trained regression"
 msgstr "_Use trained regression"
 
-#: modules/process/logistic.c:252
+#: modules/process/logistic.c:256
 msgid "_Train logistic regression"
 msgstr "_Train logistic regression"
 
-#: modules/process/logistic.c:271
+#: modules/process/logistic.c:275
 msgid "_Gaussian blur"
 msgstr "_Gaussian blur"
 
-#: modules/process/logistic.c:284
+#: modules/process/logistic.c:288
 msgid "_Number of Gaussians:"
 msgstr "_Number of Gaussians:"
 
-#: modules/process/logistic.c:292
+#: modules/process/logistic.c:296
 msgid "_Sobel derivatives"
 msgstr "_Sobel derivatives"
 
-#: modules/process/logistic.c:303
+#: modules/process/logistic.c:307
 msgid "_Laplacian"
 msgstr "_Laplacian"
 
-#: modules/process/logistic.c:314
+#: modules/process/logistic.c:318
 msgid "_Hessian"
 msgstr "_Hessian"
 
-#: modules/process/logistic.c:327
+#: modules/process/logistic.c:331
 msgid "_Regularization parameter:"
 msgstr "_Regularisation parameter:"
 
-#: modules/process/logistic.c:619 modules/process/neural.c:1101
+#: modules/process/logistic.c:623 modules/process/neural.c:1101
 msgid "Training..."
 msgstr "Training..."
 
@@ -14370,26 +14370,26 @@ msgstr "_Remove outliers"
 msgid "Outliers _threshold:"
 msgstr "Outliers _threshold:"
 
-#: modules/volume/volume_kmeans.c:435
+#: modules/volume/volume_kmeans.c:431
 msgid "K-means iteration..."
 msgstr "K-means iteration..."
 
-#: modules/volume/volume_kmeans.c:655
+#: modules/volume/volume_kmeans.c:651
 #, c-format
 msgid "K-means cluster of %s"
 msgstr "K-means cluster of %s"
 
-#: modules/volume/volume_kmeans.c:664
+#: modules/volume/volume_kmeans.c:660
 #, c-format
 msgid "K-means error of %s"
 msgstr "K-means error of %s"
 
-#: modules/volume/volume_kmeans.c:674 modules/volume/volume_kmedians.c:514
+#: modules/volume/volume_kmeans.c:670 modules/volume/volume_kmedians.c:514
 #, c-format
 msgid "Pre-normalized intensity of %s"
 msgstr "Pre-normalised intensity of %s"
 
-#: modules/volume/volume_kmeans.c:706
+#: modules/volume/volume_kmeans.c:702
 #, c-format
 msgid "K-means center %d"
 msgstr "K-means centre %d"
