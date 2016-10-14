@@ -20,6 +20,7 @@ Release checklist:
 - make sure global library headers (libfoo.h) include all other public
   headers
 - check full rebuild
+  disabled=update_version ./utils/gwyddion-night-build
 - check and update NEWS, set release data, generate the HTML version
   (utils/gen-news.py)
 - generate on-line module list (run ./make-module-list in utils, may need
