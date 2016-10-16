@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -771,14 +771,13 @@ crosscor_do(CrosscorArgs * args)
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *dfield2b = NULL,
                  *dfield4b = NULL, *dfield3 = NULL, *dfield4 = NULL,
-                 *score, *buffer, *mask, *dir = NULL,
+                 *score, *dir = NULL,
                  *abs = NULL, *corrected;
     GwyDataField *dfieldx2 = NULL, *dfieldy2 = NULL, *score2 = NULL;
     GwyXY *coords;
-    gboolean cancelled;
 
     gint newid, xres, yres, i, col, row, leftadd, rightadd, topadd, bottomadd;
-    gdouble error, *xdata, *ydata;
+    gdouble *xdata, *ydata;
     GwyComputationState *state;
     GwySIUnit *siunit;
     GQuark quark;
@@ -924,8 +923,7 @@ crosscor_do(CrosscorArgs * args)
 
 
     if (args->extend) {
-        buffer = gwy_data_field_new_alike(dfieldx, FALSE);
-        mask = gwy_data_field_new_alike(dfieldx, TRUE);
+        GwyDataField *mask = gwy_data_field_new_alike(dfieldx, TRUE);
 
         //crop data if there was a global shift
         if (args->search_xoffset<0) {
@@ -945,70 +943,46 @@ crosscor_do(CrosscorArgs * args)
             bottomadd = 0;
         }
 
-        gwy_data_field_area_fill(mask, 0, 0, args->window_x/2 + 2 + leftadd, yres, 1);
-        gwy_data_field_area_fill(mask, 0, 0, xres, args->window_y/2 + 2 + topadd, 1);
-        gwy_data_field_area_fill(mask, xres - args->window_x/2 - 2 - rightadd, 0, args->window_x/2 + 2 + rightadd, yres, 1);
-        gwy_data_field_area_fill(mask, 0, yres - args->window_y/2 - 2 - bottomadd, xres, args->window_y/2 + 2 + bottomadd, 1);
+        gwy_data_field_area_fill(mask,
+                                 0, 0,
+                                 args->window_x/2 + 2 + leftadd, yres, 1);
+        gwy_data_field_area_fill(mask,
+                                 0, 0,
+                                 xres, args->window_y/2 + 2 + topadd, 1);
+        gwy_data_field_area_fill(mask,
+                                 xres - args->window_x/2 - 2 - rightadd, 0,
+                                 args->window_x/2 + 2 + rightadd, yres, 1);
+        gwy_data_field_area_fill(mask,
+                                 0, yres - args->window_y/2 - 2 - bottomadd,
+                                 xres, args->window_y/2 + 2 + bottomadd, 1);
 
-        gwy_data_field_correct_average_unmasked(dfieldx, mask);
-        gwy_data_field_correct_average_unmasked(dfieldy, mask);
+        gwy_data_field_laplace_solve(dfieldx, mask, -1, 0.8);
+        gwy_data_field_laplace_solve(dfieldy, mask, -1, 0.8);
 
-        gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->op1.id),
-                           _("Borders extension..."));
-
-        cancelled = FALSE;
-        for (i = 0; i < 10000; i++) {
-            gwy_data_field_correct_laplace_iteration(dfieldx,
-                                                     mask,
-                                                     buffer,
-                                                     0.2,
-                                                     &error);
-            if (!gwy_app_wait_set_fraction((gdouble)i/20000.0)) {
-                cancelled = TRUE;
-                gwy_app_wait_finish();
-                break;
-            }
-
-        }
-        if (!cancelled) {
-            for (i = 0; i < 10000; i++) {
-                gwy_data_field_correct_laplace_iteration(dfieldy,
-                                                     mask,
-                                                     buffer,
-                                                     0.2,
-                                                     &error);
-                if (!gwy_app_wait_set_fraction((10000.0 + (gdouble)i)/20000.0))
-                    break;
-
-            }
-        }
-        gwy_app_wait_finish();
-
-        GWY_OBJECT_UNREF(buffer);
-        GWY_OBJECT_UNREF(mask);
+        g_object_unref(mask);
     }
 
     if (args->gaussian) {
-       gwy_data_field_filter_gaussian(dfieldx, args->gaussian_width);
-       gwy_data_field_filter_gaussian(dfieldy, args->gaussian_width);
+        gwy_data_field_filter_gaussian(dfieldx, args->gaussian_width);
+        gwy_data_field_filter_gaussian(dfieldy, args->gaussian_width);
     }
 
     if (args->correct) {
-       corrected = gwy_data_field_new_alike(dfield2, FALSE);
-       coords = g_new(GwyXY, xres*yres);
+        corrected = gwy_data_field_new_alike(dfield2, FALSE);
+        coords = g_new(GwyXY, xres*yres);
 
-       xdata = gwy_data_field_get_data(dfieldx);
-       ydata = gwy_data_field_get_data(dfieldy);
-       i = 0;
-       for (row = 0; row < yres; row++) {
-           for (col = 0; col < xres; col++) {
-               coords[i].x = col + gwy_data_field_rtoi(corrected,
-                                                       xdata[col + xres*row]) + 0.5 - args->search_xoffset;
-               coords[i].y = row + gwy_data_field_rtoj(corrected,
-                                                       ydata[col + xres*row]) + 0.5 - args->search_yoffset;
-               i++;
-           }
-       }
+        xdata = gwy_data_field_get_data(dfieldx);
+        ydata = gwy_data_field_get_data(dfieldy);
+        i = 0;
+        for (row = 0; row < yres; row++) {
+            for (col = 0; col < xres; col++) {
+                coords[i].x = col + gwy_data_field_rtoi(corrected,
+                                                        xdata[col + xres*row]) + 0.5 - args->search_xoffset;
+                coords[i].y = row + gwy_data_field_rtoj(corrected,
+                                                        ydata[col + xres*row]) + 0.5 - args->search_yoffset;
+                i++;
+            }
+        }
 
        gwy_data_field_sample_distorted(dfield2,
                                        corrected,

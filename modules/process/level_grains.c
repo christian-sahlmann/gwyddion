@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels individual grains, interpolating the shifts between using "
        "Laplacian interpolation."),
     "David Nečas <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -143,12 +143,10 @@ level_grains_do(const LevelGrainsArgs *args,
                 GwyContainer *data, GQuark dquark, gint id,
                 GwyDataField *dfield, GwyDataField *mfield)
 {
-    GwyDataField *buffer, *background, *invmask;
-    gdouble error, cor, maxerr, lastfrac, frac, starterr;
+    GwyDataField *background, *invmask;
     gdouble *heights, *bgdata;
     gint *grains;
-    gboolean cancelled = FALSE;
-    gint i, xres, yres, ngrains;
+    gint newid, i, xres, yres, ngrains;
 
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
@@ -172,60 +170,23 @@ level_grains_do(const LevelGrainsArgs *args,
 
     invmask = gwy_data_field_duplicate(mfield);
     gwy_data_field_grains_invert(invmask);
-
-    maxerr = gwy_data_field_get_rms(dfield)/1.0e4;
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Laplace interpolation..."));
-
+    gwy_data_field_laplace_solve(background, invmask, -1, 0.8);
     g_free(heights);
     g_free(grains);
 
-    buffer = gwy_data_field_new_alike(background, TRUE);
-    gwy_data_field_correct_average_unmasked(background, invmask);
+    gwy_data_field_invert(background, FALSE, FALSE, TRUE);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+    gwy_data_field_subtract_fields(dfield, dfield, background);
+    gwy_data_field_data_changed(dfield);
 
-    cor = 0.2;
-    error = 0.0;
-    lastfrac = 0.0;
-    starterr = 0.0;
-    for (i = 0; i < 5000; i++) {
-        gwy_data_field_correct_laplace_iteration(background, invmask, buffer,
-                                                 cor, &error);
-        if (error < maxerr)
-            break;
-        if (!i)
-            starterr = error;
-
-        frac = log(error/starterr)/log(maxerr/starterr);
-        if ((i/(gdouble)(5000)) > frac)
-            frac = i/(gdouble)(5000);
-        if (lastfrac > frac)
-            frac = lastfrac;
-
-        if (!gwy_app_wait_set_fraction(frac)) {
-            cancelled = TRUE;
-            break;
-        }
-        lastfrac = frac;
+    if (args->do_extract) {
+        newid = gwy_app_data_browser_add_data_field(background, data, TRUE);
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                0);
+        gwy_app_set_data_field_title(data, newid, _("Background"));
     }
-    gwy_app_wait_finish();
 
-    if (!cancelled) {
-        gwy_data_field_invert(background, FALSE, FALSE, TRUE);
-        gwy_app_undo_qcheckpointv(data, 1, &dquark);
-        gwy_data_field_subtract_fields(dfield, dfield, background);
-        gwy_data_field_data_changed(dfield);
-
-        if (args->do_extract) {
-            gint newid;
-
-            newid = gwy_app_data_browser_add_data_field(background, data, TRUE);
-            gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
-            gwy_app_set_data_field_title(data, newid, _("Background"));
-        }
-    }
-    g_object_unref(buffer);
     g_object_unref(invmask);
     g_object_unref(background);
 }

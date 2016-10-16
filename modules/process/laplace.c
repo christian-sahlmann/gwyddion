@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     N_("Removes data under mask, "
        "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -67,11 +67,9 @@ module_register(void)
 static void
 laplace(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *mfield, *buffer;
+    GwyDataField *dfield, *mfield;
     GQuark dquark;
-    gdouble error, cor, maxer, lastfrac, frac, starter;
-    gint i, id;
-    gboolean cancelled = FALSE;
+    gint id;
 
     g_return_if_fail(run & LAPLACE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
@@ -80,47 +78,10 @@ laplace(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && dquark && mfield);
-
-    maxer = gwy_data_field_get_rms(dfield)/1.0e4;
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
-                       _("Laplace interpolation..."));
-
-    dfield = gwy_data_field_duplicate(dfield);
-    buffer = gwy_data_field_new_alike(dfield, TRUE);
-    gwy_data_field_correct_average_unmasked(dfield, mfield);
-
-    cor = 0.2;
-    error = 0.0;
-    lastfrac = 0.0;
-    starter = 0.0;
-    for (i = 0; i < 5000; i++) {
-        gwy_data_field_correct_laplace_iteration(dfield, mfield, buffer,
-                                                 cor, &error);
-        if (error < maxer)
-            break;
-        if (!i)
-            starter = error;
-
-        frac = log(error/starter)/log(maxer/starter);
-        if ((i/(gdouble)(5000)) > frac)
-            frac = i/(gdouble)(5000);
-        if (lastfrac > frac)
-            frac = lastfrac;
-
-        if (!gwy_app_wait_set_fraction(frac)) {
-            cancelled = TRUE;
-            break;
-        }
-        lastfrac = frac;
-    }
-    gwy_app_wait_finish();
-    if (!cancelled) {
-        gwy_app_undo_qcheckpointv(data, 1, &dquark);
-        gwy_container_set_object(data, dquark, dfield);
-        gwy_app_channel_log_add_proc(data, id, id);
-    }
-    g_object_unref(dfield);
-    g_object_unref(buffer);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+    gwy_data_field_laplace_solve(dfield, mfield, -1, 1.0);
+    gwy_data_field_data_changed(dfield);
+    gwy_app_channel_log_add_proc(data, id, id);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
