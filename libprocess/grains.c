@@ -3933,6 +3933,54 @@ gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
 }
 
 /**
+ * gwy_data_field_get_grain_sizes:
+ * @mask_field: Data field containing positive values in grains, nonpositive
+ *              in free space.  However its contents is ignored as all
+ *              grain information is taken from @grains (its dimensions
+ *              determine the dimensions of @grains).
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @sizes: Array of size at least @ngrains+1 to fill with grain sizes
+ *         (as usual zero does not correspond to any grain, grains
+ *         start from 1). It can be %NULL to allocate a new array.
+ *
+ * Find sizes of all grains in a mask data field.
+ *
+ * Size is the number of pixels in the grain.
+ *
+ * The zeroth element of @sizes is filled with the number of pixels not
+ * covered by the mask.
+ *
+ * Returns: Either @sizes (if it was not %NULL), or a newly allocated array
+ *          of size @ngrains+1.
+ *
+ * Since: 2.47
+ **/
+gint*
+gwy_data_field_get_grain_sizes(GwyDataField *mask_field,
+                               gint ngrains,
+                               const gint *grains,
+                               gint *sizes)
+{
+    gint xres, yres, k;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
+    g_return_val_if_fail(grains, NULL);
+
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    if (!sizes)
+        sizes = g_new(gint, ngrains + 1);
+
+    gwy_clear(sizes, ngrains + 1);
+    for (k = 0; k < xres*yres; k++)
+        sizes[grains[k]]++;
+
+    return sizes;
+}
+
+/**
  * gwy_data_field_area_grains_tgnd:
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
