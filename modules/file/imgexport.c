@@ -514,7 +514,7 @@ static GwyModuleInfo module_info = {
        "Export to some formats relies on GDK and other libraries thus may "
        "be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti)",
     "2014",
 };
