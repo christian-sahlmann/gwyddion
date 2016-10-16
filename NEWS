@@ -1,5 +1,19 @@
 2.47 (0000-00-00)
+Application:
+- Translations updated: Russian.
+
+Libraries:
+- libgwyprocess: New single-step tip modelling functions, either for fixed
+  model size or optimised for a certain height range, with more general
+  model parameter handling.
+- libgwyprocess: Elliptical parabolic tip model was added.
+- libgwyprocess: Fast Laplace interpolation function
+  gwy_data_field_laplace_solve() was added.
+- libgwyprocess: Helper function for grain pixel size calculation was added.
+
 Modules:
+- Image export: Inset scale bar label can be placed either below or above the
+  bar.
 - Fit shape: Parabolic bump function was added.
 
 
