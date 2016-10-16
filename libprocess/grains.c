@@ -1855,139 +1855,6 @@ improve_inscribed_disc(InscribedDisc *disc, EdgeQueue *edges, guint dist)
     } while (eps > 1e-3 || improvement > 1e-3);
 }
 
-static gdouble
-grain_volume_laplace(GwyDataField *data_field,
-                     const gint *grains,
-                     gint gno,
-                     const gint *bound)
-{
-    GwyDataField *grain, *mask, *buffer;
-    gint xres, yres, col, row, w, h, i, j, k, ns;
-    gdouble v, s, maxerr, error, vol;
-    const gdouble *d;
-    gdouble *m, *g;
-
-    xres = data_field->xres;
-    yres = data_field->yres;
-
-    /* Caulcate extended boundaries */
-    w = bound[2];
-    col = bound[0];
-    if (col > 0) {
-        col--;
-        w++;
-    }
-    if (col + w < xres)
-        w++;
-
-    h = bound[3];
-    row = bound[1];
-    if (row > 0) {
-        row--;
-        h++;
-    }
-    if (row + h < yres)
-        h++;
-
-    /* Create the mask for laplace iteration and calculate a suitable starting
-     * value to fill the grain with */
-    grain = gwy_data_field_area_extract(data_field, col, row, w, h);
-    mask = gwy_data_field_new_alike(grain, TRUE);
-
-    g = grain->data;
-    m = mask->data;
-    d = data_field->data + row*xres + col;
-
-    s = maxerr = 0.0;
-    ns = 0;
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j++) {
-            k = (i + row)*xres + j + col;
-            if (grains[k] == gno) {
-                m[i*w + j] = 1.0;
-                if (i > 0 && !grains[k - xres]) {
-                    v = g[i*w + j - w];
-                    s += v;
-                    maxerr += v*v;
-                    ns++;
-                }
-                if (j > 0 && !grains[k - 1]) {
-                    v = g[i*w + j - 1];
-                    s += v;
-                    maxerr += v*v;
-                    ns++;
-                }
-                if (j + 1 < w && !grains[k + 1]) {
-                    v = g[i*w + j + 1];
-                    s += v;
-                    maxerr += v*v;
-                    ns++;
-                }
-                if (i + 1 < h && !grains[k + xres]) {
-                    v = g[i*w + j + w];
-                    s += v;
-                    maxerr += v*v;
-                    ns++;
-                }
-            }
-        }
-    }
-    g_assert(ns > 0);
-    s /= ns;
-    maxerr = 0.01*sqrt(fabs(maxerr/ns - s*s));
-
-    /* Fill with the starting value */
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j++) {
-            k = (i + row)*xres + j + col;
-            if (grains[k] == gno)
-                g[i*w + j] = s;
-        }
-    }
-
-    /* Iterate to get basis (background) */
-    if (maxerr) {
-        buffer = gwy_data_field_new_alike(grain, FALSE);
-        for (i = 0; i < 500; i++) {
-            gwy_data_field_correct_laplace_iteration(grain, mask, buffer,
-                                                     0.2, &error);
-            if (error <= maxerr)
-                break;
-        }
-        g_object_unref(buffer);
-    }
-    g_object_unref(mask);
-
-    /* Calculate the volume between data and basis */
-    vol = 0.0;
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j++) {
-            k = (i + row)*xres + j + col;
-            if (grains[k] == gno) {
-                gint im, ip, jm, jp;
-
-                im = (i > 0) ? i-1 : i;
-                ip = (i < h-1) ? i+1 : i;
-                jm = (j > 0) ? j-1 : j;
-                jp = (j < w-1) ? j+1 : j;
-
-                vol += 52.0*(d[i*xres + j] - g[i*w + j])
-                       + 10.0*(d[im*xres + j] - g[im*w + j]
-                               + d[i*xres + jm] - g[i*w + jm]
-                               + d[i*xres + jp] - g[i*w + jp]
-                               + d[ip*xres + j] - g[ip*w + j])
-                       + (d[im*xres + jm] - g[im*w + jm]
-                          + d[im*xres + jp] - g[im*w + jp]
-                          + d[ip*xres + jm] - g[ip*w + jm]
-                          + d[ip*xres + jp] - g[ip*w + jp]);
-            }
-        }
-    }
-    g_object_unref(grain);
-
-    return vol;
-}
-
 /**
  * gwy_data_field_grains_get_values:
  * @data_field: Data field used for marking.  For some quantities its values
@@ -2948,14 +2815,23 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         }
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_VOLUME_LAPLACE])) {
-        gwy_clear(p, ngrains + 1);
         /* Fail gracefully when there is one big `grain' over all data. */
         if (ngrains == 1 && sizes[1] == xres*yres)
             p[1] = 0.0;
         else {
-            for (gno = 1; gno <= ngrains; gno++)
-                p[gno] = qarea/96.0*grain_volume_laplace(data_field, grains,
-                                                         gno, bbox + 4*gno);
+            GwyDataField *difference = gwy_data_field_duplicate(data_field);
+            GwyDataField *mask = gwy_data_field_new_alike(data_field, FALSE);
+            gdouble *m = mask->data;
+
+            for (k = 0; k < nn; k++)
+                m[k] = grains[k];
+
+            gwy_data_field_laplace_solve(difference, mask, -1, 0.4);
+            g_object_unref(mask);
+            gwy_data_field_subtract_fields(difference, data_field, difference);
+            integrate_grain_volume0(difference->data, grains, xres, yres, p,
+                                    ngrains, qarea);
+            g_object_unref(difference);
         }
     }
     if (quantity_data[GWY_GRAIN_VALUE_SLOPE_THETA]
