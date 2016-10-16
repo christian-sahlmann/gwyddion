@@ -2209,6 +2209,40 @@ calculate_grain_aux(GwyDataField *data_field,
     }
 }
 
+static void
+integrate_grain_volume0(const gdouble *d, const gint *grains,
+                        gint xres, gint yres,
+                        gdouble *volume, guint ngrains,
+                        gdouble pixelarea)
+{
+    gint i, j, gno;
+
+    gwy_clear(volume, ngrains + 1);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gint ix, ipx, imx, jp, jm;
+            gdouble v;
+
+            ix = i*xres;
+            if (!(gno = grains[ix + j]))
+                continue;
+
+            imx = (i > 0) ? ix-xres : ix;
+            ipx = (i < yres-1) ? ix+xres : ix;
+            jm = (j > 0) ? j-1 : j;
+            jp = (j < xres-1) ? j+1 : j;
+
+            v = (52.0*d[ix + j] + 10.0*(d[imx + j] + d[ix + jm]
+                                        + d[ix + jp] + d[ipx + j])
+                 + (d[imx + jm] + d[imx + jp] + d[ipx + jm] + d[ipx + jp]));
+
+            volume[gno] += v;
+        }
+    }
+    for (gno = 0; gno <= ngrains; gno++)
+        volume[gno] *= pixelarea/96.0;
+}
+
 /**
  * gwy_data_field_grains_get_quantities:
  * @data_field: Data field used for marking.  For some quantities its values
@@ -2282,7 +2316,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_XVALUE,                  /* centre x */
         NEED_YVALUE,                  /* centre y */
         0,                            /* volume, 0-based */
-        NEED_MIN,                     /* volume, min-based */
+        NEED_MIN | NEED_SIZES,        /* volume, min-based */
         NEED_BBOX | NEED_SIZES,       /* volume, Laplace-based */
         INVALID,
         INVALID,
@@ -2899,44 +2933,18 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gdouble *pv0 = quantity_data[GWY_GRAIN_VALUE_VOLUME_0];
         gdouble *pvm = quantity_data[GWY_GRAIN_VALUE_VOLUME_MIN];
 
-        if (pv0)
-            gwy_clear(pv0, ngrains + 1);
-        if (pvm)
-            gwy_clear(pvm, ngrains + 1);
-
-        for (i = 0; i < yres; i++) {
-            for (j = 0; j < xres; j++) {
-                gint ix, ipx, imx, jp, jm;
-                gdouble v;
-
-                ix = i*xres;
-                if (!(gno = grains[ix + j]))
-                    continue;
-
-                imx = (i > 0) ? ix-xres : ix;
-                ipx = (i < yres-1) ? ix+xres : ix;
-                jm = (j > 0) ? j-1 : j;
-                jp = (j < xres-1) ? j+1 : j;
-
-                v = (52.0*d[ix + j] + 10.0*(d[imx + j] + d[ix + jm]
-                                            + d[ix + jp] + d[ipx + j])
-                     + (d[imx + jm] + d[imx + jp] + d[ipx + jm] + d[ipx + jp]));
-
-                /* We know the basis would appear with total weight -96 so
-                 * don't bother subtracting it from individual heights */
-                if (pv0)
-                    pv0[gno] += v;
-                if (pvm)
-                    pvm[gno] += v - 96.0*min[gno];
+        if (pv0) {
+            integrate_grain_volume0(d, grains, xres, yres, pv0, ngrains, qarea);
+            if (pvm) {
+                for (gno = 0; gno <= ngrains; gno++)
+                    pvm[gno] = pv0[gno] - qarea*min[gno]*sizes[gno];
             }
         }
-        if (pv0) {
-            for (gno = 1; gno <= ngrains; gno++)
-                pv0[gno] *= qarea/96.0;
-        }
-        if (pvm) {
-            for (gno = 1; gno <= ngrains; gno++)
-                pvm[gno] *= qarea/96.0;
+        else {
+            g_assert(pvm);
+            integrate_grain_volume0(d, grains, xres, yres, pvm, ngrains, qarea);
+            for (gno = 0; gno <= ngrains; gno++)
+                pvm[gno] -= qarea*min[gno]*sizes[gno];
         }
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_VOLUME_LAPLACE])) {
