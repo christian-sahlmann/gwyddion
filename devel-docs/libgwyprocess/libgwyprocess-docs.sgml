@@ -168,5 +168,9 @@
     <title>Index of new symbols in 2.46</title>
     <xi:include href="xml/api-index-2.46.xml"><xi:fallback /></xi:include>
   </index>
+  <index id="api-index-2-47" role="2.47">
+    <title>Index of new symbols in 2.47</title>
+    <xi:include href="xml/api-index-2.47.xml"><xi:fallback /></xi:include>
+  </index>
   <!-- API INDICES END -->
 </book>
