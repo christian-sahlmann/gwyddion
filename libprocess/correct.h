@@ -33,6 +33,10 @@ typedef void (*GwyCoordTransform2DFunc)(gdouble x,
                                         gdouble *py,
                                         gpointer user_data);
 
+void     gwy_data_field_laplace_solve            (GwyDataField *field,
+                                                  GwyDataField *mask,
+                                                  gint grain_id,
+                                                  gdouble qprec);
 void     gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                                   GwyDataField *mask_field,
                                                   GwyDataField *buffer_field,
