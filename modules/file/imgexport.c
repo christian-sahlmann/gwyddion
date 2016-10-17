@@ -1930,7 +1930,7 @@ draw_inset(const ImgExportArgs *args,
     const ImgExportRect *rect = &sizes->inset, *imgrect = &sizes->image;
     const GwyRGBA *colour = &args->inset_color;
     const GwyRGBA *outcolour = &args->inset_outline_color;
-    PangoRectangle logical;
+    PangoRectangle logical, ink;
     gdouble lw = sizes->sizes.line_width;
     gdouble tl = sizes->sizes.tick_length;
     gdouble olw = sizes->sizes.outline_width;
@@ -1987,7 +1987,9 @@ draw_inset(const ImgExportArgs *args,
     cairo_stroke(cr);
     cairo_restore(cr);
 
-    if (args->inset_draw_ticks)
+    if (args->inset_draw_text_above)
+        y = -2.0*lw;
+    else if (args->inset_draw_ticks)
         y = tl + 2.0*lw;
     else
         y = 2.0*lw;
@@ -1995,10 +1997,12 @@ draw_inset(const ImgExportArgs *args,
     if (args->inset_draw_label) {
         cairo_save(cr);
         format_layout(layout, &logical, s, "%s", args->inset_length);
-        if (args->inset_draw_text_above) {
-            y = -y - logical.height/pangoscale;
-        }
-        cairo_move_to(cr, xcentre - 0.5*logical.width/pangoscale, y);
+        /* We need ink rectangle to position labels with no ink below baseline,
+         * such as 100 nm, as expected. */
+        pango_layout_get_extents(layout, &ink, NULL);
+        if (args->inset_draw_text_above)
+            y -= (ink.y + ink.height)/pangoscale;
+        cairo_move_to(cr, xcentre - 0.5*ink.width/pangoscale, y);
         draw_text_with_outline(cr, layout, colour, outcolour, olw);
         cairo_restore(cr);
     }
