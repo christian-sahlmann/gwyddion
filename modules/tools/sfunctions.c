@@ -123,7 +123,7 @@ struct _GwyToolSFunctionsClass {
 
 static gboolean module_register(void);
 
-static GType    gwy_tool_sfunctions_get_type              (void)                      G_GNUC_CONST;
+static GType    gwy_tool_sfunctions_get_type              (void)                        G_GNUC_CONST;
 static void     gwy_tool_sfunctions_finalize              (GObject *object);
 static void     gwy_tool_sfunctions_init_dialog           (GwyToolSFunctions *tool);
 static void     gwy_tool_sfunctions_data_switched         (GwyTool *gwytool,
@@ -163,10 +163,17 @@ static void     gwy_tool_sfunctions_target_changed        (GwyToolSFunctions *to
 static void     gwy_tool_sfunctions_apply                 (GwyToolSFunctions *tool);
 static void     gwy_data_field_area_range                 (GwyDataField *dfield,
                                                            GwyDataLine *dline,
-                                                           gint col, gint row, gint width, gint height,
+                                                           gint col,
+                                                           gint row,
+                                                           gint width,
+                                                           gint height,
                                                            GwyOrientation direction,
                                                            GwyInterpolationType interp,
                                                            gint lineres);
+static void     update_unc_fields                         (GwyPlainTool *plain_tool);
+static gboolean sfunction_supports_masking                (GwySFOutputType type);
+static gboolean sfunction_has_explicit_resampling         (GwySFOutputType type);
+static gboolean sfunction_has_direction                   (GwySFOutputType type);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -175,7 +182,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.14",
+    "2.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -548,9 +555,6 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolSFunctions *tool;
     gboolean ignore;
-    gchar xukey[24];
-    gchar yukey[24];
-    gchar zukey[24];
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
@@ -568,36 +572,7 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-
-        g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
-        g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
-        g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
-
-        if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-        {
-            tool->has_calibration = TRUE;
-            gtk_widget_show(tool->separate);
-            /*we need to resample uncertainties*/
-            tool->xunc = gwy_data_field_new_resampled(tool->xunc,
-                                                      gwy_data_field_get_xres(plain_tool->data_field),
-                                                      gwy_data_field_get_yres(plain_tool->data_field),
-                                                      GWY_INTERPOLATION_BILINEAR);
-            tool->yunc = gwy_data_field_new_resampled(tool->yunc,
-                                                      gwy_data_field_get_xres(plain_tool->data_field),
-                                                      gwy_data_field_get_yres(plain_tool->data_field),
-                                                      GWY_INTERPOLATION_BILINEAR);
-
-            tool->zunc = gwy_data_field_new_resampled(tool->zunc,
-                                                      gwy_data_field_get_xres(plain_tool->data_field),
-                                                      gwy_data_field_get_yres(plain_tool->data_field),
-                                                      GWY_INTERPOLATION_BILINEAR);
-
-        } else {
-            tool->has_calibration = FALSE;
-            gtk_widget_hide(tool->separate);
-        }
+        update_unc_fields(plain_tool);
     }
 
     gwy_tool_sfunctions_update_curve(tool);
@@ -620,40 +595,9 @@ gwy_tool_sfunctions_response(GwyTool *tool,
 static void
 gwy_tool_sfunctions_data_changed(GwyPlainTool *plain_tool)
 {
-    GwyToolSFunctions *tool = GWY_TOOL_SFUNCTIONS(plain_tool);
-    gchar xukey[24], yukey[24], zukey[24];
-
-    g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
-    g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
-    g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
-
-    if (gwy_container_gis_object_by_name(plain_tool->container,
-                                         xukey, &tool->xunc)
-        && gwy_container_gis_object_by_name(plain_tool->container,
-                                            yukey, &tool->yunc)
-        && gwy_container_gis_object_by_name(plain_tool->container,
-                                            zukey, &tool->zunc)) {
-        gint xres = gwy_data_field_get_xres(plain_tool->data_field);
-        gint yres = gwy_data_field_get_yres(plain_tool->data_field);
-
-        tool->has_calibration = TRUE;
-            gtk_widget_show(tool->separate);
-            /*we need to resample uncertainties*/
-            tool->xunc = gwy_data_field_new_resampled(tool->xunc, xres, yres,
-                                                      GWY_INTERPOLATION_BILINEAR);
-            tool->yunc = gwy_data_field_new_resampled(tool->yunc, xres, yres,
-                                                      GWY_INTERPOLATION_BILINEAR);
-
-            tool->zunc = gwy_data_field_new_resampled(tool->zunc, xres, yres,
-                                                      GWY_INTERPOLATION_BILINEAR);
-
-    }
-    else {
-        tool->has_calibration = FALSE;
-    }
-
-    gwy_tool_sfunctions_update_curve(tool);
-    gwy_tool_sfunctions_update_target_graphs(tool);
+    update_unc_fields(plain_tool);
+    gwy_tool_sfunctions_update_curve(GWY_TOOL_SFUNCTIONS(plain_tool));
+    gwy_tool_sfunctions_update_target_graphs(GWY_TOOL_SFUNCTIONS(plain_tool));
 }
 
 static void
@@ -661,11 +605,8 @@ gwy_tool_sfunctions_mask_changed(GwyPlainTool *plain_tool)
 {
     GwyToolSFunctions *tool = GWY_TOOL_SFUNCTIONS(plain_tool);
 
-    if (tool->args.masking == GWY_MASK_IGNORE
-        || tool->args.output_type != GWY_SF_DH)
-        return;
-
-    gwy_tool_sfunctions_update_curve(tool);
+    if (sfunction_supports_masking(tool->args.output_type))
+        gwy_tool_sfunctions_update_curve(tool);
 }
 
 static void
@@ -702,22 +643,16 @@ gwy_tool_sfunctions_update_sensitivity(GwyToolSFunctions *tool)
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
     gwy_table_hscale_set_sensitive(tool->resolution, tool->args.fixres);
 
-    sensitive = (tool->args.output_type == GWY_SF_ACF
-                 || tool->args.output_type == GWY_SF_HHCF
-                 || tool->args.output_type == GWY_SF_PSDF
-                 || tool->args.output_type == GWY_SF_RPSDF);
+    sensitive = (sfunction_has_explicit_resampling(tool->args.output_type)
+                 && tool->args.fixres);
     gtk_widget_set_sensitive(tool->interpolation, sensitive);
     gtk_widget_set_sensitive(tool->interpolation_label, sensitive);
 
-    sensitive = (tool->args.output_type == GWY_SF_DA
-                 || tool->args.output_type == GWY_SF_CDA
-                 || tool->args.output_type == GWY_SF_ACF
-                 || tool->args.output_type == GWY_SF_HHCF
-                 || tool->args.output_type == GWY_SF_PSDF);
+    sensitive = sfunction_has_direction(tool->args.output_type);
     for (l = tool->direction; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sensitive);
 
-    sensitive = (tool->args.output_type == GWY_SF_DH);
+    sensitive = sfunction_supports_masking(tool->args.output_type);
     gtk_widget_set_sensitive(tool->masking_label, sensitive);
     for (l = tool->masking; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sensitive);
@@ -727,29 +662,34 @@ static void
 gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
+    GwyDataField *dfield, *mask, *tmp_mask = NULL;
+    GwyOrientation dir = tool->args.direction;
+    GwyInterpolationType interp = tool->args.interpolation;
+    GwyGraphModel *gmodel = tool->gmodel;
     GwyGraphCurveModel *gcmodel, *ugcmodel = NULL;
-    GwyDataField *mask_field = NULL;
     gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
     const gchar *title, *xlabel, *ylabel;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
+    dfield = plain_tool->data_field;
+    mask = plain_tool->mask_field;
 
-    n = gwy_graph_model_get_n_curves(tool->gmodel);
+    n = gwy_graph_model_get_n_curves(gmodel);
     nsel = 0;
-    if (plain_tool->data_field) {
+    if (dfield) {
         if (!plain_tool->selection
             || !gwy_selection_get_object(plain_tool->selection, 0, sel)) {
             isel[0] = isel[1] = 0;
-            w = gwy_data_field_get_xres(plain_tool->data_field);
-            h = gwy_data_field_get_yres(plain_tool->data_field);
+            w = gwy_data_field_get_xres(dfield);
+            h = gwy_data_field_get_yres(dfield);
         }
         else {
-            isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
-            isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
-            isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
-            isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
+            isel[0] = floor(gwy_data_field_rtoj(dfield, sel[0]));
+            isel[1] = floor(gwy_data_field_rtoi(dfield, sel[1]));
+            isel[2] = floor(gwy_data_field_rtoj(dfield, sel[2]));
+            isel[3] = floor(gwy_data_field_rtoi(dfield, sel[3]));
 
             w = ABS(isel[2] - isel[0]) + 1;
             h = ABS(isel[3] - isel[1]) + 1;
@@ -766,190 +706,136 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         return;
 
     if (nsel == 0 && n > 0) {
-        gwy_graph_model_remove_all_curves(tool->gmodel);
+        gwy_graph_model_remove_all_curves(gmodel);
         return;
     }
 
     tool->has_uline = FALSE;
     lineres = tool->args.fixres ? tool->args.resolution : -1;
+    if (sfunction_supports_masking(tool->args.output_type) && mask) {
+        if (tool->args.masking == GWY_MASK_EXCLUDE) {
+            tmp_mask = gwy_data_field_duplicate(mask);
+            gwy_data_field_grains_invert(tmp_mask);
+        }
+        else if (tool->args.masking == GWY_MASK_INCLUDE)
+            tmp_mask = g_object_ref(mask);
+        /* Otherwise keep tmp_mask as NULL. */
+    }
+
     switch (tool->args.output_type) {
         case GWY_SF_DH:
-        if (tool->args.masking == GWY_MASK_EXCLUDE
-            && plain_tool->mask_field) {
-            mask_field = gwy_data_field_duplicate(plain_tool->mask_field);
-            gwy_data_field_grains_invert(mask_field);
-        }
-        else if (tool->args.masking == GWY_MASK_INCLUDE
-                 && plain_tool->mask_field)
-            mask_field = g_object_ref(plain_tool->mask_field);
-
-        gwy_data_field_area_dh(plain_tool->data_field, mask_field,
-                               tool->line,
-                               isel[0], isel[1], w, h,
-                               lineres);
+        gwy_data_field_area_dh(dfield, tmp_mask, tool->line,
+                               isel[0], isel[1], w, h, lineres);
         xlabel = "z";
         ylabel = "ρ";
         if (tool->has_calibration) {
-            gwy_data_field_area_dh_uncertainty(plain_tool->data_field,
-                                               tool->zunc,
-                                               mask_field,
+            gwy_data_field_area_dh_uncertainty(dfield, tool->zunc, tmp_mask,
                                                tool->uline,
                                                isel[0], isel[1], w, h,
                                                lineres);
             tool->has_uline = TRUE;
         }
-        GWY_OBJECT_UNREF(mask_field);
         break;
 
         case GWY_SF_CDH:
-        gwy_data_field_area_cdh(plain_tool->data_field, NULL,
-                                tool->line,
-                                isel[0], isel[1], w, h,
-                                lineres);
+        gwy_data_field_area_cdh(dfield, tmp_mask, tool->line,
+                                isel[0], isel[1], w, h, lineres);
         xlabel = "z";
         ylabel = "D";
-       if (tool->has_calibration) {
-            gwy_data_field_area_cdh_uncertainty(plain_tool->data_field,
-                                           tool->zunc,
-                                           plain_tool->mask_field,
-                                           tool->uline,
-                                           isel[0], isel[1], w, h,
-                                           lineres);
+        if (tool->has_calibration) {
+            gwy_data_field_area_cdh_uncertainty(dfield, tool->zunc, tmp_mask,
+                                                tool->uline,
+                                                isel[0], isel[1], w, h,
+                                                lineres);
             tool->has_uline = TRUE;
         }
-
         break;
 
         case GWY_SF_DA:
-        gwy_data_field_area_da(plain_tool->data_field,
-                               tool->line,
-                               isel[0], isel[1], w, h,
-                               tool->args.direction,
-                               lineres);
+        gwy_data_field_area_da(dfield, tool->line, isel[0], isel[1], w, h,
+                               dir, lineres);
         xlabel = "tan β";
         ylabel = "ρ";
         break;
 
         case GWY_SF_CDA:
-        gwy_data_field_area_cda(plain_tool->data_field,
-                                tool->line,
-                                isel[0], isel[1], w, h,
-                                tool->args.direction,
-                                lineres);
+        gwy_data_field_area_cda(dfield, tool->line, isel[0], isel[1], w, h,
+                                dir, lineres);
         xlabel = "tan β";
         ylabel = "D";
         break;
 
         case GWY_SF_ACF:
-        gwy_data_field_area_acf(plain_tool->data_field,
-                                tool->line,
-                                isel[0], isel[1], w, h,
-                                tool->args.direction,
-                                tool->args.interpolation,
-                                lineres);
+        gwy_data_field_area_acf(dfield, tool->line, isel[0], isel[1], w, h,
+                                dir, interp, lineres);
         xlabel = "τ";
         ylabel = "G";
         if (tool->has_calibration) {
-            gwy_data_field_area_acf_uncertainty(plain_tool->data_field,
-                                           tool->zunc,
-                                           tool->uline,
-                                           isel[0], isel[1], w, h,
-                                           tool->args.direction,
-                                           tool->args.interpolation,
-                                           lineres);
+            gwy_data_field_area_acf_uncertainty(dfield, tool->zunc, tool->uline,
+                                                isel[0], isel[1], w, h,
+                                                dir, interp, lineres);
             tool->has_uline = TRUE;
         }
         break;
 
         case GWY_SF_HHCF:
-        gwy_data_field_area_hhcf(plain_tool->data_field,
-                                 tool->line,
-                                 isel[0], isel[1], w, h,
-                                 tool->args.direction,
-                                 tool->args.interpolation,
-                                 lineres);
+        gwy_data_field_area_hhcf(dfield, tool->line, isel[0], isel[1], w, h,
+                                 dir, interp, lineres);
         xlabel = "τ";
         ylabel = "H";
         if (tool->has_calibration) {
-            gwy_data_field_area_hhcf_uncertainty(plain_tool->data_field,
-                                           tool->zunc,
-                                           tool->uline,
-                                           isel[0], isel[1], w, h,
-                                           tool->args.direction,
-                                           tool->args.interpolation,
-                                           lineres);
-      /*        gwy_data_field_hhcf_uncertainty(plain_tool->data_field, tool->zunc,
-                          tool->uline, tool->args.direction);*/
+            gwy_data_field_area_hhcf_uncertainty(dfield, tool->zunc, tool->uline,
+                                                 isel[0], isel[1], w, h,
+                                                 dir, interp, lineres);
             tool->has_uline = TRUE;
         }
         break;
 
         case GWY_SF_PSDF:
-        gwy_data_field_area_psdf(plain_tool->data_field,
-                                 tool->line,
-                                 isel[0], isel[1], w, h,
-                                 tool->args.direction,
-                                 tool->args.interpolation,
-                                 GWY_WINDOWING_HANN,
-                                 lineres);
+        gwy_data_field_area_psdf(dfield, tool->line, isel[0], isel[1], w, h,
+                                 dir, interp, GWY_WINDOWING_HANN, lineres);
         xlabel = "k";
         ylabel = "W<sub>1</sub>";
         break;
 
         case GWY_SF_MINKOWSKI_VOLUME:
-        gwy_data_field_area_minkowski_volume(plain_tool->data_field,
-                                             tool->line,
-                                             isel[0], isel[1], w, h,
-                                             lineres);
+        gwy_data_field_area_minkowski_volume(dfield, tool->line,
+                                             isel[0], isel[1], w, h, lineres);
         xlabel = "z";
         ylabel = "V";
         break;
 
         case GWY_SF_MINKOWSKI_BOUNDARY:
-        gwy_data_field_area_minkowski_boundary(plain_tool->data_field,
-                                               tool->line,
-                                               isel[0], isel[1], w, h,
-                                               lineres);
+        gwy_data_field_area_minkowski_boundary(dfield, tool->line,
+                                               isel[0], isel[1], w, h, lineres);
         xlabel = "z";
         ylabel = "S";
         break;
 
         case GWY_SF_MINKOWSKI_CONNECTIVITY:
-        gwy_data_field_area_minkowski_euler(plain_tool->data_field,
-                                            tool->line,
-                                            isel[0], isel[1], w, h,
-                                            lineres);
+        gwy_data_field_area_minkowski_euler(dfield, tool->line,
+                                            isel[0], isel[1], w, h, lineres);
         xlabel = "z";
         ylabel = "χ";
         break;
 
         case GWY_SF_RPSDF:
-        gwy_data_field_area_rpsdf(plain_tool->data_field,
-                                  tool->line,
-                                  isel[0], isel[1], w, h,
-                                  tool->args.interpolation,
-                                  GWY_WINDOWING_HANN,
-                                  lineres);
+        gwy_data_field_area_rpsdf(dfield, tool->line, isel[0], isel[1], w, h,
+                                  interp, GWY_WINDOWING_HANN, lineres);
         xlabel = "k";
         ylabel = "W<sub>r</sub>";
         break;
 
         case GWY_SF_RACF:
-        gwy_data_field_area_racf(plain_tool->data_field,
-                                 tool->line,
-                                 isel[0], isel[1], w, h,
+        gwy_data_field_area_racf(dfield, tool->line, isel[0], isel[1], w, h,
                                  lineres);
         xlabel = "τ";
         ylabel = "G<sub>r</sub>";
         break;
 
         case GWY_SF_RANGE:
-        gwy_data_field_area_range(plain_tool->data_field,
-                                  tool->line,
-                                  isel[0], isel[1], w, h,
-                                  tool->args.direction,
-                                  tool->args.interpolation,
-                                  lineres);
+        gwy_data_field_area_range(dfield, tool->line, isel[0], isel[1], w, h,
+                                  dir, interp, lineres);
         xlabel = "τ";
         ylabel = "R";
         break;
@@ -958,35 +844,36 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         g_return_if_reached();
         break;
     }
+    GWY_OBJECT_UNREF(tmp_mask);
 
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
-        gwy_graph_model_add_curve(tool->gmodel, gcmodel);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         g_object_unref(gcmodel);
 
         if (tool->has_calibration && tool->has_uline) {
            ugcmodel = gwy_graph_curve_model_new();
-           gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
+           gwy_graph_model_add_curve(gmodel, ugcmodel);
            g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
            g_object_unref(ugcmodel);
         }
     }
     else {
-        gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
+        gcmodel = gwy_graph_model_get_curve(gmodel, 0);
         if (tool->has_calibration && tool->has_uline) {
-           if (gwy_graph_model_get_n_curves(tool->gmodel) < 2) {
+           if (gwy_graph_model_get_n_curves(gmodel) < 2) {
                ugcmodel = gwy_graph_curve_model_new();
-               gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
+               gwy_graph_model_add_curve(gmodel, ugcmodel);
                g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
                g_object_unref(ugcmodel);
            }
            else {
-               ugcmodel = gwy_graph_model_get_curve(tool->gmodel, 1);
+               ugcmodel = gwy_graph_model_get_curve(gmodel, 1);
            }
         }
-        else if (gwy_graph_model_get_n_curves(tool->gmodel) > 1)
-           gwy_graph_model_remove_curve(tool->gmodel, 1);
+        else if (gwy_graph_model_get_n_curves(gmodel) > 1)
+           gwy_graph_model_remove_curve(gmodel, 1);
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
@@ -1002,15 +889,14 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         g_object_set(ugcmodel, "description", "uncertainty", NULL);
     }
 
-    g_object_set(tool->gmodel,
+    g_object_set(gmodel,
                  "title", title,
                  "axis-label-bottom", xlabel,
                  "axis-label-left", ylabel,
                  NULL);
 
-    gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+    gwy_graph_model_set_units_from_data_line(gmodel, tool->line);
     gwy_tool_sfunctions_update_target_graphs(tool);
-
 }
 
 static void
@@ -1037,6 +923,7 @@ gwy_tool_sfunctions_fixres_changed(GtkToggleButton *check,
                                    GwyToolSFunctions *tool)
 {
     tool->args.fixres = gtk_toggle_button_get_active(check);
+    gwy_tool_sfunctions_update_sensitivity(tool);
     gwy_tool_sfunctions_update_curve(tool);
 }
 
@@ -1240,6 +1127,68 @@ gwy_data_field_area_range(GwyDataField *dfield,
     g_free(maxdata);
     g_free(mindata);
     g_object_unref(buf);
+}
+
+static void
+update_unc_fields(GwyPlainTool *plain_tool)
+{
+    GwyToolSFunctions *tool = GWY_TOOL_SFUNCTIONS(plain_tool);
+    gchar xukey[24], yukey[24], zukey[24];
+
+    g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
+
+    GWY_OBJECT_UNREF(tool->xunc);
+    GWY_OBJECT_UNREF(tool->yunc);
+    GWY_OBJECT_UNREF(tool->zunc);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container,
+                                         xukey, &tool->xunc)
+        && gwy_container_gis_object_by_name(plain_tool->container,
+                                            yukey, &tool->yunc)
+        && gwy_container_gis_object_by_name(plain_tool->container,
+                                            zukey, &tool->zunc)) {
+        gint xres = gwy_data_field_get_xres(plain_tool->data_field);
+        gint yres = gwy_data_field_get_yres(plain_tool->data_field);
+
+        /* We need to resample uncertainties. */
+        tool->xunc = gwy_data_field_new_resampled(tool->xunc, xres, yres,
+                                                  GWY_INTERPOLATION_BILINEAR);
+        tool->yunc = gwy_data_field_new_resampled(tool->yunc, xres, yres,
+                                                  GWY_INTERPOLATION_BILINEAR);
+        tool->zunc = gwy_data_field_new_resampled(tool->zunc, xres, yres,
+                                                  GWY_INTERPOLATION_BILINEAR);
+
+        tool->has_calibration = TRUE;
+        gtk_widget_show(tool->separate);
+    }
+    else {
+        tool->has_calibration = FALSE;
+        gtk_widget_hide(tool->separate);
+    }
+}
+
+static gboolean
+sfunction_supports_masking(GwySFOutputType type)
+{
+    return (type == GWY_SF_DH || type == GWY_SF_CDH);
+}
+
+static gboolean
+sfunction_has_explicit_resampling(GwySFOutputType type)
+{
+    return (type == GWY_SF_ACF || type == GWY_SF_HHCF
+            || type == GWY_SF_PSDF || type == GWY_SF_RPSDF
+            || type == GWY_SF_RANGE);
+}
+
+static gboolean
+sfunction_has_direction(GwySFOutputType type)
+{
+    return (type == GWY_SF_DA || type == GWY_SF_CDA
+            || type == GWY_SF_ACF || type == GWY_SF_HHCF
+            || type == GWY_SF_PSDF);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
