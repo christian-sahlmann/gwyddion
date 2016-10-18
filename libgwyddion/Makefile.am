@@ -24,6 +24,7 @@ libgwyddion2include_HEADERS = \
 	gwyrandgenset.h \
 	gwyresource.h \
 	gwyserializable.h \
+	gwyshapefitpreset.h \
 	gwysiunit.h \
 	gwystringlist.h \
 	gwyutils.h \
@@ -51,7 +52,8 @@ MKENUM_ID = GWYDDION_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwyddionenums.h \
 	$(srcdir)/gwyutils.h \
-	$(srcdir)/gwyexpr.h
+	$(srcdir)/gwyexpr.h \
+	$(srcdir)/gwyshapefitpreset.h
 include $(top_srcdir)/utils/mkenum.mk
 
 libgwyddion2.def: $(libgwyddion2_la_OBJECTS)
@@ -97,6 +99,7 @@ libgwyddion2_la_SOURCES = \
 	gwyrandgenset.c \
 	gwyresource.c \
 	gwyserializable.c \
+	gwyshapefitpreset.c \
 	gwysiunit.c \
 	gwystringlist.c \
 	gwyutils.c \

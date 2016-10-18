@@ -24,6 +24,8 @@
 #ifndef __GWY_INTERNAL_H__
 #define __GWY_INTERNAL_H__
 
+#include "gwynlfitpreset.h"
+
 G_BEGIN_DECLS
 
 typedef void (*GwyNLFitGuessFunc)(gint n_dat,
@@ -65,6 +67,9 @@ void _gwy_nlfit_preset_class_setup_presets(void);
 
 G_GNUC_INTERNAL
 void _gwy_fd_curve_preset_class_setup_presets(void);
+
+G_GNUC_INTERNAL
+void _gwy_shape_fit_preset_class_setup_presets(void);
 
 G_END_DECLS
 
