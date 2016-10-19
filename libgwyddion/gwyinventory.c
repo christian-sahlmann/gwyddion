@@ -516,7 +516,7 @@ gwy_inventory_get_nth_item(GwyInventory *inventory,
  *
  * Finds position of an item in an inventory.
  *
- * Returns: Item position, or -1 if there is no such item.
+ * Returns: Item position, or (guint)-1 if there is no such item.
  **/
 guint
 gwy_inventory_get_item_position(GwyInventory *inventory,
