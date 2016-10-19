@@ -326,10 +326,15 @@ static const FitShapeParam pring_params[] = {
 
 #define pring_secondary NULL
 
-static GwyShapeFitPreset* create_static_preset(const FitShapeFunc *function);
-static void               reduce_data_size    (const GwyXYZ *xyzsrc,
-                                               guint nsrc,
-                                               GwySurface *dest);
+static void               enforce_param_flags    (const FitShapeFunc *builtin,
+                                                  gdouble *param);
+static gdouble            enforce_secondary_flags(const FitShapeFunc *builtin,
+                                                  guint i,
+                                                  gdouble value);
+static GwyShapeFitPreset* create_static_preset   (const FitShapeFunc *function);
+static void               reduce_data_size       (const GwyXYZ *xyzsrc,
+                                                  guint nsrc,
+                                                  GwySurface *dest);
 
 G_DEFINE_TYPE(GwyShapeFitPreset, gwy_shape_fit_preset, GWY_TYPE_RESOURCE)
 
@@ -388,6 +393,7 @@ _gwy_shape_fit_preset_class_setup_presets(void)
         g_object_unref(preset);
     }
     gwy_inventory_restore_order(klass->inventory);
+    gwy_inventory_set_default_item_name(klass->inventory, functions[0].name);
 
     /* The presets added a reference so we can safely unref it again */
     g_type_class_unref(klass);
@@ -615,7 +621,8 @@ gwy_shape_fit_preset_get_secondary_value(GwyShapeFitPreset *preset,
     g_return_val_if_fail(param, 0.0);
     builtin = preset->priv->builtin;
     g_return_val_if_fail(i < builtin->nsecondary, 0.0);
-    return builtin->secondary[i].calc(param);
+    return enforce_secondary_flags(builtin, i,
+                                   builtin->secondary[i].calc(param));
 }
 
 /**
@@ -726,6 +733,7 @@ gwy_shape_fit_preset_setup(GwyShapeFitPreset *preset,
     gwy_clear(&estimcache, 1);
     /* The function has a return value but it should always succeed. */
     builtin->initialise(points, n, params, &estimcache);
+    enforce_param_flags(builtin, params);
 }
 
 /**
@@ -762,6 +770,7 @@ gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
 {
     FitShapeEstimateCache estimcache;
     const FitShapeFunc *builtin;
+    gboolean ok;
 
     g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), FALSE);
     g_return_val_if_fail(points, FALSE);
@@ -769,7 +778,10 @@ gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
     builtin = preset->priv->builtin;
 
     gwy_clear(&estimcache, 1);
-    return builtin->estimate(points, n, params, &estimcache);
+    ok = builtin->estimate(points, n, params, &estimcache);
+    enforce_param_flags(builtin, params);
+
+    return ok;
 }
 
 /**
@@ -964,10 +976,42 @@ gwy_shape_fit_preset_fit(GwyShapeFitPreset *preset,
     myrss = gwy_math_nlfit_fit_idx_full(fitter, n, builtin->nparams,
                                         params, fixed_param, NULL, priv);
     priv->xyz = NULL;
+    enforce_param_flags(builtin, params);
     if (rss)
         *rss = myrss;
 
     return fitter;
+}
+
+static void
+enforce_param_flags(const FitShapeFunc *builtin, gdouble *param)
+{
+    guint i;
+
+    for (i = 0; i < builtin->nparams; i++) {
+        GwyNLFitParamFlags flags = builtin->param[i].flags;
+
+        if (flags & GWY_NLFIT_PARAM_ANGLE)
+            param[i] = fmod(param[i], 2.0*G_PI);
+        if (flags & GWY_NLFIT_PARAM_ABSVAL)
+            param[i] = fabs(param[i]);
+    }
+}
+
+static gdouble
+enforce_secondary_flags(const FitShapeFunc *builtin, guint i, gdouble value)
+{
+    GwyNLFitParamFlags flags;
+
+    g_return_val_if_fail(i < builtin->nsecondary, value);
+    flags = builtin->secondary[i].flags;
+
+    if (flags & GWY_NLFIT_PARAM_ANGLE)
+        value = fmod(value, 2.0*G_PI);
+    if (flags & GWY_NLFIT_PARAM_ABSVAL)
+        value = fabs(value);
+
+    return value;
 }
 
 static void
