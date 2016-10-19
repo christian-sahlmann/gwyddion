@@ -57,7 +57,6 @@ gwy_type_init(void)
 
     _gwy_nlfit_preset_class_setup_presets();
     _gwy_fd_curve_preset_class_setup_presets();
-    _gwy_shape_fit_preset_class_setup_presets();
 }
 
 /************************** Documentation ****************************/

@@ -63,6 +63,9 @@ void _gwy_grain_value_class_setup_presets(void);
 G_GNUC_INTERNAL
 void _gwy_calibration_class_setup_presets(void);
 
+G_GNUC_INTERNAL
+void _gwy_shape_fit_preset_class_setup_presets(void);
+
 struct _GwySurfacePrivate {
     GwySIUnit *si_unit_xy;
     GwySIUnit *si_unit_z;

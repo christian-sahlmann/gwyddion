@@ -29,6 +29,7 @@ libgwyprocess2include_HEADERS = \
 	gwyprocess.h \
 	gwyprocessenums.h \
 	gwyprocesstypes.h \
+	gwyshapefitpreset.h \
 	hough.h \
 	interpolation.h \
 	inttrans.h \
@@ -70,7 +71,8 @@ MKENUM_ID = GWY_PROCESS_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwyprocessenums.h \
 	$(srcdir)/peaks.h \
-	$(srcdir)/gwygrainvalue.h
+	$(srcdir)/gwygrainvalue.h \
+	$(srcdir)/gwyshapefitpreset.h
 include $(top_srcdir)/utils/mkenum.mk
 
 libgwyprocess2.def: $(libgwyprocess2_la_OBJECTS)
@@ -115,6 +117,7 @@ libgwyprocess2_la_SOURCES = \
 	gwyprocess.c \
 	gwyprocessenums.c \
 	gwyprocesstypes.c \
+	gwyshapefitpreset.c \
 	hough.c \
 	interpolation.c \
 	inttrans.c \

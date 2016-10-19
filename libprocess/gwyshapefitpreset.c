@@ -22,9 +22,16 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyrandgenset.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include <libgwyddion/gwyshapefitpreset.h>
-#include "gwyddioninternal.h"
+#include <libprocess/dataline.h>
+#include <libprocess/linestats.h>
+#include <libprocess/surface.h>
+#include <libprocess/gwyshapefitpreset.h>
+#include "gwyprocessinternal.h"
+
+enum { NREDLIM = 4096 };
 
 /* Lower symmetric part indexing */
 /* i MUST be greater or equal than j */
@@ -156,8 +163,10 @@ static const FitShapeSecondary sphere_secondary[] = {
    { "R", 0, 1, 0, sphere_calc_R, sphere_calc_err_R, },
 };
 
-static GwyShapeFitPreset*
-gwy_shape_fit_preset_new_static(const FitShapeFunc *function);
+static GwyShapeFitPreset* create_static_preset(const FitShapeFunc *function);
+static void               reduce_data_size    (const GwyXYZ *xyzsrc,
+                                               guint nsrc,
+                                               GwySurface *dest);
 
 G_DEFINE_TYPE(GwyShapeFitPreset, gwy_shape_fit_preset, GWY_TYPE_RESOURCE)
 
@@ -213,7 +222,7 @@ _gwy_shape_fit_preset_class_setup_presets(void)
     klass = g_type_class_ref(GWY_TYPE_SHAPE_FIT_PRESET);
 
     for (i = 0; i < G_N_ELEMENTS(functions); i++) {
-        preset = gwy_shape_fit_preset_new_static(functions + i);
+        preset = create_static_preset(functions + i);
         gwy_inventory_insert_item(klass->inventory, preset);
         g_object_unref(preset);
     }
@@ -800,8 +809,24 @@ gwy_shape_fit_preset_fit(GwyShapeFitPreset *preset,
     return fitter;
 }
 
+static void
+reduce_data_size(const GwyXYZ *xyzsrc, guint nsrc, GwySurface *dest)
+{
+    GwyRandGenSet *rngset = gwy_rand_gen_set_new(1);
+    guint ndest = gwy_surface_get_npoints(dest);
+    guint *redindex = gwy_rand_gen_set_choose_shuffle(rngset, 0, nsrc, ndest);
+    GwyXYZ *xyzdest = gwy_surface_get_data(dest);
+    guint i;
+
+    for (i = 0; i < ndest; i++)
+        xyzdest[i] = xyzsrc[redindex[i]];
+
+    g_free(redindex);
+    gwy_rand_gen_set_free(rngset);
+}
+
 static GwyShapeFitPreset*
-gwy_shape_fit_preset_new_static(const FitShapeFunc *builtin)
+create_static_preset(const FitShapeFunc *builtin)
 {
     GwyShapeFitPreset *preset;
 

@@ -51,6 +51,7 @@
 #include <libprocess/surface.h>
 #include <libprocess/peaks.h>
 #include <libprocess/triangulation.h>
+#include <libprocess/gwyshapefitpreset.h>
 #include <libprocess/gwycalibration.h>
 #include <libprocess/gwycaldata.h>
 #include <libprocess/stats_uncertainty.h>
