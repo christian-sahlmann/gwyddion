@@ -95,16 +95,31 @@ typedef struct {
 
 struct _GwyShapeFitPresetPrivate {
     const FitShapeFunc *builtin;
+    /* Context for the opaque function during fitting. */
+    const GwyXYZ *xyz;
 };
 
 typedef struct _GwyShapeFitPresetPrivate ShapeFitPreset;
 
-/*
 static GwyShapeFitPreset*
-gwy_shape_fit_preset_new_static(const GwyShapeFitPresetBuiltin *data);
-*/
+gwy_shape_fit_preset_new_static(const FitShapeFunc *function);
 
 G_DEFINE_TYPE(GwyShapeFitPreset, gwy_shape_fit_preset, GWY_TYPE_RESOURCE)
+
+static const FitShapeFunc functions[] = {
+#if 0
+    { N_("Grating (simple)"),  FALSE, SHAPE_FUNC_ITEM(grating),    },
+    { N_("Grating (3-level)"), FALSE, SHAPE_FUNC_ITEM(grating3),   },
+    { N_("Holes"),             FALSE, SHAPE_FUNC_ITEM(holes),      },
+    { N_("Ring"),              FALSE, SHAPE_FUNC_ITEM(pring),      },
+    { N_("Sphere"),            TRUE,  SHAPE_FUNC_ITEM(sphere),     },
+    { N_("Cylinder (lying)"),  TRUE,  SHAPE_FUNC_ITEM(cylinder),   },
+    { N_("Gaussian"),          FALSE, SHAPE_FUNC_ITEM(gaussian),   },
+    { N_("Lorentzian"),        FALSE, SHAPE_FUNC_ITEM(lorentzian), },
+    { N_("Pyramid (diamond)"), FALSE, SHAPE_FUNC_ITEM(pyramidx),   },
+    { N_("Parabolic bump"),    FALSE, SHAPE_FUNC_ITEM(parbump),   },
+#endif
+};
 
 static void
 gwy_shape_fit_preset_class_init(GwyShapeFitPresetClass *klass)
@@ -131,19 +146,17 @@ gwy_shape_fit_preset_init(GwyShapeFitPreset *preset)
                                                ShapeFitPreset);
 }
 
-#if 0
 static GwyShapeFitPreset*
-gwy_shape_fit_preset_new_static(const GwyShapeFitPresetBuiltin *data)
+gwy_shape_fit_preset_new_static(const FitShapeFunc *builtin)
 {
     GwyShapeFitPreset *preset;
 
     preset = g_object_new(GWY_TYPE_SHAPE_FIT_PRESET, "is-const", TRUE, NULL);
-    preset->builtin = data;
-    g_string_assign(GWY_RESOURCE(preset)->name, data->name);
+    preset->priv->builtin = builtin;
+    g_string_assign(GWY_RESOURCE(preset)->name, builtin->name);
 
     return preset;
 }
-#endif
 
 void
 _gwy_shape_fit_preset_class_setup_presets(void)
@@ -156,17 +169,36 @@ _gwy_shape_fit_preset_class_setup_presets(void)
      * referenced. */
     klass = g_type_class_ref(GWY_TYPE_SHAPE_FIT_PRESET);
 
-#if 0
-    for (i = 0; i < G_N_ELEMENTS(fitting_presets); i++) {
-        preset = gwy_shape_fit_preset_new_static(fitting_presets + i);
+    for (i = 0; i < G_N_ELEMENTS(functions); i++) {
+        preset = gwy_shape_fit_preset_new_static(functions + i);
         gwy_inventory_insert_item(klass->inventory, preset);
         g_object_unref(preset);
     }
-#endif
     gwy_inventory_restore_order(klass->inventory);
 
     /* The presets added a reference so we can safely unref it again */
     g_type_class_unref(klass);
+}
+
+/**
+ * gwy_shape_fit_preset_needs_same_units:
+ * @preset: A 3D geometrical shape fitting function.
+ *
+ * Reports if a 3D geometrical shape fitter preset requires the same lateral
+ * and value units.
+ *
+ * For instance, fitting a sphere is meaningless if the horizontal and
+ * vertical radii would be different physical quantities.
+ *
+ * Returns: %TRUE if the function requires the same lateral and value units.
+ *
+ * Since: 2.47
+ **/
+gboolean
+gwy_shape_fit_preset_needs_same_units(GwyShapeFitPreset *preset)
+{
+    g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), FALSE);
+    return preset->priv->builtin->needs_same_units;
 }
 
 /**
@@ -448,40 +480,220 @@ gwy_shape_fit_preset_get_secondary_units(GwyShapeFitPreset *preset,
                                       NULL);
 }
 
-#if 0
 /**
- * gwy_shape_fit_preset_guess:
+ * gwy_shape_fit_preset_setup:
  * @preset: A 3D geometrical shape fitting function.
- * @n_dat: The number of data points (number of items in @x and @y).
- * @x: Abscissa points.
- * @y: Ordinate points.
- * @params: The array to fill with estimated parameter values.  It has to be
- *          at least gwy_shape_fit_preset_get_nparams() long.
- * @fres: Set to %TRUE if succeeds, %FALSE on failure.
+ * @points: Array of XYZ data to fit.
+ * @n: Number of data points.
+ * @params: The array to fill with initialised parameter values.
  *
- * Performs initial parameter estimate for a NL fitter.
+ * Initialises parameter values of a 3D geometrical shape fitter preset.
  *
- * The initial estimate method depends on the function used.  There is no
- * absolute guarantee of quality, however if the data points approximately
- * match the fitted function the fit will typically converge from the returned
- * estimate.
- *
- * The parameters are filled also on failure, though just with some neutral
- * values that should not give raise to NaNs and infinities.
+ * The parameters are quickly set to reasonable values that roughly correspond
+ * to the ranges of the data points.  They may serve as starting values for
+ * manual experimentation but often will not be good enough as initial
+ * parameter estimates for the fit.  See also gwy_shape_fit_preset_guess().
  *
  * Since: 2.47
  **/
 void
-gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
-                       gint n_dat,
-                       const gdouble *x,
-                       const gdouble *y,
-                       gdouble *params,
-                       gboolean *fres)
+gwy_shape_fit_preset_setup(GwyShapeFitPreset *preset,
+                           const GwyXYZ *points,
+                           guint n,
+                           gdouble *params)
 {
+    FitShapeEstimateCache estimcache;
+    const FitShapeFunc *builtin;
+
     g_return_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset));
-    /* FIXME: builtin */
-    preset->builtin->guess(n_dat, x, y, params, fres);
+    g_return_if_fail(points);
+    g_return_if_fail(params);
+    builtin = preset->priv->builtin;
+
+    gwy_clear(&estimcache, 1);
+    /* The function has a return value but it should always succeed. */
+    builtin->initialise(points, n, params, &estimcache);
+}
+
+/**
+ * gwy_shape_fit_preset_guess:
+ * @preset: A 3D geometrical shape fitting function.
+ * @points: Array of XYZ data to fit.
+ * @n: Number of data points.
+ * @params: The array to fill with initialised parameter values.
+ *
+ * Estimates parameter values of a 3D geometrical shape fitter preset.
+ *
+ * This function tries to find initial parameter estimates that are good enough
+ * for the fit the converge.  Of course, it is not guaranteed it always
+ * succeeds.  For some shapes it can be noticeably slower than
+ * gwy_shape_fit_preset_setup().
+ *
+ * The estimate may not be deterministic.  For large point sets some estimates
+ * are carried out using a randomly selected subset of points.
+ *
+ * If the function cannot find how the data points could correspond to the
+ * preset geometrical shape it return %FALSE.  Parameter values are still set.
+ * However, in this case they may be no better than from
+ * gwy_shape_fit_preset_setup().
+ *
+ * Returns: %TRUE if the estimation succeeded, %FALSE if it failed.
+ *
+ * Since: 2.47
+ **/
+gboolean
+gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
+                           const GwyXYZ *points,
+                           guint n,
+                           gdouble *params)
+{
+    FitShapeEstimateCache estimcache;
+    const FitShapeFunc *builtin;
+
+    g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), FALSE);
+    g_return_val_if_fail(points, FALSE);
+    g_return_val_if_fail(params, FALSE);
+    builtin = preset->priv->builtin;
+
+    gwy_clear(&estimcache, 1);
+    return builtin->estimate(points, n, params, &estimcache);
+}
+
+/**
+ * gwy_shape_fit_preset_get_value:
+ * @preset: A 3D geometrical shape fitting function.
+ * @x: X-coordinate.
+ * @y: Y-coordinate.
+ * @params: Fitting parameter values.
+ *
+ * Calculates the value of a 3D geometrical shape fitter preset in a single
+ * point.
+ *
+ * If you want multiple values you should use either
+ * gwy_shape_fit_preset_calculate_z() or gwy_shape_fit_preset_calculate_xyz()
+ * instead of calling this function in a cycle.
+ *
+ * Returns: The calculated function value in (@x,@y).
+ *
+ * Since: 2.47
+ **/
+gdouble
+gwy_shape_fit_preset_get_value(GwyShapeFitPreset *preset,
+                               gdouble x,
+                               gdouble y,
+                               const gdouble *params)
+{
+    const FitShapeFunc *builtin;
+
+    g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), 0.0);
+    g_return_val_if_fail(params, 0.0);
+    builtin = preset->priv->builtin;
+    return builtin->function(x, y, params);
+}
+
+/**
+ * gwy_shape_fit_preset_calculate_z:
+ * @preset: A 3D geometrical shape fitting function.
+ * @points: Array of @n XYZ data defining the lateral coordinates.
+ * @z: Array length @n to fill with calculated values.
+ * @n: Number of items in @points and @z.
+ * @params: Fitting parameter values.
+ *
+ * Calculates values of a 3D geometrical shape fitter preset in an array of
+ * points.
+ *
+ * The z-coordinates in @points are ignored.  Only the lateral coordinates are
+ * used.
+ *
+ * See also gwy_shape_fit_preset_calculate_xyz().
+ *
+ * Since: 2.47
+ **/
+void
+gwy_shape_fit_preset_calculate_z(GwyShapeFitPreset *preset,
+                                 const GwyXYZ *points,
+                                 gdouble *z,
+                                 guint n,
+                                 const gdouble *params)
+{
+    const FitShapeFunc *builtin;
+    FitShapeXYFunc func;
+    guint i;
+
+    g_return_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset));
+    g_return_if_fail(params);
+    if (!n)
+        return;
+
+    g_return_if_fail(points);
+    g_return_if_fail(z);
+    builtin = preset->priv->builtin;
+    func = builtin->function;
+    for (i = 0; i < n; i++)
+        z[i] = func(points[i].x, points[i].y, params);
+}
+
+/**
+ * gwy_shape_fit_preset_calculate_xyz:
+ * @preset: A 3D geometrical shape fitting function.
+ * @points: Array of @n XYZ data defining the lateral coordinates.  The
+ *          z-coordinates will be filled with the calculated values.
+ * @n: Number of items in @points.
+ * @params: Fitting parameter values.
+ *
+ * Calculates values of a 3D geometrical shape fitter preset in an array of
+ * points.
+ *
+ * See also gwy_shape_fit_preset_calculate_z().
+ *
+ * Since: 2.47
+ **/
+void
+gwy_shape_fit_preset_calculate_xyz(GwyShapeFitPreset *preset,
+                                   GwyXYZ *points,
+                                   guint n,
+                                   const gdouble *params)
+{
+    const FitShapeFunc *builtin;
+    FitShapeXYFunc func;
+    guint i;
+
+    g_return_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset));
+    g_return_if_fail(params);
+    if (!n)
+        return;
+
+    g_return_if_fail(points);
+    builtin = preset->priv->builtin;
+    func = builtin->function;
+    for (i = 0; i < n; i++)
+        points[i].z = func(points[i].x, points[i].y, params);
+}
+
+/**
+ * gwy_shape_fit_preset_create_fitter:
+ * @preset: A 3D geometrical shape fitting function.
+ *
+ * Creates a non-linear least-squares fitter for a 3D geometrical shape.
+ *
+ * The created fitter will be of the opaque indexed data type, as created with
+ * gwy_math_nlfit_new_idx().
+ *
+ * If you do not need to modify the fitter settings you can use
+ * gwy_shape_fit_preset_fit() directly with %NULL fitter.
+ *
+ * Returns: A newly created fitter for @preset.
+ *
+ * Since: 2.47
+ **/
+GwyNLFitter*
+gwy_shape_fit_preset_create_fitter(GwyShapeFitPreset *preset)
+{
+    const FitShapeFunc *builtin;
+
+    g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), NULL);
+    builtin = preset->priv->builtin;
+    return gwy_math_nlfit_new_idx(builtin->fit_function, NULL);
 }
 
 /**
@@ -489,20 +701,26 @@ gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
  * @preset: A 3D geometrical shape fitting function.
  * @fitter: A Marquardt-Levenberg nonlinear fitter already initialized for
  *          @preset's function, or %NULL.
- * @n_dat: The number of data points (number of items in @x and @y).
- * @x: Abscissa points.
- * @y: Ordinate points.
- * @params: Initial parameter estimate (the number of parameters depends on
- *          the fitted preset and it can be obtained with
- *          gwy_shape_fit_preset_get_nparams()).
- * @err: Array to store parameter errros to, may be %NULL.
+ * @points: Array of @n XYZ data defining the lateral coordinates and values
+ *          to fit.
+ * @n: Number of items in @points.
+ * @params: Fitting parameters filled with initial estimates (the fitting
+ *          starts from the provided values).
  * @fixed_param: Which parameters should be treated as fixed (set
  *               corresponding element to %TRUE for them).  May be %NULL if
- *               all parameters are variable.
+ *               all parameters are free.
+ * @rss: Location to store the residual sum of squares, as returned by
+ *       gwy_math_nlfit_fit_idx(), may be %NULL.
  *
- * Performs a nonlinear fit with a preset.
+ * Performs a non-linear least-squares fit with a 3D geometrical shape fitter.
  *
- * See gwy_math_nlfit_fit_full() for details.
+ * If you pass %NULL @fitter the function creates one for you and immediately
+ * performs the fit.  If you want to modify the fitter settings beforehand or
+ * set callback functions create it using gwy_shape_fit_preset_create_fitter()
+ * and pass to this function.  The fitter must be created for the same preset.
+ *
+ * Additional quantities such as parameter errors or the correlation matrix can
+ * be obtained from the fitter. See gwy_math_nlfit_fit_full() for details.
  *
  * Returns: Either @fitter itself, or a newly created fitter if it was %NULL.
  *
@@ -510,53 +728,34 @@ gwy_shape_fit_preset_guess(GwyShapeFitPreset *preset,
  **/
 GwyNLFitter*
 gwy_shape_fit_preset_fit(GwyShapeFitPreset *preset,
-                     GwyNLFitter *fitter,
-                     gint n_dat,
-                     const gdouble *x,
-                     const gdouble *y,
-                     gdouble *param,
-                     gdouble *err,
-                     const gboolean *fixed_param)
+                         GwyNLFitter *fitter,
+                         const GwyXYZ *points,
+                         guint n,
+                         gdouble *params,
+                         const gboolean *fixed_param,
+                         gdouble *rss)
 {
-    gdouble *weight = NULL;
-    gboolean ok;
-    gint i;
+    ShapeFitPreset *priv;
+    const FitShapeFunc *builtin;
+    gdouble myrss;
 
     g_return_val_if_fail(GWY_IS_SHAPE_FIT_PRESET(preset), NULL);
-    /* FIXME: builtin */
-    /*use numerical derivation if necessary*/
-    if (fitter) {
-        /* XXX */
-        g_return_val_if_fail(fitter->fmarq == preset->builtin->function, NULL);
-    }
-    else
-        fitter = gwy_math_nlfit_new(preset->builtin->function,
-                                    preset->builtin->derive
-                                    ? preset->builtin->derive
-                                    : gwy_math_nlfit_derive);
+    g_return_val_if_fail(points, NULL);
+    g_return_val_if_fail(params, NULL);
+    if (!fitter)
+        fitter = gwy_shape_fit_preset_create_fitter(preset);
 
-    /*load default weights for given function type*/
-    if (preset->builtin->set_default_weights) {
-        weight = g_new(gdouble, n_dat);
-        preset->builtin->set_default_weights(n_dat, x, y, weight);
-    }
-
-    /* FIXME: builtin */
-    ok = gwy_math_nlfit_fit_full(fitter, n_dat, x, y, weight,
-                                 preset->builtin->nparams, param,
-                                 fixed_param, NULL, preset) >= 0.0;
-
-    if (ok && err && fitter->covar) {
-    /* FIXME: builtin */
-        for (i = 0; i < preset->builtin->nparams; i++)
-            err[i] = gwy_math_nlfit_get_sigma(fitter, i);
-    }
-
-    g_free(weight);
+    priv = preset->priv;
+    priv->xyz = points;
+    builtin = priv->builtin;
+    myrss = gwy_math_nlfit_fit_idx_full(fitter, n, builtin->nparams,
+                                        params, fixed_param, NULL, priv);
+    priv->xyz = NULL;
+    if (rss)
+        *rss = myrss;
 
     return fitter;
 }
-#endif
 
 /**
  * gwy_shape_fit_presets:
@@ -570,7 +769,8 @@ gwy_shape_fit_preset_fit(GwyShapeFitPreset *preset,
 GwyInventory*
 gwy_shape_fit_presets(void)
 {
-    return GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_SHAPE_FIT_PRESET))->inventory;
+    GTypeClass *klass = g_type_class_peek(GWY_TYPE_SHAPE_FIT_PRESET);
+    return GWY_RESOURCE_CLASS(klass)->inventory;
 }
 
 /************************** Documentation ****************************/

@@ -54,6 +54,7 @@ struct _GwyShapeFitPresetClass {
 };
 
 GType              gwy_shape_fit_preset_get_type           (void)                         G_GNUC_CONST;
+gboolean           gwy_shape_fit_preset_needs_same_units   (GwyShapeFitPreset *preset);
 guint              gwy_shape_fit_preset_get_nparams        (GwyShapeFitPreset *preset);
 const gchar*       gwy_shape_fit_preset_get_param_name     (GwyShapeFitPreset *preset,
                                                             guint i);
@@ -80,7 +81,7 @@ GwySIUnit*         gwy_shape_fit_preset_get_secondary_units(GwyShapeFitPreset *p
                                                             guint i,
                                                             GwySIUnit *siunit_xy,
                                                             GwySIUnit *siunit_z);
-gboolean           gwy_shape_fit_preset_setup              (GwyShapeFitPreset *preset,
+void               gwy_shape_fit_preset_setup              (GwyShapeFitPreset *preset,
                                                             const GwyXYZ *points,
                                                             guint n,
                                                             gdouble *params);
@@ -91,23 +92,24 @@ gboolean           gwy_shape_fit_preset_guess              (GwyShapeFitPreset *p
 gdouble            gwy_shape_fit_preset_get_value          (GwyShapeFitPreset *preset,
                                                             gdouble x,
                                                             gdouble y,
-                                                            const gdouble *params,
-                                                            gboolean *fres);
-gboolean           gwy_shape_fit_preset_calculate_z        (GwyShapeFitPreset *preset,
+                                                            const gdouble *params);
+void               gwy_shape_fit_preset_calculate_z        (GwyShapeFitPreset *preset,
                                                             const GwyXYZ *points,
                                                             gdouble *z,
                                                             guint n,
                                                             const gdouble *params);
-gboolean           gwy_shape_fit_preset_calculate_xyz      (GwyShapeFitPreset *preset,
+void               gwy_shape_fit_preset_calculate_xyz      (GwyShapeFitPreset *preset,
                                                             GwyXYZ *points,
                                                             guint n,
                                                             const gdouble *params);
+GwyNLFitter*       gwy_shape_fit_preset_create_fitter      (GwyShapeFitPreset *preset);
 GwyNLFitter*       gwy_shape_fit_preset_fit                (GwyShapeFitPreset *preset,
+                                                            GwyNLFitter *fitter,
                                                             const GwyXYZ *points,
                                                             guint n,
                                                             gdouble *params,
-                                                            gdouble *err,
-                                                            const gboolean *fixed_param);
+                                                            const gboolean *fixed_param,
+                                                            gdouble *rss);
 GwyInventory*      gwy_shape_fit_presets                   (void);
 
 G_END_DECLS
